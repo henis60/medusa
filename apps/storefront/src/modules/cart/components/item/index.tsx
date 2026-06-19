@@ -25,7 +25,11 @@ function getVariantImageUrl(item: HttpTypes.StoreCartLineItem): string | null {
   const allImages: { url?: string }[] = product.images ?? []
   if (!allImages.length) return null
 
-  const options: { id?: string; title?: string; values?: { value?: string }[] }[] = product.options ?? []
+  const options: {
+    id?: string
+    title?: string
+    values?: { value?: string }[]
+  }[] = product.options ?? []
   const colorOption = options.find((o) =>
     COLOR_OPTION_NAMES.includes(o.title?.toLowerCase() ?? "")
   )
@@ -39,13 +43,16 @@ function getVariantImageUrl(item: HttpTypes.StoreCartLineItem): string | null {
   // Fallback: derive from product variants if options.values is empty
   if (!colorValues.length) {
     const allVariants: any[] = product.variants ?? []
-    const fromVariants = [
-      ...new Set(
+    const fromVariants = Array.from(
+      new Set(
         allVariants
-          .map((v: any) => v.options?.find((o: any) => o.option_id === colorOption.id)?.value)
+          .map(
+            (v: any) =>
+              v.options?.find((o: any) => o.option_id === colorOption.id)?.value
+          )
           .filter(Boolean) as string[]
-      ),
-    ]
+      )
+    )
     colorValues.push(...fromVariants)
   }
 
@@ -104,7 +111,10 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
               | { value: string }[]
               | undefined
             const label = opts?.length
-              ? opts.map((o) => o.value).filter(Boolean).join(" · ") || item.variant?.title
+              ? opts
+                  .map((o) => o.value)
+                  .filter(Boolean)
+                  .join(" · ") || item.variant?.title
               : item.variant?.title
             return label ? (
               <p className="font-serif italic text-[11px] text-[var(--theme-text-muted)]">
@@ -184,7 +194,10 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
             const opts = (item.variant as any)?.options as
               | { value?: string; option?: { title?: string } }[]
               | undefined
-            const fromOpts = opts?.map((o) => o.value).filter(Boolean).join(" · ")
+            const fromOpts = opts
+              ?.map((o) => o.value)
+              .filter(Boolean)
+              .join(" · ")
             const label = fromOpts || item.variant?.title
             return label ? (
               <p className="font-serif italic text-[12px] small:text-[14px] text-[var(--theme-text-muted)] mt-1">
