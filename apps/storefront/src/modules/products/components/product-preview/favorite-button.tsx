@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { useFavorites } from "@lib/context/favorites-context"
 
 type Props = {
@@ -12,7 +13,13 @@ type Props = {
 
 export default function FavoriteButton({ productId, productHandle, productTitle, productThumbnail, size = 16 }: Props) {
   const { isFavorite, toggle } = useFavorites()
-  const on = productId ? isFavorite(productId) : false
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => setMounted(true), [])
+
+  // Favorites live in localStorage (client-only), so keep the default state
+  // until mounted to avoid a hydration mismatch.
+  const on = mounted && !!productId && isFavorite(productId)
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault()

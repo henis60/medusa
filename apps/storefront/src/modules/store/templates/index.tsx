@@ -3,9 +3,9 @@ import { Suspense } from "react"
 import { listCollections } from "@lib/data/collections"
 import { listCategories } from "@lib/data/categories"
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
-import RefinementList from "@modules/store/components/refinement-list"
 import FilterDrawer from "@modules/store/components/filter-drawer"
-import FilterToggle from "@modules/store/components/filter-toggle"
+import StoreSidebar from "@modules/store/components/store-sidebar"
+import CategoryPills from "@modules/store/components/category-pills"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
 import PaginatedProducts from "./paginated-products"
@@ -31,22 +31,44 @@ const StoreTemplate = async ({
     listCategories(),
   ])
 
+  const activeCollection = collections.find((c) => c.id === collectionId)
+  const activeCategory = categories.find((c) => c.id === categoryId)
+  const heading =
+    activeCategory?.name || activeCollection?.title || "Toate produsele"
+
   return (
     <div className="bg-[var(--theme-bg)] w-full min-h-screen">
-      {/* Header */}
-      <div className="content-container pt-5 pb-6 small:pt-20">
-        <h1
-          data-testid="store-page-title"
-          className="font-display text-4xl small:text-5xl text-[var(--theme-text)] leading-none"
-        >
-          All <span className="italic text-hunter-gold">Products</span>
-        </h1>
+      {/* Hero header */}
+      <div className="border-b border-[var(--theme-border)]">
+        <div className="content-container pt-6 pb-5 small:pt-10 small:pb-6">
+          <div className="flex items-center gap-3 mb-5">
+            <span className="h-px w-8 bg-hunter-gold" />
+            <span className="font-sans text-[10px] uppercase tracking-[5px] text-[var(--theme-text-muted)]">
+              Magazin
+            </span>
+          </div>
+          <h1
+            data-testid="store-page-title"
+            className="font-display text-4xl small:text-6xl text-[var(--theme-text)] leading-[0.95]"
+          >
+            {heading === "Toate produsele" ? (
+              <>
+                Toate <span className="italic text-hunter-gold">produsele</span>
+              </>
+            ) : (
+              heading
+            )}
+          </h1>
+          <p className="mt-4 max-w-md font-serif text-lg text-[var(--theme-text-muted)] leading-relaxed">
+            Piese selectate cu grijă — cămăși, accesorii și colecții pentru
+            garderoba ta.
+          </p>
+        </div>
       </div>
 
-      {/* Filter + sort bar */}
-      <div className="border-y border-[var(--theme-border)]">
-        <div className="content-container py-2 flex items-center justify-between gap-3">
-          {/* Filter drawer — mobile + desktop */}
+      {/* Mobile filter + sort bar */}
+      <div className="small:hidden border-b border-[var(--theme-border)]">
+        <div className="content-container py-3 flex items-center justify-between gap-3">
           <FilterDrawer
             collections={collections}
             categories={categories}
@@ -54,24 +76,35 @@ const StoreTemplate = async ({
             selectedCollection={collectionId}
             selectedCategory={categoryId}
           />
-
-          <div className="hidden small:block">
-            <RefinementList sortBy={sort} />
-          </div>
         </div>
       </div>
 
-      {/* Product grid */}
-      <div className="content-container py-10" data-testid="category-container">
-        <Suspense fallback={<SkeletonProductGrid />}>
-          <PaginatedProducts
+      {/* Mobile categories — horizontally scrollable */}
+      <CategoryPills categories={categories} selectedCategory={categoryId} />
+
+      {/* Two-column shop layout */}
+      <div className="content-container py-10 small:py-14">
+        <div className="flex gap-10 small:gap-14" data-testid="category-container">
+          <StoreSidebar
+            collections={collections}
+            categories={categories}
             sortBy={sort}
-            page={pageNumber}
-            countryCode={countryCode}
-            collectionId={collectionId}
-            categoryId={categoryId}
+            selectedCollection={collectionId}
+            selectedCategory={categoryId}
           />
-        </Suspense>
+
+          <div className="flex-1 min-w-0">
+            <Suspense fallback={<SkeletonProductGrid />}>
+              <PaginatedProducts
+                sortBy={sort}
+                page={pageNumber}
+                countryCode={countryCode}
+                collectionId={collectionId}
+                categoryId={categoryId}
+              />
+            </Suspense>
+          </div>
+        </div>
       </div>
     </div>
   )

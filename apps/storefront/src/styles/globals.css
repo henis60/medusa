@@ -134,6 +134,12 @@
     @apply max-w-[1440px] w-full mx-auto px-6;
   }
 
+  /* Shared shell for all pages except the landing + store.
+     Narrower and tighter than .content-container for a more contained feel. */
+  .page-container {
+    @apply max-w-[1200px] w-full mx-auto px-6;
+  }
+
   .contrast-btn {
     @apply px-4 py-2 border border-black rounded-full hover:bg-black hover:text-white transition-colors duration-200 ease-in;
   }

@@ -12,8 +12,8 @@ const CartTemplate = ({
   customer: HttpTypes.StoreCustomer | null
 }) => {
   return (
-    <div className="min-h-[60dvh] pt-3 pb-6 small:pt-12 small:pb-12">
-      <div className="content-container" data-testid="cart-container">
+    <div className="min-h-[60dvh] pt-3 pb-6 small:pt-10 small:pb-10">
+      <div className="page-container" data-testid="cart-container">
         {cart?.items?.length ? (
           <>
             <div className="mb-5 small:mb-10 border-b border-[var(--theme-border)] pb-4 small:pb-6">

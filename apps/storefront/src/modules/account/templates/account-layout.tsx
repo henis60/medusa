@@ -11,8 +11,8 @@ interface AccountLayoutProps {
 
 const AccountLayout: React.FC<AccountLayoutProps> = ({ customer, children }) => {
   return (
-    <div className="flex-1 py-6 sm:py-16" data-testid="account-page">
-      <div className="content-container">
+    <div className="flex-1 py-6 sm:py-10" data-testid="account-page">
+      <div className="page-container">
         {customer && (
           <div className="mb-6 sm:mb-10">
             <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-2">

@@ -4,7 +4,7 @@ import ProductPreview from "@modules/products/components/product-preview"
 import { Pagination } from "@modules/store/components/pagination"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
-const PRODUCT_LIMIT = 12
+const PRODUCT_LIMIT = 3
 
 type PaginatedProductsParams = {
   limit: number
@@ -30,7 +30,7 @@ export default async function PaginatedProducts({
   countryCode: string
 }) {
   const queryParams: PaginatedProductsParams = {
-    limit: 12,
+    limit: PRODUCT_LIMIT,
   }
 
   if (collectionId) {
@@ -72,7 +72,7 @@ export default async function PaginatedProducts({
         <p className="font-sans text-[10px] uppercase tracking-[5px] text-[var(--theme-text-muted)]">
           Niciun produs găsit
         </p>
-        <p className="font-sans text-sm text-[var(--theme-text-muted)] max-w-xs">
+        <p className="font-serif text-lg text-[var(--theme-text-muted)] max-w-xs">
           Combinația de filtre selectată nu returnează rezultate.
         </p>
         <a
@@ -88,7 +88,7 @@ export default async function PaginatedProducts({
   return (
     <>
       <ul
-        className="grid grid-cols-2 w-full small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-10 small:gap-x-8 small:gap-y-16"
+        className="grid grid-cols-2 w-full small:grid-cols-2 medium:grid-cols-3 gap-x-6 gap-y-10 small:gap-x-8 small:gap-y-16"
         data-testid="products-list"
       >
         {products.map((p) => {

@@ -1,16 +1,18 @@
+import React from "react"
 import { HttpTypes } from "@medusajs/types"
 import { Heading, Text } from "@modules/common/components/ui"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 type ProductInfoProps = {
   product: HttpTypes.StoreProduct
+  action?: React.ReactNode
 }
 
-const ProductInfo = ({ product }: ProductInfoProps) => {
+const ProductInfo = ({ product, action }: ProductInfoProps) => {
   return (
     <div id="product-info" className="flex flex-col gap-y-4">
-      {(product.collection || product.categories?.length) && (
-        <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 flex-wrap min-w-0">
           {product.collection && (
             <LocalizedClientLink
               href={`/collections/${product.collection.handle}`}
@@ -19,9 +21,9 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
               {product.collection.title}
             </LocalizedClientLink>
           )}
-          {product.collection && product.categories?.length && (
+          {product.collection && product.categories?.length ? (
             <span className="text-[var(--theme-border)] text-[9px]">/</span>
-          )}
+          ) : null}
           {product.categories?.map((cat) => (
             <LocalizedClientLink
               key={cat.id}
@@ -32,7 +34,8 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
             </LocalizedClientLink>
           ))}
         </div>
-      )}
+        {action && <div className="shrink-0">{action}</div>}
+      </div>
       <Heading
         level="h2"
         className="font-display text-4xl leading-tight text-[var(--theme-text)]"

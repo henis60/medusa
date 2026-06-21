@@ -23,7 +23,7 @@ export default async function OrderCompletedTemplate({
   return (
     <div className="min-h-[calc(100vh-64px)] bg-[var(--theme-bg)]">
       {/* Back link */}
-      <div className="content-container pt-4 pb-0">
+      <div className="page-container pt-4 pb-0">
         <LocalizedClientLink
           href="/store"
           className="inline-flex items-center gap-2 text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors font-sans text-[11px] uppercase tracking-[3px]"
@@ -33,7 +33,7 @@ export default async function OrderCompletedTemplate({
         </LocalizedClientLink>
       </div>
 
-      <div className="content-container max-w-3xl py-12 flex flex-col gap-0" data-testid="order-complete-container">
+      <div className="page-container max-w-3xl py-10 flex flex-col gap-0" data-testid="order-complete-container">
         {isOnboarding && <OnboardingCta orderId={order.id} />}
 
         {/* Header */}
