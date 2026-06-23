@@ -7,8 +7,7 @@ import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Image from "next/image"
 import { useState } from "react"
-
-const COLOR_OPTION_NAMES = ["color", "colour", "culoare"]
+import { COLOR_OPTION_NAMES } from "@lib/util/product"
 
 function getVariantImageUrl(item: HttpTypes.StoreCartLineItem): string | null {
   const variant = item.variant as any

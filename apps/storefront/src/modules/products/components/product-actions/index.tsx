@@ -12,7 +12,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import ProductPrice from "../product-price"
 import MobileActions from "./mobile-actions"
 import { useRouter } from "next/navigation"
-import { isInStoreOnly } from "@lib/util/product"
+import { isInStoreOnly, COLOR_OPTION_NAMES as COLOR_TITLES } from "@lib/util/product"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -57,12 +57,17 @@ export default function ProductActions({
     })
   }, [product.variants, options])
 
-  const COLOR_TITLES = ["color", "colour", "culoare"]
   const isColorOpt = (optId: string) =>
     COLOR_TITLES.includes(product.options?.find((o) => o.id === optId)?.title?.toLowerCase() ?? "")
 
   const variantMap = (v: HttpTypes.StoreProductVariant) =>
     v.options?.reduce((acc, o) => { if (o.option_id) acc[o.option_id] = o.value; return acc }, {} as Record<string, string>) ?? {}
+
+  const variantInStock = (v: HttpTypes.StoreProductVariant) => {
+    if (!v.manage_inventory) return true
+    if (v.allow_backorder) return true
+    return (v.inventory_quantity || 0) > 0
+  }
 
   // update the options when a variant is selected
   const setOptionValue = (optionId: string, value: string) => {
@@ -138,6 +143,18 @@ export default function ProductActions({
     return false
   }, [selectedVariant])
 
+  // check if the whole product is out of stock (no purchasable variant)
+  const productOutOfStock = useMemo(() => {
+    if (!product.variants || product.variants.length === 0) {
+      return false
+    }
+    return !product.variants.some((v) => {
+      if (!v.manage_inventory) return true
+      if (v.allow_backorder) return true
+      return (v.inventory_quantity || 0) > 0
+    })
+  }, [product.variants])
+
   const getDisabledValues = (optionId: string): Set<string> => {
     const allValues = product.options?.find((o) => o.id === optionId)?.values?.map((v) => v.value ?? "") ?? []
     if (isColorOpt(optionId)) {
@@ -147,13 +164,19 @@ export default function ProductActions({
       )
       return new Set(allValues.filter((v) => !available.has(v)))
     }
-    // Size: disable if no variant matches selected color(s)
+    // Size: mark as unavailable if no matching variant exists OR it's out of stock
     const others = Object.entries(options).filter(([id, val]) => id !== optionId && !!val) as [string, string][]
     if (others.length === 0) return new Set()
     const available = new Set<string>()
     product.variants?.forEach((v) => {
       const map = variantMap(v)
-      if (others.every(([id, val]) => map[id] === val) && map[optionId]) available.add(map[optionId])
+      if (
+        others.every(([id, val]) => map[id] === val) &&
+        map[optionId] &&
+        variantInStock(v)
+      ) {
+        available.add(map[optionId])
+      }
     })
     return new Set(allValues.filter((v) => !available.has(v)))
   }
@@ -184,6 +207,27 @@ export default function ProductActions({
         <div>
           {(product.variants?.length ?? 0) > 1 && (
             <div className="flex flex-col gap-y-4">
+              {product.material && (
+                <div className="flex flex-col gap-y-3" data-testid="product-material">
+                  <span className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
+                    Material
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {product.material.split(",").map((m) => {
+                      const value = m.trim()
+                      if (!value) return null
+                      return (
+                        <span
+                          key={value}
+                          className="inline-flex items-center justify-center h-8 px-3 bg-[var(--theme-surface)] font-serif text-sm text-[var(--theme-text)] cursor-default select-none"
+                        >
+                          {value}
+                        </span>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
               {(product.options || []).map((option) => {
                 return (
                   <div key={option.id}>
@@ -195,6 +239,7 @@ export default function ProductActions({
                       data-testid="product-options"
                       disabled={!!disabled || isAdding}
                       disabledValues={getDisabledValues(option.id)}
+                      variants={product.variants}
                     />
                   </div>
                 )
@@ -226,11 +271,13 @@ export default function ProductActions({
             isLoading={isAdding}
             data-testid="add-product-button"
           >
-            {!selectedVariant && !options
-              ? "Select variant"
+            {productOutOfStock
+              ? "Indisponibil"
+              : !selectedVariant && !options
+              ? "Alege varianta"
               : !inStock || !isValidVariant
-              ? "Out of stock"
-              : "Add to cart"}
+              ? "Indisponibil"
+              : "Adaugă în coș"}
           </Button>
         )}
         </div>

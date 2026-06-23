@@ -13,52 +13,26 @@ type Props = {
   options?: HttpTypes.StoreProductOption[] | null
 }
 
-const COLOR_OPTION_NAMES = ["color", "colour", "culoare"]
-
 function getVariantFirstImageIndex(
   variantId: string | null,
   variants: HttpTypes.StoreProductVariant[] | null | undefined,
-  options: HttpTypes.StoreProductOption[] | null | undefined,
   allImages: HttpTypes.StoreProductImage[],
 ): number {
   if (!variantId || !variants || !allImages.length) return 0
 
   const variant = variants.find((v) => v.id === variantId)
-  if (!variant) return 0
+  if (!variant?.images?.length) return 0
 
-  // If variant has explicit images, find the first one in allImages
-  if (variant.images?.length) {
-    const firstUrl = (variant.images[0] as HttpTypes.StoreProductImage).url
-    const idx = allImages.findIndex((img) => img.url === firstUrl)
-    return idx >= 0 ? idx : 0
-  }
-
-  // Fallback: use color option index to pick the image
-  const colorOption = options?.find((o) =>
-    COLOR_OPTION_NAMES.includes(o.title?.toLowerCase() ?? "")
-  )
-  if (!colorOption) return 0
-
-  const colorValues = [
-    ...new Set(
-      variants
-        .map((v) => v.options?.find((o) => o.option_id === colorOption.id)?.value)
-        .filter(Boolean) as string[]
-    ),
-  ]
-  const variantColorValue = variant.options?.find(
-    (o) => o.option_id === colorOption.id
-  )?.value
-  const colorIndex = variantColorValue ? colorValues.indexOf(variantColorValue) : -1
-
-  return colorIndex >= 0 && colorIndex < allImages.length ? colorIndex : 0
+  // Jump to the variant's first image; if not found, stay on image 0.
+  const firstUrl = (variant.images[0] as HttpTypes.StoreProductImage).url
+  const idx = allImages.findIndex((img) => img.url === firstUrl)
+  return idx >= 0 ? idx : 0
 }
 
 export default function VariantAwareGallery({
   defaultImages,
   allImages,
   variants,
-  options,
 }: Props) {
   const searchParams = useSearchParams()
   const variantId = searchParams.get("v_id")
@@ -71,9 +45,9 @@ export default function VariantAwareGallery({
 
   // Jump to variant's first image when variant changes
   useEffect(() => {
-    const idx = getVariantFirstImageIndex(variantId, variants, options, images)
+    const idx = getVariantFirstImageIndex(variantId, variants, images)
     setSelectedIndex(idx)
-  }, [variantId])
+  }, [variantId, variants, images])
 
   const selected = images[selectedIndex] ?? images[0]
   const count = images.length
@@ -121,7 +95,7 @@ export default function VariantAwareGallery({
                   src={resolveImageUrl(img.url)!}
                   alt={`Product image ${i + 1}`}
                   fill
-                  className="object-cover object-center"
+                  className="object-contain object-center"
                   sizes="64px"
                 />
               )}
@@ -146,7 +120,7 @@ export default function VariantAwareGallery({
               fill
               priority
               draggable={false}
-              className="object-cover object-center transition-opacity duration-300 pointer-events-none"
+              className="object-contain object-center transition-opacity duration-300 pointer-events-none"
               sizes="(max-width: 1024px) 100vw, 55vw"
             />
           )}

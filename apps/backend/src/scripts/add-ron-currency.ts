@@ -94,7 +94,8 @@ export default async function ({ container }: { container: MedusaContainer }) {
         .map((c: any) => c.iso_2)
       await updateRegionsWorkflow(container).run({
         input: {
-          regions: [{ id: regionWithRo.id, countries: remainingCountries }],
+          selector: { id: regionWithRo.id },
+          update: { countries: remainingCountries },
         },
       })
       logger.info(`Removed "ro" from region "${regionWithRo.name}".`)
@@ -103,7 +104,8 @@ export default async function ({ container }: { container: MedusaContainer }) {
     const currentRoCountries = ((ronRegion as any).countries ?? []).map((c: any) => c.iso_2)
     await updateRegionsWorkflow(container).run({
       input: {
-        regions: [{ id: regionId, countries: [...currentRoCountries, "ro"] }],
+        selector: { id: regionId },
+        update: { countries: [...currentRoCountries, "ro"] },
       },
     })
     logger.info(`"ro" assigned to Romania/RON region.`)

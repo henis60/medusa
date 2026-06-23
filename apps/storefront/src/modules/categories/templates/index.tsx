@@ -36,7 +36,7 @@ export default function CategoryTemplate({
   return (
     <div className="bg-[var(--theme-bg)] w-full min-h-screen">
       {/* Editorial header */}
-      <div className="content-container pt-16 pb-10">
+      <div className="page-container pt-6 pb-5">
         {parents.length > 0 && (
           <div className="flex items-center gap-2 mb-4">
             {[...parents].reverse().map((parent, i) => (
@@ -57,7 +57,7 @@ export default function CategoryTemplate({
         </p>
         <h1
           data-testid="category-page-title"
-          className="font-display text-5xl small:text-7xl text-[var(--theme-text)] leading-[1.0]"
+          className="font-display text-4xl small:text-6xl text-[var(--theme-text)] leading-[1.0]"
         >
           {category.name.split(" ").slice(0, -1).join(" ")}{" "}
           <span className="italic text-hunter-gold">
@@ -73,14 +73,14 @@ export default function CategoryTemplate({
 
       {/* Sort bar */}
       <div className="border-y border-[var(--theme-border)]">
-        <div className="content-container py-3 flex items-center justify-end">
+        <div className="page-container py-3 flex items-center justify-end">
           <RefinementList sortBy={sort} />
         </div>
       </div>
 
       {/* Subcategories */}
       {category.category_children && category.category_children.length > 0 && (
-        <div className="content-container pt-8">
+        <div className="page-container pt-8">
           <div className="flex flex-wrap gap-3">
             {category.category_children.map((c) => (
               <LocalizedClientLink
@@ -96,7 +96,7 @@ export default function CategoryTemplate({
       )}
 
       {/* Product grid */}
-      <div className="content-container py-14" data-testid="category-container">
+      <div className="page-container py-10" data-testid="category-container">
         <Suspense
           fallback={
             <SkeletonProductGrid numberOfProducts={category.products?.length ?? 8} />

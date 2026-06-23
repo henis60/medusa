@@ -14,8 +14,7 @@ import Image from "next/image"
 import { deleteLineItem, updateLineItem } from "@lib/data/cart"
 import { Fragment, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-
-const COLOR_OPTION_NAMES = ["color", "colour", "culoare"]
+import { COLOR_OPTION_NAMES } from "@lib/util/product"
 
 function getVariantImageUrl(item: HttpTypes.StoreCartLineItem): string | null {
   const variant = item.variant as any

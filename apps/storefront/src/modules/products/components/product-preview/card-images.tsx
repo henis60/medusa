@@ -35,7 +35,7 @@ export default function CardImages({ product, isFeatured, noOverlay, activeImage
             alt={product.title ?? ""}
             fill
             sizes="(max-width: 1024px) 50vw, 25vw"
-            className={`object-cover object-center transition-all duration-700 ease-out ${showHover ? "group-hover:opacity-0" : activeImage ? "" : "group-hover:scale-[1.04]"}`}
+            className={`object-contain object-center transition-all duration-700 ease-out ${showHover ? "group-hover:opacity-0" : activeImage ? "" : "group-hover:scale-[1.04]"}`}
             priority={isFeatured}
           />
         )}
@@ -46,7 +46,7 @@ export default function CardImages({ product, isFeatured, noOverlay, activeImage
             alt={product.title ?? ""}
             fill
             sizes="(max-width: 1024px) 50vw, 25vw"
-            className="object-cover object-center opacity-0 transition-opacity duration-700 group-hover:opacity-100"
+            className="object-contain object-center opacity-0 transition-opacity duration-700 group-hover:opacity-100"
           />
         )}
 
@@ -57,7 +57,7 @@ export default function CardImages({ product, isFeatured, noOverlay, activeImage
             alt={product.title ?? ""}
             fill
             sizes="(max-width: 1024px) 50vw, 25vw"
-            className="object-cover object-center transition-opacity duration-500 ease-out opacity-0"
+            className="object-contain object-center transition-opacity duration-500 ease-out opacity-0"
             onLoad={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = "1" }}
           />
         )}

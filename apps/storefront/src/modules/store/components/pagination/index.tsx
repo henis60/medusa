@@ -25,25 +25,33 @@ export function Pagination({
     router.push(`${pathname}?${params.toString()}`)
   }
 
-  const renderPageButton = (p: number, label: string | number, isCurrent: boolean) => (
+  const renderPageButton = (
+    p: number,
+    label: string | number,
+    isCurrent: boolean
+  ) => (
     <button
       key={p}
+      aria-current={isCurrent ? "page" : undefined}
       className={clx(
-        "txt-xlarge-plus transition-colors",
+        "font-sans text-[11px] tracking-[2px] tabular-nums pb-1 border-b transition-colors",
         isCurrent
-          ? "text-[var(--theme-text)] font-semibold"
-          : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
+          ? "text-[var(--theme-text)] border-hunter-gold"
+          : "text-[var(--theme-text-muted)] border-transparent hover:text-[var(--theme-text)]"
       )}
       disabled={isCurrent}
       onClick={() => handlePageChange(p)}
     >
-      {label}
+      {String(label).padStart(2, "0")}
     </button>
   )
 
   const renderEllipsis = (key: string) => (
-    <span key={key} className="txt-xlarge-plus text-[var(--theme-text-muted)] items-center cursor-default">
-      ...
+    <span
+      key={key}
+      className="font-sans text-[11px] text-[var(--theme-text-muted)] select-none cursor-default pb-1"
+    >
+      —
     </span>
   )
 
@@ -51,20 +59,34 @@ export function Pagination({
     const buttons = []
 
     if (totalPages <= 7) {
-      buttons.push(...arrayRange(1, totalPages).map((p) => renderPageButton(p, p, p === page)))
+      buttons.push(
+        ...arrayRange(1, totalPages).map((p) =>
+          renderPageButton(p, p, p === page)
+        )
+      )
     } else {
       if (page <= 4) {
-        buttons.push(...arrayRange(1, 5).map((p) => renderPageButton(p, p, p === page)))
+        buttons.push(
+          ...arrayRange(1, 5).map((p) => renderPageButton(p, p, p === page))
+        )
         buttons.push(renderEllipsis("ellipsis1"))
         buttons.push(renderPageButton(totalPages, totalPages, totalPages === page))
       } else if (page >= totalPages - 3) {
         buttons.push(renderPageButton(1, 1, 1 === page))
         buttons.push(renderEllipsis("ellipsis2"))
-        buttons.push(...arrayRange(totalPages - 4, totalPages).map((p) => renderPageButton(p, p, p === page)))
+        buttons.push(
+          ...arrayRange(totalPages - 4, totalPages).map((p) =>
+            renderPageButton(p, p, p === page)
+          )
+        )
       } else {
         buttons.push(renderPageButton(1, 1, 1 === page))
         buttons.push(renderEllipsis("ellipsis3"))
-        buttons.push(...arrayRange(page - 1, page + 1).map((p) => renderPageButton(p, p, p === page)))
+        buttons.push(
+          ...arrayRange(page - 1, page + 1).map((p) =>
+            renderPageButton(p, p, p === page)
+          )
+        )
         buttons.push(renderEllipsis("ellipsis4"))
         buttons.push(renderPageButton(totalPages, totalPages, totalPages === page))
       }
@@ -73,9 +95,39 @@ export function Pagination({
     return buttons
   }
 
+  const arrowClass = (disabled: boolean) =>
+    clx(
+      "inline-flex items-center gap-2 font-sans text-[10px] uppercase tracking-[3px] transition-colors",
+      disabled
+        ? "text-[var(--theme-border)] cursor-not-allowed"
+        : "text-[var(--theme-text-muted)] hover:text-hunter-gold"
+    )
+
   return (
-    <div className="flex justify-center w-full mt-12">
-      <div className="flex gap-3 items-end" data-testid={dataTestid}>{renderPageButtons()}</div>
-    </div>
+    <nav
+      className="flex items-center justify-between gap-6 w-full mt-16 pt-8 border-t border-[var(--theme-border)]"
+      data-testid={dataTestid}
+      aria-label="Paginare"
+    >
+      <button
+        onClick={() => handlePageChange(page - 1)}
+        disabled={page <= 1}
+        className={arrowClass(page <= 1)}
+      >
+        <span aria-hidden>←</span>
+        <span className="hidden small:inline">Anterior</span>
+      </button>
+
+      <div className="flex items-end gap-5">{renderPageButtons()}</div>
+
+      <button
+        onClick={() => handlePageChange(page + 1)}
+        disabled={page >= totalPages}
+        className={arrowClass(page >= totalPages)}
+      >
+        <span className="hidden small:inline">Următor</span>
+        <span aria-hidden>→</span>
+      </button>
+    </nav>
   )
 }

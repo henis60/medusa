@@ -20,6 +20,7 @@ type ProductTemplateProps = {
   region: HttpTypes.StoreRegion
   countryCode: string
   images: HttpTypes.StoreProductImage[]
+  previewFallback?: boolean
 }
 
 const ProductTemplate: React.FC<ProductTemplateProps> = ({
@@ -27,6 +28,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
   region,
   countryCode,
   images,
+  previewFallback = false,
 }) => {
   if (!product || !product.id) {
     return notFound()
@@ -35,7 +37,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
   return (
     <div className="bg-[var(--theme-bg)] min-h-screen">
       {/* Back to shop */}
-      <div className="content-container pt-3 small:pt-6 pb-0">
+      <div className="page-container pt-3 small:pt-6 pb-0">
         <LocalizedClientLink
           href="/store"
           className="inline-flex items-center gap-2 text-[var(--theme-text-muted)] hover:text-[var(--theme-gold)] transition-colors font-sans text-[11px] uppercase tracking-[3px]"
@@ -47,7 +49,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
 
       {/* Main product section */}
       <div
-        className="content-container grid grid-cols-1 small:grid-cols-[1fr_400px] gap-x-16 py-8 small:pb-12 pt-2 small:pt-8 small:max-w-5xl"
+        className="page-container grid grid-cols-1 small:grid-cols-[1fr_400px] gap-x-16 py-8 small:pb-12 pt-2 small:pt-8 small:max-w-5xl"
         data-testid="product-container"
       >
         {/* Images — left, scrolls with page */}
@@ -65,17 +67,17 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
         {/* Info + actions — right, sticky */}
         <div className="flex flex-col gap-y-6 small:sticky small:top-24 small:self-start py-4 small:py-0">
           <ProductOnboardingCta />
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <ProductInfo product={product} />
-            </div>
-            <ProductFavoriteButton
-              productId={product.id}
-              productHandle={product.handle ?? ""}
-              productTitle={product.title ?? ""}
-              productThumbnail={product.thumbnail ?? null}
-            />
-          </div>
+          <ProductInfo
+            product={product}
+            action={
+              <ProductFavoriteButton
+                productId={product.id}
+                productHandle={product.handle ?? ""}
+                productTitle={product.title ?? ""}
+                productThumbnail={product.thumbnail ?? null}
+              />
+            }
+          />
           <Suspense
             fallback={
               <ProductActions
@@ -85,7 +87,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
               />
             }
           >
-            <ProductActionsWrapper id={product.id} region={region} />
+            <ProductActionsWrapper id={product.id} region={region} fallbackProduct={previewFallback ? product : undefined} />
           </Suspense>
           <ProductTabs product={product} />
         </div>

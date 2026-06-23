@@ -27,7 +27,7 @@ export default function CollectionTemplate({
   return (
     <div className="bg-[var(--theme-bg)] w-full min-h-screen">
       {/* Header */}
-      <div className="content-container pt-5 small:pt-10 pb-6">
+      <div className="page-container pt-6 pb-5">
         <h1
           data-testid="collection-page-title"
           className="font-display text-4xl small:text-5xl text-[var(--theme-text)] leading-none"
@@ -39,14 +39,14 @@ export default function CollectionTemplate({
 
       {/* Sort bar */}
       <div className="border-y border-[var(--theme-border)]">
-        <div className="content-container py-2.5 flex items-center justify-end">
+        <div className="page-container py-3 flex items-center justify-end">
           <RefinementList sortBy={sort} />
         </div>
       </div>
 
       {/* Product grid */}
       <div
-        className="content-container py-10"
+        className="page-container py-10"
         data-testid="collection-container"
       >
         <Suspense
