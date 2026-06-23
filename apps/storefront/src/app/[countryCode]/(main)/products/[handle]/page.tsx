@@ -2,8 +2,8 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { listProducts } from "@lib/data/products"
 import { getRegion, listRegions } from "@lib/data/regions"
+import { getImagesForVariant } from "@lib/util/product"
 import ProductTemplate from "@modules/products/templates"
-import { HttpTypes } from "@medusajs/types"
 
 type Props = {
   params: Promise<{ countryCode: string; handle: string }>
@@ -50,23 +50,6 @@ export async function generateStaticParams() {
     )
     return []
   }
-}
-
-function getImagesForVariant(
-  product: HttpTypes.StoreProduct,
-  selectedVariantId?: string
-) {
-  if (!selectedVariantId || !product.variants) {
-    return product.images
-  }
-
-  const variant = product.variants!.find((v) => v.id === selectedVariantId)
-  if (!variant || !variant.images?.length) {
-    return product.images
-  }
-
-  const imageIdsMap = new Map(variant.images!.map((i) => [i.id, true]))
-  return product.images?.filter((i) => imageIdsMap.has(i.id)) ?? null
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {

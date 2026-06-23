@@ -4,9 +4,9 @@ import { addToCart } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { useParams } from "next/navigation"
 import { useState, useMemo } from "react"
+import { COLOR_OPTION_NAMES as COLOR_TITLES } from "@lib/util/product"
 
 const SIZE_ORDER = ["2XS","XS","S","M","L","XL","2XL","XXL","3XL","XXXL","4XL","5XL","6XL","7XL","8XL","9XL","10XL","44","46","48","50","52","54","56","58","60","62","64","66","68","70","72","74","76","78","80","82","84","86","88","90","92","94","96","98","100","102","104","106","108","110"]
-const COLOR_TITLES = ["color", "colour", "culoare"]
 
 const sortOptionValues = (values: HttpTypes.StoreProductOptionValue[]) =>
   [...values].sort((a, b) => {

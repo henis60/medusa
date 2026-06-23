@@ -5,6 +5,7 @@ import { HttpTypes } from "@medusajs/types"
 import { useParams } from "next/navigation"
 import { useState, useMemo, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
+import { COLOR_OPTION_NAMES as COLOR_TITLES } from "@lib/util/product"
 
 const COLOR_MAP: Record<string, string> = {
   black: "#1a1a1a",
@@ -172,7 +173,6 @@ export default function QuickAddOverlay({
     setMobileOpen(false)
   }
 
-  const COLOR_TITLES = ["color", "colour", "culoare"]
   const vmap = (v: HttpTypes.StoreProductVariant) =>
     v.options?.reduce((acc, o) => {
       if (o.option_id) acc[o.option_id] = o.value

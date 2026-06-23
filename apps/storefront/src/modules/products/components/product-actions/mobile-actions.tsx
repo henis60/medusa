@@ -3,7 +3,7 @@
 import { HttpTypes } from "@medusajs/types"
 import { clx } from "@modules/common/components/ui"
 import { getProductPrice } from "@lib/util/get-product-price"
-import { isSimpleProduct, isInStoreOnly } from "@lib/util/product"
+import { isSimpleProduct, isInStoreOnly, COLOR_OPTION_NAMES as COLOR_TITLES } from "@lib/util/product"
 import { Button } from "@modules/common/components/ui"
 import OptionSelect from "./option-select"
 import { useMemo, useEffect, useRef, useState } from "react"
@@ -72,7 +72,6 @@ const MobileActions: React.FC<MobileActionsProps> = ({
     return price.variantPrice || price.cheapestPrice || null
   }, [price])
 
-  const COLOR_TITLES = ["color", "colour", "culoare"]
   const isColorOpt = (optId: string) =>
     COLOR_TITLES.includes(product.options?.find((o) => o.id === optId)?.title?.toLowerCase() ?? "")
   const vmap = (v: HttpTypes.StoreProductVariant) =>
@@ -120,7 +119,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
               isLoading={isAdding}
               className="!bg-hunter-gold !text-hunter-dark !border-transparent font-sans uppercase tracking-[3px] text-[11px] px-6 py-3 rounded-none"
             >
-              {!inStock ? "Out of stock" : "Add to cart"}
+              {!inStock ? "Indisponibil" : "Adaugă în coș"}
             </Button>
           ) : (
             <button
@@ -188,6 +187,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                     title={option.title ?? ""}
                     disabled={optionsDisabled}
                     disabledValues={getDisabledValues(option.id)}
+                    variants={product.variants}
                   />
                 </div>
               ))}

@@ -12,11 +12,13 @@ export const listProducts = async ({
   queryParams,
   countryCode,
   regionId,
+  includeProposed = false,
 }: {
   pageParam?: number
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductListParams
   countryCode?: string
   regionId?: string
+  includeProposed?: boolean
 }): Promise<{
   response: { products: HttpTypes.StoreProduct[]; count: number }
   nextPage: number | null
@@ -73,7 +75,11 @@ export const listProducts = async ({
     )
     .then(({ products, count }) => {
       const nextPage = count > offset + limit ? pageParam + 1 : null
-      const published = products.filter((p) => (p as any).status !== "draft")
+      const published = products.filter((p) => {
+        const status = (p as any).status
+        if (includeProposed) return !["draft"].includes(status)
+        return !["draft", "proposed"].includes(status)
+      })
 
       return {
         response: {

@@ -4,10 +4,8 @@ import { HttpTypes } from "@medusajs/types"
 import { useState, useCallback } from "react"
 import CardImages from "./card-images"
 import DesktopQuickAdd from "./desktop-quick-add"
-import { isInStoreOnly } from "@lib/util/product"
+import { isInStoreOnly, COLOR_OPTION_NAMES } from "@lib/util/product"
 import { resolveImageUrl } from "@lib/util/image-url"
-
-const COLOR_OPTION_NAMES = ["color", "colour", "culoare"]
 
 function getVariantImage(
   variant: HttpTypes.StoreProductVariant,

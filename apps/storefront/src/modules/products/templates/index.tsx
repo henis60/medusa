@@ -20,6 +20,7 @@ type ProductTemplateProps = {
   region: HttpTypes.StoreRegion
   countryCode: string
   images: HttpTypes.StoreProductImage[]
+  previewFallback?: boolean
 }
 
 const ProductTemplate: React.FC<ProductTemplateProps> = ({
@@ -27,6 +28,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
   region,
   countryCode,
   images,
+  previewFallback = false,
 }) => {
   if (!product || !product.id) {
     return notFound()
@@ -85,7 +87,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
               />
             }
           >
-            <ProductActionsWrapper id={product.id} region={region} />
+            <ProductActionsWrapper id={product.id} region={region} fallbackProduct={previewFallback ? product : undefined} />
           </Suspense>
           <ProductTabs product={product} />
         </div>
