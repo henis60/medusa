@@ -387,7 +387,7 @@ export default async function initial_data_seed({
               prices: [
                 { amount: 189000, currency_code: "eur" },
                 { amount: 209000, currency_code: "usd" },
-                { amount: 940000, currency_code: "ron" },
+                { amount: 940000, currency_code: "ron", includes_tax: true },
               ],
             },
             {
@@ -397,7 +397,7 @@ export default async function initial_data_seed({
               prices: [
                 { amount: 189000, currency_code: "eur" },
                 { amount: 209000, currency_code: "usd" },
-                { amount: 940000, currency_code: "ron" },
+                { amount: 940000, currency_code: "ron", includes_tax: true },
               ],
             },
             {
@@ -407,7 +407,7 @@ export default async function initial_data_seed({
               prices: [
                 { amount: 189000, currency_code: "eur" },
                 { amount: 209000, currency_code: "usd" },
-                { amount: 940000, currency_code: "ron" },
+                { amount: 940000, currency_code: "ron", includes_tax: true },
               ],
             },
             {
@@ -417,7 +417,7 @@ export default async function initial_data_seed({
               prices: [
                 { amount: 189000, currency_code: "eur" },
                 { amount: 209000, currency_code: "usd" },
-                { amount: 940000, currency_code: "ron" },
+                { amount: 940000, currency_code: "ron", includes_tax: true },
               ],
             },
             {
@@ -427,7 +427,7 @@ export default async function initial_data_seed({
               prices: [
                 { amount: 189000, currency_code: "eur" },
                 { amount: 209000, currency_code: "usd" },
-                { amount: 940000, currency_code: "ron" },
+                { amount: 940000, currency_code: "ron", includes_tax: true },
               ],
             },
           ],
@@ -462,7 +462,7 @@ export default async function initial_data_seed({
               prices: [
                 { amount: 129000, currency_code: "eur" },
                 { amount: 145000, currency_code: "usd" },
-                { amount: 645000, currency_code: "ron" },
+                { amount: 645000, currency_code: "ron", includes_tax: true },
               ],
             },
             {
@@ -472,7 +472,7 @@ export default async function initial_data_seed({
               prices: [
                 { amount: 129000, currency_code: "eur" },
                 { amount: 145000, currency_code: "usd" },
-                { amount: 645000, currency_code: "ron" },
+                { amount: 645000, currency_code: "ron", includes_tax: true },
               ],
             },
             {
@@ -482,7 +482,7 @@ export default async function initial_data_seed({
               prices: [
                 { amount: 129000, currency_code: "eur" },
                 { amount: 145000, currency_code: "usd" },
-                { amount: 645000, currency_code: "ron" },
+                { amount: 645000, currency_code: "ron", includes_tax: true },
               ],
             },
             {
@@ -492,7 +492,7 @@ export default async function initial_data_seed({
               prices: [
                 { amount: 129000, currency_code: "eur" },
                 { amount: 145000, currency_code: "usd" },
-                { amount: 645000, currency_code: "ron" },
+                { amount: 645000, currency_code: "ron", includes_tax: true },
               ],
             },
             {
@@ -502,7 +502,7 @@ export default async function initial_data_seed({
               prices: [
                 { amount: 129000, currency_code: "eur" },
                 { amount: 145000, currency_code: "usd" },
-                { amount: 645000, currency_code: "ron" },
+                { amount: 645000, currency_code: "ron", includes_tax: true },
               ],
             },
           ],
@@ -537,7 +537,7 @@ export default async function initial_data_seed({
               prices: [
                 { amount: 229000, currency_code: "eur" },
                 { amount: 259000, currency_code: "usd" },
-                { amount: 1145000, currency_code: "ron" },
+                { amount: 1145000, currency_code: "ron", includes_tax: true },
               ],
             },
             {
@@ -547,7 +547,7 @@ export default async function initial_data_seed({
               prices: [
                 { amount: 229000, currency_code: "eur" },
                 { amount: 259000, currency_code: "usd" },
-                { amount: 1145000, currency_code: "ron" },
+                { amount: 1145000, currency_code: "ron", includes_tax: true },
               ],
             },
             {
@@ -557,7 +557,7 @@ export default async function initial_data_seed({
               prices: [
                 { amount: 229000, currency_code: "eur" },
                 { amount: 259000, currency_code: "usd" },
-                { amount: 1145000, currency_code: "ron" },
+                { amount: 1145000, currency_code: "ron", includes_tax: true },
               ],
             },
             {
@@ -567,7 +567,7 @@ export default async function initial_data_seed({
               prices: [
                 { amount: 229000, currency_code: "eur" },
                 { amount: 259000, currency_code: "usd" },
-                { amount: 1145000, currency_code: "ron" },
+                { amount: 1145000, currency_code: "ron", includes_tax: true },
               ],
             },
             {
@@ -577,7 +577,7 @@ export default async function initial_data_seed({
               prices: [
                 { amount: 229000, currency_code: "eur" },
                 { amount: 259000, currency_code: "usd" },
-                { amount: 1145000, currency_code: "ron" },
+                { amount: 1145000, currency_code: "ron", includes_tax: true },
               ],
             },
           ],
@@ -612,7 +612,7 @@ export default async function initial_data_seed({
               prices: [
                 { amount: 69000, currency_code: "eur" },
                 { amount: 79000, currency_code: "usd" },
-                { amount: 345000, currency_code: "ron" },
+                { amount: 345000, currency_code: "ron", includes_tax: true },
               ],
             },
             {
@@ -622,7 +622,7 @@ export default async function initial_data_seed({
               prices: [
                 { amount: 69000, currency_code: "eur" },
                 { amount: 79000, currency_code: "usd" },
-                { amount: 345000, currency_code: "ron" },
+                { amount: 345000, currency_code: "ron", includes_tax: true },
               ],
             },
             {
@@ -632,7 +632,7 @@ export default async function initial_data_seed({
               prices: [
                 { amount: 69000, currency_code: "eur" },
                 { amount: 79000, currency_code: "usd" },
-                { amount: 345000, currency_code: "ron" },
+                { amount: 345000, currency_code: "ron", includes_tax: true },
               ],
             },
             {
@@ -642,7 +642,7 @@ export default async function initial_data_seed({
               prices: [
                 { amount: 69000, currency_code: "eur" },
                 { amount: 79000, currency_code: "usd" },
-                { amount: 345000, currency_code: "ron" },
+                { amount: 345000, currency_code: "ron", includes_tax: true },
               ],
             },
             {
@@ -652,7 +652,7 @@ export default async function initial_data_seed({
               prices: [
                 { amount: 69000, currency_code: "eur" },
                 { amount: 79000, currency_code: "usd" },
-                { amount: 345000, currency_code: "ron" },
+                { amount: 345000, currency_code: "ron", includes_tax: true },
               ],
             },
           ],

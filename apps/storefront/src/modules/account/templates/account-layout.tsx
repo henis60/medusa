@@ -35,17 +35,17 @@ const AccountLayout: React.FC<AccountLayoutProps> = ({ customer, children }) => 
         <div className="flex flex-col small:flex-row items-start small:items-center justify-between border-t border-[var(--theme-border)] pt-10 mt-16 gap-6">
           <div>
             <p className="font-display text-[20px] leading-[1.1] text-[var(--theme-text)] mb-2">
-              Got questions?
+              Ai întrebări?
             </p>
             <p className="font-sans text-[12px] text-[var(--theme-text-muted)]">
-              Find answers on our customer service page.
+              Găsește răspunsuri pe pagina de întrebări frecvente.
             </p>
           </div>
           <LocalizedClientLink
-            href="/customer-service"
+            href="/faq"
             className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5"
           >
-            Customer Service
+            Întrebări frecvente
           </LocalizedClientLink>
         </div>
       </div>

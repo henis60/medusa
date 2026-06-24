@@ -217,7 +217,7 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
             data-testid="submit-delivery-option-button"
             className="w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {isLoading ? "Se procesează…" : "Continuă cu plata"}
+            {isLoading ? "Se procesează…" : "Continuă cu metoda de plată"}
           </button>
         </>
       ) : (

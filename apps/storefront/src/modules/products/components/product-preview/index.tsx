@@ -50,13 +50,32 @@ const COLOR_MAP: Record<string, string> = {
 
 function ColorSwatches({ product }: { product: HttpTypes.StoreProduct }) {
   const colorOption = product.options?.find((o) =>
-    ["color", "colour"].includes(o.title?.toLowerCase() ?? "")
+    ["color", "colour", "culoare"].includes(o.title?.toLowerCase() ?? "")
   )
   if (!colorOption?.values?.length) return null
 
+  // Find the hex stored per-variant (metadata.color_hex) for a given color value.
+  const hexFromVariants = (value?: string) => {
+    if (!value) return null
+    const variant = product.variants?.find((v) =>
+      v.options?.some(
+        (o) => o.option_id === colorOption.id && o.value === value
+      )
+    )
+    const hex = (variant?.metadata?.color_hex as string | undefined) ?? null
+    return hex && /^#?[0-9a-fA-F]{3,8}$/.test(hex)
+      ? hex.startsWith("#")
+        ? hex
+        : `#${hex}`
+      : null
+  }
+
   const colors = colorOption.values.map((v) => ({
     label: v.value,
-    hex: COLOR_MAP[v.value?.toLowerCase()] ?? "#c0b8b0",
+    hex:
+      hexFromVariants(v.value) ??
+      COLOR_MAP[v.value?.toLowerCase()] ??
+      "#c0b8b0",
   }))
 
   if (colors.length <= 1) return null

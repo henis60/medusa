@@ -49,6 +49,7 @@
   /* Light theme (default) */
   :root {
     --theme-bg: #ffffff;
+    --theme-chrome: #ffffff;
     --theme-surface: #f8f8f7;
     --theme-surface-raised: #eeede9;
     --theme-text: var(--walnut);
@@ -60,6 +61,7 @@
   /* Dark theme */
   .dark {
     --theme-bg: #1b3328;
+    --theme-chrome: #15281e;
     --theme-surface: #141410;
     --theme-surface-raised: #1e1e19;
     --theme-text: var(--ivory);

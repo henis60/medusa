@@ -45,7 +45,7 @@ const OrderSummary = ({ order }: OrderSummaryProps) => {
           <span className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
             Total
           </span>
-          <span className="font-display text-[24px] leading-none text-hunter-gold">
+          <span className="font-display text-[16px] leading-none text-hunter-gold">
             {fmt(order.total)}
           </span>
         </div>

@@ -15,7 +15,6 @@ import { clx } from "@modules/common/components/ui"
 import { Fragment, useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { useTheme } from "next-themes"
-import CountrySelect from "../country-select"
 import LanguageSelect from "../language-select"
 import { Locale } from "@lib/data/locales"
 
@@ -24,6 +23,7 @@ type SideMenuProps = {
   locales: Locale[] | null
   currentLocale: string | null
   collections?: HttpTypes.StoreCollection[]
+  categories?: HttpTypes.StoreProductCategory[]
 }
 
 type ScrollGuardProps = {
@@ -105,6 +105,9 @@ function ThemeToggle() {
   )
 }
 
+const subLinkClass =
+  "font-sans text-[12px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors py-1 block"
+
 function CollectionsMenuItem({
   collections,
   close,
@@ -112,39 +115,57 @@ function CollectionsMenuItem({
   collections: HttpTypes.StoreCollection[]
   close: () => void
 }) {
-  const [open, setOpen] = useState(false)
-
   return (
-    <li className="border-b border-[var(--theme-border)]">
-      <button
-        className="w-full flex items-center justify-between py-4 font-display text-[24px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] hover:text-hunter-gold transition-colors"
-        onClick={() => setOpen((v) => !v)}
+    <li>
+      <span className="block py-2.5 font-display text-[26px] leading-[1] tracking-[0.02em] text-[var(--theme-text)]">
+        Colecții
+      </span>
+      <ul className="flex flex-col gap-1 pl-3 pb-2">
+        {collections.map((c) => (
+          <li key={c.id}>
+            <LocalizedClientLink
+              href={`/collections/${c.handle}`}
+              className={subLinkClass}
+              onClick={close}
+            >
+              {c.title}
+            </LocalizedClientLink>
+          </li>
+        ))}
+      </ul>
+    </li>
+  )
+}
+
+function ShopMenuItem({
+  categories,
+  close,
+}: {
+  categories: HttpTypes.StoreProductCategory[]
+  close: () => void
+}) {
+  return (
+    <li>
+      <LocalizedClientLink
+        href="/store"
+        className="block py-2.5 font-display text-[26px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] hover:text-hunter-gold transition-colors"
+        onClick={close}
       >
-        <span>Colecții</span>
-        <span className="text-xl leading-none text-[var(--theme-text-muted)]">
-          {open ? "−" : "+"}
-        </span>
-      </button>
-      <div
-        className={clx(
-          "overflow-hidden transition-all duration-300",
-          open ? "max-h-60 mb-3" : "max-h-0"
-        )}
-      >
-        <ul className="flex flex-col gap-1 pl-3">
-          {collections.map((c) => (
-            <li key={c.id}>
-              <LocalizedClientLink
-                href={`/collections/${c.handle}`}
-                className="font-sans text-[11px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors py-1 block"
-                onClick={close}
-              >
-                {c.title}
-              </LocalizedClientLink>
-            </li>
-          ))}
-        </ul>
-      </div>
+        Shop
+      </LocalizedClientLink>
+      <ul className="flex flex-col gap-1 pl-3 pb-2">
+        {categories.map((c) => (
+          <li key={c.id}>
+            <LocalizedClientLink
+              href={`/categories/${c.handle}`}
+              className={subLinkClass}
+              onClick={close}
+            >
+              {c.name}
+            </LocalizedClientLink>
+          </li>
+        ))}
+      </ul>
     </li>
   )
 }
@@ -154,8 +175,8 @@ const SideMenu = ({
   locales,
   currentLocale,
   collections,
+  categories,
 }: SideMenuProps) => {
-  const countryToggleState = useToggleState()
   const languageToggleState = useToggleState()
   const [mounted, setMounted] = useState(false)
 
@@ -231,25 +252,33 @@ const SideMenu = ({
                           </div>
 
                           {/* Navigation */}
-                          <nav className="flex-1 px-8 pt-8 pb-6">
+                          <nav className="flex-1 px-8 pt-8 pb-6 flex flex-col">
+                            {/* Primary group */}
                             <ul className="flex flex-col">
-                              {[
-                                { label: "Home", href: "/" },
-                                { label: "Shop", href: "/store" },
-                              ].map(({ label, href }) => (
-                                <li
-                                  key={label}
-                                  className="border-b border-[var(--theme-border)]"
+                              <li>
+                                <LocalizedClientLink
+                                  href="/"
+                                  className="flex items-center py-2.5 font-display text-[26px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
+                                  onClick={close}
                                 >
+                                  Home
+                                </LocalizedClientLink>
+                              </li>
+
+                              {/* Shop → categorii */}
+                              {categories?.length ? (
+                                <ShopMenuItem categories={categories} close={close} />
+                              ) : (
+                                <li>
                                   <LocalizedClientLink
-                                    href={href}
-                                    className="flex items-center py-4 font-display text-[24px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
+                                    href="/store"
+                                    className="flex items-center py-2.5 font-display text-[26px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
                                     onClick={close}
                                   >
-                                    {label}
+                                    Shop
                                   </LocalizedClientLink>
                                 </li>
-                              ))}
+                              )}
 
                               {/* Colecții */}
                               {!!collections?.length && (
@@ -258,18 +287,20 @@ const SideMenu = ({
                                   close={close}
                                 />
                               )}
+                            </ul>
 
+                            {/* Secondary links — bottom */}
+                            <ul className="flex flex-col mt-auto pt-10">
                               {[
+                                { label: "Contact", href: "/contact" },
                                 { label: "Contul meu", href: "/account" },
-                                { label: "Coș de cumpărături", href: "/cart" },
+                                { label: "Relații cu clienții", href: "/relatii-clienti" },
+                                { label: "Întrebări frecvente", href: "/faq" },
                               ].map(({ label, href }) => (
-                                <li
-                                  key={label}
-                                  className="border-b border-[var(--theme-border)] last:border-none"
-                                >
+                                <li key={label}>
                                   <LocalizedClientLink
                                     href={href}
-                                    className="flex items-center py-4 font-display text-[24px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
+                                    className="flex items-center py-2 font-sans text-[13px] uppercase tracking-[3px] text-[var(--theme-text-muted)] transition-colors duration-200 hover:text-hunter-gold"
                                     onClick={close}
                                   >
                                     {label}
@@ -303,24 +334,6 @@ const SideMenu = ({
                                 />
                               </div>
                             )}
-                            <div
-                              className="flex justify-between items-center text-[11px] uppercase tracking-[0.2em] text-[var(--theme-text-muted)]"
-                              onMouseEnter={countryToggleState.open}
-                              onMouseLeave={countryToggleState.close}
-                            >
-                              {regions && (
-                                <CountrySelect
-                                  toggleState={countryToggleState}
-                                  regions={regions}
-                                />
-                              )}
-                              <ArrowRightMini
-                                className={clx(
-                                  "transition-transform duration-150",
-                                  countryToggleState.state ? "-rotate-90" : ""
-                                )}
-                              />
-                            </div>
                           </div>
                         </div>
                       </PopoverPanel>

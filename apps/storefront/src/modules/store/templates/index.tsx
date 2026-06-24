@@ -41,7 +41,7 @@ const StoreTemplate = async ({
       {/* Hero header */}
       <div className="border-b border-[var(--theme-border)]">
         <div className="content-container pt-6 pb-5 small:pt-10 small:pb-6">
-          <div className="flex items-center gap-3 mb-5">
+          <div className="flex items-center gap-3 mb-3">
             <span className="h-px w-8 bg-hunter-gold" />
             <span className="font-sans text-[10px] uppercase tracking-[5px] text-[var(--theme-text-muted)]">
               Magazin
