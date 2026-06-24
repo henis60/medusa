@@ -271,12 +271,7 @@ export default class PlatiOnlineProviderService extends AbstractPaymentProvider<
     const orderNumber = (data?.order_number ?? data?.session_id) as string | undefined
     const transactionId = data?.x_trans_id as string | undefined
 
-    this.logger_.info(
-      `[PlatiOnline] resolveStatus query → orderNumber=${orderNumber ?? "-"} transactionId=${transactionId ?? "-"}`
-    )
-
     if (!orderNumber && !transactionId) {
-      this.logger_.warn("[PlatiOnline] resolveStatus: no orderNumber/transactionId → pending")
       return { status: "pending" }
     }
 
@@ -287,25 +282,15 @@ export default class PlatiOnlineProviderService extends AbstractPaymentProvider<
         testMode: !!this.options_.testMode,
       })
 
-      this.logger_.info(
-        `[PlatiOnline] query result → statusFin1=${result.statusFin1} statusFin2=${result.statusFin2} ` +
-          `x_trans_id=${result.transactionId ?? "-"} amount=${result.amount ?? "-"}`
-      )
-      this.logger_.info(`[PlatiOnline] query raw (first 600 chars): ${result.raw.slice(0, 600)}`)
-
       if (result.statusFin1 === undefined) {
         return { status: "pending", transactionId: result.transactionId }
       }
-      const mapped = mapFinStatus(result.statusFin1)
-      this.logger_.info(
-        `[PlatiOnline] mapped status → ${mapped.sessionStatus} (action ${mapped.action})`
-      )
       return {
-        status: mapped.sessionStatus,
+        status: mapFinStatus(result.statusFin1).sessionStatus,
         transactionId: result.transactionId,
       }
     } catch (e) {
-      this.logger_.error(`[PlatiOnline] query failed: ${(e as Error).message}`)
+      this.logger_.error(`PlatiOnline query failed: ${(e as Error).message}`)
       throw e
     }
   }

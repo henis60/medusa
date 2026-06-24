@@ -16,19 +16,24 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
   const { data: sessions } = await query.graph({
     entity: "payment_session",
-    fields: ["payment_collection_id"],
+    fields: ["payment_collection_id", "status"],
     filters: { id: sessionId },
   })
-  const paymentCollectionId = sessions?.[0]?.payment_collection_id
-  if (!paymentCollectionId) {
-    return res.status(404).json({ message: "payment session not found", cart_id: null })
+  const session = sessions?.[0]
+  if (!session?.payment_collection_id) {
+    return res.json({ cart_id: null, status: null })
   }
 
   const { data: links } = await query.graph({
     entity: "cart_payment_collection",
     fields: ["cart_id"],
-    filters: { payment_collection_id: paymentCollectionId },
+    filters: { payment_collection_id: session.payment_collection_id },
   })
 
-  return res.json({ cart_id: links?.[0]?.cart_id ?? null })
+  return res.json({
+    cart_id: links?.[0]?.cart_id ?? null,
+    // Payment session status reflects the last authorization attempt:
+    // "error"/"canceled" → terminal decline; otherwise still settling.
+    status: session.status ?? null,
+  })
 }

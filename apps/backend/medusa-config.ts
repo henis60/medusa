@@ -4,8 +4,20 @@ import { loadPlatiOnlineOptionsFromEnv } from './src/modules/plati-online/lib/co
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 
 const platiOnlineOptions = loadPlatiOnlineOptionsFromEnv()
-// Only register PlatiOnline when configured, so the app still boots without credentials.
-const paymentProviders = platiOnlineOptions.login
+// Register PlatiOnline only when ALL required options are present, so a partially
+// configured env doesn't make the provider's validateOptions throw at boot and
+// take down the whole app.
+const platiOnlineConfigured = [
+  platiOnlineOptions.login,
+  platiOnlineOptions.website,
+  platiOnlineOptions.poPublicKey,
+  platiOnlineOptions.merchantPrivateKey,
+  platiOnlineOptions.ivAuth,
+  platiOnlineOptions.ivItsn,
+  platiOnlineOptions.relayUrl,
+].every(Boolean)
+
+const paymentProviders = platiOnlineConfigured
   ? [
       {
         resolve: "./src/modules/plati-online",

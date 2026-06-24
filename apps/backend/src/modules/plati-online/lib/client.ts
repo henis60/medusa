@@ -52,9 +52,6 @@ export class PlatiOnlineClient {
    * with the given SOAPAction. Returns the raw response body.
    */
   async send(xml: string, soapAction: string): Promise<string> {
-    // eslint-disable-next-line no-console
-    console.log(`[PlatiOnline] → SOAPAction="${soapAction}" request: ${xml}`)
-
     const { fMessage, fCryptMessage } = encryptRequest(xml, {
       ivAuth: this.ivAuth,
       poPublicKey: this.poPublicKey,
@@ -79,10 +76,6 @@ export class PlatiOnlineClient {
     })
 
     const text = await response.text()
-    // eslint-disable-next-line no-console
-    console.log(
-      `[PlatiOnline] ← HTTP ${response.status} response (first 600): ${text.slice(0, 600)}`
-    )
     if (!response.ok) {
       throw new Error(
         `PlatiOnline request failed (HTTP ${response.status}): ${text.slice(0, 300)}`

@@ -286,9 +286,15 @@ export async function initiatePlatiOnlinePayment(
  * This is idempotent with the ITSN webhook: whichever completes the cart first
  * wins; a second completion of an already-completed cart returns the same order.
  */
+export type PlatiOnlineCompletion = {
+  orderId?: string
+  pending?: boolean
+  failed?: boolean
+}
+
 export async function completePlatiOnlineCart(
   cartId: string
-): Promise<{ orderId?: string; pending?: boolean; debug?: string }> {
+): Promise<PlatiOnlineCompletion> {
   const headers = { ...(await getAuthHeaders()) }
 
   try {
@@ -301,14 +307,11 @@ export async function completePlatiOnlineCart(
       await removeCartId()
       return { orderId: res.order.id }
     }
-    // Cart returned (not an order) → payment not authorized yet.
-    return { pending: true, debug: `complete returned type=${(res as any)?.type}, cartId=${cartId}` }
-  } catch (e) {
-    // complete() throws while the payment session is still pending.
-    return {
-      pending: true,
-      debug: `complete threw for cartId=${cartId}: ${e instanceof Error ? e.message : String(e)}`,
-    }
+    // Cart returned (not an order) → payment not authorized yet; keep polling.
+    return { pending: true }
+  } catch {
+    // complete() throws while the payment session is still pending/settling.
+    return { pending: true }
   }
 }
 
@@ -319,25 +322,32 @@ export async function completePlatiOnlineCart(
  */
 export async function completePlatiOnlineBySession(
   sessionId: string
-): Promise<{ orderId?: string; pending?: boolean; debug?: string }> {
+): Promise<PlatiOnlineCompletion> {
   const headers = { ...(await getAuthHeaders()) }
 
   let cartId: string | null = null
+  let status: string | null = null
   try {
-    const resolved = await sdk.client.fetch<{ cart_id: string | null }>(
-      "/store/plati-online/session-cart",
-      { query: { session_id: sessionId }, headers }
-    )
+    const resolved = await sdk.client.fetch<{
+      cart_id: string | null
+      status: string | null
+    }>("/store/plati-online/session-cart", {
+      query: { session_id: sessionId },
+      headers,
+    })
     cartId = resolved?.cart_id ?? null
-  } catch (e) {
-    return {
-      pending: true,
-      debug: `session-cart lookup failed for ${sessionId}: ${e instanceof Error ? e.message : String(e)}`,
-    }
+    status = resolved?.status ?? null
+  } catch {
+    return { pending: true }
+  }
+
+  // Terminal decline: a prior authorization attempt failed → stop polling.
+  if (status === "error" || status === "canceled") {
+    return { failed: true }
   }
 
   if (!cartId) {
-    return { pending: true, debug: `no cart_id resolved for session ${sessionId}` }
+    return { pending: true }
   }
 
   return completePlatiOnlineCart(cartId)

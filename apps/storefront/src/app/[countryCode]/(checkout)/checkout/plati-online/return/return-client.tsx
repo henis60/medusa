@@ -5,7 +5,7 @@ import {
   completePlatiOnlineCart,
 } from "@lib/data/cart"
 import { useParams, useRouter } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 
 const MAX_ATTEMPTS = 15
 const INTERVAL_MS = 2000
@@ -25,16 +25,22 @@ const PlatiOnlineReturn = ({
   const router = useRouter()
   const params = useParams()
   const countryCode = (params?.countryCode as string) ?? "ro"
-  const [failed, setFailed] = useState(false)
-  const attempts = useRef(0)
+  // "working" while polling, "timeout" when retries are exhausted, "declined"
+  // when PlatiOnline terminally rejected the payment.
+  const [state, setState] = useState<"working" | "timeout" | "declined">(
+    "working"
+  )
 
   useEffect(() => {
     if (!sessionId && !cartId) {
-      setFailed(true)
+      setState("timeout")
       return
     }
 
     let active = true
+    let timer: ReturnType<typeof setTimeout> | undefined
+    let attempts = 0
+
     const tick = async () => {
       try {
         // Prefer session_id (always present from the relay URL); fall back to
@@ -47,27 +53,32 @@ const PlatiOnlineReturn = ({
           router.push(`/${countryCode}/order/${res.orderId}/confirmed`)
           return
         }
+        if (res.failed) {
+          setState("declined")
+          return
+        }
       } catch {
         // ignore and retry
       }
 
-      attempts.current += 1
-      if (attempts.current >= MAX_ATTEMPTS) {
-        setFailed(true)
+      attempts += 1
+      if (attempts >= MAX_ATTEMPTS) {
+        setState("timeout")
         return
       }
-      if (active) setTimeout(tick, INTERVAL_MS)
+      if (active) timer = setTimeout(tick, INTERVAL_MS)
     }
 
     tick()
     return () => {
       active = false
+      if (timer) clearTimeout(timer)
     }
-  }, [cartId, countryCode, router])
+  }, [sessionId, cartId, countryCode, router])
 
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center gap-8 px-6 py-32 text-center">
-      {!failed ? (
+      {state === "working" && (
         <>
           <div className="relative h-24 w-24">
             <div className="absolute inset-0 rounded-full border-2 border-[var(--theme-border)]" />
@@ -82,7 +93,35 @@ const PlatiOnlineReturn = ({
             </p>
           </div>
         </>
-      ) : (
+      )}
+
+      {state === "declined" && (
+        <>
+          <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-[var(--theme-border)]">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-[var(--theme-text-muted)]">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.2" />
+              <path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            </svg>
+          </div>
+          <div className="flex max-w-md flex-col gap-4">
+            <p className="font-serif italic text-[26px] leading-tight text-[var(--theme-text)]">
+              Plata nu a fost finalizată
+            </p>
+            <p className="font-sans text-[13px] leading-relaxed text-[var(--theme-text-muted)]">
+              Tranzacția a fost respinsă sau anulată. Nu a fost reținută nicio
+              sumă. Poți încerca din nou cu altă metodă de plată.
+            </p>
+            <a
+              href={`/${countryCode}/checkout?step=payment`}
+              className="mt-4 inline-block border border-hunter-gold px-8 py-3 font-sans text-[10px] uppercase tracking-[4px] text-hunter-gold transition-colors hover:bg-hunter-gold hover:text-[#0D0D0D]"
+            >
+              Încearcă din nou
+            </a>
+          </div>
+        </>
+      )}
+
+      {state === "timeout" && (
         <>
           <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-[var(--theme-border)]">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-hunter-gold">

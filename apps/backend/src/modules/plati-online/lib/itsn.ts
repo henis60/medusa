@@ -24,6 +24,21 @@ export function decryptItsnIds(
   options: PlatiOnlineOptions,
   body: Record<string, unknown>
 ): { sessionId?: string; transactionId?: string } {
+  const xml = decryptItsnBody(options, body)
+  return {
+    sessionId: getXmlTag(xml, "f_order_number"),
+    transactionId: getXmlTag(xml, "x_trans_id"),
+  }
+}
+
+/**
+ * Decrypts an incoming ITSN body to its plaintext XML. Shared by
+ * {@link decryptItsnIds} and {@link processItsn}.
+ */
+function decryptItsnBody(
+  options: PlatiOnlineOptions,
+  body: Record<string, unknown>
+): string {
   const message = (body.f_message ?? body.f_relay_message) as string | undefined
   const cryptMessage = body.f_crypt_message as string | undefined
 
@@ -31,15 +46,10 @@ export function decryptItsnIds(
     throw new Error("ITSN body missing f_message / f_crypt_message")
   }
 
-  const xml = decryptMessage(message, cryptMessage, {
+  return decryptMessage(message, cryptMessage, {
     iv: options.ivItsn,
     merchantPrivateKey: options.merchantPrivateKey,
   })
-
-  return {
-    sessionId: getXmlTag(xml, "f_order_number"),
-    transactionId: getXmlTag(xml, "x_trans_id"),
-  }
 }
 
 /**
@@ -53,17 +63,7 @@ export async function processItsn(
   options: PlatiOnlineOptions,
   body: Record<string, unknown>
 ): Promise<ItsnResult> {
-  const message = (body.f_message ?? body.f_relay_message) as string | undefined
-  const cryptMessage = body.f_crypt_message as string | undefined
-
-  if (!message || !cryptMessage) {
-    throw new Error("ITSN body missing f_message / f_crypt_message")
-  }
-
-  const xml = decryptMessage(message, cryptMessage, {
-    iv: options.ivItsn,
-    merchantPrivateKey: options.merchantPrivateKey,
-  })
+  const xml = decryptItsnBody(options, body)
 
   const sessionId = getXmlTag(xml, "f_order_number")
   const transactionId = getXmlTag(xml, "x_trans_id")
