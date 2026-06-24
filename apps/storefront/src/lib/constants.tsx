@@ -33,6 +33,10 @@ export const paymentInfoMap: Record<
     title: "Manual Payment",
     icon: <CreditCard />,
   },
+  "pp_plati-online_plati-online": {
+    title: "Card bancar (PlatiOnline)",
+    icon: <CreditCard />,
+  },
   // Add more payment providers here
 }
 
@@ -48,6 +52,12 @@ export const isPaypal = (providerId?: string) => {
 }
 export const isManual = (providerId?: string) => {
   return providerId?.startsWith("pp_system_default")
+}
+
+// PlatiOnline is a redirect-based provider: the customer is sent to PlatiOnline's
+// hosted page, and the order is confirmed server-side via the ITSN webhook.
+export const isPlatiOnline = (providerId?: string) => {
+  return providerId?.startsWith("pp_plati-online")
 }
 
 // Add currencies that don't need to be divided by 100

@@ -30,15 +30,15 @@ export default function FavoritesList() {
   return (
     <div className="grid grid-cols-2 small:grid-cols-4 gap-x-3 gap-y-6 small:px-8 py-8">
       {favorites.map((item) => (
-        <div key={item.id} className="group flex flex-col gap-2">
-          <LocalizedClientLink href={`/products/${item.handle}`} className="block relative aspect-[3/4] overflow-hidden">
+        <div key={item.id} className="group relative aspect-[3/4] overflow-hidden">
+          <LocalizedClientLink href={`/products/${item.handle}`} className="block w-full h-full">
             {item.thumbnail ? (
               <Image
                 src={resolveImageUrl(item.thumbnail) ?? item.thumbnail}
                 alt={item.title}
                 fill
                 sizes="(max-width: 640px) 50vw, 33vw"
-                className="object-cover object-center group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+                className="object-contain object-center group-hover:scale-[1.03] transition-transform duration-700 ease-out"
               />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
@@ -48,22 +48,15 @@ export default function FavoritesList() {
               </div>
             )}
           </LocalizedClientLink>
-          <div className="flex items-center justify-between gap-2">
-            <LocalizedClientLink href={`/products/${item.handle}`}>
-              <p className="font-sans text-[9px] uppercase tracking-[2.5px] text-[var(--theme-text)] hover:text-hunter-gold transition-colors truncate">
-                {item.title}
-              </p>
-            </LocalizedClientLink>
-            <button
-              onClick={() => toggle(item)}
-              aria-label="Elimină din salvate"
-              className="shrink-0 opacity-40 hover:opacity-100 transition-opacity"
-            >
-              <svg viewBox="0 0 24 24" style={{ width: 13, height: 13 }} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+          <button
+            onClick={() => toggle(item)}
+            aria-label="Elimină din salvate"
+            className="absolute top-2 right-2 z-10 p-1 transition-opacity duration-150 opacity-80 hover:opacity-100"
+          >
+            <svg viewBox="0 0 24 24" style={{ width: 16, height: 16 }} fill="#c9a84c" stroke="#c9a84c" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+            </svg>
+          </button>
         </div>
       ))}
     </div>

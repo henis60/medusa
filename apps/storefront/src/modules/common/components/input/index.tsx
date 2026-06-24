@@ -4,8 +4,8 @@ import Eye from "@modules/common/icons/eye"
 import EyeOff from "@modules/common/icons/eye-off"
 
 type InputProps = Omit<
-  Omit<React.InputHTMLAttributes<HTMLInputElement>, "size">,
-  "placeholder"
+  React.InputHTMLAttributes<HTMLInputElement>,
+  "size"
 > & {
   label: string
   errors?: Record<string, unknown>
@@ -45,7 +45,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             type={inputType}
             name={name}
             required={required}
-            className={`w-full h-10 px-3 bg-transparent border border-[var(--theme-border)] text-[var(--theme-text)] font-sans text-base placeholder:text-[var(--theme-text-muted)] focus:outline-none focus:border-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)] transition-colors ${type === "password" ? "pr-10" : ""} ${className ?? ""}`}
+            className={`w-full h-10 px-3 bg-transparent border border-[var(--theme-border)] text-[var(--theme-text)] font-sans text-base placeholder:text-[var(--theme-text-muted)] placeholder:text-[14px] focus:outline-none focus:border-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)] transition-colors ${type === "password" ? "pr-10" : ""} ${className ?? ""}`}
             {...props}
             ref={inputRef}
           />

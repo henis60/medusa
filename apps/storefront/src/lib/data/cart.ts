@@ -255,6 +255,94 @@ export async function initiatePaymentSession(
     .catch(medusaError)
 }
 
+/**
+ * Re-initiates the PlatiOnline payment session and returns a FRESH hosted-page
+ * redirect URL. PlatiOnline redirect tokens are single-use, so we regenerate
+ * the session each time the customer clicks pay rather than reusing a stale one.
+ */
+export async function initiatePlatiOnlinePayment(
+  cart: HttpTypes.StoreCart,
+  providerId: string
+): Promise<string | undefined> {
+  const resp = (await initiatePaymentSession(cart, {
+    provider_id: providerId,
+  })) as { payment_collection?: HttpTypes.StorePaymentCollection }
+
+  const session = resp?.payment_collection?.payment_sessions?.find(
+    (s) => s.provider_id === providerId
+  )
+
+  return (session?.data as Record<string, unknown> | undefined)?.redirect_url as
+    | string
+    | undefined
+}
+
+/**
+ * Attempts to complete the cart on the PlatiOnline relay return. Completing the
+ * cart authorizes the payment session (the provider queries PlatiOnline for the
+ * real status), which creates the order. Returns the order id on success, or
+ * `{ pending: true }` if the payment isn't authorized yet (caller should retry).
+ *
+ * This is idempotent with the ITSN webhook: whichever completes the cart first
+ * wins; a second completion of an already-completed cart returns the same order.
+ */
+export async function completePlatiOnlineCart(
+  cartId: string
+): Promise<{ orderId?: string; pending?: boolean; debug?: string }> {
+  const headers = { ...(await getAuthHeaders()) }
+
+  try {
+    const res = await sdk.store.cart.complete(cartId, {}, headers)
+    if (res?.type === "order") {
+      const cartCacheTag = await getCacheTag("carts")
+      revalidateTag(cartCacheTag)
+      const orderCacheTag = await getCacheTag("orders")
+      revalidateTag(orderCacheTag)
+      await removeCartId()
+      return { orderId: res.order.id }
+    }
+    // Cart returned (not an order) → payment not authorized yet.
+    return { pending: true, debug: `complete returned type=${(res as any)?.type}, cartId=${cartId}` }
+  } catch (e) {
+    // complete() throws while the payment session is still pending.
+    return {
+      pending: true,
+      debug: `complete threw for cartId=${cartId}: ${e instanceof Error ? e.message : String(e)}`,
+    }
+  }
+}
+
+/**
+ * Completes the PlatiOnline order on relay return. Resolves the cart id from the
+ * payment `session_id` (passed in the return URL) since the cross-site POST
+ * return doesn't carry the cart cookie, then completes the cart.
+ */
+export async function completePlatiOnlineBySession(
+  sessionId: string
+): Promise<{ orderId?: string; pending?: boolean; debug?: string }> {
+  const headers = { ...(await getAuthHeaders()) }
+
+  let cartId: string | null = null
+  try {
+    const resolved = await sdk.client.fetch<{ cart_id: string | null }>(
+      "/store/plati-online/session-cart",
+      { query: { session_id: sessionId }, headers }
+    )
+    cartId = resolved?.cart_id ?? null
+  } catch (e) {
+    return {
+      pending: true,
+      debug: `session-cart lookup failed for ${sessionId}: ${e instanceof Error ? e.message : String(e)}`,
+    }
+  }
+
+  if (!cartId) {
+    return { pending: true, debug: `no cart_id resolved for session ${sessionId}` }
+  }
+
+  return completePlatiOnlineCart(cartId)
+}
+
 export async function applyPromotions(codes: string[]) {
   const cartId = await getCartId()
 

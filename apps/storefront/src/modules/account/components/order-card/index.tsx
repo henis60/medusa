@@ -32,7 +32,7 @@ const OrderCard = ({ order }: OrderCardProps) => {
 
       <div className="flex items-center gap-6">
         <span
-          className="font-display text-[18px] leading-none text-[var(--theme-gold)]"
+          className="font-display text-[14px] leading-none text-[var(--theme-gold)]"
           data-testid="order-amount"
         >
           {convertToLocale({ amount: order.total, currency_code: order.currency_code })}

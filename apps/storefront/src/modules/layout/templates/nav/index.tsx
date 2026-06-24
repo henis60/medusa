@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 
 import { listCollections } from "@lib/data/collections"
+import { listCategories } from "@lib/data/categories"
 import { listLocales } from "@lib/data/locales"
 import { getLocale } from "@lib/data/locale-actions"
 import { listRegions } from "@lib/data/regions"
@@ -16,12 +17,14 @@ import {
 } from "@modules/layout/components/nav-icons"
 
 export default async function Nav() {
-  const [regions, locales, currentLocale, { collections }] = await Promise.all([
-    listRegions().then((regions: StoreRegion[]) => regions),
-    listLocales(),
-    getLocale(),
-    listCollections(),
-  ])
+  const [regions, locales, currentLocale, { collections }, categories] =
+    await Promise.all([
+      listRegions().then((regions: StoreRegion[]) => regions),
+      listLocales(),
+      getLocale(),
+      listCollections(),
+      listCategories(),
+    ])
 
   return (
     <NavShell>
@@ -32,6 +35,7 @@ export default async function Nav() {
             locales={locales}
             currentLocale={currentLocale}
             collections={collections}
+            categories={categories}
           />
         </div>
       </div>

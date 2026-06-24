@@ -2,7 +2,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-[var(--theme-bg)] border-t border-[var(--theme-border)]">
+    <footer className="w-full bg-[var(--theme-chrome)] border-t border-[var(--theme-border)]">
       <div className="content-container flex flex-wrap items-center justify-between gap-x-6 gap-y-1 py-3">
         <LocalizedClientLink
           href="/"
