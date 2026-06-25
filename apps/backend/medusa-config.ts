@@ -45,5 +45,22 @@ module.exports = defineConfig({
         providers: paymentProviders,
       },
     },
+    {
+      resolve: "@medusajs/medusa/notification",
+      options: {
+        providers: [
+          {
+            resolve: "./src/modules/brevo-notification",
+            id: "brevo",
+            options: {
+              channels: ["email"],
+              apiKey: process.env.BREVO_API_KEY,
+              from: process.env.BREVO_FROM_EMAIL,
+              fromName: process.env.BREVO_FROM_NAME,
+            },
+          },
+        ],
+      },
+    },
   ],
 })

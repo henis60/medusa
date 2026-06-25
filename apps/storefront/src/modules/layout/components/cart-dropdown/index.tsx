@@ -282,13 +282,13 @@ const CartDropdown = ({
                                   className="shrink-0"
                                   onClick={close}
                                 >
-                                  <div className="relative w-[72px] aspect-[3/4] overflow-hidden bg-[var(--theme-surface)]">
+                                  <div className="relative w-[72px] aspect-[3/4] overflow-hidden bg-white">
                                     {imgSrc && (
                                       <Image
                                         src={imgSrc}
                                         alt={item.product_title ?? ""}
                                         fill
-                                        className="object-cover object-center"
+                                        className="object-contain object-center"
                                         sizes="72px"
                                       />
                                     )}

@@ -34,47 +34,47 @@ const ContactTemplate = () => {
         {/* Details + map */}
         <div className="grid grid-cols-1 small:grid-cols-2 gap-6 small:gap-10 items-stretch">
           {/* Contact details */}
-          <div className="grid grid-cols-2 gap-x-8 gap-y-6 self-center">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-4 small:gap-x-8 small:gap-y-6 self-center">
             <div>
-              <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-2">
+              <p className="font-sans text-[8px] small:text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-1 small:mb-2">
                 Email
               </p>
               <a
                 href="mailto:contact@thehunter.ro"
-                className="font-serif text-lg text-[var(--theme-text)] hover:text-hunter-gold transition-colors break-all"
+                className="font-serif text-sm small:text-lg text-[var(--theme-text)] hover:text-hunter-gold transition-colors break-all"
               >
                 contact@thehunter.ro
               </a>
             </div>
             <div>
-              <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-2">
+              <p className="font-sans text-[8px] small:text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-1 small:mb-2">
                 Telefon
               </p>
               <a
                 href="tel:+40765080667"
-                className="font-serif text-lg text-[var(--theme-text)] hover:text-hunter-gold transition-colors"
+                className="font-serif text-sm small:text-lg text-[var(--theme-text)] hover:text-hunter-gold transition-colors"
               >
                 +40 765 080 667
               </a>
             </div>
             <div>
-              <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-2">
+              <p className="font-sans text-[8px] small:text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-1 small:mb-2">
                 Locație
               </p>
               <a
                 href="https://maps.app.goo.gl/zdCeRp3LB2uJeLX49"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-serif text-lg text-[var(--theme-text)] hover:text-hunter-gold transition-colors"
+                className="font-serif text-sm small:text-lg text-[var(--theme-text)] hover:text-hunter-gold transition-colors"
               >
                 Bulevardul Unirii 7, Baia Mare
               </a>
             </div>
             <div>
-              <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-2">
+              <p className="font-sans text-[8px] small:text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-1 small:mb-2">
                 Program
               </p>
-              <p className="font-serif text-lg text-[var(--theme-text)] leading-snug">
+              <p className="font-serif text-sm small:text-lg text-[var(--theme-text)] leading-snug">
                 Luni – Vineri · 07:00 – 18:00
                 <br />
                 Sâmbătă · 09:00 – 14:30
@@ -87,7 +87,7 @@ const ContactTemplate = () => {
             href="https://maps.app.goo.gl/zdCeRp3LB2uJeLX49"
             target="_blank"
             rel="noopener noreferrer"
-            className="block border border-[var(--theme-border)] min-h-[220px]"
+            className="block border border-[var(--theme-border)] min-h-[200px]"
           >
             <iframe
               title="Hartă — Bulevardul Unirii 7, Baia Mare"
@@ -96,7 +96,7 @@ const ContactTemplate = () => {
               height="100%"
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              className="block w-full h-full min-h-[220px] grayscale-[0.3] pointer-events-none"
+              className="block w-full h-full min-h-[200px] grayscale-[0.3] pointer-events-none"
               style={{ border: 0 }}
             />
           </a>

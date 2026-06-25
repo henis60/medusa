@@ -90,13 +90,13 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
   if (type === "preview") {
     return (
       <div className="flex gap-3 py-3">
-        <div className="relative w-12 aspect-[3/4] shrink-0 overflow-hidden bg-[#F5F4F2] dark:bg-[#1e2a22]">
+        <div className="relative w-12 aspect-[3/4] shrink-0 overflow-hidden bg-white">
           {imgSrc && (
             <Image
               src={imgSrc}
               alt={item.product_title ?? ""}
               fill
-              className="object-cover object-center"
+              className="object-contain object-center"
               sizes="48px"
             />
           )}
@@ -139,13 +139,13 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
         href={`/products/${item.product_handle}`}
         className="shrink-0"
       >
-        <div className="relative w-[90px] small:w-[110px] aspect-[3/4] overflow-hidden bg-[#F5F4F2] dark:bg-[#1e2a22]">
+        <div className="relative w-[90px] small:w-[110px] aspect-[3/4] overflow-hidden bg-white">
           {imgSrc && (
             <Image
               src={imgSrc}
               alt={item.product_title ?? ""}
               fill
-              className="object-cover object-center"
+              className="object-contain object-center"
               sizes="(max-width: 640px) 90px, 110px"
             />
           )}

@@ -28,7 +28,7 @@ export default function CardImages({ product, isFeatured, noOverlay, activeImage
 
   return (
     <div className="relative cursor-pointer w-full">
-      <div className="relative overflow-hidden w-full" style={{ paddingBottom: "133.333%" }}>
+      <div className="relative overflow-hidden w-full bg-white" style={{ paddingBottom: "133.333%" }}>
         {mainImage && (
           <Image
             src={mainImage}

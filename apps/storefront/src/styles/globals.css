@@ -869,7 +869,7 @@ body.hunter-landing-active::before {
          Uses the landing's native .section / .kicker / .sec-title classes so it
          matches the rest of the page, but is kept compact (no full-height). */
 .subscribe-sec {
-  background: var(--green-d);
+  background: #1e1502;
   min-height: auto;
   display: block;
   padding-top: clamp(34px, 5vw, 52px);
@@ -905,6 +905,9 @@ body.hunter-landing-active::before {
   text-transform: uppercase;
   color: rgba(232, 213, 163, 0.35);
 }
+.newsletter-email-input::placeholder {
+  font-size: 14px;
+}
 .subscribe-form-wrap {
   width: 100%;
   max-width: 100%;
@@ -938,18 +941,6 @@ body.hunter-landing-active::before {
 .subscribe-form {
   width: 100%;
   max-width: none;
-}
-.subscribe-form .entry__error {
-  text-align: center !important;
-  padding: 0 !important;
-  height: 0 !important;
-  overflow: hidden !important;
-  opacity: 0 !important;
-}
-.subscribe-form .entry__error.visible {
-  height: auto !important;
-  padding: 6px 0 0 !important;
-  opacity: 1 !important;
 }
 
 .kicker {
@@ -3786,12 +3777,6 @@ a.cb-value:hover {
     padding: 8px 6px;
     margin-top: 4px;
   }
-  #sib-container .sib-form-block__button {
-    font-size: 9px !important;
-    letter-spacing: 1.5px !important;
-    padding: 14px 6px !important;
-    margin-top: 4px !important;
-  }
   .modal-note {
     font-size: 7px;
   }
@@ -3957,170 +3942,4 @@ html {
     padding: 14px 6px !important;
     margin-top: 4px !important;
   }
-}
-/* ── BREVO FORM — Hunter Shop theme overrides ── */
-.sib-form,
-#sib-form-container,
-#sib-container {
-  background: transparent !important;
-  border: none !important;
-  border-radius: 0 !important;
-  max-width: 100% !important;
-  padding: 0 !important;
-  direction: ltr;
-}
-#sib-container input.input {
-  font-family: var(--rl) !important;
-  font-size: 16px !important;
-  letter-spacing: 2px !important;
-  background: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid rgba(201, 168, 76, 0.25) !important;
-  border-radius: 0 !important;
-  color: var(--ivory) !important;
-  padding: 0 14px !important;
-  height: 44px !important;
-  width: 100% !important;
-  outline: none !important;
-  transition: border-color 0.3s !important;
-  box-shadow: none !important;
-  caret-color: var(--gold);
-}
-#sib-container input.input:focus {
-  border-color: rgba(201, 168, 76, 0.65) !important;
-  box-shadow: none !important;
-}
-#sib-container input.input::placeholder {
-  color: rgba(232, 213, 163, 0.22) !important;
-  font-family: var(--rl) !important;
-}
-#sib-container .entry__label {
-  font-family: var(--rl) !important;
-  font-size: 9px !important;
-  letter-spacing: 4px !important;
-  text-transform: uppercase !important;
-  color: rgba(201, 168, 76, 0.7) !important;
-  font-weight: 400 !important;
-  display: block !important;
-  margin-bottom: 10px !important;
-}
-#sib-container .entry__specification {
-  display: none !important;
-}
-#sib-container .entry__error {
-  font-family: var(--rl) !important;
-  font-size: 9px !important;
-  letter-spacing: 3px !important;
-  text-transform: uppercase !important;
-  color: rgba(201, 168, 76, 0.7) !important;
-  background: transparent !important;
-  border: none !important;
-  border-radius: 0 !important;
-  padding: 10px 0 0 !important;
-  display: block !important;
-  opacity: 0 !important;
-  transition: opacity 0.35s ease !important;
-}
-#sib-container .entry__error.visible {
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-#sib-container .sib-form-block__button {
-  font-family: var(--rl) !important;
-  font-size: 11px !important;
-  letter-spacing: 4px !important;
-  text-transform: uppercase !important;
-  color: var(--dark) !important;
-  background: var(--gold) !important;
-  border: none !important;
-  border-radius: 0 !important;
-  padding: 0 20px !important;
-  cursor: pointer !important;
-  width: 100% !important;
-  height: 44px !important;
-  margin-top: 0 !important;
-  transition: background 0.3s, opacity 0.3s !important;
-}
-.subscribe-form .sib-form-block {
-  display: flex;
-}
-.subscribe-form .sib-input {
-  display: flex;
-  flex-direction: column;
-}
-.subscribe-form .form__entry {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-.subscribe-form .form__label-row {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-.subscribe-form .entry__field {
-  flex: 1;
-  display: flex;
-}
-.subscribe-form .entry__field input {
-  flex: 1;
-}
-#sib-container .sib-form-block__button:hover {
-  background: var(--gold-b) !important;
-}
-#sib-container .sib-form-block__button:disabled {
-  opacity: 0.55 !important;
-  cursor: default !important;
-}
-/* spinner icon inside button */
-#sib-container .sib-form-block__button .sib-hide-loader-icon {
-  fill: var(--dark) !important;
-}
-/* message panels */
-#error-message.sib-form-message-panel {
-  background: rgba(114, 47, 55, 0.22) !important;
-  border: 1px solid rgba(139, 69, 19, 0.5) !important;
-  border-radius: 0 !important;
-  max-width: 100% !important;
-  color: rgba(232, 213, 163, 0.85) !important;
-  margin-bottom: 10px !important;
-}
-#success-message.sib-form-message-panel {
-  background: rgba(27, 77, 62, 0.3) !important;
-  border: 1px solid rgba(201, 168, 76, 0.35) !important;
-  border-radius: 0 !important;
-  max-width: 100% !important;
-  color: rgba(232, 213, 163, 0.85) !important;
-  margin-bottom: 12px !important;
-}
-#success-message.sib-form-message-panel--active + #sib-container {
-  display: none !important;
-}
-/* panels are hidden inline until Brevo's script activates them */
-.sib-form-message-panel--active {
-  display: block !important;
-  padding: 12px 14px !important;
-}
-.sib-form-message-panel__text {
-  color: inherit !important;
-  font-family: var(--rl) !important;
-  font-size: 11px !important;
-  letter-spacing: 2px !important;
-}
-.sib-icon.sib-notification__icon path {
-  fill: var(--gold) !important;
-}
-/* form block padding reset */
-#sib-container .sib-form-block,
-#sib-container .sib-input {
-  padding: 0 !important;
-  margin: 0 !important;
-}
-/* form__entry spacing */
-#sib-container .form__entry {
-  padding: 0 !important;
-}
-/* prevent mobile zoom on focus — font-size must be >= 16px */
-#sib-container input,
-#sib-container input.input {
-  font-size: 16px !important;
 }
