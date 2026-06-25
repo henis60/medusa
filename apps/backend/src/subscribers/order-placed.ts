@@ -50,10 +50,10 @@ export default async function sendOrderConfirmationEmail({
         items: (order.items ?? []).map((item: any) => ({
           title: item.title,
           quantity: item.quantity,
-          unit_price: `${((item.unit_price ?? 0) / 100).toFixed(2)} ${(order.currency_code ?? "RON").toUpperCase()}`,
-          subtotal: `${((item.subtotal ?? item.unit_price * item.quantity ?? 0) / 100).toFixed(2)} ${(order.currency_code ?? "RON").toUpperCase()}`,
+          unit_price: `${Number(item.unit_price ?? 0).toFixed(2)} ${(order.currency_code ?? "RON").toUpperCase()}`,
+          subtotal: `${Number(item.subtotal ?? (item.unit_price ?? 0) * (item.quantity ?? 1)).toFixed(2)} ${(order.currency_code ?? "RON").toUpperCase()}`,
         })),
-        total: `${((order.total ?? 0) / 100).toFixed(2)} ${(order.currency_code ?? "RON").toUpperCase()}`,
+        total: `${Number(order.total ?? 0).toFixed(2)} ${(order.currency_code ?? "RON").toUpperCase()}`,
         shipping_address: order.shipping_address,
         attachments: [
           {
