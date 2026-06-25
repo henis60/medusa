@@ -42,26 +42,37 @@ export default async function sendOrderConfirmationEmail({
 
     await notificationService.createNotifications({
       to: order.email,
-      template: "order-confirmation",
+      template: "5",
       channel: "email",
       data: {
         order_id: order.display_id,
-        customer_name: `${order.customer?.first_name ?? ""} ${order.customer?.last_name ?? ""}`.trim(),
-        items: order.items,
-        total: order.total,
-        currency: order.currency_code,
+        customer_name: `${order.customer?.first_name ?? ""} ${order.customer?.last_name ?? ""}`.trim() || "Client",
+        items: (order.items ?? []).map((item: any) => ({
+          title: item.title,
+          quantity: item.quantity,
+          unit_price: `${((item.unit_price ?? 0) / 100).toFixed(2)} ${(order.currency_code ?? "RON").toUpperCase()}`,
+          subtotal: `${((item.subtotal ?? item.unit_price * item.quantity ?? 0) / 100).toFixed(2)} ${(order.currency_code ?? "RON").toUpperCase()}`,
+        })),
+        total: `${((order.total ?? 0) / 100).toFixed(2)} ${(order.currency_code ?? "RON").toUpperCase()}`,
         shipping_address: order.shipping_address,
+        attachments: [
+          {
+            name: `factura-${order.display_id}.pdf`,
+            // TEST: PDF minimal valid (o pagina alba)
+            content: "JVBERi0xLjQKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5kb2JqCjIgMCBvYmoKPDwKL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL0NvdW50IDEKPJ4KZW5kb2JqCjMgMCBvYmoKPDwKL1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgovTWVkaWFCb3ggWzAgMCA2MTIgNzkyXQovQ29udGVudHMgNCAwIFIKL1Jlc291cmNlcyA8PAovRm9udCA8PAovRjEgNSAwIFIKPj4KPj4KPj4KZW5kb2JqCjQgMCBvYmoKPDwKL0xlbmd0aCA0NAo+PgpzdHJlYW0KQlQKL0YxIDI0IFRmCjEwMCA3MDAgVGQKKEZhY3R1cmEgdGVzdCkgVGoKRVQKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8Ci9UeXBlIC9Gb250Ci9TdWJ0eXBlIC9UeXBlMQovQmFzZUZvbnQgL0hlbHZldGljYQo+PgplbmRvYmoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwNTggMDAwMDAgbiAKMDAwMDAwMDExNSAwMDAwMCBuIAowMDAwMDAwMjY2IDAwMDAwIG4gCjAwMDAwMDAzNjAgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA2Ci9Sb290IDEgMCBSCj4+CnN0YXJ0eHJlZgo0MzUKJSVFT0YK",
+          },
+        ],
       },
     })
 
     logger.info(`Order confirmation email sent to ${order.email}`)
   } catch (error) {
     logger.error(
-      `Failed to send order confirmation for ${data.id}: ${error.message}`
+      `Failed to send order confirmation for ${data.id}: ${String(error?.message ?? error)}`
     )
   }
 }
 
 export const config: SubscriberConfig = {
-  event: "order.placed",
+  event: ["order.placed", "order.completed"],
 }

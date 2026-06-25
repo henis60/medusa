@@ -9,6 +9,14 @@ export default async function sendOrderShippedEmail({
 
   try {
     const query = container.resolve("query")
+    const { data: fulfillments } = await query.graph({
+      entity: "fulfillment",
+      fields: ["tracking_numbers"],
+      filters: { id: data.id },
+    })
+
+    const trackingNumber = fulfillments?.[0]?.tracking_numbers?.[0] ?? null
+
     const { data: orders } = await query.graph({
       entity: "order",
       fields: [
@@ -40,12 +48,13 @@ export default async function sendOrderShippedEmail({
 
     await notificationService.createNotifications({
       to: order.email,
-      template: "order-shipped",
+      template: "5",
       channel: "email",
       data: {
         order_id: order.display_id,
         customer_name: `${order.customer?.first_name ?? ""} ${order.customer?.last_name ?? ""}`.trim(),
         shipping_address: order.shipping_address,
+        tracking_number: trackingNumber,
       },
     })
 

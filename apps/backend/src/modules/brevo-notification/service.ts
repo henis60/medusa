@@ -63,12 +63,15 @@ class BrevoNotificationProviderService extends AbstractNotificationProviderServi
     try {
       let messageId: string | undefined
 
+      const attachments = this.buildAttachments(data as Record<string, unknown>)
+
       if (!isNaN(templateId) && templateId > 0) {
         const result = await this.client.transactionalEmails.sendTransacEmail({
           to: [{ email: to }],
           sender: { email: senderEmail, name: senderName },
           templateId,
           params: data as Record<string, unknown>,
+          ...(attachments.length ? { attachment: attachments } : {}),
         })
         messageId = result?.messageId
       } else {
@@ -82,6 +85,7 @@ class BrevoNotificationProviderService extends AbstractNotificationProviderServi
           subject,
           htmlContent,
           params: data as Record<string, unknown>,
+          ...(attachments.length ? { attachment: attachments } : {}),
         })
         messageId = result?.messageId
       }
@@ -97,6 +101,16 @@ class BrevoNotificationProviderService extends AbstractNotificationProviderServi
         `Failed to send email via Brevo: ${String(error?.message ?? error)}`
       )
     }
+  }
+
+  private buildAttachments(
+    data: Record<string, unknown>
+  ): Array<{ name: string; content?: string; url?: string }> {
+    const raw = data?.attachments
+    if (!Array.isArray(raw)) return []
+    return raw
+      .filter((a) => a && (a.content || a.url) && a.name)
+      .map((a) => ({ name: a.name, ...(a.url ? { url: a.url } : { content: a.content }) }))
   }
 
   private buildFallbackEmail(

@@ -12,7 +12,7 @@ export default async function sendPasswordResetEmail({
 
     await notificationService.createNotifications({
       to: data.email,
-      template: "password-reset",
+      template: "7",
       channel: "email",
       data: {
         email: data.email,
