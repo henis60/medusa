@@ -32,7 +32,8 @@ export default async function setRonTaxInclusive({
 
   logger.info(`Found ${prices.length} RON prices. Setting includes_tax=true...`)
 
-  await pricingService.updatePrices(
+  // @ts-ignore — updatePrices exists at runtime but is missing from the type declaration in this version
+  await (pricingService as any).updatePrices(
     prices.map((p) => ({ id: p.id, includes_tax: true }))
   )
 

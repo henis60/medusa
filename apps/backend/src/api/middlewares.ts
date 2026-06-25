@@ -1,4 +1,4 @@
-import { defineMiddlewares } from "@medusajs/framework/http"
+import { defineMiddlewares } from "@medusajs/framework/http";
 
 export default defineMiddlewares({
   routes: [
@@ -9,4 +9,4 @@ export default defineMiddlewares({
       bodyParser: { preserveRawBody: true },
     },
   ],
-})
+});

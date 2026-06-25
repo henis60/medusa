@@ -835,24 +835,6 @@ export function initHunterLanding(): () => void {
   document.head.appendChild(shakeStyle)
   injectedStyles.push(shakeStyle)
 
-  /* ═══════ SUBSCRIBE FORM (inline, section#subscribe) ═══════ */
-  // The Brevo form now lives inline before the contact section, so load its
-  // enhancement scripts (reCAPTCHA + Brevo) on mount rather than on click.
-  if (!(window as any)._rcLoaded) {
-    ;(window as any)._rcLoaded = true
-    var rc = document.createElement("script")
-    rc.src =
-      "https://www.google.com/recaptcha/api.js?render=6LdnohktAAAAAOnmNaDbJ1bBeKx3irV5qgeqoOI5&hl=ro"
-    rc.async = true
-    document.head.appendChild(rc)
-  }
-  if (!(window as any)._brevoLoaded) {
-    ;(window as any)._brevoLoaded = true
-    var bv = document.createElement("script")
-    bv.src = "https://sibforms.com/forms/end-form/build/main.js"
-    bv.async = true
-    document.head.appendChild(bv)
-  }
   // Shop "În curând" buttons used to open a modal — now smooth-scroll to the form.
   function openModal() {
     document

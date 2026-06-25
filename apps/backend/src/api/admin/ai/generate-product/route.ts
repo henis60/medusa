@@ -68,7 +68,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     : `- "tags": array gol []`
 
   // ── Fetch all images ───────────────────────────────────────────────────────
-  const urlsToFetch = allImageUrls?.length > 1 ? allImageUrls : [imageUrl]
+  const urlsToFetch = (allImageUrls?.length ?? 0) > 1 ? allImageUrls! : [imageUrl]
   const fetchedImages: Anthropic.ImageBlockParam[] = []
   for (const url of urlsToFetch) {
     const resp = await fetch(url)
@@ -84,7 +84,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   const n = fetchedImages.length
   const needColorDetection = !colors?.length
-  const colorOrderHint = colors?.length > 1
+  const colorOrderHint = (colors?.length ?? 0) > 1
     ? ` Ordinea grupelor: ${JSON.stringify(colors)}.`
     : needColorDetection
     ? " Grupează grupele în ordinea în care apar culorile în câmpul \"colors\" returnat."
