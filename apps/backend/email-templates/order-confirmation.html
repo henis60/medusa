@@ -3,6 +3,8 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <meta name="supported-color-schemes" content="light" />
   <!--[if !mso]><!-->
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <!--<![endif]-->
@@ -16,8 +18,12 @@
   </xml>
   <![endif]-->
   <style type="text/css">
+    :root { color-scheme: light !important; }
     html { background-color:#152018 !important; margin:0 !important; padding:0 !important; }
     body { background-color:#152018 !important; margin:0 !important; padding:0 !important; }
+    @media (prefers-color-scheme: dark) {
+      body, div, table, td { background-color:#152018 !important; }
+    }
     #outlook a { padding:0; }
     .ReadMsgBody { width:100%; background-color:#152018; }
     .ExternalClass { width:100%; background-color:#152018; }
