@@ -18,7 +18,7 @@ const ProductPreviewWidget = ({ data: product }: DetailWidgetProps<AdminProduct>
     sdk.client
       .fetch<{ token: string }>(`/admin/ai/preview-token?product_id=${product.id}`)
       .then(({ token }) => {
-        setPreviewUrl(`${STOREFRONT_URL}/ro/preview/products/${product.handle}?token=${token}`)
+        setPreviewUrl(`${STOREFRONT_URL}/preview/products/${product.handle}?token=${token}`)
       })
       .catch(() => {})
   }, [product.id, product.handle, status])
@@ -26,7 +26,7 @@ const ProductPreviewWidget = ({ data: product }: DetailWidgetProps<AdminProduct>
   if (status !== "proposed" && status !== "published") return null
 
   if (status === "published") {
-    const liveUrl = `${STOREFRONT_URL}/ro/products/${product.handle}`
+    const liveUrl = `${STOREFRONT_URL}/products/${product.handle}`
     return (
       <Container className="flex items-center justify-between px-6 py-4">
         <div>

@@ -1285,7 +1285,7 @@ const AIProductPage = () => {
                                     `/admin/ai/preview-token?product_id=${row.productId}`,
                                   );
                                   window.open(
-                                    `${import.meta.env.VITE_STOREFRONT_URL || "http://localhost:8000"}/ro/preview/products/${row.productHandle}?token=${token}`,
+                                    `${import.meta.env.VITE_STOREFRONT_URL || "http://localhost:8000"}/preview/products/${row.productHandle}?token=${token}`,
                                     "_blank",
                                   );
                                 }}
