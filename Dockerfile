@@ -9,12 +9,14 @@ WORKDIR /app
 # 1) Install workspace deps from the committed root lockfile.
 #    Copy only the manifests first so Docker caches this layer across
 #    deploys whenever dependencies haven't changed.
-#    `npm ci` installs straight from the lockfile (no graph resolution
-#    and no peer-dep backtracking) — that's what kills the multi-minute hang.
+#    Use `npm install` (not `npm ci`) so npm self-heals platform-specific
+#    native deps (e.g. @swc/core-linux-x64-gnu) that a Windows-generated
+#    lockfile can omit. With the lockfile present + --legacy-peer-deps it
+#    still resolves fast (no from-scratch peer backtracking).
 COPY package.json package-lock.json .npmrc ./
 COPY apps/backend/package.json ./apps/backend/package.json
 COPY apps/storefront/package.json ./apps/storefront/package.json
-RUN npm ci --legacy-peer-deps --no-audit --no-fund
+RUN npm install --legacy-peer-deps --no-audit --no-fund
 
 # 2) Build the backend (compiles the server + bundles the admin dashboard).
 COPY apps/backend ./apps/backend
