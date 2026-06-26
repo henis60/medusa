@@ -9,7 +9,7 @@ import { HttpTypes } from "@medusajs/types"
 const OrderOverview = ({ orders }: { orders: HttpTypes.StoreOrder[] }) => {
   if (orders?.length) {
     return (
-      <div className="w-full small:px-8 py-6">
+      <div className="w-full small:px-8 py-4">
         {orders.map((o) => (
           <OrderCard key={o.id} order={o} />
         ))}
@@ -24,13 +24,13 @@ const OrderOverview = ({ orders }: { orders: HttpTypes.StoreOrder[] }) => {
     >
       <div>
         <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-3">
-          Order History
+          Istoric comenzi
         </p>
         <h2 className="font-display text-[28px] leading-[1.1] text-[var(--theme-text)] mb-3">
-          No orders yet
+          Nicio comandă încă
         </h2>
         <p className="font-serif italic text-[14px] text-[var(--theme-text-muted)] max-w-[240px] mx-auto">
-          Discover our curated collection and place your first order.
+          Descoperă colecția noastră și plasează prima ta comandă.
         </p>
       </div>
       <LocalizedClientLink href="/store" passHref>
@@ -38,7 +38,7 @@ const OrderOverview = ({ orders }: { orders: HttpTypes.StoreOrder[] }) => {
           data-testid="continue-shopping-button"
           className="h-12 small:px-8 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent font-sans uppercase tracking-[3px] text-[11px]"
         >
-          Shop Now
+          Vezi colecția
         </Button>
       </LocalizedClientLink>
     </div>

@@ -3,11 +3,11 @@ import { Suspense } from "react"
 import { listCollections } from "@lib/data/collections"
 import { listCategories } from "@lib/data/categories"
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
-import FilterDrawer from "@modules/store/components/filter-drawer"
 import StoreSidebar from "@modules/store/components/store-sidebar"
 import CategoryPills from "@modules/store/components/category-pills"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
+import StoreSortSelect from "@modules/store/components/store-sort-select"
 import PaginatedProducts from "./paginated-products"
 
 const StoreTemplate = async ({
@@ -40,16 +40,13 @@ const StoreTemplate = async ({
     <div className="bg-[var(--theme-bg)] w-full min-h-screen">
       {/* Hero header */}
       <div className="border-b border-[var(--theme-border)]">
-        <div className="content-container pt-6 pb-5 small:pt-10 small:pb-6">
-          <div className="flex items-center gap-3 mb-3">
-            <span className="h-px w-8 bg-hunter-gold" />
-            <span className="font-sans text-[10px] uppercase tracking-[5px] text-[var(--theme-text-muted)]">
-              Magazin
-            </span>
+        <div className="relative page-container pt-6 pb-5 small:pt-10 small:pb-6">
+          <div className="hidden small:block absolute bottom-0 right-0 translate-y-full py-3 px-10 z-10">
+            <StoreSortSelect sortBy={sort} />
           </div>
           <h1
             data-testid="store-page-title"
-            className="font-display text-4xl small:text-6xl text-[var(--theme-text)] leading-[0.95]"
+            className="font-display text-3xl small:text-6xl text-[var(--theme-text)] leading-[0.95]"
           >
             {heading === "Toate produsele" ? (
               <>
@@ -59,32 +56,29 @@ const StoreTemplate = async ({
               heading
             )}
           </h1>
-          <p className="mt-4 max-w-md font-serif text-lg text-[var(--theme-text-muted)] leading-relaxed">
-            Piese selectate cu grijă — cămăși, accesorii și colecții pentru
-            garderoba ta.
+          <p className="mt-2 small:mt-4 max-w-2xl font-serif text-sm small:text-lg text-[var(--theme-text-muted)] leading-relaxed line-clamp-3 small:line-clamp-2 min-h-[4.35rem] small:min-h-[3.75rem]">
+            {activeCategory?.description ||
+              (activeCollection?.metadata?.description as string) ||
+              "Piese selectate cu grijă — cămăși, accesorii și colecții pentru garderoba ta."}
           </p>
         </div>
       </div>
 
-      {/* Mobile filter + sort bar */}
-      <div className="small:hidden border-b border-[var(--theme-border)]">
-        <div className="content-container py-3 flex items-center justify-between gap-3">
-          <FilterDrawer
-            collections={collections}
-            categories={categories}
-            sortBy={sort}
-            selectedCollection={collectionId}
-            selectedCategory={categoryId}
-          />
-        </div>
-      </div>
-
-      {/* Mobile categories — horizontally scrollable */}
-      <CategoryPills categories={categories} selectedCategory={categoryId} />
+      {/* Mobile — horizontally scrollable chips: sort, collections, categories */}
+      <CategoryPills
+        categories={categories}
+        collections={collections}
+        selectedCategory={categoryId}
+        selectedCollection={collectionId}
+        sortBy={sort}
+      />
 
       {/* Two-column shop layout */}
-      <div className="content-container py-10 small:py-14">
-        <div className="flex gap-10 small:gap-14" data-testid="category-container">
+      <div className="page-container small:py-14">
+        <div
+          className="flex gap-10 small:gap-14"
+          data-testid="category-container"
+        >
           <StoreSidebar
             collections={collections}
             categories={categories}

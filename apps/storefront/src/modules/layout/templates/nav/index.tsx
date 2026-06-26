@@ -13,7 +13,6 @@ import NavShell from "@modules/layout/components/nav-shell"
 import {
   BagIcon,
   ShopIcon,
-  UserIcon,
 } from "@modules/layout/components/nav-icons"
 
 export default async function Nav() {
@@ -51,14 +50,6 @@ export default async function Nav() {
       </div>
 
       <div className="flex items-center gap-x-6 h-full flex-1 basis-0 justify-end opacity-80">
-        <LocalizedClientLink
-          className="hidden small:flex items-center hover:opacity-60 transition-opacity"
-          href="/account"
-          data-testid="nav-account-link"
-          aria-label="Account"
-        >
-          <UserIcon size={26} />
-        </LocalizedClientLink>
         <Suspense
           fallback={
             <LocalizedClientLink

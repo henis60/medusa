@@ -2,9 +2,9 @@
 
 import { addToCart } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
-import { useParams } from "next/navigation"
 import { useState, useMemo, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
+import { AnimatePresence, motion } from "framer-motion"
 import { COLOR_OPTION_NAMES as COLOR_TITLES } from "@lib/util/product"
 
 const COLOR_MAP: Record<string, string> = {
@@ -140,7 +140,7 @@ export default function QuickAddOverlay({
   mobileOnly,
   desktopOnly,
 }: Props) {
-  const countryCode = useParams().countryCode as string
+  const countryCode = "ro"
   const [selected, setSelected] = useState<Record<string, string>>({})
   const [adding, setAdding] = useState(false)
   const [added, setAdded] = useState(false)
@@ -428,140 +428,156 @@ export default function QuickAddOverlay({
       {mounted &&
         createPortal(
           <>
-            <div
-              className={`fixed inset-0 z-[9020] bg-black/50 transition-opacity duration-300 sm:hidden ${
-                mobileOpen
-                  ? "opacity-100 pointer-events-auto"
-                  : "opacity-0 pointer-events-none"
-              }`}
-              onTouchEnd={(e) => {
-                e.preventDefault()
-                ;(
-                  window as typeof window & { __overlayClosedAt?: number }
-                ).__overlayClosedAt = Date.now()
-                closeOverlay()
-              }}
-              onClick={closeOverlay}
-            />
-
-            <div
-              className={`fixed inset-x-0 bottom-0 z-[9021] bg-[var(--theme-bg)] border-t border-[var(--theme-border)] sm:hidden${
-                dragOffset === 0
-                  ? " transition-transform duration-300 ease-out"
-                  : ""
-              }`}
-              style={{
-                transform: mobileOpen
-                  ? `translateY(${dragOffset}px)`
-                  : "translateY(100%)",
-              }}
-            >
-              {/* Drag handle */}
-              <div
-                className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing touch-none"
-                onTouchStart={onDragStart}
-                onTouchMove={onDragMove}
-                onTouchEnd={onDragEnd}
-              >
-                <div className="w-10 h-1 rounded-full bg-[var(--theme-border)]" />
-              </div>
-
-              {/* Header */}
-              {title && (
-                <div
-                  className="px-6 py-3 border-b border-[var(--theme-border)] touch-none"
-                  onTouchStart={onDragStart}
-                  onTouchMove={onDragMove}
-                  onTouchEnd={onDragEnd}
-                >
-                  <span className="font-sans text-[10px] uppercase tracking-[4px] text-[var(--theme-text-muted)]">
-                    {title}
-                  </span>
-                </div>
-              )}
-
-              {/* Options */}
-              <div className="px-6 py-5 flex flex-col gap-6 overflow-y-auto max-h-[50dvh]">
-                {options.map((option) => {
-                  const sortedValues = sortOptionValues(
-                    option.values ?? [],
-                    false
-                  )
-                  return (
-                    <div key={option.id} className="flex flex-col gap-3">
-                      <span className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
-                        {option.title}
-                      </span>
-                      <div className="flex flex-wrap gap-2">
-                        {sortedValues.map((v) => {
-                          const isSelected =
-                            selected[option.id ?? ""] === v.value
-                          const unavailable = getDisabledValues(
-                            option.id ?? ""
-                          ).has(v.value ?? "")
-                          return (
-                            <button
-                              key={v.id}
-                              onClick={(e) =>
-                                !unavailable &&
-                                handleOptionClick(
-                                  e,
-                                  option.id ?? "",
-                                  v.value ?? ""
-                                )
-                              }
-                              disabled={unavailable}
-                              className={`inline-flex items-center justify-center h-10 min-w-[56px] px-4 border font-sans text-[11px] leading-none uppercase tracking-[2px] transition-colors duration-150 ${
-                                isSelected
-                                  ? "border-hunter-gold bg-hunter-gold/10 text-[var(--theme-text)]"
-                                  : unavailable
-                                  ? "border-[var(--theme-border)] text-[var(--theme-text-muted)] opacity-30 line-through cursor-not-allowed"
-                                  : "border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)]"
-                              }`}
-                            >
-                              {v.value}
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-
-              {/* Footer */}
-              <div className="px-6 py-4 border-t border-[var(--theme-border)] flex gap-3">
-                <button
+            <AnimatePresence>
+              {mobileOpen && (
+                <motion.div
+                  key="qao-backdrop"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="fixed inset-0 z-[9020] bg-black/50 sm:hidden"
                   onTouchEnd={(e) => {
                     e.preventDefault()
+                    ;(
+                      window as typeof window & { __overlayClosedAt?: number }
+                    ).__overlayClosedAt = Date.now()
                     closeOverlay()
                   }}
                   onClick={closeOverlay}
-                  className="flex-1 py-3 font-sans text-[10px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)] transition-colors"
-                >
-                  Înapoi
-                </button>
-                <button
-                  onClick={handleAdd}
-                  disabled={
-                    adding ||
-                    !inStock ||
-                    (!effectiveVariant && options.length > 0)
+                />
+              )}
+            </AnimatePresence>
+            <AnimatePresence>
+              {mobileOpen && (
+                <motion.div
+                  key="qao-sheet"
+                  initial={{ y: "100%" }}
+                  animate={{ y: dragOffset }}
+                  exit={{ y: "100%" }}
+                  transition={
+                    dragging.current
+                      ? { duration: 0 }
+                      : {
+                          duration: 0.38,
+                          ease: [0.22, 1, 0.36, 1] as [
+                            number,
+                            number,
+                            number,
+                            number
+                          ],
+                        }
                   }
-                  className="flex-[2] py-3 font-sans text-[10px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="fixed inset-x-0 bottom-0 z-[9021] bg-[var(--theme-bg)] border-t border-[var(--theme-border)] sm:hidden"
                 >
-                  {adding
-                    ? "Se adaugă…"
-                    : added
-                    ? "Adăugat ✓"
-                    : !effectiveVariant && options.length > 0
-                    ? selectLabel
-                    : !inStock
-                    ? "Stoc epuizat"
-                    : "Adaugă în coș"}
-                </button>
-              </div>
-            </div>
+                  {/* Drag handle */}
+                  <div
+                    className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing touch-none"
+                    onTouchStart={onDragStart}
+                    onTouchMove={onDragMove}
+                    onTouchEnd={onDragEnd}
+                  >
+                    <div className="w-10 h-1 rounded-full bg-[var(--theme-border)]" />
+                  </div>
+
+                  {/* Header */}
+                  {title && (
+                    <div
+                      className="px-6 py-3 border-b border-[var(--theme-border)] touch-none"
+                      onTouchStart={onDragStart}
+                      onTouchMove={onDragMove}
+                      onTouchEnd={onDragEnd}
+                    >
+                      <span className="font-sans text-[10px] uppercase tracking-[4px] text-[var(--theme-text-muted)]">
+                        {title}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Options */}
+                  <div className="px-6 py-5 flex flex-col gap-6 overflow-y-auto max-h-[50dvh]">
+                    {options.map((option) => {
+                      const sortedValues = sortOptionValues(
+                        option.values ?? [],
+                        false
+                      )
+                      return (
+                        <div key={option.id} className="flex flex-col gap-3">
+                          <span className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
+                            {option.title}
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            {sortedValues.map((v) => {
+                              const isSelected =
+                                selected[option.id ?? ""] === v.value
+                              const unavailable = getDisabledValues(
+                                option.id ?? ""
+                              ).has(v.value ?? "")
+                              return (
+                                <button
+                                  key={v.id}
+                                  onClick={(e) =>
+                                    !unavailable &&
+                                    handleOptionClick(
+                                      e,
+                                      option.id ?? "",
+                                      v.value ?? ""
+                                    )
+                                  }
+                                  disabled={unavailable}
+                                  className={`inline-flex items-center justify-center h-10 min-w-[56px] px-4 border font-sans text-[11px] leading-none uppercase tracking-[2px] transition-colors duration-150 ${
+                                    isSelected
+                                      ? "border-hunter-gold bg-hunter-gold/10 text-[var(--theme-text)]"
+                                      : unavailable
+                                      ? "border-[var(--theme-border)] text-[var(--theme-text-muted)] opacity-30 line-through cursor-not-allowed"
+                                      : "border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)]"
+                                  }`}
+                                >
+                                  {v.value}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="px-6 py-4 border-t border-[var(--theme-border)] flex gap-3">
+                    <button
+                      onTouchEnd={(e) => {
+                        e.preventDefault()
+                        closeOverlay()
+                      }}
+                      onClick={closeOverlay}
+                      className="flex-1 py-3 font-sans text-[10px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)] transition-colors"
+                    >
+                      Înapoi
+                    </button>
+                    <button
+                      onClick={handleAdd}
+                      disabled={
+                        adding ||
+                        !inStock ||
+                        (!effectiveVariant && options.length > 0)
+                      }
+                      className="flex-[2] py-3 font-sans text-[10px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {adding
+                        ? "Se adaugă…"
+                        : added
+                        ? "Adăugat ✓"
+                        : !effectiveVariant && options.length > 0
+                        ? selectLabel
+                        : !inStock
+                        ? "Stoc epuizat"
+                        : "Adaugă în coș"}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </>,
           document.body
         )}

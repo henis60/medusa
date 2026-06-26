@@ -11,9 +11,9 @@ const Items = ({ order }: ItemsProps) => {
   )
 
   return (
-    <div className="px-4 small:px-8 py-6">
+    <div className="small:px-8 py-6">
       <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-5">
-        Items
+        Produse
       </p>
       <div className="flex flex-col gap-5" data-testid="products-table">
         {items?.map((item) => (

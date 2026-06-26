@@ -12,7 +12,7 @@ type AccountInfoProps = {
   errorMessage?: string
   clearState: () => void
   children?: React.ReactNode
-  'data-testid'?: string
+  "data-testid"?: string
 }
 
 const SaveButton = () => {
@@ -24,7 +24,7 @@ const SaveButton = () => {
       data-testid="save-button"
       className="h-10 px-6 font-sans text-[10px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark hover:bg-hunter-gold/90 transition-colors disabled:opacity-50"
     >
-      {pending ? "Saving…" : "Save changes"}
+      {pending ? "Se salvează…" : "Salvează"}
     </button>
   )
 }
@@ -35,9 +35,9 @@ const AccountInfo = ({
   isSuccess,
   isError,
   clearState,
-  errorMessage = "An error occurred, please try again",
+  errorMessage = "A apărut o eroare, încearcă din nou",
   children,
-  'data-testid': dataTestid
+  "data-testid": dataTestid,
 }: AccountInfoProps) => {
   const { state, close, toggle } = useToggleState()
 
@@ -60,7 +60,10 @@ const AccountInfo = ({
             {label}
           </span>
           {!state && (
-            <div className="font-serif text-[15px] text-[var(--theme-text)]" data-testid="current-info">
+            <div
+              className="font-serif text-[15px] text-[var(--theme-text)]"
+              data-testid="current-info"
+            >
               {currentInfo}
             </div>
           )}
@@ -72,7 +75,7 @@ const AccountInfo = ({
           data-active={state}
           className="shrink-0 font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5"
         >
-          {state ? "Cancel" : "Edit"}
+          {state ? "Anulează" : "Editează"}
         </button>
       </div>
 
@@ -106,7 +109,9 @@ const AccountInfo = ({
       <div
         className={clx(
           "transition-[max-height,opacity] duration-300 ease-in-out",
-          state ? "max-h-[1000px] opacity-100 overflow-visible" : "max-h-0 opacity-0 overflow-hidden"
+          state
+            ? "max-h-[1000px] opacity-100 overflow-visible"
+            : "max-h-0 opacity-0 overflow-hidden"
         )}
       >
         <div className="flex flex-col gap-y-3 pt-4">

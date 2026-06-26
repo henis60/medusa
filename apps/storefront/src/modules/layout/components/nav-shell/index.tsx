@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 
 const NavShell = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname()
-  const isLanding = (pathname?.split("/").filter(Boolean).length ?? 0) <= 1
+  const isLanding = (pathname?.split("/").filter(Boolean).length ?? 0) === 0
 
   const [scrolled, setScrolled] = useState(false)
 

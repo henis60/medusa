@@ -22,12 +22,9 @@ const sortOptions: { value: SortOptions; label: string }[] = [
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2.5 mb-5">
-      <span className="h-px w-5 bg-hunter-gold" />
-      <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)]">
-        {children}
-      </p>
-    </div>
+    <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-3">
+      {children}
+    </p>
   )
 }
 
@@ -45,6 +42,9 @@ export default function StoreSidebar({
   const updateParam = useCallback(
     (key: string, value: string | null) => {
       const params = new URLSearchParams(searchParams)
+      // categories and collections are mutually exclusive
+      if (key === "category") params.delete("collection")
+      if (key === "collection") params.delete("category")
       if (value) {
         params.set(key, value)
       } else {
@@ -55,6 +55,14 @@ export default function StoreSidebar({
     },
     [pathname, router, searchParams]
   )
+
+  const clearAll = useCallback(() => {
+    const params = new URLSearchParams(searchParams)
+    params.delete("category")
+    params.delete("collection")
+    params.delete("page")
+    router.push(`${pathname}?${params.toString()}`)
+  }, [pathname, router, searchParams])
 
   const hasFilters = !!selectedCollection || !!selectedCategory
 
@@ -70,9 +78,9 @@ export default function StoreSidebar({
     <button
       onClick={onClick}
       className={clx(
-        "w-full text-left font-serif text-xl leading-snug py-1 transition-colors",
+        "w-full text-left py-2 font-serif text-[22px] leading-none transition-colors duration-150",
         active
-          ? "text-hunter-gold italic"
+          ? "text-[var(--theme-gold)] italic"
           : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
       )}
     >
@@ -81,16 +89,16 @@ export default function StoreSidebar({
   )
 
   return (
-    <aside className="hidden small:block w-60 shrink-0">
-      <div className="sticky top-28 flex flex-col divide-y divide-[var(--theme-border)]">
+    <aside className="hidden small:block w-52 shrink-0">
+      <div className="sticky top-28 flex flex-col">
         {/* Categories */}
         {categories.length > 0 && (
           <div className="pb-8">
             <SectionLabel>Categorii</SectionLabel>
-            <nav className="flex flex-col gap-0.5">
+            <nav className="flex flex-col">
               <NavItem
-                active={!selectedCategory}
-                onClick={() => updateParam("category", null)}
+                active={!selectedCategory && !selectedCollection}
+                onClick={clearAll}
               >
                 Toate
               </NavItem>
@@ -114,9 +122,9 @@ export default function StoreSidebar({
 
         {/* Collections */}
         {collections.length > 0 && (
-          <div className="py-8">
+          <div className="py-8 border-t border-[var(--theme-border)]">
             <SectionLabel>Colecții</SectionLabel>
-            <nav className="flex flex-col gap-0.5">
+            <nav className="flex flex-col">
               {collections.map((c) => (
                 <NavItem
                   key={c.id}
@@ -135,32 +143,10 @@ export default function StoreSidebar({
           </div>
         )}
 
-        {/* Sort */}
-        <div className="py-8">
-          <SectionLabel>Sortare</SectionLabel>
-          <nav className="flex flex-col gap-0.5">
-            {sortOptions.map((opt) => (
-              <NavItem
-                key={opt.value}
-                active={sortBy === opt.value}
-                onClick={() => updateParam("sortBy", opt.value)}
-              >
-                {opt.label}
-              </NavItem>
-            ))}
-          </nav>
-        </div>
-
         {hasFilters && (
           <div className="pt-8">
             <button
-              onClick={() => {
-                const params = new URLSearchParams(searchParams)
-                params.delete("collection")
-                params.delete("category")
-                params.delete("page")
-                router.push(`${pathname}?${params.toString()}`)
-              }}
+              onClick={clearAll}
               className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-transparent hover:border-hunter-gold pb-0.5"
             >
               Resetează filtrele

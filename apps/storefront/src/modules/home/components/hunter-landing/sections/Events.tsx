@@ -1,6 +1,19 @@
 "use client"
 
+import { motion, useReducedMotion } from "framer-motion"
+
 export default function Events() {
+  const reduced = useReducedMotion()
+
+  const barVariants = {
+    hidden: { height: 0 },
+    visible: {
+      height: "100%",
+      transition: reduced
+        ? { duration: 0 }
+        : ({ duration: 0.8, ease: [0.23, 1, 0.32, 1] } as const),
+    },
+  }
   const events = [
     {
       id: 1,
@@ -54,7 +67,8 @@ export default function Events() {
           <span className="kicker-bar"></span>Events
         </div>
         <h2 className="sec-title rv">
-          Seri care<br />
+          Seri care
+          <br />
           nu se <em>uită</em>
         </h2>
         <div className="line-draw rv" style={{ maxWidth: "260px" }}></div>
@@ -65,6 +79,13 @@ export default function Events() {
               className="ev rv"
               style={{ transitionDelay: event.delay }}
             >
+              <motion.div
+                className="ev-bar"
+                variants={barVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.25 }}
+              />
               <div className="ev-freq">{event.freq}</div>
               <div className="ev-title">
                 {event.title.replace(event.highlighted, "")}

@@ -3,6 +3,7 @@
 import { HttpTypes } from "@medusajs/types"
 import { useSearchParams } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
+import { AnimatePresence, motion } from "framer-motion"
 import Image from "next/image"
 import { resolveImageUrl } from "@lib/util/image-url"
 
@@ -16,7 +17,7 @@ type Props = {
 function getVariantFirstImageIndex(
   variantId: string | null,
   variants: HttpTypes.StoreProductVariant[] | null | undefined,
-  allImages: HttpTypes.StoreProductImage[],
+  allImages: HttpTypes.StoreProductImage[]
 ): number {
   if (!variantId || !variants || !allImages.length) return 0
 
@@ -66,7 +67,9 @@ export default function VariantAwareGallery({
   }
   // Mouse drag for desktop
   const mouseStartX = useRef<number | null>(null)
-  const onMouseDown = (e: React.MouseEvent) => { mouseStartX.current = e.clientX }
+  const onMouseDown = (e: React.MouseEvent) => {
+    mouseStartX.current = e.clientX
+  }
   const onMouseUp = (e: React.MouseEvent) => {
     if (mouseStartX.current === null) return
     const dx = e.clientX - mouseStartX.current
@@ -113,17 +116,28 @@ export default function VariantAwareGallery({
           onMouseDown={onMouseDown}
           onMouseUp={onMouseUp}
         >
-          {selected?.url && (
-            <Image
-              src={resolveImageUrl(selected.url)!}
-              alt="Product image"
-              fill
-              priority
-              draggable={false}
-              className="object-contain object-center transition-opacity duration-300 pointer-events-none"
-              sizes="(max-width: 1024px) 100vw, 55vw"
-            />
-          )}
+          <AnimatePresence mode="sync">
+            {selected?.url && (
+              <motion.div
+                key={selected.url}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.35, ease: "easeInOut" }}
+                className="absolute inset-0"
+              >
+                <Image
+                  src={resolveImageUrl(selected.url)!}
+                  alt="Product image"
+                  fill
+                  priority
+                  draggable={false}
+                  className="object-contain object-center pointer-events-none"
+                  sizes="(max-width: 1024px) 100vw, 55vw"
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Dots */}

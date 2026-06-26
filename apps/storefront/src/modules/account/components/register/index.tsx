@@ -1,12 +1,15 @@
 "use client"
 
-import { useActionState } from "react"
+import { startTransition, useActionState } from "react"
 import Input from "@modules/common/components/input"
 import { LOGIN_VIEW } from "@modules/account/templates/login-template"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { signup } from "@lib/data/customer"
+import Script from "next/script"
+
+const RECAPTCHA_SITEKEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!
 
 type Props = {
   setCurrentView: (view: LOGIN_VIEW) => void
@@ -18,32 +21,46 @@ const Register = ({ setCurrentView }: Props) => {
     null as string | null
   )
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    try {
+      await new Promise<void>((resolve) => window.grecaptcha.ready(resolve))
+      const token = await window.grecaptcha.execute(RECAPTCHA_SITEKEY, { action: "register" })
+      formData.set("recaptchaToken", token)
+    } catch {
+      // proceed without token — server will reject
+    }
+    startTransition(() => formAction(formData))
+  }
+
   return (
     <div
       className="w-full max-w-sm flex flex-col items-center"
       data-testid="register-page"
     >
-      <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-3">
-        The Hunter House
-      </p>
-      <h1 className="font-display text-[34px] leading-[1] text-[var(--theme-text)] mb-2">
-        Become a Member
+      <Script
+        src={`https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITEKEY}`}
+        strategy="lazyOnload"
+      />
+      <h1 className="font-display text-[42px] leading-[1] text-[var(--theme-text)] mb-2">
+        Creează un Cont
       </h1>
-      <p className="font-sans text-[11px] text-[var(--theme-text-muted)] mb-10 text-center">
-        Create your profile and get access to an enhanced shopping experience.
+      <p className="font-sans text-[14px] text-[var(--theme-text-muted)] mb-10 text-center">
+        Creează-ți profilul și accesează o experiență de cumpărături îmbunătățită.
       </p>
 
-      <form className="w-full flex flex-col" action={formAction}>
+      <form className="w-full flex flex-col" onSubmit={handleSubmit}>
         <div className="flex flex-col w-full gap-y-3">
           <Input
-            label="First name"
+            label="Prenume"
             name="first_name"
             required
             autoComplete="given-name"
             data-testid="first-name-input"
           />
           <Input
-            label="Last name"
+            label="Nume"
             name="last_name"
             required
             autoComplete="family-name"
@@ -58,14 +75,14 @@ const Register = ({ setCurrentView }: Props) => {
             data-testid="email-input"
           />
           <Input
-            label="Phone"
+            label="Telefon"
             name="phone"
             type="tel"
             autoComplete="tel"
             data-testid="phone-input"
           />
           <Input
-            label="Password"
+            label="Parolă"
             name="password"
             required
             type="password"
@@ -74,40 +91,37 @@ const Register = ({ setCurrentView }: Props) => {
           />
         </div>
         <ErrorMessage error={message} data-testid="register-error" />
-        <p className="font-sans text-[10px] text-[var(--theme-text-muted)] mt-6 text-center leading-relaxed">
-          By creating an account, you agree to our{" "}
+        <p className="font-sans text-[11px] text-[var(--theme-text-muted)] mt-6 leading-relaxed">
+          Prin crearea unui cont, ești de acord cu{" "}
           <LocalizedClientLink
-            href="/content/privacy-policy"
+            href="/privacy-policy"
             className="text-[var(--theme-text)] hover:text-hunter-gold underline underline-offset-2 transition-colors"
           >
-            Privacy Policy
+            Politica de Confidențialitate
           </LocalizedClientLink>{" "}
-          and{" "}
+          și{" "}
           <LocalizedClientLink
-            href="/content/terms-of-use"
+            href="/terms-of-use"
             className="text-[var(--theme-text)] hover:text-hunter-gold underline underline-offset-2 transition-colors"
           >
-            Terms of Use
+            Termenii de Utilizare
           </LocalizedClientLink>
           .
         </p>
         <SubmitButton
-          className="w-full mt-4 h-12 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent font-sans uppercase tracking-[3px] text-[11px]"
+          className="w-full mt-4 h-12 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent font-sans uppercase tracking-[3px] text-[13px]"
           data-testid="register-button"
         >
-          Create Account
+          Creează Cont
         </SubmitButton>
+        <p className="font-sans text-[11px] text-[var(--theme-text-muted)] mt-4 text-center leading-relaxed">
+          Protejat de reCAPTCHA —{" "}
+          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-hunter-gold transition-colors">Confidențialitate</a>
+          {" "}&amp;{" "}
+          <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-hunter-gold transition-colors">Termeni</a>
+        </p>
       </form>
 
-      <p className="font-sans text-[10px] text-[var(--theme-text-muted)] mt-8 text-center">
-        Already a member?{" "}
-        <button
-          onClick={() => setCurrentView(LOGIN_VIEW.SIGN_IN)}
-          className="text-[var(--theme-text)] hover:text-hunter-gold transition-colors underline underline-offset-2"
-        >
-          Sign in
-        </button>
-      </p>
     </div>
   )
 }
