@@ -14,6 +14,7 @@ import { HttpTypes } from "@medusajs/types"
 
 import ProductActionsWrapper from "./product-actions-wrapper"
 import ProductFavoriteButton from "@modules/products/components/product-favorite-button"
+import AnimatedColumn from "@modules/products/components/animated-column"
 
 type ProductTemplateProps = {
   product: HttpTypes.StoreProduct
@@ -37,7 +38,11 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
   return (
     <div className="bg-[var(--theme-bg)] min-h-screen">
       {/* Back to shop */}
-      <div className="page-container pt-3 small:pt-6 pb-0">
+      <AnimatedColumn
+        direction="up"
+        delay={0}
+        className="page-container pt-3 small:pt-6 pb-0"
+      >
         <LocalizedClientLink
           href="/store"
           className="inline-flex items-center gap-2 text-[var(--theme-text-muted)] hover:text-[var(--theme-gold)] transition-colors font-sans text-[11px] uppercase tracking-[3px]"
@@ -45,7 +50,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
           <span>←</span>
           <span>Înapoi la shop</span>
         </LocalizedClientLink>
-      </div>
+      </AnimatedColumn>
 
       {/* Main product section */}
       <div
@@ -53,7 +58,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
         data-testid="product-container"
       >
         {/* Images — left, scrolls with page */}
-        <div>
+        <AnimatedColumn direction="left" delay={0.1}>
           <Suspense fallback={<ImageGallery images={images} />}>
             <VariantAwareGallery
               defaultImages={images}
@@ -62,10 +67,14 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
               allImages={product.images ?? []}
             />
           </Suspense>
-        </div>
+        </AnimatedColumn>
 
         {/* Info + actions — right, sticky */}
-        <div className="flex flex-col gap-y-6 small:sticky small:top-24 small:self-start py-4 small:py-0">
+        <AnimatedColumn
+          direction="right"
+          delay={0.2}
+          className="flex flex-col gap-y-6 small:sticky small:top-24 small:self-start py-4 small:py-0"
+        >
           <ProductOnboardingCta />
           <ProductInfo
             product={product}
@@ -87,10 +96,14 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
               />
             }
           >
-            <ProductActionsWrapper id={product.id} region={region} fallbackProduct={previewFallback ? product : undefined} />
+            <ProductActionsWrapper
+              id={product.id}
+              region={region}
+              fallbackProduct={previewFallback ? product : undefined}
+            />
           </Suspense>
           <ProductTabs product={product} />
-        </div>
+        </AnimatedColumn>
       </div>
 
       {/* Related / fits-with products */}

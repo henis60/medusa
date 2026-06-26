@@ -1,18 +1,13 @@
 "use client"
 
-import {
-  Popover,
-  PopoverPanel,
-  Transition,
-  TransitionChild,
-} from "@headlessui/react"
-import useToggleState from "@lib/hooks/use-toggle-state"
-import { ArrowRightMini, XMark } from "@medusajs/icons"
+import { Popover, PopoverPanel } from "@headlessui/react"
+import { AnimatePresence, motion } from "framer-motion"
+import { XMark } from "@medusajs/icons"
 import { MenuIcon } from "@modules/layout/components/nav-icons"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { clx } from "@modules/common/components/ui"
-import { Fragment, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { useTheme } from "next-themes"
 import LanguageSelect from "../language-select"
@@ -84,7 +79,7 @@ function ThemeToggle() {
 
   return (
     <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-[var(--theme-text-muted)]">
-      <span>Theme</span>
+      <span>Temă</span>
       <div className="flex items-center gap-3">
         {(["light", "system", "dark"] as const).map((t) => (
           <button
@@ -157,7 +152,7 @@ function ShopMenuItem({
         {categories.map((c) => (
           <li key={c.id}>
             <LocalizedClientLink
-              href={`/categories/${c.handle}`}
+              href={`/store?category=${c.id}`}
               className={subLinkClass}
               onClick={close}
             >
@@ -177,7 +172,6 @@ const SideMenu = ({
   collections,
   categories,
 }: SideMenuProps) => {
-  const languageToggleState = useToggleState()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -204,141 +198,138 @@ const SideMenu = ({
 
               {mounted &&
                 createPortal(
-                  <Transition show={open} as={Fragment}>
-                    <TransitionChild
-                      as={Fragment}
-                      enter="transition ease-out duration-300"
-                      enterFrom="opacity-0"
-                      enterTo="opacity-100"
-                      leave="transition ease-in duration-200"
-                      leaveFrom="opacity-100"
-                      leaveTo="opacity-0"
-                    >
-                      <div
-                        className="fixed inset-0 z-[9010] bg-[rgba(6,10,8,0.55)] backdrop-blur-[2px] pointer-events-auto"
-                        onClick={close}
-                        data-testid="side-menu-backdrop"
-                      />
-                    </TransitionChild>
+                  <AnimatePresence>
+                    {open && (
+                      <>
+                        {/* Backdrop */}
+                        <motion.div
+                          key="backdrop"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.3, ease: "easeOut" }}
+                          className="fixed inset-0 z-[9010] bg-[rgba(6,10,8,0.55)] backdrop-blur-[2px] pointer-events-auto"
+                          onClick={close}
+                          data-testid="side-menu-backdrop"
+                        />
 
-                    <TransitionChild
-                      as={Fragment}
-                      enter="transform transition ease-out duration-300"
-                      enterFrom="opacity-0 -translate-x-full"
-                      enterTo="opacity-100 translate-x-0"
-                      leave="transform transition ease-in duration-200"
-                      leaveFrom="opacity-100 translate-x-0"
-                      leaveTo="opacity-0 -translate-x-full"
-                    >
-                      <PopoverPanel className="fixed inset-y-0 left-0 right-0 z-[9011] h-dvh sm:right-auto sm:w-[380px] will-change-transform">
-                        <div
-                          data-scroll-lock-allow="true"
-                          data-testid="nav-menu-popup"
-                          className="flex flex-col h-full overflow-y-auto overscroll-contain bg-[var(--theme-bg)] shadow-2xl"
+                        {/* Panel */}
+                        <motion.div
+                          key="panel"
+                          initial={{ x: "-100%" }}
+                          animate={{ x: 0 }}
+                          exit={{ x: "-100%" }}
+                          transition={{
+                            duration: 0.42,
+                            ease: [0.22, 1, 0.36, 1],
+                          }}
+                          className="fixed inset-y-0 left-0 right-0 z-[9011] h-dvh sm:right-auto sm:w-[380px] will-change-transform"
                         >
-                          {/* Header */}
-                          <div className="flex items-center justify-between px-8 h-16 border-b border-[var(--theme-border)] shrink-0">
-                            <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-[var(--theme-text-muted)]">
-                              Menu
-                            </span>
-                            <button
-                              data-testid="close-menu-button"
-                              onClick={close}
-                              aria-label="Close menu"
-                              className="inline-flex h-12 w-12 items-center justify-end text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
+                          <PopoverPanel static className="h-full">
+                            <div
+                              data-scroll-lock-allow="true"
+                              data-testid="nav-menu-popup"
+                              className="flex flex-col h-full overflow-y-auto overscroll-contain bg-[var(--theme-bg)] shadow-2xl"
                             >
-                              <XMark />
-                            </button>
-                          </div>
-
-                          {/* Navigation */}
-                          <nav className="flex-1 px-8 pt-8 pb-6 flex flex-col">
-                            {/* Primary group */}
-                            <ul className="flex flex-col">
-                              <li>
-                                <LocalizedClientLink
-                                  href="/"
-                                  className="flex items-center py-2.5 font-display text-[26px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
+                              {/* Header */}
+                              <div className="flex items-center justify-between px-8 h-16 border-b border-[var(--theme-border)] shrink-0">
+                                <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-[var(--theme-text-muted)]">
+                                  Menu
+                                </span>
+                                <button
+                                  data-testid="close-menu-button"
                                   onClick={close}
+                                  aria-label="Close menu"
+                                  className="inline-flex h-12 w-12 items-center justify-end text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
                                 >
-                                  Home
-                                </LocalizedClientLink>
-                              </li>
-
-                              {/* Shop → categorii */}
-                              {categories?.length ? (
-                                <ShopMenuItem categories={categories} close={close} />
-                              ) : (
-                                <li>
-                                  <LocalizedClientLink
-                                    href="/store"
-                                    className="flex items-center py-2.5 font-display text-[26px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
-                                    onClick={close}
-                                  >
-                                    Shop
-                                  </LocalizedClientLink>
-                                </li>
-                              )}
-
-                              {/* Colecții */}
-                              {!!collections?.length && (
-                                <CollectionsMenuItem
-                                  collections={collections}
-                                  close={close}
-                                />
-                              )}
-                            </ul>
-
-                            {/* Secondary links — bottom */}
-                            <ul className="flex flex-col mt-auto pt-10">
-                              {[
-                                { label: "Contact", href: "/contact" },
-                                { label: "Contul meu", href: "/account" },
-                                { label: "Relații cu clienții", href: "/relatii-clienti" },
-                                { label: "Întrebări frecvente", href: "/faq" },
-                              ].map(({ label, href }) => (
-                                <li key={label}>
-                                  <LocalizedClientLink
-                                    href={href}
-                                    className="flex items-center py-2 font-sans text-[13px] uppercase tracking-[3px] text-[var(--theme-text-muted)] transition-colors duration-200 hover:text-hunter-gold"
-                                    onClick={close}
-                                  >
-                                    {label}
-                                  </LocalizedClientLink>
-                                </li>
-                              ))}
-                            </ul>
-                          </nav>
-
-                          {/* Footer */}
-                          <div className="shrink-0 px-8 pb-8 pt-6 flex flex-col gap-y-4 border-t border-[var(--theme-border)]">
-                            <ThemeToggle />
-                            {!!locales?.length && (
-                              <div
-                                className="flex justify-between items-center text-[11px] uppercase tracking-[0.2em] text-[var(--theme-text-muted)]"
-                                onMouseEnter={languageToggleState.open}
-                                onMouseLeave={languageToggleState.close}
-                              >
-                                <LanguageSelect
-                                  toggleState={languageToggleState}
-                                  locales={locales}
-                                  currentLocale={currentLocale}
-                                />
-                                <ArrowRightMini
-                                  className={clx(
-                                    "transition-transform duration-150",
-                                    languageToggleState.state
-                                      ? "-rotate-90"
-                                      : ""
-                                  )}
-                                />
+                                  <XMark />
+                                </button>
                               </div>
-                            )}
-                          </div>
-                        </div>
-                      </PopoverPanel>
-                    </TransitionChild>
-                  </Transition>,
+
+                              {/* Navigation */}
+                              <nav className="flex-1 px-8 pt-8 pb-6 flex flex-col">
+                                {/* Primary group */}
+                                <ul className="flex flex-col">
+                                  <li>
+                                    <LocalizedClientLink
+                                      href="/"
+                                      className="flex items-center py-2.5 font-display text-[26px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
+                                      onClick={close}
+                                    >
+                                      Home
+                                    </LocalizedClientLink>
+                                  </li>
+
+                                  {/* Shop → categorii */}
+                                  {categories?.length ? (
+                                    <ShopMenuItem
+                                      categories={categories}
+                                      close={close}
+                                    />
+                                  ) : (
+                                    <li>
+                                      <LocalizedClientLink
+                                        href="/store"
+                                        className="flex items-center py-2.5 font-display text-[26px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
+                                        onClick={close}
+                                      >
+                                        Shop
+                                      </LocalizedClientLink>
+                                    </li>
+                                  )}
+
+                                  {/* Colecții */}
+                                  {!!collections?.length && (
+                                    <CollectionsMenuItem
+                                      collections={collections}
+                                      close={close}
+                                    />
+                                  )}
+                                </ul>
+
+                                {/* Secondary links — bottom */}
+                                <ul className="flex flex-col mt-auto pt-10">
+                                  {[
+                                    { label: "Profil", href: "/account" },
+                                    { label: "Contact", href: "/contact" },
+                                    {
+                                      label: "Relații cu clienții",
+                                      href: "/relatii-clienti",
+                                    },
+                                    {
+                                      label: "Întrebări frecvente",
+                                      href: "/faq",
+                                    },
+                                  ].map(({ label, href }) => (
+                                    <li key={label}>
+                                      <LocalizedClientLink
+                                        href={href}
+                                        className="flex items-center py-2 font-sans text-[13px] uppercase tracking-[3px] text-[var(--theme-text-muted)] transition-colors duration-200 hover:text-hunter-gold"
+                                        onClick={close}
+                                      >
+                                        {label}
+                                      </LocalizedClientLink>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </nav>
+
+                              {/* Footer */}
+                              <div className="shrink-0 px-8 pb-8 pt-6 flex flex-col gap-y-4 border-t border-[var(--theme-border)]">
+                                {!!locales?.length && (
+                                  <LanguageSelect
+                                    locales={locales}
+                                    currentLocale={currentLocale}
+                                  />
+                                )}
+                                <ThemeToggle />
+                              </div>
+                            </div>
+                          </PopoverPanel>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>,
                   document.body
                 )}
             </>

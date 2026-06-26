@@ -1,7 +1,8 @@
 import React from "react"
 
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import AccountNav from "../components/account-nav"
+import AccountBackLink from "../components/account-back-link"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
 
 interface AccountLayoutProps {
@@ -9,25 +10,29 @@ interface AccountLayoutProps {
   children: React.ReactNode
 }
 
-const AccountLayout: React.FC<AccountLayoutProps> = ({ customer, children }) => {
+const AccountLayout: React.FC<AccountLayoutProps> = ({
+  customer,
+  children,
+}) => {
   return (
     <div className="flex-1 py-6 sm:py-10" data-testid="account-page">
       <div className="page-container">
         {customer && (
-          <div className="mb-6 sm:mb-10">
+          <div className="border-b border-[var(--theme-border)] pb-6 sm:pb-10">
             <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-2">
-              Contul meu
+              Profil
             </p>
             <h1 className="font-display text-4xl small:text-5xl text-[var(--theme-text)] leading-tight">
-              Welcome back,<br />
-              <span className="italic text-hunter-gold">{customer.first_name}</span>
+              Bun venit înapoi,
+              <br />
+              <span className="italic text-hunter-gold">
+                {customer.first_name}
+              </span>
             </h1>
           </div>
         )}
-        <div className="grid grid-cols-1 small:grid-cols-[220px_1fr] gap-0 border-t border-[var(--theme-border)]">
-          <div className="border-b small:border-b-0 small:border-r border-[var(--theme-border)]">
-            {customer && <AccountNav customer={customer} />}
-          </div>
+        <div className="grid grid-cols-1 small:grid-cols-[220px_1fr] small:gap-10">
+          <div>{customer && <AccountNav customer={customer} />}</div>
           <div className="flex-1 min-w-0">{children}</div>
         </div>
 

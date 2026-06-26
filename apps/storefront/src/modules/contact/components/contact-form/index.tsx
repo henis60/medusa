@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Script from "next/script"
 
-const RECAPTCHA_SITEKEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? "6LdnohktAAAAAOnmNaDbJ1bBeKx3irV5qgeqoOI5"
+const RECAPTCHA_SITEKEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!
 
 declare global {
   interface Window {
@@ -50,7 +50,8 @@ export default function ContactForm() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? "",
+            "x-publishable-api-key":
+              process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? "",
           },
           body: JSON.stringify({
             name: data.get("name"),
@@ -72,7 +73,9 @@ export default function ContactForm() {
       setStatus("success")
       form.reset()
     } catch {
-      setErrorMsg("Nu am putut trimite mesajul. Verifică conexiunea și încearcă din nou.")
+      setErrorMsg(
+        "Nu am putut trimite mesajul. Verifică conexiunea și încearcă din nou."
+      )
       setStatus("error")
     }
   }
@@ -151,13 +154,35 @@ export default function ContactForm() {
           <p className="font-sans text-xs text-red-400">{errorMsg}</p>
         )}
 
-        <button
-          type="submit"
-          disabled={status === "loading"}
-          className="self-start h-11 px-8 font-sans text-[10px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark hover:opacity-90 transition-opacity disabled:opacity-50"
-        >
-          {status === "loading" ? "Se trimite..." : "Trimite mesajul"}
-        </button>
+        <div className="flex flex-col gap-2">
+          <button
+            type="submit"
+            disabled={status === "loading"}
+            className="self-start h-11 px-8 font-sans text-[10px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {status === "loading" ? "Se trimite..." : "Trimite mesajul"}
+          </button>
+          <p className="font-sans text-[9px] text-[var(--theme-text-muted)] leading-relaxed">
+            Protejat de reCAPTCHA —{" "}
+            <a
+              href="https://policies.google.com/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-hunter-gold transition-colors"
+            >
+              Confidențialitate
+            </a>{" "}
+            &amp;{" "}
+            <a
+              href="https://policies.google.com/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-hunter-gold transition-colors"
+            >
+              Termeni
+            </a>
+          </p>
+        </div>
       </form>
     </>
   )

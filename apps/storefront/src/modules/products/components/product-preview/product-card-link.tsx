@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter, useParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useRef, useCallback } from "react"
 
 type Props = {
@@ -17,8 +17,7 @@ export default function ProductCardLink({
   children,
 }: Props) {
   const router = useRouter()
-  const { countryCode } = useParams()
-  const fullHref = `/${countryCode}${href}`
+  const fullHref = href
 
   const touchStartY = useRef<number>(0)
   const touchStartX = useRef<number>(0)

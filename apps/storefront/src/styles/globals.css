@@ -208,9 +208,11 @@
 .hunter-landing *,
 .hunter-landing *::before,
 .hunter-landing *::after {
+  box-sizing: border-box;
+}
+.hunter-landing {
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
 }
 html {
   scroll-behavior: smooth;
@@ -448,22 +450,18 @@ body.hunter-landing-active::before {
   max-width: 1100px;
 }
 
-/* eyebrow with animated lines */
+/* eyebrow — entrance animated by Framer */
 .eyebrow {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 14px;
   margin-bottom: 28px;
-  opacity: 0;
-  animation: fadeSlideUp 0.9s 0.2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
 }
 .eyebrow-line {
   height: 1px;
   flex: 0 0 40px;
   background: var(--gold-d);
-  transform: scaleX(0);
-  animation: growLine 1s 0.5s forwards;
 }
 .eyebrow > :first-child {
   transform-origin: left;
@@ -513,19 +511,16 @@ body.hunter-landing-active::before {
 }
 .char {
   display: inline-block;
-  transform: translateY(100%);
-  animation: charIn 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  /* y-translate animated by Framer */
 }
 
-/* ornament */
+/* ornament — entrance animated by Framer */
 .orn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   margin-bottom: 10px;
-  opacity: 0;
-  animation: fadeSlideUp 0.7s 0.7s forwards;
 }
 .orn-line {
   height: 1px;
@@ -687,7 +682,7 @@ body.hunter-landing-active::before {
   display: none;
 }
 
-/* shop CTA button on hero */
+/* shop CTA button on hero — entrance animated by Framer */
 .hero-cta {
   display: inline-flex;
   align-items: center;
@@ -695,8 +690,6 @@ body.hunter-landing-active::before {
   border: 1px solid rgba(201, 168, 76, 0.45);
   padding: 15px 36px;
   text-decoration: none;
-  opacity: 0;
-  animation: fadeSlideUp 0.8s 1.1s forwards;
   transition: background 0.3s, border-color 0.3s;
   position: relative;
   overflow: hidden;
@@ -734,17 +727,6 @@ body.hunter-landing-active::before {
 .hero-cta:hover .hero-cta-arrow {
   transform: translateX(5px);
   color: var(--gold);
-}
-
-/* Filter drawer — right panel on desktop */
-@media (min-width: 1024px) {
-  .filter-drawer-panel {
-    transform: translateX(100%);
-    transition: transform 300ms ease-out;
-  }
-  .filter-drawer-panel.is-open {
-    transform: translateX(0);
-  }
 }
 
 /* Shop collection CTA — full-width on mobile, centered on desktop */
@@ -989,11 +971,10 @@ body.hunter-landing-active::before {
 /* ════════════════════════════════════
          REVEAL SYSTEM — many variants
       ════════════════════════════════════ */
+/* .rv initial state — Framer Motion animates these to visible */
 .rv {
   opacity: 0;
   transform: translateY(22px);
-  transition: opacity 0.55s cubic-bezier(0.23, 1, 0.32, 1),
-    transform 0.55s cubic-bezier(0.23, 1, 0.32, 1);
 }
 .rv.from-l {
   transform: translateX(-28px);
@@ -1004,54 +985,19 @@ body.hunter-landing-active::before {
 .rv.scale-in {
   transform: scale(0.94);
 }
-.rv.visible {
-  opacity: 1;
-  transform: none;
-}
 
-/* stagger children */
+/* stagger children — Framer Motion animates these with stagger delays */
 .rv-group > * {
   opacity: 0;
   transform: translateY(18px);
-  transition: opacity 0.5s cubic-bezier(0.23, 1, 0.32, 1),
-    transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-}
-.rv-group.visible > *:nth-child(1) {
-  opacity: 1;
-  transform: none;
-  transition-delay: 0.04s;
-}
-.rv-group.visible > *:nth-child(2) {
-  opacity: 1;
-  transform: none;
-  transition-delay: 0.1s;
-}
-.rv-group.visible > *:nth-child(3) {
-  opacity: 1;
-  transform: none;
-  transition-delay: 0.16s;
-}
-.rv-group.visible > *:nth-child(4) {
-  opacity: 1;
-  transform: none;
-  transition-delay: 0.22s;
-}
-.rv-group.visible > *:nth-child(5) {
-  opacity: 1;
-  transform: none;
-  transition-delay: 0.28s;
 }
 
-/* line draw */
+/* line draw — Framer Motion animates scaleX(0) → scaleX(1) */
 .line-draw {
   height: 1px;
   background: linear-gradient(90deg, var(--gold-d), transparent);
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 0.65s cubic-bezier(0.23, 1, 0.32, 1);
-}
-.line-draw.visible {
-  transform: scaleX(1);
 }
 
 /* number count-up */
@@ -1540,19 +1486,14 @@ body.hunter-landing-active::before {
   transform: scaleX(1);
 }
 
-/* left accent bar — grows on reveal */
-.ev::before {
-  content: "";
+/* left accent bar — animated by Framer Motion (motion.div.ev-bar) */
+.ev-bar {
   position: absolute;
   top: 0;
   left: 0;
   width: 2px;
-  height: 0;
   background: var(--gold-d);
-  transition: height 0.8s cubic-bezier(0.23, 1, 0.32, 1);
-}
-.ev.visible::before {
-  height: 100%;
+  pointer-events: none;
 }
 
 .ev-freq {
@@ -2626,12 +2567,7 @@ a.cb-value:hover {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0;
-  transition: opacity 1.8s ease;
-}
-
-.sg-img.is-active {
-  opacity: 1;
+  /* opacity animated by Framer Motion */
 }
 
 .sg-card::before {
@@ -2944,14 +2880,21 @@ a.cb-value:hover {
   z-index: 2;
 }
 
-/* diagonal shine sweep on hover */
-.gc-card::after {
-  content: "";
+/* diagonal shine sweep — animated by Framer Motion (div.gc-shine-wrap > div.gc-shine-sweep) */
+.gc-shine-wrap {
   position: absolute;
   top: -50%;
   left: -75%;
   width: 50%;
   height: 200%;
+  transform: skewX(-15deg);
+  pointer-events: none;
+  z-index: 4;
+  overflow: visible;
+}
+.gc-shine-sweep {
+  width: 100%;
+  height: 100%;
   background: linear-gradient(
     105deg,
     transparent,
@@ -2960,24 +2903,6 @@ a.cb-value:hover {
     rgba(255, 255, 255, 0.04) 60%,
     transparent
   );
-  transform: skewX(-15deg) translateX(0);
-  transition: transform 0.7s cubic-bezier(0.23, 1, 0.32, 1);
-  pointer-events: none;
-  z-index: 4;
-}
-.gc-card:hover::after {
-  transform: skewX(-15deg) translateX(380%);
-}
-@keyframes gc-shine {
-  from {
-    transform: skewX(-15deg) translateX(0);
-  }
-  to {
-    transform: skewX(-15deg) translateX(380%);
-  }
-}
-.gc-card.shining::after {
-  animation: gc-shine 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards;
 }
 .gc-card.elevated {
   box-shadow: 0 56px 120px rgba(0, 0, 0, 0.82), 0 24px 48px rgba(0, 0, 0, 0.5);
@@ -3030,11 +2955,7 @@ a.cb-value:hover {
   font-style: italic;
   color: rgba(201, 168, 76, 0.9);
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-  transition: transform 0.2s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.2s;
-}
-.gc-card-amount.changing {
-  transform: scale(0.8) translateY(4px);
-  opacity: 0;
+  /* transform and opacity animated by Framer Motion */
 }
 
 .gc-card-sub {
@@ -3132,13 +3053,8 @@ a.cb-value:hover {
   align-items: center;
   justify-content: center;
   cursor: none;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.4s, border-color 0.3s, background 0.3s, transform 0.3s;
-}
-.btt.show {
-  opacity: 0.78;
-  pointer-events: all;
+  /* visibility + enter/exit handled by Framer Motion AnimatePresence */
+  transition: border-color 0.3s, background 0.3s, transform 0.3s;
 }
 .btt:hover {
   border-color: rgba(201, 168, 76, 0.3);
@@ -3284,9 +3200,36 @@ a.cb-value:hover {
     opacity: 1;
   }
 }
-@keyframes charIn {
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
   to {
-    transform: translateY(0);
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
   }
 }
 

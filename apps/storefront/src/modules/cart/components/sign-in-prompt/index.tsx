@@ -12,7 +12,7 @@ const SignInPrompt = () => {
         </p>
       </div>
       <LocalizedClientLink
-        href="/account"
+        href="/account?redirectTo=/cart"
         data-testid="sign-in-button"
         className="font-sans text-[9px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-hunter-gold hover:text-hunter-gold transition-colors px-5 py-2.5"
       >

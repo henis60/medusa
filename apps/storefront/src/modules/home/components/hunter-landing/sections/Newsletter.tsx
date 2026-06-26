@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Script from "next/script"
 
-const RECAPTCHA_SITEKEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? "6LdnohktAAAAAOnmNaDbJ1bBeKx3irV5qgeqoOI5"
+const RECAPTCHA_SITEKEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!
 
 declare global {
   interface Window {
@@ -180,6 +180,13 @@ const Newsletter = () => {
                         {status === "loading" ? "..." : "Înscrie-mă"}
                       </button>
                     </div>
+
+                    <p style={{ margin: "10px 0 0", fontFamily: "var(--rl)", fontSize: "9px", color: "rgba(232,213,163,0.3)", letterSpacing: "0.5px" }}>
+                      Protejat de reCAPTCHA —{" "}
+                      <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(201,168,76,0.5)", textDecoration: "underline" }}>Confidențialitate</a>
+                      {" "}&amp;{" "}
+                      <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(201,168,76,0.5)", textDecoration: "underline" }}>Termeni</a>
+                    </p>
 
                     {status === "error" && (
                       <div

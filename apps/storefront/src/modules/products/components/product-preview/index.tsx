@@ -115,7 +115,7 @@ export default async function ProductPreview({
   return (
     <ProductCardLink
       href={`/products/${product.handle}`}
-      className="group flex flex-col relative w-full justify-between cursor-pointer"
+      className="group flex flex-col relative w-full cursor-pointer"
       style={
         {
           touchAction: "manipulation",
@@ -133,7 +133,7 @@ export default async function ProductPreview({
 
       {/* Card info — mobile */}
       <div
-        className="mt-2.5 flex flex-col gap-0.5 sm:hidden"
+        className="mt-4 flex flex-col gap-0.5 sm:hidden"
         style={{ minHeight: "2.5rem" }}
       >
         <p
@@ -153,11 +153,7 @@ export default async function ProductPreview({
       </div>
 
       {/* Card info — desktop */}
-      <div
-        className={`mt-2.5 hidden sm:flex items-start justify-between gap-3 transition-opacity duration-300 ${
-          forceDark ? "group-hover:opacity-0" : ""
-        }`}
-      >
+      <div className="mt-4 hidden sm:flex items-start justify-between gap-3">
         <div className="flex flex-col gap-0.5 min-w-0">
           <p
             className={`font-sans text-[11px] uppercase tracking-[2px] leading-snug truncate transition-colors duration-300 ${
