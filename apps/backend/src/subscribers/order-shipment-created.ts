@@ -11,11 +11,12 @@ export default async function sendOrderShippedEmail({
     const query = container.resolve("query");
     const { data: fulfillments } = await query.graph({
       entity: "fulfillment",
-      fields: ["tracking_numbers"],
+      fields: ["labels.tracking_number"],
       filters: { id: data.id },
     });
 
-    const trackingNumber = fulfillments?.[0]?.tracking_numbers?.[0] ?? null;
+    const trackingNumber =
+      fulfillments?.[0]?.labels?.[0]?.tracking_number ?? null;
 
     const { data: orders } = await query.graph({
       entity: "order",
