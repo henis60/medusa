@@ -9,14 +9,15 @@ WORKDIR /app
 # 1) Install workspace deps from the committed root lockfile.
 #    Copy only the manifests first so Docker caches this layer across
 #    deploys whenever dependencies haven't changed.
-#    Use `npm install` (not `npm ci`) so npm self-heals platform-specific
-#    native deps (e.g. @swc/core-linux-x64-gnu) that a Windows-generated
-#    lockfile can omit. With the lockfile present + --legacy-peer-deps it
-#    still resolves fast (no from-scratch peer backtracking).
+#    Resolve deps fresh ON LINUX (drop the lockfile first) so platform-specific
+#    native packages (e.g. @swc/core-linux-x64-gnu) are installed. A
+#    Windows-generated lockfile omits those entries, and neither `npm ci` nor
+#    `npm install` heals them when the lockfile is present. --legacy-peer-deps
+#    keeps the from-scratch resolve fast (no peer backtracking).
 COPY package.json package-lock.json .npmrc ./
 COPY apps/backend/package.json ./apps/backend/package.json
 COPY apps/storefront/package.json ./apps/storefront/package.json
-RUN npm install --legacy-peer-deps --no-audit --no-fund
+RUN rm -f package-lock.json && npm install --legacy-peer-deps --no-audit --no-fund
 
 # 2) Build the backend (compiles the server + bundles the admin dashboard).
 COPY apps/backend ./apps/backend
