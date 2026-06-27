@@ -2,8 +2,6 @@
 # Build context = repo root (so we can use the committed root lockfile).
 FROM node:20-slim
 
-# Medusa's admin (Vite) bundle is memory-hungry — give the build heap headroom.
-ENV NODE_OPTIONS=--max-old-space-size=4096
 WORKDIR /app
 
 # 1) Install workspace deps from the committed root lockfile.
@@ -20,9 +18,11 @@ COPY apps/storefront/package.json ./apps/storefront/package.json
 RUN rm -f package-lock.json && npm install --legacy-peer-deps --no-audit --no-fund
 
 # 2) Build the backend (compiles the server + bundles the admin dashboard).
+#    NODE_OPTIONS heap headroom is scoped to THIS build step only — at runtime a
+#    high heap limit on a small container makes V8 skip GC and get OOM-killed.
 COPY apps/backend ./apps/backend
 WORKDIR /app/apps/backend
-RUN npm run build
+RUN NODE_OPTIONS=--max-old-space-size=4096 npm run build
 
 # 3) Install production-only deps for the built server output.
 WORKDIR /app/apps/backend/.medusa/server
