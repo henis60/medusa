@@ -5,7 +5,6 @@ import Image from "next/image"
 import FavoriteButton from "./favorite-button"
 import QuickAddOverlay from "./quick-add-overlay"
 import { isInStoreOnly } from "@lib/util/product"
-import { resolveImageUrl } from "@lib/util/image-url"
 
 type Props = {
   product: HttpTypes.StoreProduct
@@ -20,8 +19,8 @@ export default function CardImages({ product, isFeatured, noOverlay, activeImage
   const variants = product.variants ?? []
   const options = product.options ?? []
 
-  const mainImage = resolveImageUrl(product.thumbnail ?? allImages[0]?.url)
-  const hoverImage = resolveImageUrl(allImages[1]?.url)
+  const mainImage = product.thumbnail ?? allImages[0]?.url
+  const hoverImage = allImages[1]?.url
 
   // Always show mainImage as base; crossfade activeImage on top when set
   const showHover = !activeImage && !!hoverImage

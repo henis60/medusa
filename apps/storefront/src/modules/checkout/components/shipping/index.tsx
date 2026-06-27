@@ -213,7 +213,7 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
           <ErrorMessage error={error} data-testid="delivery-option-error-message" />
           <button
             onClick={handleSubmit}
-            disabled={isLoading || !cart.shipping_methods?.[0]}
+            disabled={isLoading || (!cart.shipping_methods?.[0] && !shippingMethodId)}
             data-testid="submit-delivery-option-button"
             className="w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
           >

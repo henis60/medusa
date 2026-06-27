@@ -1,7 +1,6 @@
 ﻿"use client"
 
 import { useFavorites } from "@lib/context/favorites-context"
-import { resolveImageUrl } from "@lib/util/image-url"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Image from "next/image"
 
@@ -40,7 +39,7 @@ export default function FavoritesList() {
           >
             {item.thumbnail ? (
               <Image
-                src={resolveImageUrl(item.thumbnail) ?? item.thumbnail}
+                src={item.thumbnail}
                 alt={item.title}
                 fill
                 sizes="64px"

@@ -147,6 +147,11 @@ export async function login(_currentState: unknown, formData: FormData) {
   } catch (error) {
     return String(error)
   }
+
+  const redirectTo = formData.get("redirectTo") as string | null
+  if (redirectTo) {
+    redirect(redirectTo)
+  }
 }
 
 export async function signout() {

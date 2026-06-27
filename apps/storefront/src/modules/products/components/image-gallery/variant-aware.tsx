@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import Image from "next/image"
-import { resolveImageUrl } from "@lib/util/image-url"
 
 type Props = {
   defaultImages: HttpTypes.StoreProductImage[]
@@ -114,7 +113,7 @@ export default function VariantAwareGallery({
           <div
             ref={thumbsRef}
             className="flex flex-col gap-2 overflow-y-auto no-scrollbar w-16 shrink-0 cursor-grab active:cursor-grabbing"
-          style={mainImageHeight ? { maxHeight: mainImageHeight } : undefined}
+            style={mainImageHeight ? { maxHeight: mainImageHeight } : undefined}
             onMouseDown={onThumbMouseDown}
             onMouseMove={onThumbMouseMove}
             onMouseUp={onThumbMouseLeaveOrUp}
@@ -133,7 +132,7 @@ export default function VariantAwareGallery({
               >
                 {img.url && (
                   <Image
-                    src={resolveImageUrl(img.url)!}
+                    src={img.url}
                     alt={`Product image ${i + 1}`}
                     fill
                     className="object-cover object-center"
@@ -165,12 +164,12 @@ export default function VariantAwareGallery({
                 className="absolute inset-0"
               >
                 <Image
-                  src={resolveImageUrl(selected.url)!}
+                  src={selected.url}
                   alt="Product image"
                   fill
                   priority
                   draggable={false}
-                  className="object-cover object-center pointer-events-none"
+                  className="object-contain object-center pointer-events-none"
                   sizes="(max-width: 1024px) 100vw, 55vw"
                 />
               </motion.div>

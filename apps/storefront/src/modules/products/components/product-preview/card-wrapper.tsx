@@ -5,7 +5,6 @@ import { useState, useCallback } from "react"
 import CardImages from "./card-images"
 import DesktopQuickAdd from "./desktop-quick-add"
 import { isInStoreOnly } from "@lib/util/product"
-import { resolveImageUrl } from "@lib/util/image-url"
 
 // Reveals on hover anywhere over the card link (group), floating above the
 // image bottom with an inset gap from the edges.
@@ -78,7 +77,7 @@ export default function CardWrapper({ product, isFeatured, forceDark }: Props) {
         return
       }
       const url = getVariantImage(variant, allImages, options, variants)
-      setActiveImage(resolveImageUrl(url) ?? null)
+      setActiveImage(url ?? null)
     },
     [allImages, options, variants]
   )

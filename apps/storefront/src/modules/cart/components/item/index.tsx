@@ -2,7 +2,6 @@
 
 import { updateLineItem, deleteLineItem } from "@lib/data/cart"
 import { convertToLocale } from "@lib/util/money"
-import { resolveImageUrl } from "@lib/util/image-url"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Image from "next/image"
@@ -71,11 +70,10 @@ type ItemProps = {
 const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
   const [updating, setUpdating] = useState(false)
 
-  const imgSrc = resolveImageUrl(
+  const imgSrc =
     getVariantImageUrl(item) ||
-      item.thumbnail ||
-      (item.variant?.product as any)?.images?.[0]?.url
-  )
+    item.thumbnail ||
+    (item.variant?.product as any)?.images?.[0]?.url
 
   const changeQuantity = async (qty: number) => {
     if (qty < 1 || updating) return

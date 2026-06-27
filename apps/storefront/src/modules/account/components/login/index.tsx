@@ -16,12 +16,15 @@ type Props = {
   redirectTo?: string
 }
 
-const Login = ({ setCurrentView }: Props) => {
+const Login = ({ setCurrentView, redirectTo }: Props) => {
   const [message, formAction] = useActionState(login, null)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
+    if (redirectTo) {
+      formData.set("redirectTo", redirectTo)
+    }
     try {
       await new Promise<void>((resolve) => window.grecaptcha.ready(resolve))
       const token = await window.grecaptcha.execute(RECAPTCHA_SITEKEY, { action: "login" })

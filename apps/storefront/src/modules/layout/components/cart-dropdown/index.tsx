@@ -8,7 +8,6 @@ import { Button } from "@modules/common/components/ui"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { BagIcon } from "@modules/layout/components/nav-icons"
 import CountBadge from "@modules/common/components/count-badge"
-import { resolveImageUrl } from "@lib/util/image-url"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
 import { deleteLineItem, updateLineItem } from "@lib/data/cart"
@@ -258,11 +257,10 @@ const CartDropdown = ({
                                 : 1
                             )
                             .map((item) => {
-                              const imgSrc = resolveImageUrl(
+                              const imgSrc =
                                 getVariantImageUrl(item) ||
-                                  item.thumbnail ||
-                                  item.variant?.product?.images?.[0]?.url
-                              )
+                                item.thumbnail ||
+                                item.variant?.product?.images?.[0]?.url
                               const hasDiscount =
                                 (item.total ?? 0) < (item.original_total ?? 0)
                               return (

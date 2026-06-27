@@ -9,6 +9,20 @@ const S3_HOSTNAME = process.env.MEDUSA_CLOUD_S3_HOSTNAME
 const S3_PATHNAME = process.env.MEDUSA_CLOUD_S3_PATHNAME
 
 /**
+ * Turn a URL env var into a remotePattern { protocol, hostname } entry so
+ * next/image can optimize images served from that host.
+ */
+const urlToRemotePattern = (value) => {
+  if (!value) return []
+  try {
+    const { protocol, hostname } = new URL(value)
+    return [{ protocol: protocol.replace(":", ""), hostname }]
+  } catch {
+    return []
+  }
+}
+
+/**
  * @type {import('next').NextConfig}
  */
 const nextConfig = {
@@ -25,7 +39,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
         protocol: "http",
@@ -39,6 +53,8 @@ const nextConfig = {
         protocol: "https",
         hostname: "*.s3.amazonaws.com",
       },
+      // Backend public file host (product images)
+      ...urlToRemotePattern(process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL),
       ...(S3_HOSTNAME && S3_PATHNAME
         ? [
             {
