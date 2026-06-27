@@ -24,7 +24,7 @@ import { getLocale } from "./locale-actions"
 export async function retrieveCart(cartId?: string, fields?: string) {
   const id = cartId || (await getCartId())
   fields ??=
-    "*items, *region, *items.variant, +items.variant.thumbnail, +items.variant.images, +items.variant.options, +items.variant.options.option, *items.variant.product, +items.variant.product.thumbnail, +items.variant.product.images, +items.variant.product.options, +items.variant.product.options.values, +items.variant.product.variants, +items.variant.product.variants.options, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
+    "*items, *region, *items.variant, +items.variant.thumbnail, *items.variant.images, +items.variant.options, +items.variant.options.option, *items.variant.product, +items.variant.product.thumbnail, *items.variant.product.images, +items.variant.product.options, +items.variant.product.options.values, *items.variant.product.variants, *items.variant.product.variants.options, *items.variant.product.variants.images, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, *payment_collection, +payment_collection.payment_sessions"
 
   if (!id) {
     return null
@@ -272,9 +272,8 @@ export async function initiatePlatiOnlinePayment(
     (s) => s.provider_id === providerId
   )
 
-  return (session?.data as Record<string, unknown> | undefined)?.redirect_url as
-    | string
-    | undefined
+  return (session?.data as Record<string, unknown> | undefined)
+    ?.redirect_url as string | undefined
 }
 
 /**

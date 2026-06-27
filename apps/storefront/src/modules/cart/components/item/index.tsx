@@ -11,54 +11,65 @@ import { COLOR_OPTION_NAMES } from "@lib/util/product"
 function getVariantImageUrl(item: HttpTypes.StoreCartLineItem): string | null {
   const variant = item.variant as any
   const product = variant?.product
-  if (!variant || !product) return null
+  if (!variant || !product) return item.thumbnail ?? null
 
   // 1. Variant-specific thumbnail (set in Medusa admin per variant)
   if (variant.thumbnail) return variant.thumbnail
 
-  // 2. Variant-specific images array
+  // Product images come back sorted by rank; keep that order everywhere.
+  const allImages: { id?: string; url?: string }[] = product.images ?? []
+
+  // 2. Variant-specific images: show the variant's own first image
   if (variant.images?.length) return variant.images[0].url ?? null
 
   // 3. Map by color option index → product images
-  const allImages: { url?: string }[] = product.images ?? []
-  if (!allImages.length) return null
-
   const options: {
     id?: string
     title?: string
     values?: { value?: string }[]
   }[] = product.options ?? []
   const colorOption = options.find((o) =>
-    COLOR_OPTION_NAMES.includes(o.title?.toLowerCase() ?? "")
+    COLOR_OPTION_NAMES.includes(o?.title?.toLowerCase() ?? "")
   )
-  if (!colorOption) return null
 
-  // Use options.values array (creation order matches image upload order)
-  const colorValues: string[] = (colorOption.values ?? [])
-    .map((v) => v.value)
-    .filter((v): v is string => !!v)
+  if (colorOption && allImages.length) {
+    // Use options.values array (creation order matches image upload order)
+    const colorValues: string[] = (colorOption.values ?? [])
+      .map((v) => v.value)
+      .filter((v): v is string => !!v)
 
-  // Fallback: derive from product variants if options.values is empty
-  if (!colorValues.length) {
-    const allVariants: any[] = product.variants ?? []
-    const fromVariants = Array.from(
-      new Set(
-        allVariants
-          .map(
-            (v: any) =>
-              v.options?.find((o: any) => o.option_id === colorOption.id)?.value
-          )
-          .filter(Boolean) as string[]
+    // Fallback: derive from product variants if options.values is empty
+    if (!colorValues.length) {
+      const allVariants: any[] = product.variants ?? []
+      const fromVariants = Array.from(
+        new Set(
+          allVariants
+            .map(
+              (v: any) =>
+                v.options?.find((o: any) => o.option_id === colorOption.id)
+                  ?.value
+            )
+            .filter(Boolean) as string[]
+        )
       )
-    )
-    colorValues.push(...fromVariants)
+      colorValues.push(...fromVariants)
+    }
+
+    const variantColor = variant.options?.find(
+      (o: { option_id?: string }) => o.option_id === colorOption.id
+    )?.value
+    const idx = variantColor ? colorValues.indexOf(variantColor) : -1
+    if (idx >= 0 && idx < allImages.length) return allImages[idx].url ?? null
   }
 
-  const variantColor = variant.options?.find(
-    (o: { option_id?: string }) => o.option_id === colorOption.id
-  )?.value
-  const idx = variantColor ? colorValues.indexOf(variantColor) : -1
-  return idx >= 0 && idx < allImages.length ? allImages[idx].url ?? null : null
+  // 4. First product image
+  if (allImages.length) return allImages[0].url ?? null
+
+  // 5. Product thumbnail
+  if (product.thumbnail) return product.thumbnail
+
+  // 6. Line item thumbnail as last resort
+  return item.thumbnail ?? null
 }
 
 type ItemProps = {
@@ -70,10 +81,7 @@ type ItemProps = {
 const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
   const [updating, setUpdating] = useState(false)
 
-  const imgSrc =
-    getVariantImageUrl(item) ||
-    item.thumbnail ||
-    (item.variant?.product as any)?.images?.[0]?.url
+  const imgSrc = getVariantImageUrl(item)
 
   const changeQuantity = async (qty: number) => {
     if (qty < 1 || updating) return
