@@ -3044,33 +3044,39 @@ a.cb-value:hover {
   bottom: 28px;
   right: 28px;
   z-index: 500;
-  width: 34px;
-  height: 34px;
-  border: 1px solid rgba(201, 168, 76, 0.14);
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 0;
+  border: 1px solid rgba(201, 168, 76, 0.18);
   background: rgba(10, 20, 14, 0.56);
   backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: none;
-  /* visibility + enter/exit handled by Framer Motion AnimatePresence */
-  transition: border-color 0.3s, background 0.3s, transform 0.3s;
+  font-family: var(--font-raleway, sans-serif);
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(201, 168, 76, 0.5);
+  white-space: nowrap;
+  transition: border-color 0.3s, background 0.3s, color 0.3s, transform 0.3s;
 }
 .btt:hover {
-  border-color: rgba(201, 168, 76, 0.3);
-  background: rgba(201, 168, 76, 0.05);
+  border-color: rgba(201, 168, 76, 0.35);
+  background: rgba(201, 168, 76, 0.04);
+  color: rgba(201, 168, 76, 0.8);
   transform: translateY(-1px);
 }
 .btt svg {
-  width: 12px;
-  height: 12px;
-  stroke: rgba(201, 168, 76, 0.42);
-  fill: none;
-  stroke-width: 1.4;
-  transition: stroke 0.3s;
+  width: 10px;
+  height: 10px;
+  fill: rgba(201, 168, 76, 0.5);
+  margin-right: 5px;
+  transition: fill 0.3s;
 }
 .btt:hover svg {
-  stroke: rgba(201, 168, 76, 0.68);
+  fill: rgba(201, 168, 76, 0.8);
 }
 
 /* ════════════════════════════════════
@@ -3231,6 +3237,31 @@ a.cb-value:hover {
   75% {
     transform: translateX(6px);
   }
+}
+@property --appt-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes apptSpin {
+  to {
+    --appt-angle: 360deg;
+  }
+}
+.appt-ping {
+  animation: apptSpin 2.5s linear 1.2s 3;
+  background: conic-gradient(
+    from var(--appt-angle),
+    transparent 0%,
+    rgba(184, 149, 90, 0.5) 10%,
+    transparent 22%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  padding: 1px;
 }
 
 /* ════════════════════════════════════

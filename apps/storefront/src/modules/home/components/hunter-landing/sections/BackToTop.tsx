@@ -12,7 +12,9 @@ export default function BackToTop() {
   const [visible, setVisible] = useState(false)
 
   useMotionValueEvent(scrollY, "change", (v) => {
-    setVisible(v > window.innerHeight * 0.5)
+    const nearBottom =
+      v + window.innerHeight >= document.documentElement.scrollHeight - 200
+    setVisible(nearBottom)
   })
 
   return (
@@ -33,6 +35,7 @@ export default function BackToTop() {
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M7 14l5-5 5 5z" fill="currentColor" />
           </svg>
+          Back to top
         </motion.button>
       )}
     </AnimatePresence>

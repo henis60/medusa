@@ -25,9 +25,6 @@ const ContactTemplate = () => {
       <div className="page-container pb-8 flex flex-col gap-8">
         {/* Form */}
         <div className="bg-[var(--theme-surface)] border border-[var(--theme-border)] p-6 small:p-8">
-          <h2 className="font-display text-2xl text-[var(--theme-text)] mb-5">
-            Trimite-ne un mesaj
-          </h2>
           <ContactForm />
         </div>
 

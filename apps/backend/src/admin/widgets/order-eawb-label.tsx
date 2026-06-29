@@ -1,11 +1,12 @@
 import { defineWidgetConfig } from "@medusajs/admin-sdk"
-import { Container, Button, Text, Badge } from "@medusajs/ui"
+import { Container, Button, Text, Badge, toast } from "@medusajs/ui"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { sdk } from "../lib/client"
 
 type EawbFulfillment = {
   id: string
-  provider_id?: string
+  canceled_at?: string | null
   data?: {
     awb?: string
     carrier_name?: string
@@ -16,29 +17,52 @@ type EawbFulfillment = {
   }
 }
 
-type OrderProps = {
-  id: string
-  fulfillments?: EawbFulfillment[]
+type OrderStatus = {
+  uses_eawb: boolean
+  remaining_items: number
+  fulfillments: EawbFulfillment[]
 }
 
-const OrderEawbLabelWidget = ({ data: order }: { data: OrderProps }) => {
+const OrderEawbLabelWidget = ({ data: order }: { data: { id: string } }) => {
+  const queryClient = useQueryClient()
   const [loadingId, setLoadingId] = useState<string | null>(null)
+  const [fulfilling, setFulfilling] = useState(false)
 
-  const eawbFulfillments = (order.fulfillments ?? []).filter(
-    (f) => f.provider_id?.startsWith("fp_eawb_")
-  )
+  const { data, refetch } = useQuery({
+    queryKey: ["eawb-order-status", order.id],
+    queryFn: () =>
+      sdk.client.fetch<OrderStatus>(`/admin/eawb/order-status/${order.id}`),
+  })
 
-  if (!eawbFulfillments.length) return null
+  // Only render for orders shipped via eAWB.
+  if (!data?.uses_eawb) return null
 
-  const handleDownloadLabel = async (fulfillment: EawbFulfillment) => {
-    setLoadingId(fulfillment.id)
+  const fulfillments = data.fulfillments ?? []
+  const remainingItems = data.remaining_items ?? 0
+
+  const handleFulfill = async () => {
+    setFulfilling(true)
+    try {
+      await sdk.client.fetch(`/admin/eawb/fulfill/${order.id}`, { method: "POST" })
+      toast.success("Comandă pregătită de expediere — AWB generat.")
+      await refetch()
+      queryClient.invalidateQueries({ queryKey: ["order", order.id] })
+    } catch (err: any) {
+      toast.error(err?.message || "Eroare la generarea AWB.")
+    } finally {
+      setFulfilling(false)
+    }
+  }
+
+  const handleDownloadLabel = async (f: EawbFulfillment) => {
+    setLoadingId(f.id)
     try {
       const { url } = await sdk.client.fetch<{ url: string }>(
-        `/admin/eawb/label/${fulfillment.id}`
+        `/admin/eawb/label/${f.id}`
       )
       window.open(url, "_blank")
-    } catch (err) {
-      alert("Eroare la generarea etichetei. Verifică logurile serverului.")
+    } catch {
+      toast.error("Eroare la generarea etichetei. Verifică logurile serverului.")
     } finally {
       setLoadingId(null)
     }
@@ -46,12 +70,26 @@ const OrderEawbLabelWidget = ({ data: order }: { data: OrderProps }) => {
 
   return (
     <Container className="divide-y p-0">
-      <div className="px-6 py-4">
+      <div className="flex items-center justify-between px-6 py-4">
         <Text size="small" weight="plus">
           eAWB / Europarcel
         </Text>
+        {remainingItems > 0 && (
+          <Button size="small" onClick={handleFulfill} isLoading={fulfilling}>
+            Gata de expediere
+          </Button>
+        )}
       </div>
-      {eawbFulfillments.map((f) => {
+
+      {fulfillments.length === 0 && remainingItems === 0 && (
+        <div className="px-6 py-4">
+          <Text size="xsmall" className="text-ui-fg-subtle">
+            Nicio expediere activă.
+          </Text>
+        </div>
+      )}
+
+      {fulfillments.map((f) => {
         const d = f.data ?? {}
         return (
           <div key={f.id} className="flex items-center justify-between px-6 py-4 gap-4">

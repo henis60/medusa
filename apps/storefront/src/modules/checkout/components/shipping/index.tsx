@@ -190,8 +190,11 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
   useEffect(() => { setError(null) }, [isOpen])
 
   // Restore the locker picker when returning to the step with a locker service
-  // already selected on the cart.
+  // already selected on the cart. Skips if a locker is already being handled in
+  // this session, so committing a selection (which updates the cart) doesn't
+  // re-trigger a reload.
   useEffect(() => {
+    if (lockerOptionId) return
     const sm = cart.shipping_methods?.at(-1)
     const optId = sm?.shipping_option_id
     if (!optId) return
@@ -346,7 +349,7 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
                       </ComboboxButton>
                       <ComboboxOptions
                         anchor="bottom start"
-                        className="z-50 max-h-44 overflow-auto border border-[var(--theme-border)] bg-[var(--theme-bg,#0D0D0D)] shadow-lg focus:outline-none [--anchor-gap:4px]"
+                        className="z-50 max-h-40 overflow-auto border border-[var(--theme-border)] bg-[var(--theme-bg,#0D0D0D)] shadow-lg focus:outline-none [--anchor-gap:4px]"
                         style={{ width: "var(--input-width)" }}
                       >
                         {filteredLockers.length === 0 ? (

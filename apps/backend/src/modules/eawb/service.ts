@@ -249,13 +249,11 @@ export default class EawbFulfillmentProviderService extends AbstractFulfillmentP
     const fixedLocationId = data.fixed_location_id
       ? Number(data.fixed_location_id)
       : undefined
+    // For locker delivery Europarcel still validates the full address (country,
+    // locality, street) — the locker id is sent ON TOP to route the parcel to
+    // the chosen locker.
     const addressTo = fixedLocationId
-      ? {
-          fixed_location_id: fixedLocationId,
-          contact: recipient.contact,
-          phone: recipient.phone,
-          email: recipient.email,
-        }
+      ? { ...recipient, fixed_location_id: fixedLocationId }
       : recipient
 
     const orderRequest = {
@@ -275,6 +273,13 @@ export default class EawbFulfillmentProviderService extends AbstractFulfillmentP
     }
 
     const created = await this.client_.createOrder(orderRequest as Record<string, unknown>)
+
+    if (!created?.awb) {
+      throw new MedusaError(
+        MedusaError.Types.UNEXPECTED_STATE,
+        `eAWB: order created but no AWB returned by Europarcel (response: ${JSON.stringify(created)}).`
+      )
+    }
 
     return {
       data: {

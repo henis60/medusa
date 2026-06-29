@@ -1,7 +1,7 @@
-import { EawbOptions } from "./types"
+import { EawbOptions } from "./types";
 
 export function loadEawbOptionsFromEnv(
-  env: NodeJS.ProcessEnv = process.env
+  env: NodeJS.ProcessEnv = process.env,
 ): EawbOptions {
   return {
     api_key: env.EAWB_API_KEY ?? "",
@@ -14,5 +14,5 @@ export function loadEawbOptionsFromEnv(
     from_street_no: env.EAWB_FROM_STREET_NO ?? "",
     from_zip: env.EAWB_FROM_ZIP ?? "",
     from_country: env.EAWB_FROM_COUNTRY ?? "RO",
-  }
+  };
 }

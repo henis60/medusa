@@ -9,11 +9,15 @@ const groups: FaqGroup[] = [
     items: [
       {
         q: "Cum plasez o comandă?",
-        a: "Alege produsul dorit, selectează mărimea și culoarea, adaugă-l în coș și urmează pașii de la finalizarea comenzii. Vei primi un email de confirmare imediat ce comanda este înregistrată.",
+        a: "Alege produsul dorit, selectează mărimea și culoarea, apoi adaugă-l în coș. La finalizarea comenzii completezi datele de livrare și de plată, iar imediat după confirmare primești un email cu rezumatul comenzii și detaliile de urmărire.",
       },
       {
         q: "Pot modifica sau anula o comandă?",
-        a: "Contactează-ne cât mai repede posibil după plasarea comenzii. Dacă aceasta nu a fost încă expediată, o putem modifica sau anula.",
+        a: "Da, atâta timp cât comanda nu a fost încă expediată. Contactează-ne cât mai repede posibil, cu numărul comenzii la îndemână, și facem modificarea sau anularea. După expediere, poți folosi politica de retur.",
+      },
+      {
+        q: "Cum urmăresc statusul comenzii?",
+        a: "După expediere primești pe email codul AWB și un link de urmărire. Poți verifica oricând statusul și din contul tău, la secțiunea Comenzile mele.",
       },
     ],
   },
@@ -22,11 +26,15 @@ const groups: FaqGroup[] = [
     items: [
       {
         q: "Cât durează livrarea?",
-        a: "Coletul ajunge în 3–5 zile lucrătoare la adresa ta sau la un punct de ridicare.",
+        a: "Comenzile sunt procesate în 1–2 zile lucrătoare, iar coletul ajunge de regulă în 3–5 zile lucrătoare la adresa ta sau la punctul de ridicare ales.",
+      },
+      {
+        q: "Cât costă transportul?",
+        a: "Costul de livrare se calculează automat la finalizarea comenzii, în funcție de metoda aleasă. Tariful exact îți este afișat înainte de plasarea comenzii.",
       },
       {
         q: "Livrați în toată România?",
-        a: "Da, livrăm în toată țara prin curier.",
+        a: "Da, livrăm în toată țara prin curier rapid, atât la adresă, cât și la punctele de ridicare disponibile.",
       },
     ],
   },
@@ -35,11 +43,15 @@ const groups: FaqGroup[] = [
     items: [
       {
         q: "Care este politica de retur?",
-        a: "Poți returna produsele în termen de 14 zile de la primire. Produsele trebuie să fie nepurtate și în ambalajul original.",
+        a: "Poți returna produsele în termen de 14 zile de la primire, fără să fie nevoie să motivezi decizia. Produsele trebuie să fie nepurtate, cu etichetele atașate și în ambalajul original.",
+      },
+      {
+        q: "Cât durează rambursarea banilor?",
+        a: "După ce primim și verificăm produsul returnat, îți rambursăm contravaloarea în maximum 14 zile, folosind aceeași metodă de plată cu care ai achitat comanda.",
       },
       {
         q: "Cum schimb mărimea unui produs?",
-        a: "Contactează-ne și îți spunem pașii pentru schimbul de mărime, în limita stocului disponibil.",
+        a: "Contactează-ne și îți spunem pașii pentru schimbul de mărime, în limita stocului disponibil. Dacă mărimea dorită nu mai este disponibilă, îți oferim rambursarea integrală.",
       },
     ],
   },
@@ -48,11 +60,15 @@ const groups: FaqGroup[] = [
     items: [
       {
         q: "Ce metode de plată acceptați?",
-        a: "Acceptăm plata online securizată cu cardul. Tranzacțiile sunt procesate printr-un furnizor de plăți securizat.",
+        a: "Acceptăm plata online securizată cu cardul (Visa, Mastercard). Tranzacțiile sunt procesate printr-un furnizor de plăți autorizat, cu protecție 3D Secure.",
       },
       {
         q: "Plata online este sigură?",
-        a: "Da. Datele cardului sunt procesate direct de furnizorul de plăți și nu sunt stocate pe site-ul nostru.",
+        a: "Da. Datele cardului sunt criptate și procesate direct de furnizorul de plăți, prin conexiune securizată. Acestea nu sunt stocate pe site-ul nostru și nu avem acces la ele.",
+      },
+      {
+        q: "Primesc factură pentru comandă?",
+        a: "Da, pentru fiecare comandă emitem factură, pe care o primești pe email împreună cu confirmarea comenzii.",
       },
     ],
   },
@@ -115,7 +131,15 @@ const FAQTemplate = () => {
                       {item.q}
                     </span>
                     <span className="shrink-0 text-[var(--theme-text-muted)] transition-transform duration-200 group-open:rotate-45">
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      >
                         <line x1="7" y1="1" x2="7" y2="13" />
                         <line x1="1" y1="7" x2="13" y2="7" />
                       </svg>

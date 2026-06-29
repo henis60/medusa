@@ -65,11 +65,16 @@ function ComboField<T extends { id: number; name: string }>({
   const [query, setQuery] = useState("")
   const [error, setError] = useState<string | null>(null)
 
-  const filtered = query
+  const MAX_RESULTS = 50
+  const matches = query
     ? options.filter((o) =>
         o.name.toLowerCase().includes(query.trim().toLowerCase())
       )
     : options
+  // Render at most MAX_RESULTS — large counties have 600+ localities and
+  // rendering them all makes the dropdown sluggish.
+  const filtered = matches.slice(0, MAX_RESULTS)
+  const truncated = matches.length > MAX_RESULTS
 
   const handleSelect = (v: T | null) => {
     if (error) setError(null)
@@ -119,11 +124,18 @@ function ComboField<T extends { id: number; name: string }>({
                 Niciun rezultat
               </div>
             ) : (
-              filtered.map((o) => (
-                <ComboboxOption key={o.id} value={o} className={optionCls}>
-                  {o.name}
-                </ComboboxOption>
-              ))
+              <>
+                {filtered.map((o) => (
+                  <ComboboxOption key={o.id} value={o} className={optionCls}>
+                    {o.name}
+                  </ComboboxOption>
+                ))}
+                {truncated && (
+                  <div className="px-3 py-2 font-sans text-[11px] text-[var(--theme-text-muted)]">
+                    Scrie pentru a căuta…
+                  </div>
+                )}
+              </>
             )}
           </ComboboxOptions>
         </div>
@@ -224,6 +236,7 @@ const LocalitySelect = ({
         testId="province-select"
       />
       <ComboField
+        key={county?.id ?? "no-county"}
         label="Localitate"
         required={required}
         value={city}

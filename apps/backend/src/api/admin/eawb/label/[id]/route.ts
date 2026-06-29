@@ -15,7 +15,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     return res.status(404).json({ error: "Fulfillment not found" })
   }
 
-  if (!fulfillment.provider_id?.startsWith("fp_eawb_")) {
+  const pid = fulfillment.provider_id
+  if (!pid?.startsWith("eawb_") && !pid?.startsWith("fp_eawb_")) {
     return res.status(400).json({ error: "Not an eAWB fulfillment" })
   }
 

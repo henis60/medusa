@@ -78,8 +78,19 @@ export class EuroparcelClient {
     return this.request("POST", "/orders/prices", req)
   }
 
-  createOrder(req: Record<string, unknown>): Promise<EpOrder> {
-    return this.request("POST", "/orders", req)
+  async createOrder(req: Record<string, unknown>): Promise<EpOrder> {
+    const raw = await this.request<Record<string, any>>("POST", "/orders", req)
+    // The create response is flat but uses different field names than the list
+    // endpoint (order_id / awb_number / carrier). Normalize to EpOrder.
+    const o = (raw?.data ?? raw) as Record<string, any>
+    return {
+      ...o,
+      id: o.id ?? o.order_id,
+      awb: o.awb ?? o.awb_number,
+      carrier_name: o.carrier_name ?? o.carrier,
+      service_name: o.service_name,
+      track_url: o.track_url ?? null,
+    } as EpOrder
   }
 
   cancelOrder(orderId: number, refundChannel: "wallet" | "card" = "wallet"): Promise<EpCancelResponse> {

@@ -66,6 +66,17 @@ export default function StoreSidebar({
 
   const hasFilters = !!selectedCollection || !!selectedCategory
 
+  // Only top-level categories at the first level
+  const topCategories = categories.filter((c) => !c.parent_category)
+  // The currently selected category (may be a subcategory)
+  const selectedCat = categories.find((c) => c.id === selectedCategory)
+  // The parent whose subcategories should be revealed
+  const activeParentId = selectedCat
+    ? selectedCat.parent_category?.id ?? selectedCat.id
+    : null
+  const subcategoriesOf = (parentId: string) =>
+    categories.filter((c) => c.parent_category?.id === parentId)
+
   const NavItem = ({
     active,
     onClick,
@@ -96,26 +107,48 @@ export default function StoreSidebar({
           <div className="pb-8">
             <SectionLabel>Categorii</SectionLabel>
             <nav className="flex flex-col">
-              <NavItem
-                active={!selectedCategory && !selectedCollection}
-                onClick={clearAll}
-              >
-                Toate
-              </NavItem>
-              {categories.map((c) => (
-                <NavItem
-                  key={c.id}
-                  active={selectedCategory === c.id}
-                  onClick={() =>
-                    updateParam(
-                      "category",
-                      selectedCategory === c.id ? null : c.id
-                    )
-                  }
-                >
-                  {c.name}
-                </NavItem>
-              ))}
+              {topCategories.map((c) => {
+                const subs = subcategoriesOf(c.id)
+                const isActiveParent = activeParentId === c.id
+                return (
+                  <div key={c.id}>
+                    <NavItem
+                      active={selectedCategory === c.id}
+                      onClick={() =>
+                        updateParam(
+                          "category",
+                          selectedCategory === c.id ? null : c.id
+                        )
+                      }
+                    >
+                      {c.name}
+                    </NavItem>
+                    {subs.length > 0 && isActiveParent && (
+                      <div className="flex flex-col pl-4 mt-1 mb-1 border-l border-[var(--theme-border)]">
+                        {subs.map((sub) => (
+                          <button
+                            key={sub.id}
+                            onClick={() =>
+                              updateParam(
+                                "category",
+                                selectedCategory === sub.id ? c.id : sub.id
+                              )
+                            }
+                            className={clx(
+                              "w-full text-left py-1.5 font-serif text-[18px] leading-none transition-colors duration-150",
+                              selectedCategory === sub.id
+                                ? "text-[var(--theme-gold)] italic"
+                                : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
+                            )}
+                          >
+                            {sub.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </nav>
           </div>
         )}
