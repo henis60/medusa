@@ -14,25 +14,50 @@ declare global {
   }
 }
 
-const inputClass =
-  "w-full h-10 bg-transparent border border-[var(--theme-border)] px-3 font-sans text-sm text-[var(--theme-text)] placeholder:text-[var(--theme-text-muted)] focus:outline-none focus:border-hunter-gold/50 transition-colors"
+const inputClass = (err?: boolean) =>
+  `w-full h-10 bg-transparent border px-3 font-sans text-sm text-[var(--theme-text)] placeholder:text-[var(--theme-text-muted)] focus:outline-none transition-colors ${
+    err ? "border-red-400/60" : "border-[var(--theme-border)] focus:border-hunter-gold/50"
+  }`
 
-const labelClass =
-  "font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-2 block"
+const Label = ({ htmlFor, children, error }: { htmlFor: string; children: React.ReactNode; error?: boolean }) => (
+  <label htmlFor={htmlFor} className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-2 flex items-center gap-1">
+    {children}
+    <span className={`text-base normal-case tracking-normal transition-colors ${error ? "text-red-400/80" : "text-hunter-gold/50"}`}>*</span>
+  </label>
+)
 
 type Status = "idle" | "loading" | "success" | "error"
+type Errors = Partial<Record<"name" | "email" | "message", boolean>>
+
+function validateEmail(v: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
+}
 
 export default function ContactForm() {
   const [status, setStatus] = useState<Status>("idle")
-  const [errorMsg, setErrorMsg] = useState("")
+  const [errors, setErrors] = useState<Errors>({})
+
+  const validate = (data: FormData): Errors => {
+    const e: Errors = {}
+    if (String(data.get("name") ?? "").trim().length < 2) e.name = true
+    if (!validateEmail(String(data.get("email") ?? "").trim())) e.email = true
+    if (String(data.get("message") ?? "").trim().length < 10) e.message = true
+    return e
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setStatus("loading")
-    setErrorMsg("")
-
     const form = e.currentTarget
     const data = new FormData(form)
+
+    const errs = validate(data)
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs)
+      return
+    }
+
+    setErrors({})
+    setStatus("loading")
 
     try {
       const recaptchaToken = await new Promise<string>((resolve, reject) => {
@@ -50,13 +75,13 @@ export default function ContactForm() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-publishable-api-key":
-              process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? "",
+            "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? "",
           },
           body: JSON.stringify({
             name: data.get("name"),
             email: data.get("email"),
             message: data.get("message"),
+            type: "contact",
             recaptchaToken,
           }),
         }
@@ -65,7 +90,6 @@ export default function ContactForm() {
       const json = await res.json()
 
       if (!res.ok) {
-        setErrorMsg(json.error || "A apărut o eroare. Încearcă din nou.")
         setStatus("error")
         return
       }
@@ -73,9 +97,6 @@ export default function ContactForm() {
       setStatus("success")
       form.reset()
     } catch {
-      setErrorMsg(
-        "Nu am putut trimite mesajul. Verifică conexiunea și încearcă din nou."
-      )
       setStatus("error")
     }
   }
@@ -83,12 +104,9 @@ export default function ContactForm() {
   if (status === "success") {
     return (
       <div className="border border-[var(--theme-border)] min-h-[200px] p-8 text-center flex flex-col gap-3 justify-center">
-        <p className="font-display text-2xl text-[var(--theme-text)]">
-          Îți mulțumim!
-        </p>
+        <p className="font-display text-2xl text-[var(--theme-text)]">Îți mulțumim!</p>
         <p className="font-sans text-sm text-[var(--theme-text-muted)]">
-          Mesajul tău a fost trimis. Revenim în maximum 24 de ore în zilele
-          lucrătoare.
+          Mesajul tău a fost trimis. Revenim în maximum 24 de ore în zilele lucrătoare.
         </p>
         <button
           type="button"
@@ -107,51 +125,33 @@ export default function ContactForm() {
         src={`https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITEKEY}`}
         strategy="lazyOnload"
       />
-
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
         <div className="grid grid-cols-1 small:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="name" className={labelClass}>
-              Nume
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              required
-              minLength={2}
-              className={inputClass}
-            />
+            <Label htmlFor="name" error={errors.name}>Nume</Label>
+            <input id="name" name="name" type="text" className={inputClass(errors.name)} />
           </div>
           <div>
-            <label htmlFor="email" className={labelClass}>
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              className={inputClass}
-            />
+            <Label htmlFor="email" error={errors.email}>Email</Label>
+            <input id="email" name="email" type="email" className={inputClass(errors.email)} />
           </div>
         </div>
         <div>
-          <label htmlFor="message" className={labelClass}>
-            Mesaj
-          </label>
+          <Label htmlFor="message" error={errors.message}>Mesaj</Label>
           <textarea
             id="message"
             name="message"
-            required
-            minLength={10}
             rows={4}
-            className="w-full bg-transparent border border-[var(--theme-border)] px-3 py-3 font-sans text-sm text-[var(--theme-text)] placeholder:text-[var(--theme-text-muted)] focus:outline-none focus:border-hunter-gold/50 transition-colors resize-y"
+            className={`w-full bg-transparent border px-3 py-3 font-sans text-sm text-[var(--theme-text)] placeholder:text-[var(--theme-text-muted)] focus:outline-none transition-colors resize-y ${
+              errors.message ? "border-red-400/60" : "border-[var(--theme-border)] focus:border-hunter-gold/50"
+            }`}
           />
         </div>
 
         {status === "error" && (
-          <p className="font-sans text-xs text-red-400">{errorMsg}</p>
+          <p className="font-sans text-xs text-red-400">
+            Nu am putut trimite mesajul. Verifică conexiunea și încearcă din nou.
+          </p>
         )}
 
         <div className="flex flex-col gap-2">
@@ -164,21 +164,11 @@ export default function ContactForm() {
           </button>
           <p className="font-sans text-[9px] text-[var(--theme-text-muted)] leading-relaxed">
             Protejat de reCAPTCHA —{" "}
-            <a
-              href="https://policies.google.com/privacy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-hunter-gold transition-colors"
-            >
+            <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-hunter-gold transition-colors">
               Confidențialitate
             </a>{" "}
             &amp;{" "}
-            <a
-              href="https://policies.google.com/terms"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-hunter-gold transition-colors"
-            >
+            <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-hunter-gold transition-colors">
               Termeni
             </a>
           </p>

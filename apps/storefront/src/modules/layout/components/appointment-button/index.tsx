@@ -14,8 +14,6 @@ export default function AppointmentButton({ transparent, hideOnTop }: Props) {
   const pathname = usePathname()
   const [scrolled, setScrolled] = useState(false)
 
-  if (pathname?.includes("/programare")) return null
-
   useEffect(() => {
     if (!hideOnTop) return
     const onScroll = () => setScrolled(window.scrollY > 80)
@@ -24,12 +22,16 @@ export default function AppointmentButton({ transparent, hideOnTop }: Props) {
     return () => window.removeEventListener("scroll", onScroll)
   }, [hideOnTop])
 
+  if (pathname?.includes("/programare")) return null
+
   const visible = !hideOnTop || scrolled
 
   return (
     <motion.div
-      className="fixed right-0 z-40 bottom-[80px] translate-y-0 small:bottom-auto small:top-[72%] small:-translate-y-1/2"
+      className="fixed right-0 z-40 bottom-[160px] translate-y-0 small:bottom-auto small:top-[72%] small:-translate-y-1/2"
       animate={{ opacity: visible ? 1 : 0, x: visible ? 0 : 12 }}
+      whileHover={{ x: -5 }}
+      whileTap={{ scale: 0.92 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       style={{ pointerEvents: visible ? "auto" : "none" }}
     >

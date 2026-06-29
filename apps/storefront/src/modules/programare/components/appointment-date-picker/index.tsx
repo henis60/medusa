@@ -40,7 +40,7 @@ const labelClass =
 const inputBase =
   "w-full h-10 bg-transparent border border-[var(--theme-border)] px-3 font-sans text-sm focus:outline-none focus:border-hunter-gold/50 transition-colors"
 
-export default function AppointmentDatePicker() {
+export default function AppointmentDatePicker({ hasError }: { hasError?: boolean }) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -112,14 +112,17 @@ export default function AppointmentDatePicker() {
 
   return (
     <div ref={containerRef} className="relative">
-      <label className={labelClass}>Data și ora</label>
+      <label className={`${labelClass} flex items-center gap-1.5`}>
+        Data și ora
+        <span className={`text-base normal-case tracking-normal transition-colors ${hasError && !selectedDate ? "text-red-400/80" : "text-hunter-gold/50"}`}>*</span>
+      </label>
       <input type="hidden" name="date" value={hiddenDate} />
       <input type="hidden" name="time" value={selectedTime} />
 
       <button
         type="button"
         onClick={handleToggle}
-        className={`${inputBase} flex items-center justify-between cursor-pointer text-left`}
+        className={`${inputBase} flex items-center justify-between cursor-pointer text-left ${hasError && !selectedDate ? "!border-red-400/60" : ""}`}
       >
         <span className={displayValue ? "text-[var(--theme-text)]" : "text-[var(--theme-text-muted)]"}>
           {displayValue || "Alege data și ora"}

@@ -11,16 +11,19 @@ const OPTIONS = [
 const labelClass =
   "font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-2 block"
 
-export default function AppointmentTypeSelect() {
+export default function AppointmentTypeSelect({ hasError }: { hasError?: boolean }) {
   const [selected, setSelected] = useState("")
 
   return (
     <div>
-      <label className={labelClass}>Tip programare</label>
+      <label className={`${labelClass} flex items-center gap-1.5`}>
+        Tip programare
+        <span className={`text-base normal-case tracking-normal transition-colors ${hasError && !selected ? "text-red-400/80" : "text-hunter-gold/50"}`}>*</span>
+      </label>
       <input type="hidden" name="type" value={selected} />
       <Listbox value={selected} onChange={setSelected}>
         <div className="relative">
-          <Listbox.Button className="relative w-full h-10 px-3 pr-8 text-left bg-transparent border border-[var(--theme-border)] focus:outline-none focus:border-hunter-gold/50 hover:border-hunter-gold/50 transition-colors flex items-center">
+          <Listbox.Button className={`relative w-full h-10 px-3 pr-8 text-left bg-transparent border focus:outline-none focus:border-hunter-gold/50 hover:border-hunter-gold/50 transition-colors flex items-center ${hasError && !selected ? "border-red-400/60" : "border-[var(--theme-border)]"}`}>
             <span
               className={`font-sans text-sm truncate ${
                 !selected ? "text-[var(--theme-text-muted)]" : "text-[var(--theme-text)]"
