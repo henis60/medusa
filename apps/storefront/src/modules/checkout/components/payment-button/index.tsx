@@ -1,7 +1,7 @@
 "use client"
 
-import { isManual, isPlatiOnline, isStripeLike } from "@lib/constants"
-import { initiatePlatiOnlinePayment, placeOrder } from "@lib/data/cart"
+import { isManual, isStripeLike } from "@lib/constants"
+import { placeOrder } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { useElements, useStripe } from "@stripe/react-stripe-js"
 import React, { useState } from "react"
@@ -37,15 +37,6 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     case isManual(paymentSession?.provider_id):
       return (
         <ManualTestPaymentButton notReady={notReady} data-testid={dataTestId} />
-      )
-    case isPlatiOnline(paymentSession?.provider_id):
-      return (
-        <PlatiOnlinePaymentButton
-          notReady={notReady}
-          cart={cart}
-          providerId={paymentSession!.provider_id}
-          data-testid={dataTestId}
-        />
       )
     default:
       return (
@@ -190,58 +181,6 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
         {submitting ? "Se procesează…" : "Plasează comanda"}
       </button>
       <ErrorMessage error={errorMessage} data-testid="manual-payment-error-message" />
-    </>
-  )
-}
-
-const PlatiOnlinePaymentButton = ({
-  cart,
-  providerId,
-  notReady,
-  "data-testid": dataTestId,
-}: {
-  cart: HttpTypes.StoreCart
-  providerId: string
-  notReady: boolean
-  "data-testid"?: string
-}) => {
-  const [submitting, setSubmitting] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-
-  const handlePayment = async () => {
-    setSubmitting(true)
-    setErrorMessage(null)
-    try {
-      // Regenerate the session to get a fresh, single-use redirect URL.
-      const redirectUrl = await initiatePlatiOnlinePayment(cart, providerId)
-      if (!redirectUrl) {
-        setErrorMessage("Nu am putut iniția plata PlatiOnline. Reîncearcă.")
-        setSubmitting(false)
-        return
-      }
-      // Hand off to PlatiOnline's hosted page. The order is confirmed
-      // server-side via the ITSN webhook when payment completes.
-      window.location.href = redirectUrl
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : String(err))
-      setSubmitting(false)
-    }
-  }
-
-  return (
-    <>
-      <button
-        disabled={notReady || submitting}
-        onClick={handlePayment}
-        data-testid={dataTestId}
-        className="w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        {submitting ? "Se redirecționează…" : "Plătește"}
-      </button>
-      <ErrorMessage
-        error={errorMessage}
-        data-testid="plati-online-payment-error-message"
-      />
     </>
   )
 }
