@@ -17,9 +17,13 @@ type Locality = { id: number; name: string }
 let countiesCache: County[] | null = null
 const localitiesCache: Record<string, Locality[]> = {}
 
+// Backed by static JSON assets under /public/ro-localities. Static files are
+// served straight from the CDN with correct per-path caching — unlike a
+// serverless route, whose query-string branch was being cached/optimized away
+// on staging and returned no localities.
 async function fetchCounties(): Promise<County[]> {
   if (countiesCache) return countiesCache
-  const res = await fetch("/api/ro-localities")
+  const res = await fetch("/ro-localities/counties.json")
   const { counties } = await res.json()
   const list = Array.isArray(counties) ? counties : []
   countiesCache = list
@@ -29,10 +33,10 @@ async function fetchCounties(): Promise<County[]> {
 async function fetchLocalities(countyId: number): Promise<Locality[]> {
   const key = String(countyId)
   if (localitiesCache[key]) return localitiesCache[key]
-  const res = await fetch(`/api/ro-localities?county_id=${countyId}`)
+  const res = await fetch(`/ro-localities/${countyId}.json`)
   const { localities } = await res.json()
   const list = Array.isArray(localities) ? localities : []
-  localitiesCache[key] = list
+  if (list.length) localitiesCache[key] = list
   return list
 }
 
