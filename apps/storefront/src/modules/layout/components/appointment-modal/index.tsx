@@ -77,6 +77,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
     if (name.trim().length < 2) e.name = true
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) e.email = true
     if (!phone.trim()) e.phone = true
+    if (message.trim().length < 2) e.message = true
     if (Object.keys(e).length) { setErrors(e); return }
     setErrors({}); setStatus("loading")
 
@@ -238,14 +239,11 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
                       <input id="m-phone" type="tel" value={phone} onChange={e => setPhone(e.target.value)} className={inputClass(errors.phone)} />
                     </div>
                     <div>
-                      <label htmlFor="m-message" className="font-sans text-[9px] uppercase tracking-[3px] text-gray-400 mb-2 flex items-center gap-1">
-                        Mesaj
-                        <span className="text-sm normal-case tracking-normal text-hunter-gold/50">*</span>
-                      </label>
+                      <Label htmlFor="m-message" error={errors.message}>Mesaj</Label>
                       <textarea
                         id="m-message" rows={3} value={message}
                         onChange={e => setMessage(e.target.value)}
-                        className="w-full bg-transparent border border-gray-200 px-3 py-2.5 font-sans text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-hunter-gold/60 transition-colors resize-none"
+                        className={`w-full bg-transparent border px-3 py-2.5 font-sans text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none transition-colors resize-none ${errors.message ? "border-red-400/60" : "border-gray-200 focus:border-hunter-gold/60"}`}
                       />
                     </div>
                     {status === "error" && (
