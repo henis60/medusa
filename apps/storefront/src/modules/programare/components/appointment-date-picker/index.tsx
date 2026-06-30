@@ -40,7 +40,7 @@ const labelClass =
 const inputBase =
   "w-full h-10 bg-transparent border border-[var(--theme-border)] px-3 font-sans text-sm focus:outline-none focus:border-hunter-gold/50 transition-colors"
 
-export default function AppointmentDatePicker({ hasError }: { hasError?: boolean }) {
+export default function AppointmentDatePicker({ hasError, onSelect }: { hasError?: boolean; onSelect?: (date: string, time: string) => void }) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -230,7 +230,11 @@ export default function AppointmentDatePicker({ hasError }: { hasError?: boolean
                         <button
                           key={slot}
                           type="button"
-                          onClick={() => { setSelectedTime(slot); setOpen(false) }}
+                          onClick={() => {
+                          setSelectedTime(slot)
+                          setOpen(false)
+                          onSelect?.(hiddenDate, slot)
+                        }}
                           className={[
                             "h-7 font-sans text-[10px] border transition-colors",
                             selectedTime === slot

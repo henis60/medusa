@@ -6,10 +6,8 @@ import { XMark } from "@medusajs/icons"
 import { MenuIcon } from "@modules/layout/components/nav-icons"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import { clx } from "@modules/common/components/ui"
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
-import { useTheme } from "next-themes"
 import LanguageSelect from "../language-select"
 import { Locale } from "@lib/data/locales"
 
@@ -19,6 +17,7 @@ type SideMenuProps = {
   currentLocale: string | null
   collections?: HttpTypes.StoreCollection[]
   categories?: HttpTypes.StoreProductCategory[]
+  featuredCollection?: HttpTypes.StoreCollection | null
 }
 
 type ScrollGuardProps = {
@@ -69,45 +68,14 @@ const SideMenuScrollGuard = ({ open }: ScrollGuardProps) => {
   return null
 }
 
-function ThemeToggle() {
-  const { theme, setTheme, resolvedTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
-  if (!mounted) return null
-
-  const isDark = resolvedTheme === "dark"
-
-  return (
-    <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-[var(--theme-text-muted)]">
-      <span>Temă</span>
-      <div className="flex items-center gap-3">
-        {(["light", "system", "dark"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTheme(t)}
-            className={clx(
-              "transition-colors capitalize",
-              theme === t
-                ? "text-hunter-gold"
-                : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
-            )}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 const subLinkClass =
   "block py-3.5 font-display text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] hover:text-hunter-gold transition-colors"
 
-type SubmenuKey = "rtw" | "accesorii" | "equestrian" | "hunter"
+type SubmenuKey = "rtw" | "accesorii" | "featured" | "hunter"
 
 const STYLE_GUIDES = [
-  { label: "Wedding Season", href: "/world-of-the-hunter/wedding-season" },
-  { label: "Shooting Wear", href: "/world-of-the-hunter/shooting-wear" },
+  { label: "Wedding Season" },
+  { label: "Shooting Wear" },
 ]
 
 function MenuTrigger({ label, onOpen }: { label: string; onOpen: () => void }) {
@@ -174,6 +142,65 @@ function SubmenuHeader({
   )
 }
 
+function FeaturedCollectionSubmenu({
+  collection,
+  categories,
+  onBack,
+  close,
+}: {
+  collection: HttpTypes.StoreCollection
+  categories: HttpTypes.StoreProductCategory[]
+  onBack: () => void
+  close: () => void
+}) {
+  const categoriesWithChildren = new Set(
+    categories
+      .filter((c) => (c.category_children?.length ?? 0) > 0)
+      .map((c) => c.id)
+  )
+  const seen = new Set<string>()
+  const productCategories: HttpTypes.StoreProductCategory[] = []
+
+  for (const product of collection.products ?? []) {
+    for (const cat of (product as any).categories ?? []) {
+      if (!seen.has(cat.id) && !categoriesWithChildren.has(cat.id)) {
+        seen.add(cat.id)
+        productCategories.push(cat)
+      }
+    }
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      <SubmenuHeader title={collection.title} onBack={onBack} />
+      <nav className="flex-1 px-8 pt-8 pb-6 overflow-y-auto">
+        <ul className="flex flex-col">
+          <li>
+            <LocalizedClientLink
+              href={`/collections/${collection.handle}`}
+              className="block py-2.5 font-sans text-[11px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
+              onClick={close}
+            >
+              Toate produsele
+            </LocalizedClientLink>
+          </li>
+          {productCategories.map((c) => (
+            <li key={c.id}>
+              <LocalizedClientLink
+                href={`/store?collection=${collection.id}&category=${c.id}`}
+                className={subLinkClass}
+                onClick={close}
+              >
+                {c.name}
+              </LocalizedClientLink>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
+  )
+}
+
 function ReadyToWearSubmenu({
   categories,
   collections,
@@ -185,6 +212,10 @@ function ReadyToWearSubmenu({
   onBack: () => void
   close: () => void
 }) {
+  const nonAccesoriiCategories = categories.filter(
+    (c) => !c.parent_category && c.name?.toLowerCase() !== "accesorii"
+  )
+
   return (
     <div className="flex flex-col h-full">
       <SubmenuHeader title="Ready to Wear" onBack={onBack} />
@@ -199,21 +230,24 @@ function ReadyToWearSubmenu({
               Toate produsele
             </LocalizedClientLink>
           </li>
-          {categories
-            .filter(
-              (c) => !c.parent_category && c.name?.toLowerCase() !== "accesorii"
-            )
-            .map((c) => (
-              <li key={c.id}>
-                <LocalizedClientLink
-                  href={`/store?category=${c.id}`}
-                  className={subLinkClass}
-                  onClick={close}
-                >
-                  {c.name}
-                </LocalizedClientLink>
-              </li>
-            ))}
+          {nonAccesoriiCategories.map((c) => (
+            <li key={c.id}>
+              <LocalizedClientLink
+                href={`/store?category=${c.id}`}
+                className={subLinkClass}
+                onClick={close}
+              >
+                {c.name}
+              </LocalizedClientLink>
+            </li>
+          ))}
+          {collections.length > 0 && (
+            <li className="mt-4 mb-1">
+              <span className="font-sans text-[10px] uppercase tracking-[2.5px] text-[var(--theme-text-muted)]">
+                Colecții
+              </span>
+            </li>
+          )}
           {collections.map((c) => (
             <li key={c.id}>
               <LocalizedClientLink
@@ -276,53 +310,6 @@ function AccesoriiSubmenu({
   )
 }
 
-function EquestrianSubmenu({
-  categories,
-  onBack,
-  close,
-}: {
-  categories: HttpTypes.StoreProductCategory[]
-  onBack: () => void
-  close: () => void
-}) {
-  const parent = categories.find((c) =>
-    c.name?.toLowerCase().includes("equestrian")
-  )
-  const subcategories = parent?.category_children ?? []
-
-  return (
-    <div className="flex flex-col h-full">
-      <SubmenuHeader title="Colecția Equestrian" onBack={onBack} />
-      <nav className="flex-1 px-8 pt-8 pb-6 overflow-y-auto">
-        <ul className="flex flex-col">
-          {parent && (
-            <li>
-              <LocalizedClientLink
-                href={`/store?category=${parent.id}`}
-                className="block py-2.5 font-sans text-[11px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
-                onClick={close}
-              >
-                Toate produsele
-              </LocalizedClientLink>
-            </li>
-          )}
-          {subcategories.map((c) => (
-            <li key={c.id}>
-              <LocalizedClientLink
-                href={`/store?category=${c.id}`}
-                className={subLinkClass}
-                onClick={close}
-              >
-                {c.name}
-              </LocalizedClientLink>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    </div>
-  )
-}
-
 function WorldOfTheHunterSubmenu({
   onBack,
   close,
@@ -339,14 +326,10 @@ function WorldOfTheHunterSubmenu({
         </p>
         <ul className="flex flex-col">
           {STYLE_GUIDES.map((g) => (
-            <li key={g.href}>
-              <LocalizedClientLink
-                href={g.href}
-                className={subLinkClass}
-                onClick={close}
-              >
+            <li key={g.label}>
+              <span className="block py-3.5 font-display text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text-muted)] cursor-default">
                 {g.label}
-              </LocalizedClientLink>
+              </span>
             </li>
           ))}
         </ul>
@@ -361,9 +344,14 @@ const SideMenu = ({
   currentLocale,
   collections,
   categories,
+  featuredCollection,
 }: SideMenuProps) => {
   const [mounted, setMounted] = useState(false)
   const [activeSubmenu, setActiveSubmenu] = useState<SubmenuKey | null>(null)
+
+  // Remaining collections (all except the first/featured) for Ready to Wear
+  const otherCollections = (collections ?? []).slice(1)
+
 
   useEffect(() => {
     setMounted(true)
@@ -465,21 +453,23 @@ const SideMenu = ({
                                       onOpen={() => setActiveSubmenu("rtw")}
                                     />
 
-                                    {/* Accesorii The Hunter → submeniu */}
+                                    {/* Accesorii → submeniu */}
                                     <MenuTrigger
-                                      label="Accesorii The Hunter"
+                                      label="Accesorii"
                                       onOpen={() =>
                                         setActiveSubmenu("accesorii")
                                       }
                                     />
 
-                                    {/* Colecția Equestrian → submeniu */}
-                                    <MenuTrigger
-                                      label="Colecția Equestrian"
-                                      onOpen={() =>
-                                        setActiveSubmenu("equestrian")
-                                      }
-                                    />
+                                    {/* Prima colecție din sortare → submeniu cu categorii */}
+                                    {featuredCollection && (
+                                      <MenuTrigger
+                                        label={featuredCollection.title}
+                                        onOpen={() =>
+                                          setActiveSubmenu("featured")
+                                        }
+                                      />
+                                    )}
 
                                     {/* World of The Hunter → submeniu */}
                                     <MenuTrigger
@@ -489,7 +479,7 @@ const SideMenu = ({
 
                                     <li>
                                       <LocalizedClientLink
-                                        href="/programare"
+                                        href="/world-of-the-hunter/made-to-measure"
                                         className="flex items-center py-3.5 font-display text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
                                         onClick={handleClose}
                                       >
@@ -533,7 +523,6 @@ const SideMenu = ({
                                       currentLocale={currentLocale}
                                     />
                                   )}
-                                  <ThemeToggle />
                                 </div>
                               </div>
 
@@ -554,7 +543,7 @@ const SideMenu = ({
                                     {activeSubmenu === "rtw" ? (
                                       <ReadyToWearSubmenu
                                         categories={categories ?? []}
-                                        collections={collections ?? []}
+                                        collections={otherCollections}
                                         onBack={() => setActiveSubmenu(null)}
                                         close={handleClose}
                                       />
@@ -564,8 +553,10 @@ const SideMenu = ({
                                         onBack={() => setActiveSubmenu(null)}
                                         close={handleClose}
                                       />
-                                    ) : activeSubmenu === "equestrian" ? (
-                                      <EquestrianSubmenu
+                                    ) : activeSubmenu === "featured" &&
+                                      featuredCollection ? (
+                                      <FeaturedCollectionSubmenu
+                                        collection={featuredCollection}
                                         categories={categories ?? []}
                                         onBack={() => setActiveSubmenu(null)}
                                         close={handleClose}

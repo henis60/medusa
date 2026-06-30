@@ -6,7 +6,7 @@ import { StoreCartShippingOption } from "@medusajs/types"
 import CartMismatchBanner from "@modules/layout/components/cart-mismatch-banner"
 import Nav from "@modules/layout/templates/nav"
 import FreeShippingPriceNudge from "@modules/shipping/components/free-shipping-price-nudge"
-import AppointmentButton from "@modules/layout/components/appointment-button"
+import AppointmentWidget from "@modules/layout/components/appointment-widget"
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),
@@ -35,7 +35,7 @@ export default async function HomeLayout(props: { children: React.ReactNode }) {
           shippingOptions={shippingOptions}
         />
       )}
-      <AppointmentButton transparent hideOnTop />
+      <AppointmentWidget transparent hideOnTop />
       <div className="flex-1">{props.children}</div>
       {/* Footer is rendered inside HunterLanding (HomepageFooter) */}
     </div>
