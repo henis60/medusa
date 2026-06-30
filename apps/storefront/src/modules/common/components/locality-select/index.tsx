@@ -21,8 +21,9 @@ async function fetchCounties(): Promise<County[]> {
   if (countiesCache) return countiesCache
   const res = await fetch("/api/ro-localities")
   const { counties } = await res.json()
-  countiesCache = counties
-  return counties
+  const list = Array.isArray(counties) ? counties : []
+  countiesCache = list
+  return list
 }
 
 async function fetchLocalities(countyId: number): Promise<Locality[]> {
@@ -30,8 +31,9 @@ async function fetchLocalities(countyId: number): Promise<Locality[]> {
   if (localitiesCache[key]) return localitiesCache[key]
   const res = await fetch(`/api/ro-localities?county_id=${countyId}`)
   const { localities } = await res.json()
-  localitiesCache[key] = localities
-  return localities
+  const list = Array.isArray(localities) ? localities : []
+  localitiesCache[key] = list
+  return list
 }
 
 const fieldLabelCls =
@@ -66,15 +68,16 @@ function ComboField<T extends { id: number; name: string }>({
   const [error, setError] = useState<string | null>(null)
 
   const MAX_RESULTS = 50
+  const list = options ?? []
   const matches = query
-    ? options.filter((o) =>
+    ? list.filter((o) =>
         o.name.toLowerCase().includes(query.trim().toLowerCase())
       )
-    : options
+    : list
   // Render at most MAX_RESULTS — large counties have 600+ localities and
   // rendering them all makes the dropdown sluggish.
-  const filtered = matches.slice(0, MAX_RESULTS)
-  const truncated = matches.length > MAX_RESULTS
+  const filtered = matches?.slice(0, MAX_RESULTS)
+  const truncated = matches?.length > MAX_RESULTS
 
   const handleSelect = (v: T | null) => {
     if (error) setError(null)
