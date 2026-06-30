@@ -1,7 +1,7 @@
 "use client"
 
-import { isManual, isPlatiOnline, isStripeLike } from "@lib/constants"
-import { initiatePlatiOnlinePayment, placeOrder } from "@lib/data/cart"
+import { isManual, isNetopia, isStripeLike } from "@lib/constants"
+import { initiateNetopiaPayment, placeOrder } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { useElements, useStripe } from "@stripe/react-stripe-js"
 import React, { useState } from "react"
@@ -38,9 +38,9 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
       return (
         <ManualTestPaymentButton notReady={notReady} data-testid={dataTestId} />
       )
-    case isPlatiOnline(paymentSession?.provider_id):
+    case isNetopia(paymentSession?.provider_id):
       return (
-        <PlatiOnlinePaymentButton
+        <NetopiaPaymentButton
           notReady={notReady}
           cart={cart}
           providerId={paymentSession!.provider_id}
@@ -194,7 +194,7 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
   )
 }
 
-const PlatiOnlinePaymentButton = ({
+const NetopiaPaymentButton = ({
   cart,
   providerId,
   notReady,
@@ -212,15 +212,12 @@ const PlatiOnlinePaymentButton = ({
     setSubmitting(true)
     setErrorMessage(null)
     try {
-      // Regenerate the session to get a fresh, single-use redirect URL.
-      const redirectUrl = await initiatePlatiOnlinePayment(cart, providerId)
+      const redirectUrl = await initiateNetopiaPayment(cart, providerId)
       if (!redirectUrl) {
-        setErrorMessage("Nu am putut iniția plata PlatiOnline. Reîncearcă.")
+        setErrorMessage("Nu am putut iniția plata. Reîncearcă.")
         setSubmitting(false)
         return
       }
-      // Hand off to PlatiOnline's hosted page. The order is confirmed
-      // server-side via the ITSN webhook when payment completes.
       window.location.href = redirectUrl
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : String(err))
@@ -236,11 +233,11 @@ const PlatiOnlinePaymentButton = ({
         data-testid={dataTestId}
         className="w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        {submitting ? "Se redirecționează…" : "Plătește"}
+        {submitting ? "Se redirecționează…" : "Plătește cu cardul"}
       </button>
       <ErrorMessage
         error={errorMessage}
-        data-testid="plati-online-payment-error-message"
+        data-testid="netopia-payment-error-message"
       />
     </>
   )

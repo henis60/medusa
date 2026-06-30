@@ -1,29 +1,21 @@
 import { loadEnv, defineConfig, Modules } from '@medusajs/framework/utils'
-import { loadPlatiOnlineOptionsFromEnv } from './src/modules/plati-online/lib/config'
 import { loadEawbOptionsFromEnv } from './src/modules/eawb/lib/config'
+import { loadNetopiaOptionsFromEnv } from './src/modules/netopia/lib/config'
 
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 
-const platiOnlineOptions = loadPlatiOnlineOptionsFromEnv()
-// Register PlatiOnline only when ALL required options are present, so a partially
-// configured env doesn't make the provider's validateOptions throw at boot and
-// take down the whole app.
-const platiOnlineConfigured = [
-  platiOnlineOptions.login,
-  platiOnlineOptions.website,
-  platiOnlineOptions.poPublicKey,
-  platiOnlineOptions.merchantPrivateKey,
-  platiOnlineOptions.ivAuth,
-  platiOnlineOptions.ivItsn,
-  platiOnlineOptions.relayUrl,
+const netopiaOptions = loadNetopiaOptionsFromEnv()
+const netopiaConfigured = [
+  netopiaOptions.apiKey,       // NETOPIA_SECRET
+  netopiaOptions.posSignature, // NETOPIA_ID
 ].every(Boolean)
 
-const paymentProviders = platiOnlineConfigured
+const paymentProviders = netopiaConfigured
   ? [
       {
-        resolve: "./src/modules/plati-online",
-        id: "plati-online",
-        options: platiOnlineOptions,
+        resolve: "./src/modules/netopia",
+        id: "netopia",
+        options: netopiaOptions,
       },
     ]
   : []

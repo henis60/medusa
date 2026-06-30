@@ -3,8 +3,8 @@ import { defineMiddlewares } from "@medusajs/framework/http";
 export default defineMiddlewares({
   routes: [
     {
-      // PlatiOnline ITSN webhook: preserve the raw body for the payment pipeline.
-      matcher: "/hooks/plati-online",
+      // Netopia IPN: preserve raw body for JSON parsing (sent as text/plain)
+      matcher: "/hooks/netopia",
       method: ["POST"],
       bodyParser: { preserveRawBody: true },
     },

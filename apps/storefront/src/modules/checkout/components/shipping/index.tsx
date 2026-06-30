@@ -275,36 +275,53 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
               </RadioGroup>
             )}
 
-            <RadioGroup
-              value={shippingMethodId}
-              onChange={(v) => {
-                const opt = _shippingMethods?.find((o) => o.id === v)
-                if (opt) handleSelectOption(opt)
-              }}
-            >
-              {visibleShippingMethods?.map((option) => {
-                return (
-                  <Radio
-                    key={option.id}
-                    value={option.id}
-                    data-testid="delivery-option-radio"
-                    className={radioClass(option.id === shippingMethodId)}
+            {isLoadingPrices ? (
+              <div className="flex flex-col gap-2">
+                {Array.from({ length: _shippingMethods?.length || 3 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between px-4 py-3 border border-[var(--theme-border)] animate-pulse"
                   >
                     <div className="flex items-center gap-3">
-                      <span className={`w-3 h-3 rounded-full border flex-shrink-0 ${option.id === shippingMethodId ? "border-hunter-gold bg-hunter-gold" : "border-[var(--theme-border)]"}`} />
-                      <span className="font-serif text-[13px] text-[var(--theme-text)]">{option.name}</span>
+                      <div className="w-3 h-3 rounded-full bg-[var(--theme-border)]" />
+                      <div className="h-3 w-32 rounded bg-[var(--theme-border)]" />
                     </div>
-                    <span className="font-serif italic text-[13px] text-[var(--theme-text-muted)]">
-                      {option.price_type === "flat" ? (
-                        convertToLocale({ amount: option.amount!, currency_code: cart?.currency_code })
-                      ) : calculatedPricesMap[option.id] ? (
-                        convertToLocale({ amount: calculatedPricesMap[option.id], currency_code: cart?.currency_code })
-                      ) : isLoadingPrices ? <Loader /> : "Indisponibil"}
-                    </span>
-                  </Radio>
-                )
-              })}
-            </RadioGroup>
+                    <div className="h-3 w-16 rounded bg-[var(--theme-border)]" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <RadioGroup
+                value={shippingMethodId}
+                onChange={(v) => {
+                  const opt = _shippingMethods?.find((o) => o.id === v)
+                  if (opt) handleSelectOption(opt)
+                }}
+              >
+                {visibleShippingMethods?.map((option) => {
+                  return (
+                    <Radio
+                      key={option.id}
+                      value={option.id}
+                      data-testid="delivery-option-radio"
+                      className={radioClass(option.id === shippingMethodId)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className={`w-3 h-3 rounded-full border flex-shrink-0 ${option.id === shippingMethodId ? "border-hunter-gold bg-hunter-gold" : "border-[var(--theme-border)]"}`} />
+                        <span className="font-serif text-[13px] text-[var(--theme-text)]">{option.name}</span>
+                      </div>
+                      <span className="font-serif italic text-[13px] text-[var(--theme-text-muted)]">
+                        {option.price_type === "flat" ? (
+                          convertToLocale({ amount: option.amount!, currency_code: cart?.currency_code })
+                        ) : calculatedPricesMap[option.id] ? (
+                          convertToLocale({ amount: calculatedPricesMap[option.id], currency_code: cart?.currency_code })
+                        ) : "Indisponibil"}
+                      </span>
+                    </Radio>
+                  )
+                })}
+              </RadioGroup>
+            )}
 
             {!isLoadingPrices &&
               (visibleShippingMethods?.length ?? 0) === 0 &&

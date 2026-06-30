@@ -2,9 +2,9 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 /**
- * Resolves the cart id (and any existing order) for a payment session id.
- * Used by the PlatiOnline relay return page, which receives `session_id` in the
- * URL because the cross-site POST return doesn't carry the cart cookie.
+ * Resolves the cart id (and payment session status) from a payment session id.
+ * Used by the Netopia return page: the redirectUrl carries ?session_id=ps_xxx
+ * so we can find the cart even when the cart cookie is unavailable.
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const sessionId = req.query.session_id as string | undefined
@@ -32,8 +32,6 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
   return res.json({
     cart_id: links?.[0]?.cart_id ?? null,
-    // Payment session status reflects the last authorization attempt:
-    // "error"/"canceled" → terminal decline; otherwise still settling.
     status: session.status ?? null,
   })
 }
