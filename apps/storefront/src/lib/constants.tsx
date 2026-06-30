@@ -33,6 +33,10 @@ export const paymentInfoMap: Record<
     title: "Manual Payment",
     icon: <CreditCard />,
   },
+  pp_netopia_netopia: {
+    title: "Card bancar (Netopia)",
+    icon: <CreditCard />,
+  },
   // Add more payment providers here
 }
 
@@ -48,6 +52,10 @@ export const isPaypal = (providerId?: string) => {
 }
 export const isManual = (providerId?: string) => {
   return providerId?.startsWith("pp_system_default")
+}
+
+export const isNetopia = (providerId?: string) => {
+  return providerId?.startsWith("pp_netopia")
 }
 
 // Add currencies that don't need to be divided by 100

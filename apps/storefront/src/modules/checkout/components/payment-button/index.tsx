@@ -1,7 +1,7 @@
 "use client"
 
-import { isManual, isStripeLike } from "@lib/constants"
-import { placeOrder } from "@lib/data/cart"
+import { isManual, isNetopia, isStripeLike } from "@lib/constants"
+import { initiateNetopiaPayment, placeOrder } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { useElements, useStripe } from "@stripe/react-stripe-js"
 import React, { useState } from "react"
@@ -37,6 +37,15 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     case isManual(paymentSession?.provider_id):
       return (
         <ManualTestPaymentButton notReady={notReady} data-testid={dataTestId} />
+      )
+    case isNetopia(paymentSession?.provider_id):
+      return (
+        <NetopiaPaymentButton
+          notReady={notReady}
+          cart={cart}
+          providerId={paymentSession!.provider_id}
+          data-testid={dataTestId}
+        />
       )
     default:
       return (
@@ -181,6 +190,55 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
         {submitting ? "Se procesează…" : "Plasează comanda"}
       </button>
       <ErrorMessage error={errorMessage} data-testid="manual-payment-error-message" />
+    </>
+  )
+}
+
+const NetopiaPaymentButton = ({
+  cart,
+  providerId,
+  notReady,
+  "data-testid": dataTestId,
+}: {
+  cart: HttpTypes.StoreCart
+  providerId: string
+  notReady: boolean
+  "data-testid"?: string
+}) => {
+  const [submitting, setSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const handlePayment = async () => {
+    setSubmitting(true)
+    setErrorMessage(null)
+    try {
+      const redirectUrl = await initiateNetopiaPayment(cart, providerId)
+      if (!redirectUrl) {
+        setErrorMessage("Nu am putut iniția plata. Reîncearcă.")
+        setSubmitting(false)
+        return
+      }
+      window.location.href = redirectUrl
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : String(err))
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <>
+      <button
+        disabled={notReady || submitting}
+        onClick={handlePayment}
+        data-testid={dataTestId}
+        className="w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        {submitting ? "Se redirecționează…" : "Plătește cu cardul"}
+      </button>
+      <ErrorMessage
+        error={errorMessage}
+        data-testid="netopia-payment-error-message"
+      />
     </>
   )
 }

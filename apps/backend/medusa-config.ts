@@ -1,9 +1,24 @@
 import { loadEnv, defineConfig, Modules } from '@medusajs/framework/utils'
 import { loadEawbOptionsFromEnv } from './src/modules/eawb/lib/config'
+import { loadNetopiaOptionsFromEnv } from './src/modules/netopia/lib/config'
 
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 
-const paymentProviders: any[] = []
+const netopiaOptions = loadNetopiaOptionsFromEnv()
+const netopiaConfigured = [
+  netopiaOptions.apiKey,       // NETOPIA_SECRET
+  netopiaOptions.posSignature, // NETOPIA_ID
+].every(Boolean)
+
+const paymentProviders = netopiaConfigured
+  ? [
+      {
+        resolve: "./src/modules/netopia",
+        id: "netopia",
+        options: netopiaOptions,
+      },
+    ]
+  : []
 
 const eawbOptions = loadEawbOptionsFromEnv()
 const eawbFulfillmentProviders = [

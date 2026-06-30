@@ -124,7 +124,7 @@ function ComboField<T extends { id: number; name: string }>({
                 Niciun rezultat
               </div>
             ) : (
-              <>
+              <div>
                 {filtered.map((o) => (
                   <ComboboxOption key={o.id} value={o} className={optionCls}>
                     {o.name}
@@ -135,7 +135,7 @@ function ComboField<T extends { id: number; name: string }>({
                     Scrie pentru a căuta…
                   </div>
                 )}
-              </>
+              </div>
             )}
           </ComboboxOptions>
         </div>

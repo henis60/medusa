@@ -262,6 +262,77 @@ export async function initiatePaymentSession(
     .catch(medusaError)
 }
 
+export async function initiateNetopiaPayment(
+  cart: HttpTypes.StoreCart,
+  providerId: string
+): Promise<string | undefined> {
+  const resp = (await initiatePaymentSession(cart, {
+    provider_id: providerId,
+  })) as { payment_collection?: HttpTypes.StorePaymentCollection }
+
+  const session = resp?.payment_collection?.payment_sessions?.find(
+    (s) => s.provider_id === providerId
+  )
+
+  return (session?.data as Record<string, unknown> | undefined)
+    ?.redirect_url as string | undefined
+}
+
+export type NetopiaCompletion = {
+  orderId?: string
+  pending?: boolean
+  failed?: boolean
+}
+
+export async function completeNetopiaCart(cartId: string): Promise<NetopiaCompletion> {
+  const headers = { ...(await getAuthHeaders()) }
+
+  try {
+    const res = await sdk.store.cart.complete(cartId, {}, headers)
+    if (res?.type === "order") {
+      const cartCacheTag = await getCacheTag("carts")
+      revalidateTag(cartCacheTag)
+      const orderCacheTag = await getCacheTag("orders")
+      revalidateTag(orderCacheTag)
+      await removeCartId()
+      return { orderId: res.order.id }
+    }
+    return { pending: true }
+  } catch {
+    return { pending: true }
+  }
+}
+
+export async function completeNetopiaBySession(sessionId: string): Promise<NetopiaCompletion> {
+  const headers = { ...(await getAuthHeaders()) }
+
+  let cartId: string | null = null
+  let status: string | null = null
+  try {
+    const resolved = await sdk.client.fetch<{
+      cart_id: string | null
+      status: string | null
+    }>("/store/netopia/session-cart", {
+      query: { session_id: sessionId },
+      headers,
+    })
+    cartId = resolved?.cart_id ?? null
+    status = resolved?.status ?? null
+  } catch {
+    return { pending: true }
+  }
+
+  if (status === "error" || status === "canceled") {
+    return { failed: true }
+  }
+
+  if (!cartId) {
+    return { pending: true }
+  }
+
+  return completeNetopiaCart(cartId)
+}
+
 export async function applyPromotions(codes: string[]) {
   const cartId = await getCartId()
 
