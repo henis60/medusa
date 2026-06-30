@@ -1,11 +1,32 @@
 import { SubscriberArgs, type SubscriberConfig } from "@medusajs/framework";
+import { capturePaymentWorkflow } from "@medusajs/core-flows";
+import { createOblioInvoiceWorkflow } from "../workflows/create-oblio-invoice";
 
 export default async function sendOrderConfirmationEmail({
-  event: { data },
+  event: { data, eventName },
   container,
 }: SubscriberArgs<{ id: string }>) {
   const logger = container.resolve("logger");
-  logger.info(`Sending order confirmation for order: ${data.id}`);
+  logger.info(`Trimitere email confirmare pentru comanda: ${data.id}`);
+
+  // Auto-capture plată la plasarea comenzii
+  if (eventName === "order.placed") {
+    try {
+      const query = container.resolve("query")
+      const { data: orders } = await query.graph({
+        entity: "order",
+        fields: ["payment_collections.id", "payment_collections.payments.id"],
+        filters: { id: data.id },
+      })
+      const payments = orders?.[0]?.payment_collections?.flatMap((pc: any) => pc.payments ?? []) ?? []
+      for (const payment of payments) {
+        await capturePaymentWorkflow(container).run({ input: { payment_id: payment.id } })
+        logger.info(`Plată ${payment.id} capturată automat pentru comanda ${data.id}`)
+      }
+    } catch (err) {
+      logger.error(`Auto-capture eșuat pentru comanda ${data.id}: ${(err as Error).message}`)
+    }
+  }
 
   try {
     const query = container.resolve("query");
@@ -17,6 +38,7 @@ export default async function sendOrderConfirmationEmail({
         "email",
         "total",
         "currency_code",
+        "metadata",
         "customer.first_name",
         "customer.last_name",
         "items.*",
@@ -27,17 +49,36 @@ export default async function sendOrderConfirmationEmail({
     });
 
     if (!orders?.length) {
-      logger.error(`Order ${data.id} not found, skipping confirmation email`);
+      logger.error(`Comanda ${data.id} negăsită, se omite emailul de confirmare`);
       return;
     }
 
     const order = orders[0];
 
     if (!order.email) {
-      logger.error(
-        `Order ${data.id} has no email address, skipping confirmation email`,
-      );
+      logger.error(`Comanda ${data.id} nu are adresă de email`);
       return;
+    }
+
+    // Generare factură Oblio (cu idempotență internă)
+    let invoiceAttachment: { name: string; content: string } | null = null
+    try {
+      const { result } = await createOblioInvoiceWorkflow(container).run({
+        input: { order_id: data.id },
+      })
+      invoiceAttachment = {
+        name: `factura-${order.display_id}.pdf`,
+        content: result.pdf_base64,
+      }
+      logger.info(
+        `Factură Oblio generată: ${result.series}/${result.number} pentru comanda ${data.id}`
+      )
+    } catch (invoiceError) {
+      logger.error(
+        `Eroare la generarea facturii Oblio pentru comanda ${data.id}: ` +
+        String((invoiceError as Error)?.message ?? invoiceError)
+      )
+      // Continuăm cu trimiterea emailului chiar dacă factura a eșuat
     }
 
     const notificationService = container.resolve("notification");
@@ -60,21 +101,14 @@ export default async function sendOrderConfirmationEmail({
         total: `${Number(order.total ?? 0).toFixed(2)} ${(order.currency_code ?? "RON").toUpperCase()}`,
         shipping_address: order.shipping_address,
         storefront_url: process.env.VITE_STOREFRONT_URL,
-        attachments: [
-          {
-            name: `factura-${order.display_id}.pdf`,
-            // TEST: PDF minimal valid (o pagina alba)
-            content:
-              "JVBERi0xLjQKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5kb2JqCjIgMCBvYmoKPDwKL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL0NvdW50IDEKPJ4KZW5kb2JqCjMgMCBvYmoKPDwKL1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgovTWVkaWFCb3ggWzAgMCA2MTIgNzkyXQovQ29udGVudHMgNCAwIFIKL1Jlc291cmNlcyA8PAovRm9udCA8PAovRjEgNSAwIFIKPj4KPj4KPj4KZW5kb2JqCjQgMCBvYmoKPDwKL0xlbmd0aCA0NAo+PgpzdHJlYW0KQlQKL0YxIDI0IFRmCjEwMCA3MDAgVGQKKEZhY3R1cmEgdGVzdCkgVGoKRVQKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8Ci9UeXBlIC9Gb250Ci9TdWJ0eXBlIC9UeXBlMQovQmFzZUZvbnQgL0hlbHZldGljYQo+PgplbmRvYmoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwNTggMDAwMDAgbiAKMDAwMDAwMDExNSAwMDAwMCBuIAowMDAwMDAwMjY2IDAwMDAwIG4gCjAwMDAwMDAzNjAgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA2Ci9Sb290IDEgMCBSCj4+CnN0YXJ0eHJlZgo0MzUKJSVFT0YK",
-          },
-        ],
+        ...(invoiceAttachment ? { attachments: [invoiceAttachment] } : {}),
       },
     });
 
-    logger.info(`Order confirmation email sent to ${order.email}`);
+    logger.info(`Email confirmare trimis la ${order.email}`);
   } catch (error) {
     logger.error(
-      `Failed to send order confirmation for ${data.id}: ${String(error?.message ?? error)}`,
+      `Eroare la trimiterea emailului de confirmare pentru ${data.id}: ${String((error as Error)?.message ?? error)}`,
     );
   }
 }

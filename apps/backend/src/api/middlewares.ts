@@ -1,4 +1,4 @@
-import { defineMiddlewares } from "@medusajs/framework/http";
+import { authenticate, defineMiddlewares } from "@medusajs/framework/http";
 
 export default defineMiddlewares({
   routes: [
@@ -7,6 +7,11 @@ export default defineMiddlewares({
       matcher: "/hooks/netopia",
       method: ["POST"],
       bodyParser: { preserveRawBody: true },
+    },
+    {
+      matcher: "/store/orders/:id/invoice",
+      method: ["GET"],
+      middlewares: [authenticate("customer", ["session", "bearer"])],
     },
   ],
 });

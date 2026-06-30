@@ -15,7 +15,7 @@ const paymentProviders = netopiaConfigured
       {
         resolve: "./src/modules/netopia",
         id: "netopia",
-        options: netopiaOptions,
+        options: { ...netopiaOptions, capture: true },
       },
     ]
   : []

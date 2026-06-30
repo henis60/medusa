@@ -16,7 +16,7 @@ const OrderSummary = ({ order }: OrderSummaryProps) => {
       <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-5">
         Sumar
       </p>
-      <div className="flex flex-col gap-2 small:max-w-xs small:ml-auto">
+      <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between font-sans text-[12px]">
           <span className="text-[var(--theme-text-muted)]">Subtotal</span>
           <span className="text-[var(--theme-text)]">
