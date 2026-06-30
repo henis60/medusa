@@ -34,7 +34,7 @@ const StoreTemplate = async ({
   const activeCollection = collections.find((c) => c.id === collectionId)
   const activeCategory = categories.find((c) => c.id === categoryId)
   const heading =
-    activeCategory?.name || activeCollection?.title || "Toate produsele"
+    activeCategory?.name || activeCollection?.title || "Ready to wear"
 
   return (
     <div className="bg-[var(--theme-bg)] w-full min-h-screen">
@@ -48,9 +48,9 @@ const StoreTemplate = async ({
             data-testid="store-page-title"
             className="font-display text-3xl small:text-6xl text-[var(--theme-text)] leading-[0.95]"
           >
-            {heading === "Toate produsele" ? (
+            {heading === "Ready to wear" ? (
               <>
-                Toate <span className="italic text-hunter-gold">produsele</span>
+                Ready to <span className="italic text-hunter-gold">wear</span>
               </>
             ) : (
               heading

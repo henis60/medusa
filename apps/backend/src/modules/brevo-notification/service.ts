@@ -123,6 +123,7 @@ class BrevoNotificationProviderService extends AbstractNotificationProviderServi
       "password-reset": "Resetare parolă",
       "admin-invite": "Invitație administrator",
       "contact-form": `Mesaj nou de la ${data.name || data.email || "vizitator"}`,
+      "appointment-form": `Cerere programare — ${data.name || data.email || "vizitator"}`,
     }
 
     const subject = subjects[template] || "Notificare magazin"
@@ -137,6 +138,55 @@ class BrevoNotificationProviderService extends AbstractNotificationProviderServi
     data: Record<string, unknown>
   ): string {
     const brand = this.options.fromName || this.options.from
+
+    if (template === "appointment-form") {
+      const safeName = escapeHtml(data.name)
+      const safeEmail = escapeHtml(data.email)
+      const safeMessage = escapeHtml(data.message)
+
+      // Parse liniile din mesaj (Telefon: / Tip: / Data: / mesaj liber)
+      const lines = safeMessage.split("\n")
+      const rows = lines
+        .filter((l) => l.includes(": "))
+        .map((l) => {
+          const idx = l.indexOf(": ")
+          return { label: l.slice(0, idx), value: l.slice(idx + 2) }
+        })
+      const extraMessage = lines.slice(rows.length + 1).join("\n").trim()
+
+      return `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;">
+          <div style="background:#1a1a1a;padding:24px 32px;">
+            <p style="margin:0;color:#c9a84c;font-size:11px;letter-spacing:3px;text-transform:uppercase;">${brand}</p>
+          </div>
+          <div style="padding:32px;">
+            <h2 style="margin:0 0 6px;font-size:18px;color:#1a1a1a;">Cerere programare</h2>
+            <p style="margin:0 0 24px;font-size:12px;color:#888;">Trimisă prin formularul de pe thehunter.ro</p>
+            <table style="width:100%;border-collapse:collapse;">
+              <tr><td style="padding:8px 0;color:#888;font-size:12px;width:80px;">Nume</td>
+                  <td style="padding:8px 0;color:#1a1a1a;font-size:14px;">${safeName}</td></tr>
+              <tr><td style="padding:8px 0;color:#888;font-size:12px;">Email</td>
+                  <td style="padding:8px 0;font-size:14px;"><a href="mailto:${safeEmail}" style="color:#c9a84c;">${safeEmail}</a></td></tr>
+              ${rows.map(({ label, value }) => `
+              <tr><td style="padding:8px 0;color:#888;font-size:12px;">${escapeHtml(label)}</td>
+                  <td style="padding:8px 0;color:#1a1a1a;font-size:14px;">${escapeHtml(value)}</td></tr>`).join("")}
+            </table>
+            ${extraMessage ? `
+            <div style="margin-top:24px;padding:16px;background:#f8f8f8;border-left:3px solid #c9a84c;">
+              <p style="margin:0;font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap;">${escapeHtml(extraMessage)}</p>
+            </div>` : ""}
+            <p style="margin-top:24px;">
+              <a href="mailto:${safeEmail}?subject=Re: Programare The Hunter House"
+                 style="display:inline-block;padding:10px 24px;background:#c9a84c;color:#1a1a1a;text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;">
+                Confirmă programarea
+              </a>
+            </p>
+          </div>
+          <div style="padding:16px 32px;background:#f8f8f8;border-top:1px solid #eee;">
+            <p style="margin:0;color:#aaa;font-size:11px;">Cerere primită prin formularul de programare de pe thehunter.ro</p>
+          </div>
+        </div>`
+    }
 
     if (template === "contact-form") {
       const safeName = escapeHtml(data.name)

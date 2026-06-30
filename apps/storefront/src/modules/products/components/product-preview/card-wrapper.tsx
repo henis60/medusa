@@ -4,7 +4,7 @@ import { HttpTypes } from "@medusajs/types"
 import { useState, useCallback } from "react"
 import CardImages from "./card-images"
 import DesktopQuickAdd from "./desktop-quick-add"
-import { isInStoreOnly } from "@lib/util/product"
+import { isInStoreOnly, COLOR_OPTION_NAMES } from "@lib/util/product"
 
 // Reveals on hover anywhere over the card link (group), floating above the
 // image bottom with an inset gap from the edges.
@@ -17,10 +17,10 @@ function HoverOverlay({
 }) {
   return (
     <div
-      className={`hidden sm:block absolute inset-x-3 bottom-3 z-30 py-3 font-sans text-[10px] uppercase tracking-[3px] border text-center backdrop-blur-sm pointer-events-none translate-y-3 opacity-0 transition-all duration-[400ms] ease-out group-hover:translate-y-0 group-hover:opacity-100 ${
+      className={`hidden sm:block absolute inset-x-0 bottom-0 z-30 py-3.5 font-sans text-[10px] uppercase tracking-[3px] border text-center pointer-events-none translate-y-2 opacity-0 transition-all duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100 ${
         dark
-          ? "border-white/40 text-white bg-black/40"
-          : "border-[var(--theme-border)] text-[var(--theme-text)] bg-[var(--theme-bg)]/90"
+          ? "border-white/40 text-white bg-black"
+          : "border-[var(--theme-border)] text-[var(--theme-text)] bg-[var(--theme-bg)]"
       }`}
     >
       {children}
@@ -42,12 +42,14 @@ function getVariantImage(
   )
   if (!colorOption || !allImages.length) return null
   const colorValues = [
-    ...new Set(
-      allVariants
-        .map(
-          (v) => v.options?.find((o) => o.option_id === colorOption.id)?.value
-        )
-        .filter(Boolean) as string[]
+    ...Array.from(
+      new Set(
+        allVariants
+          .map(
+            (v) => v.options?.find((o) => o.option_id === colorOption.id)?.value
+          )
+          .filter(Boolean) as string[]
+      )
     ),
   ]
   const variantColor = variant.options?.find(

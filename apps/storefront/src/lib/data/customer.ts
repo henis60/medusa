@@ -142,11 +142,9 @@ export async function login(_currentState: unknown, formData: FormData) {
     return String(error)
   }
 
-  try {
-    await transferCart()
-  } catch (error) {
-    return String(error)
-  }
+  // Cart transfer is best-effort: the cart-mismatch handler retries it silently
+  // after login, so a failure here must never block sign-in.
+  await transferCart().catch(() => {})
 
   const redirectTo = formData.get("redirectTo") as string | null
   if (redirectTo) {
