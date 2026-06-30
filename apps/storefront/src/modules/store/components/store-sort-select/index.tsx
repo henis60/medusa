@@ -6,10 +6,33 @@ import { SortOptions } from "../refinement-list/sort-products"
 import { clx } from "@modules/common/components/ui"
 import { AnimatePresence, motion } from "framer-motion"
 
-const sortOptions: { value: SortOptions; label: string }[] = [
+function PriceChevron({ dir }: { dir: "up" | "down" }) {
+  return (
+    <svg
+      width="10"
+      height="10"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="inline-block"
+    >
+      <polyline points={dir === "up" ? "6 15 12 9 18 15" : "6 9 12 15 18 9"} />
+    </svg>
+  )
+}
+
+const sortOptions: {
+  value: SortOptions
+  label: string
+  icon?: "up" | "down"
+}[] = [
   { value: "created_at", label: "Cele mai noi" },
-  { value: "price_asc", label: "Preț crescător" },
-  { value: "price_desc", label: "Preț descrescător" },
+  { value: "price_asc", label: "Preț", icon: "up" },
+  { value: "price_desc", label: "Preț", icon: "down" },
 ]
 
 export default function StoreSortSelect({ sortBy }: { sortBy: SortOptions }) {
@@ -48,13 +71,14 @@ export default function StoreSortSelect({ sortBy }: { sortBy: SortOptions }) {
                 transition={{ duration: 0.2, delay: i * 0.05 }}
                 onClick={() => handleChange(opt.value)}
                 className={clx(
-                  "font-sans text-[10px] uppercase tracking-[2px] transition-colors whitespace-nowrap",
+                  "inline-flex items-center gap-1 font-sans text-[10px] uppercase tracking-[2px] transition-colors whitespace-nowrap",
                   sortBy === opt.value
                     ? "text-hunter-gold"
                     : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
                 )}
               >
                 {opt.label}
+                {opt.icon && <PriceChevron dir={opt.icon} />}
               </motion.button>
             ))}
           </motion.div>
@@ -63,7 +87,7 @@ export default function StoreSortSelect({ sortBy }: { sortBy: SortOptions }) {
       <button
         onClick={() => setOpen((v) => !v)}
         className={clx(
-          "font-sans text-[10px] uppercase tracking-[3px] transition-colors",
+          "font-sans text-[10px] uppercase tracking-[3px] transition-colors underline underline-offset-2",
           open
             ? "text-hunter-gold"
             : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"

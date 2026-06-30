@@ -1,17 +1,15 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { usePathname } from "next/navigation"
 import { motion } from "framer-motion"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 type Props = {
   transparent?: boolean
   hideOnTop?: boolean
+  onClick?: () => void
 }
 
-export default function AppointmentButton({ transparent, hideOnTop }: Props) {
-  const pathname = usePathname()
+export default function AppointmentButton({ transparent, hideOnTop, onClick }: Props) {
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -21,8 +19,6 @@ export default function AppointmentButton({ transparent, hideOnTop }: Props) {
     window.addEventListener("scroll", onScroll, { passive: true })
     return () => window.removeEventListener("scroll", onScroll)
   }, [hideOnTop])
-
-  if (pathname?.includes("/programare")) return null
 
   const visible = !hideOnTop || scrolled
 
@@ -35,9 +31,9 @@ export default function AppointmentButton({ transparent, hideOnTop }: Props) {
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       style={{ pointerEvents: visible ? "auto" : "none" }}
     >
-      <LocalizedClientLink
-        href="/programare"
-        className={`flex transition-colors ${
+      <button
+        onClick={onClick}
+        className={`flex transition-colors cursor-none ${
           transparent
             ? "bg-transparent border-y border-l border-white/20 text-white/60 hover:text-white hover:border-white/40"
             : "bg-[var(--theme-bg)] border-y border-l border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:text-hunter-gold hover:border-hunter-gold"
@@ -60,7 +56,7 @@ export default function AppointmentButton({ transparent, hideOnTop }: Props) {
         <span className="hidden small:flex items-center justify-center font-sans text-[9px] uppercase tracking-[4px] py-5 px-2.5 [writing-mode:vertical-rl] rotate-180">
           Programare
         </span>
-      </LocalizedClientLink>
+      </button>
     </motion.div>
   )
 }

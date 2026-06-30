@@ -92,7 +92,10 @@ export default function VariantAwareGallery({
   // Drag-to-scroll for thumbnail strip
   const onThumbMouseDown = (e: React.MouseEvent) => {
     if (!thumbsRef.current) return
-    thumbDragStart.current = { y: e.clientY, scrollTop: thumbsRef.current.scrollTop }
+    thumbDragStart.current = {
+      y: e.clientY,
+      scrollTop: thumbsRef.current.scrollTop,
+    }
     e.preventDefault()
   }
   const onThumbMouseMove = (e: React.MouseEvent) => {
@@ -135,7 +138,7 @@ export default function VariantAwareGallery({
                     src={img.url}
                     alt={`Product image ${i + 1}`}
                     fill
-                    className="object-cover object-center"
+                    className="object-contain object-center bg-white"
                     sizes="64px"
                   />
                 )}

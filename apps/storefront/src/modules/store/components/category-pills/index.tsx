@@ -6,35 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { clx } from "@modules/common/components/ui"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
-
-const SORT_OPTIONS: {
-  value: SortOptions
-  label: string
-  chevron?: "up" | "down"
-}[] = [
-  { value: "created_at", label: "Cele mai noi" },
-  { value: "price_asc", label: "Preț", chevron: "up" },
-  { value: "price_desc", label: "Preț", chevron: "down" },
-]
-
-function Chevron({ dir }: { dir: "up" | "down" }) {
-  return (
-    <svg
-      width="11"
-      height="11"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      className="inline-block"
-    >
-      <polyline points={dir === "up" ? "6 15 12 9 18 15" : "6 9 12 15 18 9"} />
-    </svg>
-  )
-}
+import StoreSortSelect from "@modules/store/components/store-sort-select"
 
 type Props = {
   categories: HttpTypes.StoreProductCategory[]
@@ -42,6 +14,7 @@ type Props = {
   selectedCategory?: string
   selectedCollection?: string
   sortBy?: SortOptions
+  collectionCategories?: HttpTypes.StoreProductCategory[]
 }
 
 // Horizontally scrollable row with edge fades that appear/disappear with scroll
@@ -61,14 +34,20 @@ function FadeScroller({
     if (!el) return
     const update = () => {
       setFadeLeft(el.scrollLeft > 1)
-      setFadeRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1)
+      setFadeRight(Math.ceil(el.scrollLeft + el.clientWidth) < el.scrollWidth)
     }
-    const observer = new ResizeObserver(update)
-    observer.observe(el)
+    const resizeObs = new ResizeObserver(update)
+    const mutationObs = new MutationObserver(() =>
+      requestAnimationFrame(update)
+    )
+    resizeObs.observe(el)
+    mutationObs.observe(el, { childList: true, subtree: true })
     el.addEventListener("scroll", update, { passive: true })
-    update()
+    const id = requestAnimationFrame(update)
     return () => {
-      observer.disconnect()
+      cancelAnimationFrame(id)
+      resizeObs.disconnect()
+      mutationObs.disconnect()
       el.removeEventListener("scroll", update)
     }
   }, [])
@@ -94,37 +73,57 @@ export default function CategoryPills({
   selectedCategory,
   selectedCollection,
   sortBy = "created_at",
+  collectionCategories = [],
 }: Props) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const sortRef = useRef<HTMLDivElement>(null)
   const catsRef = useRef<HTMLDivElement>(null)
   const [catsFade, setCatsFade] = useState(false)
   const [catsFadeLeft, setCatsFadeLeft] = useState(false)
 
+  // Scroll active pill into view when selection changes
   useEffect(() => {
-    const check = (el: HTMLDivElement | null, set: (v: boolean) => void) => {
-      if (el) {
-        // Show fade only when there's still content to scroll to on the right
-        const hasMore = el.scrollLeft + el.clientWidth < el.scrollWidth - 1
-        set(hasMore)
+    const container = catsRef.current
+    if (!container) return
+    requestAnimationFrame(() => {
+      const active = container.querySelector<HTMLElement>(
+        "[data-active='true']"
+      )
+      if (!active) return
+      const cr = container.getBoundingClientRect()
+      const ar = active.getBoundingClientRect()
+      if (ar.left < cr.left || ar.right > cr.right) {
+        active.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+          inline: "nearest",
+        })
       }
-    }
+    })
+  }, [selectedCategory, selectedCollection])
+
+  useEffect(() => {
+    const el = catsRef.current
+    if (!el) return
     const update = () => {
-      check(catsRef.current, setCatsFade)
-      // Left fade appears once content is scrolled away on the left
-      setCatsFadeLeft(!!catsRef.current && catsRef.current.scrollLeft > 1)
+      setCatsFade(Math.ceil(el.scrollLeft + el.clientWidth) < el.scrollWidth)
+      setCatsFadeLeft(el.scrollLeft > 1)
     }
-    const observer = new ResizeObserver(update)
-    if (catsRef.current) observer.observe(catsRef.current)
-    const catsEl = catsRef.current
-    catsEl?.addEventListener("scroll", update, { passive: true })
-    update()
+    const resizeObs = new ResizeObserver(update)
+    const mutationObs = new MutationObserver(() =>
+      requestAnimationFrame(update)
+    )
+    resizeObs.observe(el)
+    mutationObs.observe(el, { childList: true, subtree: true })
+    el.addEventListener("scroll", update, { passive: true })
+    const id = requestAnimationFrame(update)
     return () => {
-      observer.disconnect()
-      catsEl?.removeEventListener("scroll", update)
+      cancelAnimationFrame(id)
+      resizeObs.disconnect()
+      mutationObs.disconnect()
+      el.removeEventListener("scroll", update)
     }
   }, [])
 
@@ -135,6 +134,18 @@ export default function CategoryPills({
       if (key === "collection") params.delete("category")
       if (value) params.set(key, value)
       else params.delete(key)
+      params.delete("page")
+      router.push(`${pathname}?${params.toString()}`)
+    },
+    [pathname, router, searchParams]
+  )
+
+  const setCollectionAndCategory = useCallback(
+    (collectionId: string, categoryId: string | null) => {
+      const params = new URLSearchParams(searchParams)
+      params.set("collection", collectionId)
+      if (categoryId) params.set("category", categoryId)
+      else params.delete("category")
       params.delete("page")
       router.push(`${pathname}?${params.toString()}`)
     },
@@ -164,8 +175,11 @@ export default function CategoryPills({
 
   // Only top-level categories at the first level
   const topCategories = categories.filter((c) => !c.parent_category)
-  // Selected category may itself be a subcategory
-  const selectedCat = categories.find((c) => c.id === selectedCategory)
+  // Active category only when NOT in collection context
+  const activeCategoryId = selectedCollection ? null : selectedCategory
+  const selectedCat = activeCategoryId
+    ? categories.find((c) => c.id === activeCategoryId)
+    : null
   // The parent whose subcategories should be revealed as sub-chips
   const activeParentId = selectedCat
     ? selectedCat.parent_category?.id ?? selectedCat.id
@@ -174,58 +188,12 @@ export default function CategoryPills({
     ? categories.filter((c) => c.parent_category?.id === activeParentId)
     : []
 
-  const sortVariants = {
-    hidden: { opacity: 0, y: 6 },
-    show: (i: number) => ({
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.25, delay: i * 0.06, ease: "easeOut" as const },
-    }),
-  }
-
   const divider = (
     <span className="shrink-0 w-px h-5 bg-[var(--theme-border)]" />
   )
 
   return (
     <div className="small:hidden sticky top-16 z-50 bg-white">
-      {/* Sort row */}
-      <div>
-        <div className="page-container">
-          <div>
-            <div
-              ref={sortRef}
-              className="flex items-center justify-start gap-4 py-3"
-            >
-              {SORT_OPTIONS.map((opt, i) => (
-                <motion.button
-                  key={opt.value}
-                  custom={i}
-                  variants={sortVariants}
-                  initial="hidden"
-                  animate="show"
-                  onClick={() =>
-                    update(
-                      "sortBy",
-                      opt.value === "created_at" ? null : opt.value
-                    )
-                  }
-                  className={clx(
-                    "shrink-0 inline-flex items-center gap-1 font-sans text-[9px] tracking-[1px] min-[360px]:text-[10px] min-[360px]:tracking-[2px] uppercase transition-colors whitespace-nowrap",
-                    sortBy === opt.value
-                      ? "text-hunter-gold"
-                      : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
-                  )}
-                >
-                  {opt.label}
-                  {opt.chevron && <Chevron dir={opt.chevron} />}
-                </motion.button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Categories + Collections row */}
       {(collections.length > 0 || categories.length > 0) && (
         <div>
@@ -233,47 +201,54 @@ export default function CategoryPills({
             <div className="relative">
               <div
                 ref={catsRef}
-                className="flex items-center gap-3 overflow-x-auto pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                className="flex items-center gap-3 overflow-x-auto pt-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               >
-                {topCategories.map((c, i) => (
-                  <motion.button
-                    key={c.id}
-                    custom={i}
-                    variants={chipVariants}
-                    initial="hidden"
-                    animate="show"
-                    onClick={() =>
-                      update(
-                        "category",
-                        selectedCategory === c.id ? null : c.id
-                      )
-                    }
-                    className={chip(
-                      selectedCategory === c.id || activeParentId === c.id
-                    )}
-                  >
-                    {c.name}
-                  </motion.button>
-                ))}
+                {topCategories.map((c, i) => {
+                  const isActive =
+                    activeCategoryId === c.id || activeParentId === c.id
+                  return (
+                    <motion.button
+                      key={c.id}
+                      custom={i}
+                      variants={chipVariants}
+                      initial="hidden"
+                      animate="show"
+                      data-active={isActive ? "true" : undefined}
+                      onClick={() =>
+                        update(
+                          "category",
+                          activeCategoryId === c.id ? null : c.id
+                        )
+                      }
+                      className={chip(isActive)}
+                    >
+                      {c.name}
+                    </motion.button>
+                  )
+                })}
                 {collections.length > 0 && divider}
-                {collections.map((c, i) => (
-                  <motion.button
-                    key={c.id}
-                    custom={categories.length + 1 + i}
-                    variants={chipVariants}
-                    initial="hidden"
-                    animate="show"
-                    onClick={() =>
-                      update(
-                        "collection",
-                        selectedCollection === c.id ? null : c.id
-                      )
-                    }
-                    className={chip(selectedCollection === c.id)}
-                  >
-                    {c.title}
-                  </motion.button>
-                ))}
+                {collections.map((c, i) => {
+                  const isActive = selectedCollection === c.id
+                  return (
+                    <motion.button
+                      key={c.id}
+                      custom={categories.length + 1 + i}
+                      variants={chipVariants}
+                      initial="hidden"
+                      animate="show"
+                      data-active={isActive ? "true" : undefined}
+                      onClick={() =>
+                        update(
+                          "collection",
+                          selectedCollection === c.id ? null : c.id
+                        )
+                      }
+                      className={chip(isActive)}
+                    >
+                      {c.title}
+                    </motion.button>
+                  )
+                })}
               </div>
               {catsFadeLeft && (
                 <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-white to-transparent" />
@@ -284,7 +259,7 @@ export default function CategoryPills({
             </div>
           </div>
 
-          {/* Subcategory chips */}
+          {/* Subcategory chips (for categories) */}
           <AnimatePresence initial={false}>
             {subChips.length > 0 && (
               <motion.div
@@ -296,9 +271,9 @@ export default function CategoryPills({
                 className="overflow-hidden"
               >
                 <div className="page-container">
-                  <FadeScroller className="flex items-center gap-2 overflow-x-auto pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  <FadeScroller className="flex items-center gap-2 overflow-x-auto pt-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {subChips.map((sub, i) => {
-                      const active = selectedCategory === sub.id
+                      const active = activeCategoryId === sub.id
                       return (
                         <motion.button
                           key={sub.id}
@@ -331,8 +306,61 @@ export default function CategoryPills({
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Collection category chips */}
+          <AnimatePresence initial={false}>
+            {selectedCollection && collectionCategories.length > 0 && (
+              <motion.div
+                key={selectedCollection + "-cats"}
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+                className="overflow-hidden"
+              >
+                <div className="page-container">
+                  <FadeScroller className="flex items-center gap-2 overflow-x-auto pt-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {collectionCategories.map((cat, i) => {
+                      const active = selectedCategory === cat.id
+                      return (
+                        <motion.button
+                          key={cat.id}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{
+                            duration: 0.25,
+                            delay: 0.05 + i * 0.04,
+                            ease: "easeOut",
+                          }}
+                          onClick={() =>
+                            setCollectionAndCategory(
+                              selectedCollection,
+                              active ? null : cat.id
+                            )
+                          }
+                          className={clx(
+                            "shrink-0 font-sans text-[10px] uppercase tracking-[2px] px-3 py-1.5 border transition-colors whitespace-nowrap",
+                            active
+                              ? "border-hunter-gold/60 text-hunter-gold"
+                              : "border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:border-[var(--theme-text-muted)]"
+                          )}
+                        >
+                          {cat.name}
+                        </motion.button>
+                      )
+                    })}
+                  </FadeScroller>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
+
+      {/* Sort row */}
+      <div className="page-container py-3 flex justify-end">
+        <StoreSortSelect sortBy={sortBy} />
+      </div>
     </div>
   )
 }

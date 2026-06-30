@@ -1,6 +1,9 @@
 import { Suspense } from "react"
 
-import { listCollections } from "@lib/data/collections"
+import {
+  listCollections,
+  getCollectionWithProductCategories,
+} from "@lib/data/collections"
 import { listCategories } from "@lib/data/categories"
 import { listLocales } from "@lib/data/locales"
 import { getLocale } from "@lib/data/locale-actions"
@@ -25,6 +28,16 @@ export default async function Nav() {
       listCategories(),
     ])
 
+  const sortedCollections = [...collections].sort(
+    (a, b) =>
+      new Date(b.created_at ?? 0).getTime() -
+      new Date(a.created_at ?? 0).getTime()
+  )
+
+  const featuredCollection = sortedCollections[0]
+    ? await getCollectionWithProductCategories(sortedCollections[0].id)
+    : null
+
   return (
     <NavShell>
       <div className="flex-1 basis-0 h-full flex items-center">
@@ -33,8 +46,9 @@ export default async function Nav() {
             regions={regions}
             locales={locales}
             currentLocale={currentLocale}
-            collections={collections}
+            collections={sortedCollections}
             categories={categories}
+            featuredCollection={featuredCollection}
           />
         </div>
       </div>

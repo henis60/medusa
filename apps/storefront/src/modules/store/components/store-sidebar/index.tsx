@@ -12,6 +12,7 @@ type Props = {
   sortBy: SortOptions
   selectedCollection?: string
   selectedCategory?: string
+  collectionCategories?: HttpTypes.StoreProductCategory[]
 }
 
 const sortOptions: { value: SortOptions; label: string }[] = [
@@ -34,6 +35,7 @@ export default function StoreSidebar({
   sortBy,
   selectedCollection,
   selectedCategory,
+  collectionCategories = [],
 }: Props) {
   const router = useRouter()
   const pathname = usePathname()
@@ -64,12 +66,30 @@ export default function StoreSidebar({
     router.push(`${pathname}?${params.toString()}`)
   }, [pathname, router, searchParams])
 
+  const setCollectionAndCategory = useCallback(
+    (collectionId: string, categoryId: string | null) => {
+      const params = new URLSearchParams(searchParams)
+      params.set("collection", collectionId)
+      if (categoryId) {
+        params.set("category", categoryId)
+      } else {
+        params.delete("category")
+      }
+      params.delete("page")
+      router.push(`${pathname}?${params.toString()}`)
+    },
+    [pathname, router, searchParams]
+  )
+
   const hasFilters = !!selectedCollection || !!selectedCategory
 
   // Only top-level categories at the first level
   const topCategories = categories.filter((c) => !c.parent_category)
-  // The currently selected category (may be a subcategory)
-  const selectedCat = categories.find((c) => c.id === selectedCategory)
+  // Active category only when NOT in collection context
+  const activeCategoryId = selectedCollection ? null : selectedCategory
+  const selectedCat = activeCategoryId
+    ? categories.find((c) => c.id === activeCategoryId)
+    : null
   // The parent whose subcategories should be revealed
   const activeParentId = selectedCat
     ? selectedCat.parent_category?.id ?? selectedCat.id
@@ -113,11 +133,11 @@ export default function StoreSidebar({
                 return (
                   <div key={c.id}>
                     <NavItem
-                      active={selectedCategory === c.id}
+                      active={activeCategoryId === c.id}
                       onClick={() =>
                         updateParam(
                           "category",
-                          selectedCategory === c.id ? null : c.id
+                          activeCategoryId === c.id ? null : c.id
                         )
                       }
                     >
@@ -131,12 +151,12 @@ export default function StoreSidebar({
                             onClick={() =>
                               updateParam(
                                 "category",
-                                selectedCategory === sub.id ? c.id : sub.id
+                                activeCategoryId === sub.id ? c.id : sub.id
                               )
                             }
                             className={clx(
                               "w-full text-left py-1.5 font-serif text-[18px] leading-none transition-colors duration-150",
-                              selectedCategory === sub.id
+                              activeCategoryId === sub.id
                                 ? "text-[var(--theme-gold)] italic"
                                 : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
                             )}
@@ -158,20 +178,47 @@ export default function StoreSidebar({
           <div className="py-8 border-t border-[var(--theme-border)]">
             <SectionLabel>Colecții</SectionLabel>
             <nav className="flex flex-col">
-              {collections.map((c) => (
-                <NavItem
-                  key={c.id}
-                  active={selectedCollection === c.id}
-                  onClick={() =>
-                    updateParam(
-                      "collection",
-                      selectedCollection === c.id ? null : c.id
-                    )
-                  }
-                >
-                  {c.title}
-                </NavItem>
-              ))}
+              {collections.map((c) => {
+                const isSelected = selectedCollection === c.id
+                return (
+                  <div key={c.id}>
+                    <NavItem
+                      active={isSelected && !selectedCategory}
+                      onClick={() =>
+                        updateParam(
+                          "collection",
+                          isSelected ? null : c.id
+                        )
+                      }
+                    >
+                      {c.title}
+                    </NavItem>
+                    {isSelected && collectionCategories.length > 0 && (
+                      <div className="flex flex-col pl-4 mt-1 mb-1 border-l border-[var(--theme-border)]">
+                        {collectionCategories.map((cat) => (
+                          <button
+                            key={cat.id}
+                            onClick={() =>
+                              setCollectionAndCategory(
+                                c.id,
+                                selectedCategory === cat.id ? null : cat.id
+                              )
+                            }
+                            className={clx(
+                              "w-full text-left py-1.5 font-serif text-[18px] leading-none transition-colors duration-150",
+                              selectedCategory === cat.id
+                                ? "text-[var(--theme-gold)] italic"
+                                : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
+                            )}
+                          >
+                            {cat.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </nav>
           </div>
         )}

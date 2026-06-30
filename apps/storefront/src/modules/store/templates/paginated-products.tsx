@@ -89,18 +89,20 @@ export default async function PaginatedProducts({
 
   return (
     <AnimatedGrid>
-      <ul
-        className="grid grid-cols-2 w-full small:grid-cols-2 medium:grid-cols-3 gap-x-6 gap-y-6 small:gap-x-8 small:gap-y-16"
-        data-testid="products-list"
-      >
-        {products.map((p, i) => {
-          return (
-            <AnimatedProductCard key={p.id} index={i}>
-              <ProductPreview product={p} region={region} />
-            </AnimatedProductCard>
-          )
-        })}
-      </ul>
+      <div className="-mx-4 small:mx-0">
+        <ul
+          className="grid grid-cols-2 w-full small:grid-cols-2 medium:grid-cols-3 gap-[4px] small:gap-x-8 small:gap-y-16"
+          data-testid="products-list"
+        >
+          {products.map((p, i) => {
+            return (
+              <AnimatedProductCard key={p.id} index={i}>
+                <ProductPreview product={p} region={region} />
+              </AnimatedProductCard>
+            )
+          })}
+        </ul>
+      </div>
       {totalPages > 1 && (
         <Pagination
           data-testid="product-pagination"

@@ -1,6 +1,10 @@
 import { Suspense } from "react"
+import { HttpTypes } from "@medusajs/types"
 
-import { listCollections } from "@lib/data/collections"
+import {
+  listCollections,
+  getCollectionWithProductCategories,
+} from "@lib/data/collections"
 import { listCategories } from "@lib/data/categories"
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
 import StoreSidebar from "@modules/store/components/store-sidebar"
@@ -26,10 +30,32 @@ const StoreTemplate = async ({
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "created_at"
 
-  const [{ collections }, categories] = await Promise.all([
+  const [{ collections }, categories, collectionWithCats] = await Promise.all([
     listCollections(),
     listCategories(),
+    collectionId
+      ? getCollectionWithProductCategories(collectionId)
+      : Promise.resolve(null),
   ])
+
+  const categoriesWithChildren = new Set(
+    categories
+      .filter((c) => (c.category_children?.length ?? 0) > 0)
+      .map((c) => c.id)
+  )
+
+  const collectionCategories: HttpTypes.StoreProductCategory[] = []
+  if (collectionWithCats?.products) {
+    const seen = new Set<string>()
+    for (const product of collectionWithCats.products) {
+      for (const cat of (product as any).categories ?? []) {
+        if (!seen.has(cat.id) && !categoriesWithChildren.has(cat.id)) {
+          seen.add(cat.id)
+          collectionCategories.push(cat)
+        }
+      }
+    }
+  }
 
   const activeCollection = collections.find((c) => c.id === collectionId)
   const activeCategory = categories.find((c) => c.id === categoryId)
@@ -56,7 +82,7 @@ const StoreTemplate = async ({
               heading
             )}
           </h1>
-          <p className="mt-2 small:mt-4 max-w-2xl font-serif text-sm small:text-lg text-[var(--theme-text-muted)] leading-relaxed line-clamp-3 small:line-clamp-2 min-h-[4.35rem] small:min-h-[3.75rem]">
+          <p className="mt-2 small:mt-4 max-w-2xl font-serif text-sm small:text-lg text-[var(--theme-text-muted)] leading-relaxed line-clamp-2">
             {activeCategory?.description ||
               (activeCollection?.metadata?.description as string) ||
               "Piese selectate cu grijă — cămăși, accesorii și colecții pentru garderoba ta."}
@@ -71,6 +97,7 @@ const StoreTemplate = async ({
         selectedCategory={categoryId}
         selectedCollection={collectionId}
         sortBy={sort}
+        collectionCategories={collectionCategories}
       />
 
       {/* Two-column shop layout */}
@@ -85,6 +112,7 @@ const StoreTemplate = async ({
             sortBy={sort}
             selectedCollection={collectionId}
             selectedCategory={categoryId}
+            collectionCategories={collectionCategories}
           />
 
           <div className="flex-1 min-w-0">

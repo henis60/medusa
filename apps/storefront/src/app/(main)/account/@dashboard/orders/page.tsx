@@ -3,7 +3,6 @@ import { Metadata } from "next"
 import OrderOverview from "@modules/account/components/order-overview"
 import { notFound } from "next/navigation"
 import { listOrders } from "@lib/data/orders"
-import TransferRequestForm from "@modules/account/components/transfer-request-form"
 
 export const metadata: Metadata = {
   title: "Comenzi",
@@ -27,11 +26,6 @@ export default async function Orders() {
       </div>
 
       <OrderOverview orders={orders} />
-
-      {/* Transfer section */}
-      <div className="small:px-8 pt-8 pb-10 border-t border-[var(--theme-border)]">
-        <TransferRequestForm />
-      </div>
     </div>
   )
 }
