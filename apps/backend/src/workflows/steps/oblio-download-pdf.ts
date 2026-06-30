@@ -36,6 +36,7 @@ export const oblioDownloadPdfStep = createStep(
           "billing_address.country_code",
           "items.title",
           "items.quantity",
+          "items.detail.quantity",
           "items.unit_price",
         ],
         filters: { id: order_id },

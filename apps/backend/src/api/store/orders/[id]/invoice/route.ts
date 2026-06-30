@@ -4,9 +4,7 @@ import {
 } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { MedusaError } from "@medusajs/framework/utils"
-
-const TEST_PDF_BASE64 =
-  "JVBERi0xLjQKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5kb2JqCjIgMCBvYmoKPDwKL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL0NvdW50IDEKPJ4KZW5kb2JqCjMgMCBvYmoKPDwKL1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgovTWVkaWFCb3ggWzAgMCA2MTIgNzkyXQovQ29udGVudHMgNCAwIFIKL1Jlc291cmNlcyA8PAovRm9udCA8PAovRjEgNSAwIFIKPj4KPj4KPj4KZW5kb2JqCjQgMCBvYmoKPDwKL0xlbmd0aCA0NAo+PgpzdHJlYW0KQlQKL0YxIDI0IFRmCjEwMCA3MDAgVGQKKEZhY3R1cmEgdGVzdCkgVGoKRVQKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8Ci9UeXBlIC9Gb250Ci9TdWJ0eXBlIC9UeXBlMQovQmFzZUZvbnQgL0hlbHZldGljYQo+PgplbmRvYmoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwNTggMDAwMDAgbiAKMDAwMDAwMDExNSAwMDAwMCBuIAowMDAwMDAwMjY2IDAwMDAwIG4gCjAwMDAwMDAzNjAgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA2Ci9Sb290IDEgMCBSCj4+CnN0YXJ0eHJlZgo0MzUKJSVFT0YK"
+import { generateTestInvoicePdf } from "../../../../../lib/generate-test-invoice-pdf"
 
 export async function GET(
   req: AuthenticatedMedusaRequest,
@@ -18,7 +16,17 @@ export async function GET(
 
   const { data: orders } = await query.graph({
     entity: "order",
-    fields: ["id", "customer_id", "display_id", "metadata"],
+    fields: [
+      "id", "customer_id", "display_id", "metadata",
+      "email", "currency_code", "shipping_total",
+      "customer.first_name", "customer.last_name",
+      "billing_address.first_name", "billing_address.last_name",
+      "billing_address.company", "billing_address.address_1",
+      "billing_address.city", "billing_address.province",
+      "billing_address.country_code",
+      "items.title", "items.quantity", "items.unit_price",
+      "items.detail.quantity",
+    ],
     filters: { id },
   })
 
@@ -44,7 +52,7 @@ export async function GET(
   let pdfBuffer: Buffer
 
   if (process.env.OBLIO_DRY_RUN === "true") {
-    pdfBuffer = Buffer.from(TEST_PDF_BASE64, "base64")
+    pdfBuffer = await generateTestInvoicePdf(order, invoiceSeries, invoiceNumber)
   } else {
     // Obține token Oblio
     const tokenResponse = await fetch("https://www.oblio.eu/business/api/authorize", {

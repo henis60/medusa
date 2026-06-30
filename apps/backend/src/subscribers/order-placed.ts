@@ -3,7 +3,7 @@ import { capturePaymentWorkflow } from "@medusajs/core-flows";
 import { createOblioInvoiceWorkflow } from "../workflows/create-oblio-invoice";
 
 export default async function sendOrderConfirmationEmail({
-  event: { data, eventName },
+  event: { data, name: eventName },
   container,
 }: SubscriberArgs<{ id: string }>) {
   const logger = container.resolve("logger");
@@ -114,5 +114,5 @@ export default async function sendOrderConfirmationEmail({
 }
 
 export const config: SubscriberConfig = {
-  event: ["order.placed", "order.completed"],
+  event: "order.placed",
 };

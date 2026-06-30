@@ -17,6 +17,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       "billing_address.city", "billing_address.province",
       "billing_address.country_code",
       "items.title", "items.quantity", "items.unit_price",
+      "items.detail.quantity",
     ],
     filters: { id },
   })
