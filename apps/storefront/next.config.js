@@ -53,6 +53,11 @@ const nextConfig = {
         protocol: "https",
         hostname: "*.s3.amazonaws.com",
       },
+      // Cloudflare R2 public dev URLs (product images)
+      {
+        protocol: "https",
+        hostname: "*.r2.dev",
+      },
       // Backend public file host (product images)
       ...urlToRemotePattern(process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL),
       ...(S3_HOSTNAME && S3_PATHNAME
