@@ -32,6 +32,31 @@ export const retrieveRegion = async (id: string) => {
     .then(({ region }) => region)
 }
 
+/**
+ * Cookie-free region lookup for statically/ISR-rendered pages (product detail).
+ * Avoids reading cookies so those pages can be prerendered and generated
+ * on-demand without DYNAMIC_SERVER_USAGE. Cached with a static tag + ISR.
+ */
+export const getRegionStatic = async (countryCode: string) => {
+  const regions = await sdk.client
+    .fetch<{ regions: HttpTypes.StoreRegion[] }>(`/store/regions`, {
+      method: "GET",
+      next: { tags: ["regions"], revalidate: 3600 },
+      cache: "force-cache",
+    })
+    .then(({ regions }) => regions)
+    .catch(() => null)
+
+  if (!regions?.length) return null
+
+  for (const region of regions) {
+    for (const c of region.countries ?? []) {
+      if (c?.iso_2 === countryCode) return region
+    }
+  }
+  return null
+}
+
 const regionMap = new Map<string, HttpTypes.StoreRegion>()
 
 export const getRegion = async (countryCode: string) => {

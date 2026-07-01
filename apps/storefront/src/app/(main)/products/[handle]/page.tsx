@@ -1,42 +1,31 @@
-﻿import { Metadata } from "next"
+import { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { listProducts } from "@lib/data/products"
-import { getRegion } from "@lib/data/regions"
-import { getImagesForVariant } from "@lib/util/product"
+import { getProductByHandle, listProductHandles } from "@lib/data/products"
+import { getRegionStatic } from "@lib/data/regions"
 import ProductTemplate from "@modules/products/templates"
 
+const COUNTRY = "ro"
+
 type Props = {
-  params: Promise<Record<string, string>>
-  searchParams: Promise<{ v_id?: string }>
+  params: Promise<{ handle: string }>
 }
 
 export async function generateStaticParams() {
-  try {
-    const { response } = await listProducts({
-      countryCode: "ro",
-      queryParams: { limit: 100, fields: "handle" },
-    })
-    return response.products
-      .filter((p) => p.handle)
-      .map((p) => ({ handle: p.handle }))
-  } catch {
-    return []
-  }
+  const region = await getRegionStatic(COUNTRY)
+  if (!region) return []
+  const handles = await listProductHandles(region.id)
+  return handles.map((handle) => ({ handle }))
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
-  const params = await props.params
-  const { handle } = params
-  const region = await getRegion("ro")
+  const { handle } = await props.params
+  const region = await getRegionStatic(COUNTRY)
 
   if (!region) {
     notFound()
   }
 
-  const product = await listProducts({
-    countryCode: "ro",
-    queryParams: { handle },
-  }).then(({ response }) => response.products[0])
+  const product = await getProductByHandle(handle, region.id)
 
   if (!product) {
     notFound()
@@ -54,22 +43,14 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 }
 
 export default async function ProductPage(props: Props) {
-  const params = await props.params
-  const region = await getRegion("ro")
-  const searchParams = await props.searchParams
-
-  const selectedVariantId = searchParams.v_id
+  const { handle } = await props.params
+  const region = await getRegionStatic(COUNTRY)
 
   if (!region) {
     notFound()
   }
 
-  const pricedProduct = await listProducts({
-    countryCode: "ro",
-    queryParams: { handle: params.handle },
-  }).then(({ response }) => response.products[0])
-
-  const images = getImagesForVariant(pricedProduct, selectedVariantId)
+  const pricedProduct = await getProductByHandle(handle, region.id)
 
   if (!pricedProduct) {
     notFound()
@@ -79,9 +60,8 @@ export default async function ProductPage(props: Props) {
     <ProductTemplate
       product={pricedProduct}
       region={region}
-      countryCode={"ro"}
-      images={images ?? []}
+      countryCode={COUNTRY}
+      images={pricedProduct.images ?? []}
     />
   )
 }
-

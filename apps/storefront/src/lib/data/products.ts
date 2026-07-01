@@ -141,3 +141,47 @@ export const listProductsWithSort = async ({
     queryParams,
   }
 }
+
+/**
+ * Cookie-free single-product fetch for the (statically/ISR-rendered) product
+ * detail page. No cookies → no DYNAMIC_SERVER_USAGE, so a product added after
+ * the last build renders on-demand without a rebuild. Static tag + ISR.
+ */
+export const getProductByHandle = async (
+  handle: string,
+  regionId: string
+): Promise<HttpTypes.StoreProduct | undefined> => {
+  return sdk.client
+    .fetch<{ products: HttpTypes.StoreProduct[] }>(`/store/products`, {
+      method: "GET",
+      query: {
+        handle,
+        region_id: regionId,
+        fields:
+          "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags,",
+      },
+      next: { tags: ["products"], revalidate: 3600 },
+      cache: "force-cache",
+    })
+    .then(({ products }) => products[0])
+}
+
+/**
+ * Cookie-free list of product handles for generateStaticParams (build-time
+ * prerender), so the build reliably gets handles without reading cookies.
+ */
+export const listProductHandles = async (
+  regionId: string
+): Promise<string[]> => {
+  return sdk.client
+    .fetch<{ products: HttpTypes.StoreProduct[] }>(`/store/products`, {
+      method: "GET",
+      query: { limit: 100, fields: "handle", region_id: regionId },
+      next: { tags: ["products"], revalidate: 3600 },
+      cache: "force-cache",
+    })
+    .then(({ products }) =>
+      products.map((p) => p.handle).filter((h): h is string => Boolean(h))
+    )
+    .catch(() => [])
+}

@@ -20,6 +20,13 @@ RUN rm -f package-lock.json && npm install --legacy-peer-deps --no-audit --no-fu
 # 2) Build the backend (compiles the server + bundles the admin dashboard).
 #    NODE_OPTIONS heap headroom is scoped to THIS build step only — at runtime a
 #    high heap limit on a small container makes V8 skip GC and get OOM-killed.
+#    VITE_STOREFRONT_URL must be present HERE: the admin is a Vite bundle and
+#    Vite inlines import.meta.env.VITE_* at BUILD time. Setting it only in the
+#    runtime environment has no effect on the already-compiled admin JS, so the
+#    preview links would fall back to http://localhost:8000. Pass it as a build
+#    arg (e.g. on Railway declare the ARG so the service variable is forwarded).
+ARG VITE_STOREFRONT_URL
+ENV VITE_STOREFRONT_URL=${VITE_STOREFRONT_URL}
 COPY apps/backend ./apps/backend
 WORKDIR /app/apps/backend
 RUN NODE_OPTIONS=--max-old-space-size=4096 npm run build
