@@ -24,7 +24,7 @@ import {
 } from "@medusajs/framework/types"
 
 import { NetopiaClient } from "./lib/client"
-import { NetopiaOptions, NetopiaIpnPayload } from "./lib/types"
+import { NetopiaOptions, NetopiaIpnPayload, NetopiaBrowserInfo } from "./lib/types"
 import { NetopiaStatus } from "./lib/status"
 
 type InjectedDependencies = {
@@ -99,7 +99,9 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
       ?? ctx?.session_id
       ?? `sess_${Date.now()}`) as string
 
-    const billing = this.extractBilling(ctx)
+    const inputData = (input.data ?? {}) as Record<string, unknown>
+    const billing = this.extractBilling(ctx, inputData.billing_address as Record<string, unknown> | undefined)
+    const browserInfo = inputData.browser_info as NetopiaBrowserInfo | undefined
     const redirectUrl = `${this.options.redirectUrl}?session_id=${sessionId}`
 
     let response
@@ -118,6 +120,7 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
           amount: amountRON,
           currency,
           billing,
+          shipping: billing,
           products: [
             {
               name: "Comandă",
@@ -131,6 +134,7 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
         payment: {
           options: { installments: 0, bonus: 0 },
           instrument: { type: "card", account: "", expMonth: 0, expYear: 0, secretCode: "" },
+          ...(browserInfo ? { data: browserInfo } : {}),
         },
       })
     } catch (err) {
@@ -278,15 +282,18 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
     return { action: "not_supported" }
   }
 
-  private extractBilling(ctx: Record<string, unknown>) {
+  // `ctx` (PaymentProviderContext) nu conține billing_address în Medusa —
+  // doar customer/account_holder/idempotency_key. Adresa reală de checkout
+  // vine prin `dataAddr`, trimisă explicit de storefront în `data.billing_address`.
+  private extractBilling(ctx: Record<string, unknown>, dataAddr?: Record<string, unknown>) {
     const customer = ((ctx?.customer ?? {}) as Record<string, unknown>)
-    const addr = ((ctx?.billing_address ?? {}) as Record<string, unknown>)
+    const addr = dataAddr ?? ((ctx?.billing_address ?? {}) as Record<string, unknown>)
 
     return {
-      email: (customer.email ?? addr.email ?? "client@example.com") as string,
+      email: (addr.email ?? customer.email ?? "client@example.com") as string,
       phone: ((addr.phone ?? customer.phone ?? "+40700000000") as string),
-      firstName: ((customer.first_name ?? addr.first_name ?? "Client") as string),
-      lastName: ((customer.last_name ?? addr.last_name ?? "") as string),
+      firstName: ((addr.first_name ?? customer.first_name ?? "Client") as string),
+      lastName: ((addr.last_name ?? customer.last_name ?? "") as string),
       city: ((addr.city ?? "Bucuresti") as string),
       country: 642,
       countryName: "Romania",

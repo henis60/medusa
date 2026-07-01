@@ -38,6 +38,40 @@ const eawbFulfillmentProviders = [
     : []),
 ]
 
+// Use S3 (Cloudflare R2) for file storage when its env vars are present, so
+// uploads persist across redeploys and get public URLs. Falls back to the
+// local provider (container disk) for local dev without R2 credentials.
+const s3Configured = [
+  process.env.S3_FILE_URL,
+  process.env.S3_ACCESS_KEY_ID,
+  process.env.S3_SECRET_ACCESS_KEY,
+  process.env.S3_BUCKET,
+  process.env.S3_ENDPOINT,
+].every(Boolean)
+
+const fileProvider = s3Configured
+  ? {
+      resolve: "@medusajs/file-s3",
+      id: "s3",
+      options: {
+        file_url: process.env.S3_FILE_URL,
+        access_key_id: process.env.S3_ACCESS_KEY_ID,
+        secret_access_key: process.env.S3_SECRET_ACCESS_KEY,
+        region: "auto", // Cloudflare R2 uses "auto"
+        bucket: process.env.S3_BUCKET,
+        endpoint: process.env.S3_ENDPOINT,
+      },
+    }
+  : {
+      resolve: "@medusajs/file-local",
+      id: "local",
+      options: {
+        // Local fallback: public base URL for served files. On Railway set
+        // BACKEND_URL to the public domain so uploaded files get reachable URLs.
+        backend_url: `${process.env.BACKEND_URL ?? "http://localhost:9000"}/static`,
+      },
+    }
+
 module.exports = defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
@@ -82,18 +116,7 @@ module.exports = defineConfig({
     {
       resolve: "@medusajs/medusa/file",
       options: {
-        providers: [
-          {
-            resolve: "@medusajs/file-local",
-            id: "local",
-            options: {
-              // Public base URL for served files. On Railway set
-              // BACKEND_URL to the public domain so uploaded files get
-              // reachable URLs (the AI route fetches them server-side).
-              backend_url: `${process.env.BACKEND_URL ?? "http://localhost:9000"}/static`,
-            },
-          },
-        ],
+        providers: [fileProvider],
       },
     },
   ],

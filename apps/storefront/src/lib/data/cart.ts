@@ -262,12 +262,42 @@ export async function initiatePaymentSession(
     .catch(medusaError)
 }
 
+export type NetopiaBrowserInfo = Record<string, string>
+
 export async function initiateNetopiaPayment(
-  cart: HttpTypes.StoreCart,
-  providerId: string
+  cartId: string,
+  providerId: string,
+  browserInfo?: NetopiaBrowserInfo
 ): Promise<string | undefined> {
+  // Trimitem doar id-urile de care are nevoie SDK-ul — coșul complet (cu toate
+  // variantele/imaginile/opțiunile) ar fi serializat integral peste rețea la
+  // fiecare apel al acestui Server Action, ceea ce pe conexiuni mobile poate
+  // eșua cu "TypeError: Load failed" (Safari) / "Failed to fetch" (Chrome).
+  const cart = { id: cartId } as HttpTypes.StoreCart
+
+  // PaymentProviderContext (Medusa) nu include billing_address — doar
+  // customer/account_holder/idempotency_key. Ca provider-ul Netopia să
+  // primească telefonul/adresa reale completate la checkout, le trimitem
+  // explicit prin `data`, populate server-side din coșul curent.
+  const fullCart = await retrieveCart(cartId)
+  const addr = fullCart?.shipping_address
+
   const resp = (await initiatePaymentSession(cart, {
     provider_id: providerId,
+    data: {
+      billing_address: addr
+        ? {
+            email: fullCart?.email ?? undefined,
+            phone: addr.phone ?? undefined,
+            first_name: addr.first_name ?? undefined,
+            last_name: addr.last_name ?? undefined,
+            city: addr.city ?? undefined,
+            postal_code: addr.postal_code ?? undefined,
+            province: addr.province ?? undefined,
+          }
+        : undefined,
+      browser_info: browserInfo,
+    },
   })) as { payment_collection?: HttpTypes.StorePaymentCollection }
 
   const session = resp?.payment_collection?.payment_sessions?.find(

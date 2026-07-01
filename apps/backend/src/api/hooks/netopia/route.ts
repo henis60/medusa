@@ -2,7 +2,7 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules, PaymentWebhookEvents } from "@medusajs/framework/utils"
 import { createVerify } from "crypto"
 
-const PROVIDER_ID = process.env.NETOPIA_PROVIDER_ID || "pp_netopia_netopia"
+const PROVIDER_ID = process.env.NETOPIA_PROVIDER_ID || "netopia_netopia"
 
 function verifyIpnSignature(
   payload: unknown,
