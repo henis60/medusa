@@ -1,9 +1,6 @@
-import { cookies as nextCookies } from "next/headers"
-
 import CartTotals from "@modules/common/components/cart-totals"
 import Help from "@modules/order/components/help"
 import Items from "@modules/order/components/items"
-import OnboardingCta from "@modules/order/components/onboarding-cta"
 import OrderDetails from "@modules/order/components/order-details"
 import ShippingDetails from "@modules/order/components/shipping-details"
 import PaymentDetails from "@modules/order/components/payment-details"
@@ -17,9 +14,6 @@ type OrderCompletedTemplateProps = {
 export default async function OrderCompletedTemplate({
   order,
 }: OrderCompletedTemplateProps) {
-  const cookies = await nextCookies()
-  const isOnboarding = cookies.get("_medusa_onboarding")?.value === "true"
-
   return (
     <div className="min-h-[calc(100vh-64px)] bg-[var(--theme-bg)]">
       {/* Back link */}
@@ -34,7 +28,6 @@ export default async function OrderCompletedTemplate({
       </div>
 
       <div className="page-container max-w-3xl py-10 flex flex-col gap-0" data-testid="order-complete-container">
-        {isOnboarding && <OnboardingCta orderId={order.id} />}
 
         {/* Header */}
         <div className="pb-8 border-b border-[var(--theme-border)]">
@@ -62,7 +55,7 @@ export default async function OrderCompletedTemplate({
             <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-5">
               Total
             </p>
-            <CartTotals totals={order} />
+            <CartTotals totals={order} showTax />
           </div>
         </div>
 

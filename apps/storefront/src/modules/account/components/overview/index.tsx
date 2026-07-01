@@ -1,6 +1,26 @@
-﻿import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import { convertToLocale } from "@lib/util/money"
+﻿"use client"
+
+import { useState } from "react"
 import { HttpTypes } from "@medusajs/types"
+import NewsletterStatus from "./newsletter-status"
+import { signout } from "@lib/data/customer"
+import { ArrowRightOnRectangle } from "@medusajs/icons"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { convertToLocale } from "@lib/util/money"
+
+const FULFILLED_STATUSES = [
+  "fulfilled",
+  "canceled",
+  "returned",
+  "partially_returned",
+]
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: "În așteptare",
+  not_fulfilled: "În procesare",
+  partially_fulfilled: "Parțial livrată",
+  requires_action: "Necesită acțiune",
+}
 
 type OverviewProps = {
   customer: HttpTypes.StoreCustomer | null
@@ -8,143 +28,118 @@ type OverviewProps = {
 }
 
 const Overview = ({ customer, orders }: OverviewProps) => {
-  const profilePct = getProfileCompletion(customer)
-  const addressCount = customer?.addresses?.length || 0
+  const [expanded, setExpanded] = useState(false)
+
+  const handleLogout = async () => {
+    await signout()
+  }
+
+  const activeOrders = orders
+    ?.sort((a, b) => (a.created_at > b.created_at ? -1 : 1))
+    .filter((o) => !FULFILLED_STATUSES.includes(o.fulfillment_status ?? ""))
 
   return (
-    <div className="small:px-8 py-8" data-testid="overview-page-wrapper">
-      {/* Stats row */}
-      <div className="grid grid-cols-2 gap-px border border-[var(--theme-border)] mb-10">
-        <div className="p-6 bg-[var(--theme-surface)]">
-          <p className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-3">
-            Profile
-          </p>
-          <div className="flex items-baseline gap-2">
-            <span
-              className="font-display text-[38px] leading-none text-[var(--theme-text)]"
-              data-testid="customer-profile-completion"
-              data-value={profilePct}
-            >
-              {profilePct}
-            </span>
-            <span className="font-sans text-[9px] uppercase tracking-[2px] text-[var(--theme-text-muted)]">
-              % complete
-            </span>
-          </div>
-        </div>
-        <div className="p-6 bg-[var(--theme-surface)]">
-          <p className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-3">
-            Addresses
-          </p>
-          <div className="flex items-baseline gap-2">
-            <span
-              className="font-display text-[38px] leading-none text-[var(--theme-text)]"
-              data-testid="addresses-count"
-              data-value={addressCount}
-            >
-              {addressCount}
-            </span>
-            <span className="font-sans text-[9px] uppercase tracking-[2px] text-[var(--theme-text-muted)]">
-              saved
+    <div
+      className="h-full small:px-8 py-8 flex flex-col justify-between"
+      data-testid="overview-page-wrapper"
+    >
+      <div className="flex flex-col gap-8">
+        {/* Member card */}
+        <div className="relative bg-[var(--theme-surface-raised)] px-6 py-7 small:px-8">
+          <div className="absolute top-0 left-0 right-0 h-px bg-hunter-gold/40" />
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-hunter-gold/10" />
+
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2">
+              <p className="font-cinzel text-[11px] tracking-[4px] text-hunter-gold/60 uppercase leading-none">
+                The Hunter House
+              </p>
+              <p className="font-serif text-[22px] small:text-[26px] leading-none text-[var(--theme-text)]">
+                {customer?.first_name} <em>{customer?.last_name}</em>
+              </p>
+              <p className="font-sans text-[8px] uppercase tracking-[2px] text-[var(--theme-text-muted)]">
+                Membru din{" "}
+                {customer?.created_at
+                  ? new Date(customer.created_at).toLocaleDateString("ro-RO", {
+                      month: "long",
+                      year: "numeric",
+                    })
+                  : "—"}
+              </p>
+            </div>
+            <span className="font-sans text-[8px] uppercase tracking-[3px] text-hunter-gold border border-hunter-gold/40 bg-hunter-gold/5 px-3 py-1.5 shrink-0 self-start">
+              Standard
             </span>
           </div>
         </div>
+        {/* Active orders */}
+        {activeOrders && activeOrders.length > 0 && (
+          <div>
+            <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-4">
+              Comenzi active
+            </p>
+            <div className="flex flex-col divide-y divide-[var(--theme-border)] border border-[var(--theme-border)]">
+              {(expanded ? activeOrders : activeOrders.slice(0, 3)).map(
+                (order) => (
+                  <LocalizedClientLink
+                    key={order.id}
+                    href={`/account/orders/details/${order.id}`}
+                    className="group flex items-center justify-between gap-4 p-4 hover:border-hunter-gold transition-colors"
+                  >
+                    <div className="flex flex-col gap-1">
+                      <span className="font-display text-[22px] leading-none text-[var(--theme-text)]">
+                        #{order.display_id}
+                      </span>
+                      <span className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text-muted)]">
+                        {STATUS_LABEL[order.fulfillment_status ?? ""] ??
+                          order.fulfillment_status}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-sans text-[13px] tracking-[1px] text-hunter-gold">
+                        {convertToLocale({
+                          amount: order.total,
+                          currency_code: order.currency_code,
+                        })}
+                      </span>
+                    </div>
+                  </LocalizedClientLink>
+                )
+              )}
+            </div>
+            {activeOrders.length > 3 && (
+              <button
+                onClick={() => setExpanded((v) => !v)}
+                className="mt-3 font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
+              >
+                {expanded
+                  ? "Restrânge"
+                  : `+ ${activeOrders.length - 3} mai mult${
+                      activeOrders.length - 3 === 1 ? "ă" : "e"
+                    }`}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Newsletter status */}
+        <NewsletterStatus customer={customer} />
       </div>
 
-      {/* Recent orders */}
-      <div>
-        <div className="flex items-center justify-between mb-5">
-          <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)]">
-            Recent Orders
-          </p>
-          <LocalizedClientLink
-            href="/account/orders"
-            className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5"
-          >
-            View all
-          </LocalizedClientLink>
-        </div>
-
-        <ul className="flex flex-col" data-testid="orders-wrapper">
-          {orders && orders.length > 0 ? (
-            orders.slice(0, 5).map((order) => (
-              <li
-                key={order.id}
-                data-testid="order-wrapper"
-                data-value={order.id}
-                className="last:border-none"
-              >
-                <LocalizedClientLink
-                  href={`/account/orders/details/${order.id}`}
-                  className="group flex items-center justify-between py-4 hover:bg-[var(--theme-surface)] px-2 -mx-2 transition-colors"
-                >
-                  <div className="flex flex-col gap-0.5">
-                    <span
-                      className="font-sans text-[11px] uppercase tracking-[2px] text-[var(--theme-text)]"
-                      data-testid="order-id"
-                      data-value={order.display_id}
-                    >
-                      #{order.display_id}
-                    </span>
-                    <span
-                      className="font-serif italic text-[13px] text-[var(--theme-text-muted)]"
-                      data-testid="order-created-date"
-                    >
-                      {new Date(order.created_at).toDateString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-6">
-                    <span
-                      className="font-display text-[18px] leading-none text-[var(--theme-gold)]"
-                      data-testid="order-amount"
-                    >
-                      {convertToLocale({
-                        amount: order.total,
-                        currency_code: order.currency_code,
-                      })}
-                    </span>
-                    <span className="text-[var(--theme-text-muted)] group-hover:text-[var(--theme-text)] transition-colors">
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                        <path d="M5 2l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </span>
-                  </div>
-                </LocalizedClientLink>
-              </li>
-            ))
-          ) : (
-            <li
-              className="py-10 text-center"
-              data-testid="no-orders-message"
-            >
-              <p className="font-display text-[20px] leading-[1.1] text-[var(--theme-text)] mb-2">
-                No orders yet
-              </p>
-              <p className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-6">
-                Discover the collection
-              </p>
-              <LocalizedClientLink
-                href="/store"
-                className="inline-block font-sans text-[10px] uppercase tracking-[3px] text-hunter-dark bg-hunter-gold px-6 py-3 hover:bg-hunter-gold/90 transition-colors"
-              >
-                Shop Now
-              </LocalizedClientLink>
-            </li>
-          )}
-        </ul>
+      {/* Logout — mobile only */}
+      <div className="small:hidden mt-8 pt-6 border-t border-[var(--theme-border)]">
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex items-center gap-2 font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
+          data-testid="logout-button"
+        >
+          <ArrowRightOnRectangle className="w-3.5 h-3.5" />
+          Deconectare
+        </button>
       </div>
     </div>
   )
-}
-
-const getProfileCompletion = (customer: HttpTypes.StoreCustomer | null) => {
-  let count = 0
-  if (!customer) return 0
-  if (customer.email) count++
-  if (customer.first_name && customer.last_name) count++
-  if (customer.phone) count++
-  if (customer.addresses?.find((addr) => addr.is_default_billing)) count++
-  return (count / 4) * 100
 }
 
 export default Overview

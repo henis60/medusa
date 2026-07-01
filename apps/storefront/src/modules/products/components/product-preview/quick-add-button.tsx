@@ -1,7 +1,7 @@
 "use client"
 
 import { addToCart } from "@lib/data/cart"
-import { useParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 type Props = {
@@ -12,7 +12,7 @@ type Props = {
 
 export default function QuickAddButton({ variantId, productHandle, hasMultipleOptions }: Props) {
   const [adding, setAdding] = useState(false)
-  const countryCode = useParams().countryCode as string
+  const countryCode = "ro"
   const router = useRouter()
 
   const handleClick = async (e: React.MouseEvent) => {

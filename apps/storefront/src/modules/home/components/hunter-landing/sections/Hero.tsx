@@ -1,3 +1,11 @@
+"use client"
+import { useRef, useState } from "react"
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from "framer-motion"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 const MARQUEE_ITEMS = [
@@ -14,12 +22,23 @@ const MARQUEE_ITEMS = [
   "Est. 2024",
 ]
 
+const ease = [0.23, 1, 0.32, 1] as const
+
 const Hero = () => {
+  const heroRef = useRef<HTMLElement>(null)
+  const reduced = useReducedMotion()
+  const [marqueePaused, setMarqueePaused] = useState(false)
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  })
+  const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "35%"])
+
   const items = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS]
 
   return (
-    <section className="hero" id="home">
-      <div className="hero-bg" id="heroBg" aria-hidden="true" />
+    <section ref={heroRef} className="hero" id="home">
+      <motion.div className="hero-bg" aria-hidden="true" style={{ y: bgY }} />
 
       <div className="hero-grid" aria-hidden="true">
         <div className="hgl" />
@@ -34,13 +53,28 @@ const Hero = () => {
       {/* Hero content */}
       <div className="hero-content">
         <div className="hero-top-group">
-          <div className="eyebrow">
-            <div className="eyebrow-line" />
+          <motion.div
+            className="eyebrow"
+            initial={reduced ? false : { opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease, delay: 0.15 }}
+          >
+            <motion.div
+              className="eyebrow-line"
+              initial={reduced ? false : { scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 1.0, ease, delay: 0.4 }}
+            />
             <span className="eyebrow-text">
               Return of the Elegant Gentleman
             </span>
-            <div className="eyebrow-line" />
-          </div>
+            <motion.div
+              className="eyebrow-line"
+              initial={reduced ? false : { scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 1.0, ease, delay: 0.5 }}
+            />
+          </motion.div>
 
           <div className="hero-logo">
             <div className="logo-l1">
@@ -67,22 +101,37 @@ const Hero = () => {
             </div>
           </div>
 
-          <div className="orn">
+          <motion.div
+            className="orn"
+            initial={reduced ? false : { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease, delay: 0.72 }}
+          >
             <div className="orn-line" />
             <div className="orn-gem" />
             <div className="orn-line r" />
-          </div>
+          </motion.div>
 
-          <div>
+          <motion.div
+            initial={reduced ? false : { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease, delay: 0.82 }}
+          >
             <span className="eyebrow-text">online shop</span>
-          </div>
+          </motion.div>
         </div>
         {/* end hero-top-group */}
 
-        <LocalizedClientLink href="/store" className="hero-cta">
-          <span className="hero-cta-text">Explorează Colecția</span>
-          <span className="hero-cta-arrow">→</span>
-        </LocalizedClientLink>
+        <motion.div
+          initial={reduced ? false : { opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease, delay: 1.1 }}
+        >
+          <LocalizedClientLink href="/store" className="hero-cta">
+            <span className="hero-cta-text">Explorează Colecția</span>
+            <span className="hero-cta-arrow">→</span>
+          </LocalizedClientLink>
+        </motion.div>
       </div>
 
       <div
@@ -95,8 +144,13 @@ const Hero = () => {
           right: 0,
           zIndex: 4,
         }}
+        onMouseEnter={() => setMarqueePaused(true)}
+        onMouseLeave={() => setMarqueePaused(false)}
       >
-        <div className="mqinner">
+        <div
+          className="mqinner"
+          style={{ animationPlayState: marqueePaused ? "paused" : "running" }}
+        >
           {items.map((label, i) => (
             <div className="mqitem" key={i}>
               {label} <span className="mqgem">◆</span>

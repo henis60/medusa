@@ -1,7 +1,6 @@
 ﻿"use client"
 
 import { useFavorites } from "@lib/context/favorites-context"
-import { resolveImageUrl } from "@lib/util/image-url"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Image from "next/image"
 
@@ -28,42 +27,47 @@ export default function FavoritesList() {
   }
 
   return (
-    <div className="grid grid-cols-2 small:grid-cols-4 gap-x-3 gap-y-6 small:px-8 py-8">
+    <div className="flex flex-col divide-y divide-[var(--theme-border)] small:px-8 py-4">
       {favorites.map((item) => (
-        <div key={item.id} className="group flex flex-col gap-2">
-          <LocalizedClientLink href={`/products/${item.handle}`} className="block relative aspect-[3/4] overflow-hidden">
+        <div
+          key={item.id}
+          className="group flex items-center gap-4 py-4 px-3 -mx-3 hover:bg-[var(--theme-surface)] transition-colors"
+        >
+          <LocalizedClientLink
+            href={`/products/${item.handle}`}
+            className="relative w-16 h-20 shrink-0 overflow-hidden bg-[var(--theme-surface)]"
+          >
             {item.thumbnail ? (
               <Image
-                src={resolveImageUrl(item.thumbnail) ?? item.thumbnail}
+                src={item.thumbnail}
                 alt={item.title}
                 fill
-                sizes="(max-width: 640px) 50vw, 33vw"
-                className="object-cover object-center group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+                sizes="64px"
+                className="object-contain object-center"
               />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
-                  {item.title}
+                  —
                 </span>
               </div>
             )}
           </LocalizedClientLink>
-          <div className="flex items-center justify-between gap-2">
-            <LocalizedClientLink href={`/products/${item.handle}`}>
-              <p className="font-sans text-[9px] uppercase tracking-[2.5px] text-[var(--theme-text)] hover:text-hunter-gold transition-colors truncate">
-                {item.title}
-              </p>
-            </LocalizedClientLink>
-            <button
-              onClick={() => toggle(item)}
-              aria-label="Elimină din salvate"
-              className="shrink-0 opacity-40 hover:opacity-100 transition-opacity"
-            >
-              <svg viewBox="0 0 24 24" style={{ width: 13, height: 13 }} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+          <LocalizedClientLink
+            href={`/products/${item.handle}`}
+            className="flex-1 min-w-0"
+          >
+            <p className="font-serif text-[16px] leading-[1.2] text-[var(--theme-text)] hover:text-hunter-gold transition-colors truncate">
+              {item.title}
+            </p>
+          </LocalizedClientLink>
+          <button
+            onClick={() => toggle(item)}
+            aria-label="Elimină din favorite"
+            className="shrink-0 font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-rose-400 transition-colors"
+          >
+            Elimină
+          </button>
         </div>
       ))}
     </div>

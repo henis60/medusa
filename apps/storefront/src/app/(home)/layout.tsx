@@ -1,0 +1,43 @@
+import { listCartOptions, retrieveCart } from "@lib/data/cart"
+import { retrieveCustomer } from "@lib/data/customer"
+import { getBaseURL } from "@lib/util/env"
+import { Metadata } from "next"
+import { StoreCartShippingOption } from "@medusajs/types"
+import CartMismatchBanner from "@modules/layout/components/cart-mismatch-banner"
+import Nav from "@modules/layout/templates/nav"
+import FreeShippingPriceNudge from "@modules/shipping/components/free-shipping-price-nudge"
+import AppointmentWidget from "@modules/layout/components/appointment-widget"
+
+export const metadata: Metadata = {
+  metadataBase: new URL(getBaseURL()),
+}
+
+export default async function HomeLayout(props: { children: React.ReactNode }) {
+  const customer = await retrieveCustomer()
+  const cart = await retrieveCart()
+  let shippingOptions: StoreCartShippingOption[] = []
+
+  if (cart) {
+    const { shipping_options } = await listCartOptions()
+    shippingOptions = shipping_options
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Nav />
+      {customer && cart && (
+        <CartMismatchBanner customer={customer} cart={cart} />
+      )}
+      {cart && (
+        <FreeShippingPriceNudge
+          variant="popup"
+          cart={cart}
+          shippingOptions={shippingOptions}
+        />
+      )}
+      <AppointmentWidget transparent hideOnTop />
+      <div className="flex-1">{props.children}</div>
+      {/* Footer is rendered inside HunterLanding (HomepageFooter) */}
+    </div>
+  )
+}

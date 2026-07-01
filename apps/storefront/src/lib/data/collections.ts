@@ -42,6 +42,26 @@ export const listCollections = async (
     .then(({ collections }) => ({ collections, count: collections.length }))
 }
 
+export const getCollectionWithProductCategories = async (
+  id: string
+): Promise<HttpTypes.StoreCollection | null> => {
+  const next = {
+    ...(await getCacheOptions("collections")),
+  }
+
+  return await sdk.client
+    .fetch<{ collection: HttpTypes.StoreCollection }>(
+      `/store/collections/${id}`,
+      {
+        query: { fields: "*products,*products.categories" },
+        next,
+        cache: "force-cache",
+      }
+    )
+    .then(({ collection }) => collection)
+    .catch(() => null)
+}
+
 export const getCollectionByHandle = async (
   handle: string
 ): Promise<HttpTypes.StoreCollection | null> => {

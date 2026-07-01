@@ -13,26 +13,24 @@ const ProductInfo = ({ product, action }: ProductInfoProps) => {
     <div id="product-info" className="flex flex-col gap-y-4">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 flex-wrap min-w-0">
-          {product.collection && (
+          {product.collection ? (
             <LocalizedClientLink
               href={`/collections/${product.collection.handle}`}
               className="font-sans text-[9px] uppercase tracking-[6px] text-hunter-green dark:text-hunter-green-m hover:text-hunter-gold transition-colors"
             >
               {product.collection.title}
             </LocalizedClientLink>
+          ) : (
+            product.categories?.map((cat) => (
+              <LocalizedClientLink
+                key={cat.id}
+                href={`/categories/${cat.handle}`}
+                className="font-sans text-[9px] uppercase tracking-[6px] text-hunter-green dark:text-hunter-green-m hover:text-hunter-gold transition-colors"
+              >
+                {cat.name}
+              </LocalizedClientLink>
+            ))
           )}
-          {product.collection && product.categories?.length ? (
-            <span className="text-[var(--theme-border)] text-[9px]">/</span>
-          ) : null}
-          {product.categories?.map((cat) => (
-            <LocalizedClientLink
-              key={cat.id}
-              href={`/categories/${cat.handle}`}
-              className="font-sans text-[9px] uppercase tracking-[6px] text-hunter-green dark:text-hunter-green-m hover:text-hunter-gold transition-colors"
-            >
-              {cat.name}
-            </LocalizedClientLink>
-          ))}
         </div>
         {action && <div className="shrink-0">{action}</div>}
       </div>
@@ -43,12 +41,12 @@ const ProductInfo = ({ product, action }: ProductInfoProps) => {
       >
         {product.title}
       </Heading>
-      {product.description && (
+      {product.subtitle && (
         <Text
           className="font-serif text-base leading-relaxed text-[var(--theme-text-muted)] whitespace-pre-line"
-          data-testid="product-description"
+          data-testid="product-subtitle"
         >
-          {product.description}
+          {product.subtitle}
         </Text>
       )}
     </div>

@@ -1,5 +1,7 @@
 "use client"
 
+import RouteCanvas from "./RouteCanvas"
+
 export default function About() {
   const pillars = [
     {
@@ -28,7 +30,7 @@ export default function About() {
     <div className="about-wrap" id="about">
       <div className="about-photo">
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <canvas id="dvizCanvas" aria-hidden="true"></canvas>
+          <RouteCanvas />
           <div className="dviz-vignette"></div>
         </div>
         <div

@@ -158,7 +158,7 @@ const Payment = ({
           {isLoading ? "Se procesează…" :
             !activeSession && isStripeLike(selectedPaymentMethod)
               ? "Introdu datele cardului"
-              : "Continuă cu recenzia"}
+              : "Continuă cu confirmarea"}
         </button>
       </div>
 

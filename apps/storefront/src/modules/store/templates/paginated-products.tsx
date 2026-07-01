@@ -3,8 +3,10 @@ import { getRegion } from "@lib/data/regions"
 import ProductPreview from "@modules/products/components/product-preview"
 import { Pagination } from "@modules/store/components/pagination"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import AnimatedProductCard from "@modules/store/components/animated-product-card"
+import AnimatedGrid from "@modules/store/components/animated-grid"
 
-const PRODUCT_LIMIT = 3
+const PRODUCT_LIMIT = 6
 
 type PaginatedProductsParams = {
   limit: number
@@ -86,19 +88,21 @@ export default async function PaginatedProducts({
   }
 
   return (
-    <>
-      <ul
-        className="grid grid-cols-2 w-full small:grid-cols-2 medium:grid-cols-3 gap-x-6 gap-y-10 small:gap-x-8 small:gap-y-16"
-        data-testid="products-list"
-      >
-        {products.map((p) => {
-          return (
-            <li key={p.id} className="relative hover:z-10">
-              <ProductPreview product={p} region={region} />
-            </li>
-          )
-        })}
-      </ul>
+    <AnimatedGrid>
+      <div className="-mx-4 small:mx-0">
+        <ul
+          className="grid grid-cols-2 w-full small:grid-cols-2 medium:grid-cols-3 gap-[4px] small:gap-x-8 small:gap-y-16"
+          data-testid="products-list"
+        >
+          {products.map((p, i) => {
+            return (
+              <AnimatedProductCard key={p.id} index={i}>
+                <ProductPreview product={p} region={region} />
+              </AnimatedProductCard>
+            )
+          })}
+        </ul>
+      </div>
       {totalPages > 1 && (
         <Pagination
           data-testid="product-pagination"
@@ -106,6 +110,6 @@ export default async function PaginatedProducts({
           totalPages={totalPages}
         />
       )}
-    </>
+    </AnimatedGrid>
   )
 }

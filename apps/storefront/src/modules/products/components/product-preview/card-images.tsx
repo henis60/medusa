@@ -5,7 +5,6 @@ import Image from "next/image"
 import FavoriteButton from "./favorite-button"
 import QuickAddOverlay from "./quick-add-overlay"
 import { isInStoreOnly } from "@lib/util/product"
-import { resolveImageUrl } from "@lib/util/image-url"
 
 type Props = {
   product: HttpTypes.StoreProduct
@@ -20,22 +19,22 @@ export default function CardImages({ product, isFeatured, noOverlay, activeImage
   const variants = product.variants ?? []
   const options = product.options ?? []
 
-  const mainImage = resolveImageUrl(product.thumbnail ?? allImages[0]?.url)
-  const hoverImage = resolveImageUrl(allImages[1]?.url)
+  const mainImage = product.thumbnail ?? allImages[0]?.url
+  const hoverImage = allImages[1]?.url
 
   // Always show mainImage as base; crossfade activeImage on top when set
   const showHover = !activeImage && !!hoverImage
 
   return (
     <div className="relative cursor-pointer w-full">
-      <div className="relative overflow-hidden w-full" style={{ paddingBottom: "133.333%" }}>
+      <div className="relative overflow-hidden w-full bg-white" style={{ paddingBottom: "133.333%" }}>
         {mainImage && (
           <Image
             src={mainImage}
             alt={product.title ?? ""}
             fill
             sizes="(max-width: 1024px) 50vw, 25vw"
-            className={`object-cover object-center transition-all duration-700 ease-out ${showHover ? "group-hover:opacity-0" : activeImage ? "" : "group-hover:scale-[1.04]"}`}
+            className={`object-contain object-center transition-all duration-700 ease-out ${showHover ? "group-hover:opacity-0" : activeImage ? "" : "group-hover:scale-[1.06]"}`}
             priority={isFeatured}
           />
         )}
@@ -46,7 +45,7 @@ export default function CardImages({ product, isFeatured, noOverlay, activeImage
             alt={product.title ?? ""}
             fill
             sizes="(max-width: 1024px) 50vw, 25vw"
-            className="object-cover object-center opacity-0 transition-opacity duration-700 group-hover:opacity-100"
+            className="object-contain object-center opacity-0 scale-[1.03] transition-all duration-700 ease-out group-hover:opacity-100 group-hover:scale-100"
           />
         )}
 
@@ -57,7 +56,7 @@ export default function CardImages({ product, isFeatured, noOverlay, activeImage
             alt={product.title ?? ""}
             fill
             sizes="(max-width: 1024px) 50vw, 25vw"
-            className="object-cover object-center transition-opacity duration-500 ease-out opacity-0"
+            className="object-contain object-center transition-opacity duration-500 ease-out opacity-0"
             onLoad={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = "1" }}
           />
         )}

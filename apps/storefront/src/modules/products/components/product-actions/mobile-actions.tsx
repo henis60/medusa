@@ -3,11 +3,16 @@
 import { HttpTypes } from "@medusajs/types"
 import { clx } from "@modules/common/components/ui"
 import { getProductPrice } from "@lib/util/get-product-price"
-import { isSimpleProduct, isInStoreOnly } from "@lib/util/product"
+import {
+  isSimpleProduct,
+  isInStoreOnly,
+  COLOR_OPTION_NAMES as COLOR_TITLES,
+} from "@lib/util/product"
 import { Button } from "@modules/common/components/ui"
 import OptionSelect from "./option-select"
 import { useMemo, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
+import { AnimatePresence, motion } from "framer-motion"
 
 type MobileActionsProps = {
   product: HttpTypes.StoreProduct
@@ -62,8 +67,10 @@ const MobileActions: React.FC<MobileActionsProps> = ({
   }
   const onTouchEnd = () => {
     dragging.current = false
-    if (dragY.current > 80) { setDragOffset(0); setOpen(false) }
-    else setDragOffset(0)
+    if (dragY.current > 80) {
+      setDragOffset(0)
+      setOpen(false)
+    } else setDragOffset(0)
   }
 
   const price = getProductPrice({ product, variantId: variant?.id })
@@ -72,24 +79,36 @@ const MobileActions: React.FC<MobileActionsProps> = ({
     return price.variantPrice || price.cheapestPrice || null
   }, [price])
 
-  const COLOR_TITLES = ["color", "colour", "culoare"]
   const isColorOpt = (optId: string) =>
-    COLOR_TITLES.includes(product.options?.find((o) => o.id === optId)?.title?.toLowerCase() ?? "")
+    COLOR_TITLES.includes(
+      product.options?.find((o) => o.id === optId)?.title?.toLowerCase() ?? ""
+    )
   const vmap = (v: HttpTypes.StoreProductVariant) =>
-    v.options?.reduce((acc, o) => { if (o.option_id) acc[o.option_id] = o.value; return acc }, {} as Record<string, string>) ?? {}
+    v.options?.reduce((acc, o) => {
+      if (o.option_id) acc[o.option_id] = o.value
+      return acc
+    }, {} as Record<string, string>) ?? {}
 
   const getDisabledValues = (optionId: string): Set<string> => {
-    const allValues = product.options?.find((o) => o.id === optionId)?.values?.map((v) => v.value ?? "") ?? []
+    const allValues =
+      product.options
+        ?.find((o) => o.id === optionId)
+        ?.values?.map((v) => v.value ?? "") ?? []
     if (isColorOpt(optionId)) {
-      const available = new Set((product.variants ?? []).map((v) => vmap(v)[optionId]).filter(Boolean))
+      const available = new Set(
+        (product.variants ?? []).map((v) => vmap(v)[optionId]).filter(Boolean)
+      )
       return new Set(allValues.filter((v) => !available.has(v)))
     }
-    const others = Object.entries(options).filter(([id, val]) => id !== optionId && !!val) as [string, string][]
+    const others = Object.entries(options).filter(
+      ([id, val]) => id !== optionId && !!val
+    ) as [string, string][]
     if (others.length === 0) return new Set()
     const available = new Set<string>()
     product.variants?.forEach((v) => {
       const map = vmap(v)
-      if (others.every(([id, val]) => map[id] === val) && map[optionId]) available.add(map[optionId])
+      if (others.every(([id, val]) => map[id] === val) && map[optionId])
+        available.add(map[optionId])
     })
     return new Set(allValues.filter((v) => !available.has(v)))
   }
@@ -100,12 +119,21 @@ const MobileActions: React.FC<MobileActionsProps> = ({
   return (
     <>
       {/* Sticky bar */}
-      <div className={clx("lg:hidden inset-x-0 bottom-0 fixed z-50 transition-transform duration-300", !show && "translate-y-full pointer-events-none")}>
+      <div
+        className={clx(
+          "lg:hidden inset-x-0 bottom-0 fixed z-50 transition-transform duration-300",
+          !show && "translate-y-full pointer-events-none"
+        )}
+      >
         <div className="bg-[var(--theme-bg)] border-t border-[var(--theme-border)] flex items-center gap-3 px-4 py-3">
           <div className="flex-1 min-w-0">
-            <p className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text)] truncate">{product.title}</p>
+            <p className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text)] truncate">
+              {product.title}
+            </p>
             {selectedPrice && (
-              <p className="font-sans text-[11px] text-hunter-gold mt-0.5">{selectedPrice.calculated_price}</p>
+              <p className="font-sans text-[11px] text-hunter-gold mt-0.5">
+                {selectedPrice.calculated_price}
+              </p>
             )}
           </div>
 
@@ -120,7 +148,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
               isLoading={isAdding}
               className="!bg-hunter-gold !text-hunter-dark !border-transparent font-sans uppercase tracking-[3px] text-[11px] px-6 py-3 rounded-none"
             >
-              {!inStock ? "Out of stock" : "Add to cart"}
+              {!inStock ? "Indisponibil" : "Adaugă în coș"}
             </Button>
           ) : (
             <button
@@ -134,85 +162,123 @@ const MobileActions: React.FC<MobileActionsProps> = ({
       </div>
 
       {/* Bottom sheet portal */}
-      {mounted && createPortal(
-        <>
-          <div
-            className={clx(
-              "fixed inset-0 z-[9020] bg-black/50 transition-opacity duration-300 lg:hidden",
-              open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-            )}
-            onClick={() => setOpen(false)}
-          />
-
-          <div
-            ref={sheetRef}
-            className={clx(
-              "fixed inset-x-0 bottom-0 z-[9021] bg-[var(--theme-bg)] border-t border-[var(--theme-border)] lg:hidden",
-              dragOffset === 0 ? "transition-transform duration-300 ease-out" : ""
-            )}
-            style={{ transform: open ? `translateY(${dragOffset}px)` : "translateY(100%)" }}
-          >
-            {/* Drag handle */}
-            <div
-              className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing touch-none"
-              onTouchStart={onTouchStart}
-              onTouchMove={onTouchMove}
-              onTouchEnd={onTouchEnd}
-            >
-              <div className="w-10 h-1 rounded-full bg-[var(--theme-border)]" />
-            </div>
-
-            {/* Header */}
-            <div
-              className="flex items-center justify-between px-6 py-3 border-b border-[var(--theme-border)] touch-none"
-              onTouchStart={onTouchStart}
-              onTouchMove={onTouchMove}
-              onTouchEnd={onTouchEnd}
-            >
-              <span className="font-sans text-[10px] uppercase tracking-[4px] text-[var(--theme-text-muted)]">
-                {product.title}
-              </span>
-              {selectedPrice && (
-                <span className="font-sans text-[11px] text-hunter-gold">{selectedPrice.calculated_price}</span>
+      {mounted &&
+        createPortal(
+          <>
+            <AnimatePresence>
+              {open && (
+                <motion.div
+                  key="ma-backdrop"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="fixed inset-0 z-[9020] bg-black/50 lg:hidden"
+                  onClick={() => setOpen(false)}
+                />
               )}
-            </div>
+            </AnimatePresence>
+            <AnimatePresence>
+              {open && (
+                <motion.div
+                  key="ma-sheet"
+                  ref={sheetRef}
+                  initial={{ y: "100%" }}
+                  animate={{ y: dragOffset }}
+                  exit={{ y: "100%" }}
+                  transition={
+                    dragging.current
+                      ? { duration: 0 }
+                      : {
+                          duration: 0.38,
+                          ease: [0.22, 1, 0.36, 1] as [
+                            number,
+                            number,
+                            number,
+                            number
+                          ],
+                        }
+                  }
+                  className="fixed inset-x-0 bottom-0 z-[9021] bg-[var(--theme-bg)] border-t border-[var(--theme-border)] lg:hidden"
+                >
+                  {/* Drag handle */}
+                  <div
+                    className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing touch-none"
+                    onTouchStart={onTouchStart}
+                    onTouchMove={onTouchMove}
+                    onTouchEnd={onTouchEnd}
+                  >
+                    <div className="w-10 h-1 rounded-full bg-[var(--theme-border)]" />
+                  </div>
 
-            {/* Options */}
-            <div className="px-6 py-5 flex flex-col gap-6 overflow-y-auto max-h-[60dvh]" data-scroll-lock-allow="true">
-              {(product.options || []).map((option) => (
-                <div key={option.id}>
-                  <OptionSelect
-                    option={option}
-                    current={options[option.id]}
-                    updateOption={updateOptions}
-                    title={option.title ?? ""}
-                    disabled={optionsDisabled}
-                    disabledValues={getDisabledValues(option.id)}
-                  />
-                </div>
-              ))}
-            </div>
+                  {/* Header */}
+                  <div
+                    className="flex items-center justify-between px-6 py-3 border-b border-[var(--theme-border)] touch-none"
+                    onTouchStart={onTouchStart}
+                    onTouchMove={onTouchMove}
+                    onTouchEnd={onTouchEnd}
+                  >
+                    <span className="font-sans text-[10px] uppercase tracking-[4px] text-[var(--theme-text-muted)]">
+                      {product.title}
+                    </span>
+                    {selectedPrice && (
+                      <span className="font-sans text-[11px] text-hunter-gold">
+                        {selectedPrice.calculated_price}
+                      </span>
+                    )}
+                  </div>
 
-            {/* Footer */}
-            <div className="px-6 py-4 border-t border-[var(--theme-border)] flex gap-3">
-              <button
-                onClick={() => setOpen(false)}
-                className="flex-1 py-3 font-sans text-[10px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)] transition-colors"
-              >
-                Înapoi
-              </button>
-              <button
-                onClick={() => { handleAddToCart(); setOpen(false) }}
-                disabled={!inStock || !variant || isAdding}
-                className="flex-[2] py-3 font-sans text-[10px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {isAdding ? "Se adaugă…" : !variant ? "Selectează" : !inStock ? "Stoc epuizat" : "Adaugă în coș"}
-              </button>
-            </div>
-          </div>
-        </>,
-        document.body
-      )}
+                  {/* Options */}
+                  <div
+                    className="px-6 py-5 flex flex-col gap-6 overflow-y-auto max-h-[60dvh]"
+                    data-scroll-lock-allow="true"
+                  >
+                    {(product.options || []).map((option) => (
+                      <div key={option.id}>
+                        <OptionSelect
+                          option={option}
+                          current={options[option.id]}
+                          updateOption={updateOptions}
+                          title={option.title ?? ""}
+                          disabled={optionsDisabled}
+                          disabledValues={getDisabledValues(option.id)}
+                          variants={product.variants}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="px-6 py-4 border-t border-[var(--theme-border)] flex gap-3">
+                    <button
+                      onClick={() => setOpen(false)}
+                      className="flex-1 py-3 font-sans text-[10px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)] transition-colors"
+                    >
+                      Înapoi
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleAddToCart()
+                        setOpen(false)
+                      }}
+                      disabled={!inStock || !variant || isAdding}
+                      className="flex-[2] py-3 font-sans text-[10px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {isAdding
+                        ? "Se adaugă…"
+                        : !variant
+                        ? "Selectează"
+                        : !inStock
+                        ? "Stoc epuizat"
+                        : "Adaugă în coș"}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </>,
+          document.body
+        )}
     </>
   )
 }

@@ -13,9 +13,10 @@ type CartTotalsProps = {
     shipping_subtotal?: number | null
     discount_subtotal?: number | null
   }
+  showTax?: boolean
 }
 
-const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
+const CartTotals: React.FC<CartTotalsProps> = ({ totals, showTax = false }) => {
   const { currency_code, total, tax_total, item_subtotal, shipping_subtotal, discount_subtotal } = totals
 
   return (
@@ -45,12 +46,14 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
         </div>
       )}
 
-      <div className="flex justify-between text-[var(--theme-text-muted)]">
-        <span>TVA</span>
-        <span data-testid="cart-taxes" data-value={tax_total ?? 0}>
-          {convertToLocale({ amount: tax_total ?? 0, currency_code })}
-        </span>
-      </div>
+      {showTax && (
+        <div className="flex justify-between text-[var(--theme-text-muted)]">
+          <span>TVA</span>
+          <span data-testid="cart-taxes" data-value={tax_total ?? 0}>
+            {convertToLocale({ amount: tax_total ?? 0, currency_code })}
+          </span>
+        </div>
+      )}
 
       <div className="border-t border-[var(--theme-border)] pt-3 flex justify-between items-baseline mt-1">
         <span className="text-[var(--theme-text-muted)]">Total</span>

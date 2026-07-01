@@ -1,21 +1,13 @@
 "use client"
 
-import {
-  Popover,
-  PopoverPanel,
-  Transition,
-  TransitionChild,
-} from "@headlessui/react"
-import useToggleState from "@lib/hooks/use-toggle-state"
-import { ArrowRightMini, XMark } from "@medusajs/icons"
+import { Popover, PopoverPanel } from "@headlessui/react"
+import { AnimatePresence, motion } from "framer-motion"
+import { XMark } from "@medusajs/icons"
 import { MenuIcon } from "@modules/layout/components/nav-icons"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import { clx } from "@modules/common/components/ui"
-import { Fragment, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
-import { useTheme } from "next-themes"
-import CountrySelect from "../country-select"
 import LanguageSelect from "../language-select"
 import { Locale } from "@lib/data/locales"
 
@@ -24,6 +16,8 @@ type SideMenuProps = {
   locales: Locale[] | null
   currentLocale: string | null
   collections?: HttpTypes.StoreCollection[]
+  categories?: HttpTypes.StoreProductCategory[]
+  featuredCollection?: HttpTypes.StoreCollection | null
 }
 
 type ScrollGuardProps = {
@@ -74,69 +68,191 @@ const SideMenuScrollGuard = ({ open }: ScrollGuardProps) => {
   return null
 }
 
-function ThemeToggle() {
-  const { theme, setTheme, resolvedTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
-  if (!mounted) return null
+const subLinkClass =
+  "block py-3.5 font-display text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] hover:text-hunter-gold transition-colors"
 
-  const isDark = resolvedTheme === "dark"
+type SubmenuKey = "rtw" | "accesorii" | "featured" | "hunter"
 
+const STYLE_GUIDES = [
+  { label: "Wedding Season" },
+  { label: "Shooting Wear" },
+]
+
+function MenuTrigger({ label, onOpen }: { label: string; onOpen: () => void }) {
   return (
-    <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-[var(--theme-text-muted)]">
-      <span>Theme</span>
-      <div className="flex items-center gap-3">
-        {(["light", "system", "dark"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTheme(t)}
-            className={clx(
-              "transition-colors capitalize",
-              theme === t
-                ? "text-hunter-gold"
-                : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
-            )}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
+    <li>
+      <button
+        type="button"
+        onClick={onOpen}
+        className="w-full flex items-center justify-between py-3.5 font-display text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
+      >
+        <span>{label}</span>
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="text-[var(--theme-text-muted)]"
+          aria-hidden="true"
+        >
+          <polyline points="9 6 15 12 9 18" />
+        </svg>
+      </button>
+    </li>
+  )
+}
+
+function SubmenuHeader({
+  title,
+  onBack,
+}: {
+  title: string
+  onBack: () => void
+}) {
+  return (
+    <div className="flex items-center justify-between px-8 h-16 border-b border-[var(--theme-border)] shrink-0">
+      <button
+        type="button"
+        onClick={onBack}
+        className="inline-flex items-center gap-2 font-sans text-[10px] uppercase tracking-[0.3em] text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <polyline points="15 6 9 12 15 18" />
+        </svg>
+        Înapoi
+      </button>
+      <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-[var(--theme-text-muted)]">
+        {title}
+      </span>
     </div>
   )
 }
 
-function CollectionsMenuItem({
-  collections,
+function FeaturedCollectionSubmenu({
+  collection,
+  categories,
+  onBack,
   close,
 }: {
-  collections: HttpTypes.StoreCollection[]
+  collection: HttpTypes.StoreCollection
+  categories: HttpTypes.StoreProductCategory[]
+  onBack: () => void
   close: () => void
 }) {
-  const [open, setOpen] = useState(false)
+  const categoriesWithChildren = new Set(
+    categories
+      .filter((c) => (c.category_children?.length ?? 0) > 0)
+      .map((c) => c.id)
+  )
+  const seen = new Set<string>()
+  const productCategories: HttpTypes.StoreProductCategory[] = []
+
+  for (const product of collection.products ?? []) {
+    for (const cat of (product as any).categories ?? []) {
+      if (!seen.has(cat.id) && !categoriesWithChildren.has(cat.id)) {
+        seen.add(cat.id)
+        productCategories.push(cat)
+      }
+    }
+  }
 
   return (
-    <li className="border-b border-[var(--theme-border)]">
-      <button
-        className="w-full flex items-center justify-between py-4 font-display text-[24px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] hover:text-hunter-gold transition-colors"
-        onClick={() => setOpen((v) => !v)}
-      >
-        <span>Colecții</span>
-        <span className="text-xl leading-none text-[var(--theme-text-muted)]">
-          {open ? "−" : "+"}
-        </span>
-      </button>
-      <div
-        className={clx(
-          "overflow-hidden transition-all duration-300",
-          open ? "max-h-60 mb-3" : "max-h-0"
-        )}
-      >
-        <ul className="flex flex-col gap-1 pl-3">
+    <div className="flex flex-col h-full">
+      <SubmenuHeader title={collection.title} onBack={onBack} />
+      <nav className="flex-1 px-8 pt-8 pb-6 overflow-y-auto">
+        <ul className="flex flex-col">
+          <li>
+            <LocalizedClientLink
+              href={`/collections/${collection.handle}`}
+              className="block py-2.5 font-sans text-[11px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
+              onClick={close}
+            >
+              Toate produsele
+            </LocalizedClientLink>
+          </li>
+          {productCategories.map((c) => (
+            <li key={c.id}>
+              <LocalizedClientLink
+                href={`/store?collection=${collection.id}&category=${c.id}`}
+                className={subLinkClass}
+                onClick={close}
+              >
+                {c.name}
+              </LocalizedClientLink>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
+  )
+}
+
+function ReadyToWearSubmenu({
+  categories,
+  collections,
+  onBack,
+  close,
+}: {
+  categories: HttpTypes.StoreProductCategory[]
+  collections: HttpTypes.StoreCollection[]
+  onBack: () => void
+  close: () => void
+}) {
+  const nonAccesoriiCategories = categories.filter(
+    (c) => !c.parent_category && c.name?.toLowerCase() !== "accesorii"
+  )
+
+  return (
+    <div className="flex flex-col h-full">
+      <SubmenuHeader title="Ready to Wear" onBack={onBack} />
+      <nav className="flex-1 px-8 pt-8 pb-6 overflow-y-auto">
+        <ul className="flex flex-col">
+          <li>
+            <LocalizedClientLink
+              href="/store"
+              className="block py-2.5 font-sans text-[11px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
+              onClick={close}
+            >
+              Toate produsele
+            </LocalizedClientLink>
+          </li>
+          {nonAccesoriiCategories.map((c) => (
+            <li key={c.id}>
+              <LocalizedClientLink
+                href={`/store?category=${c.id}`}
+                className={subLinkClass}
+                onClick={close}
+              >
+                {c.name}
+              </LocalizedClientLink>
+            </li>
+          ))}
+          {collections.length > 0 && (
+            <li className="mt-4 mb-1">
+              <span className="font-sans text-[10px] uppercase tracking-[2.5px] text-[var(--theme-text-muted)]">
+                Colecții
+              </span>
+            </li>
+          )}
           {collections.map((c) => (
             <li key={c.id}>
               <LocalizedClientLink
                 href={`/collections/${c.handle}`}
-                className="font-sans text-[11px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors py-1 block"
+                className={subLinkClass}
                 onClick={close}
               >
                 {c.title}
@@ -144,8 +260,81 @@ function CollectionsMenuItem({
             </li>
           ))}
         </ul>
-      </div>
-    </li>
+      </nav>
+    </div>
+  )
+}
+
+function AccesoriiSubmenu({
+  categories,
+  onBack,
+  close,
+}: {
+  categories: HttpTypes.StoreProductCategory[]
+  onBack: () => void
+  close: () => void
+}) {
+  const parent = categories.find((c) => c.name?.toLowerCase() === "accesorii")
+  const subcategories = parent?.category_children ?? []
+
+  return (
+    <div className="flex flex-col h-full">
+      <SubmenuHeader title="Accesorii" onBack={onBack} />
+      <nav className="flex-1 px-8 pt-8 pb-6 overflow-y-auto">
+        <ul className="flex flex-col">
+          {parent && (
+            <li>
+              <LocalizedClientLink
+                href={`/store?category=${parent.id}`}
+                className="block py-2.5 font-sans text-[11px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
+                onClick={close}
+              >
+                Toate accesoriile
+              </LocalizedClientLink>
+            </li>
+          )}
+          {subcategories.map((c) => (
+            <li key={c.id}>
+              <LocalizedClientLink
+                href={`/store?category=${c.id}`}
+                className={subLinkClass}
+                onClick={close}
+              >
+                {c.name}
+              </LocalizedClientLink>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
+  )
+}
+
+function WorldOfTheHunterSubmenu({
+  onBack,
+  close,
+}: {
+  onBack: () => void
+  close: () => void
+}) {
+  return (
+    <div className="flex flex-col h-full">
+      <SubmenuHeader title="World of the Hunter" onBack={onBack} />
+      <nav className="flex-1 px-8 pt-8 pb-6 overflow-y-auto">
+        <p className="font-sans text-[11px] uppercase tracking-[2.5px] text-[var(--theme-text-muted)] mb-3">
+          Style Guides
+        </p>
+        <ul className="flex flex-col">
+          {STYLE_GUIDES.map((g) => (
+            <li key={g.label}>
+              <span className="block py-3.5 font-display text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text-muted)] cursor-default">
+                {g.label}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
   )
 }
 
@@ -154,10 +343,15 @@ const SideMenu = ({
   locales,
   currentLocale,
   collections,
+  categories,
+  featuredCollection,
 }: SideMenuProps) => {
-  const countryToggleState = useToggleState()
-  const languageToggleState = useToggleState()
   const [mounted, setMounted] = useState(false)
+  const [activeSubmenu, setActiveSubmenu] = useState<SubmenuKey | null>(null)
+
+  // Remaining collections (all except the first/featured) for Ready to Wear
+  const otherCollections = (collections ?? []).slice(1)
+
 
   useEffect(() => {
     setMounted(true)
@@ -167,169 +361,225 @@ const SideMenu = ({
     <div className="h-full">
       <div className="flex items-center h-full">
         <Popover className="h-full flex">
-          {({ open, close }) => (
-            <>
-              <SideMenuScrollGuard open={open} />
+          {({ open, close }) => {
+            const handleClose = () => {
+              setActiveSubmenu(null)
+              close()
+            }
+            return (
+              <>
+                <SideMenuScrollGuard open={open} />
 
-              <div className="relative flex h-full">
-                <Popover.Button
-                  data-testid="nav-menu-button"
-                  aria-label="Menu"
-                  className="relative h-full flex items-center transition-all ease-out duration-200 focus:outline-none hover:opacity-60"
-                >
-                  <MenuIcon size={28} />
-                </Popover.Button>
-              </div>
+                <div className="relative flex h-full">
+                  <Popover.Button
+                    data-testid="nav-menu-button"
+                    aria-label="Menu"
+                    className="relative h-full flex items-center transition-all ease-out duration-200 focus:outline-none hover:opacity-60"
+                  >
+                    <MenuIcon size={28} />
+                  </Popover.Button>
+                </div>
 
-              {mounted &&
-                createPortal(
-                  <Transition show={open} as={Fragment}>
-                    <TransitionChild
-                      as={Fragment}
-                      enter="transition ease-out duration-300"
-                      enterFrom="opacity-0"
-                      enterTo="opacity-100"
-                      leave="transition ease-in duration-200"
-                      leaveFrom="opacity-100"
-                      leaveTo="opacity-0"
-                    >
-                      <div
-                        className="fixed inset-0 z-[9010] bg-[rgba(6,10,8,0.55)] backdrop-blur-[2px] pointer-events-auto"
-                        onClick={close}
-                        data-testid="side-menu-backdrop"
-                      />
-                    </TransitionChild>
+                {mounted &&
+                  createPortal(
+                    <AnimatePresence>
+                      {open && (
+                        <>
+                          {/* Backdrop */}
+                          <motion.div
+                            key="backdrop"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3, ease: "easeOut" }}
+                            className="fixed inset-0 z-[9010] bg-[rgba(6,10,8,0.55)] backdrop-blur-[2px] pointer-events-auto"
+                            onClick={handleClose}
+                            data-testid="side-menu-backdrop"
+                          />
 
-                    <TransitionChild
-                      as={Fragment}
-                      enter="transform transition ease-out duration-300"
-                      enterFrom="opacity-0 -translate-x-full"
-                      enterTo="opacity-100 translate-x-0"
-                      leave="transform transition ease-in duration-200"
-                      leaveFrom="opacity-100 translate-x-0"
-                      leaveTo="opacity-0 -translate-x-full"
-                    >
-                      <PopoverPanel className="fixed inset-y-0 left-0 right-0 z-[9011] h-dvh sm:right-auto sm:w-[380px] will-change-transform">
-                        <div
-                          data-scroll-lock-allow="true"
-                          data-testid="nav-menu-popup"
-                          className="flex flex-col h-full overflow-y-auto overscroll-contain bg-[var(--theme-bg)] shadow-2xl"
-                        >
-                          {/* Header */}
-                          <div className="flex items-center justify-between px-8 h-16 border-b border-[var(--theme-border)] shrink-0">
-                            <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-[var(--theme-text-muted)]">
-                              Menu
-                            </span>
-                            <button
-                              data-testid="close-menu-button"
-                              onClick={close}
-                              aria-label="Close menu"
-                              className="inline-flex h-12 w-12 items-center justify-end text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
+                          {/* Panel */}
+                          <motion.div
+                            key="panel"
+                            initial={{ x: "-100%" }}
+                            animate={{ x: 0 }}
+                            exit={{ x: "-100%" }}
+                            transition={{
+                              duration: 0.42,
+                              ease: [0.22, 1, 0.36, 1],
+                            }}
+                            className="fixed inset-y-0 left-0 right-0 z-[9011] h-dvh sm:right-auto sm:w-[380px] will-change-transform"
+                          >
+                            <PopoverPanel
+                              static
+                              className="h-full relative overflow-hidden"
                             >
-                              <XMark />
-                            </button>
-                          </div>
-
-                          {/* Navigation */}
-                          <nav className="flex-1 px-8 pt-8 pb-6">
-                            <ul className="flex flex-col">
-                              {[
-                                { label: "Home", href: "/" },
-                                { label: "Shop", href: "/store" },
-                              ].map(({ label, href }) => (
-                                <li
-                                  key={label}
-                                  className="border-b border-[var(--theme-border)]"
-                                >
-                                  <LocalizedClientLink
-                                    href={href}
-                                    className="flex items-center py-4 font-display text-[24px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
-                                    onClick={close}
-                                  >
-                                    {label}
-                                  </LocalizedClientLink>
-                                </li>
-                              ))}
-
-                              {/* Colecții */}
-                              {!!collections?.length && (
-                                <CollectionsMenuItem
-                                  collections={collections}
-                                  close={close}
-                                />
-                              )}
-
-                              {[
-                                { label: "Contul meu", href: "/account" },
-                                { label: "Coș de cumpărături", href: "/cart" },
-                              ].map(({ label, href }) => (
-                                <li
-                                  key={label}
-                                  className="border-b border-[var(--theme-border)] last:border-none"
-                                >
-                                  <LocalizedClientLink
-                                    href={href}
-                                    className="flex items-center py-4 font-display text-[24px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
-                                    onClick={close}
-                                  >
-                                    {label}
-                                  </LocalizedClientLink>
-                                </li>
-                              ))}
-                            </ul>
-                          </nav>
-
-                          {/* Footer */}
-                          <div className="shrink-0 px-8 pb-8 pt-6 flex flex-col gap-y-4 border-t border-[var(--theme-border)]">
-                            <ThemeToggle />
-                            {!!locales?.length && (
                               <div
-                                className="flex justify-between items-center text-[11px] uppercase tracking-[0.2em] text-[var(--theme-text-muted)]"
-                                onMouseEnter={languageToggleState.open}
-                                onMouseLeave={languageToggleState.close}
+                                data-scroll-lock-allow="true"
+                                data-testid="nav-menu-popup"
+                                className="flex flex-col h-full overflow-y-auto overscroll-contain bg-[var(--theme-bg)] shadow-2xl"
                               >
-                                <LanguageSelect
-                                  toggleState={languageToggleState}
-                                  locales={locales}
-                                  currentLocale={currentLocale}
-                                />
-                                <ArrowRightMini
-                                  className={clx(
-                                    "transition-transform duration-150",
-                                    languageToggleState.state
-                                      ? "-rotate-90"
-                                      : ""
+                                {/* Header */}
+                                <div className="flex items-center justify-between px-8 h-16 border-b border-[var(--theme-border)] shrink-0">
+                                  <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-[var(--theme-text-muted)]">
+                                    Menu
+                                  </span>
+                                  <button
+                                    data-testid="close-menu-button"
+                                    onClick={handleClose}
+                                    aria-label="Close menu"
+                                    className="inline-flex h-12 w-12 items-center justify-end text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
+                                  >
+                                    <XMark />
+                                  </button>
+                                </div>
+
+                                {/* Navigation */}
+                                <nav className="flex-1 px-8 pt-8 pb-6 flex flex-col">
+                                  {/* Primary group */}
+                                  <ul className="flex flex-col">
+                                    <li>
+                                      <LocalizedClientLink
+                                        href="/"
+                                        className="flex items-center py-3.5 font-display text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
+                                        onClick={handleClose}
+                                      >
+                                        Home
+                                      </LocalizedClientLink>
+                                    </li>
+
+                                    {/* Ready to Wear → submeniu */}
+                                    <MenuTrigger
+                                      label="Ready to Wear"
+                                      onOpen={() => setActiveSubmenu("rtw")}
+                                    />
+
+                                    {/* Accesorii → submeniu */}
+                                    <MenuTrigger
+                                      label="Accesorii"
+                                      onOpen={() =>
+                                        setActiveSubmenu("accesorii")
+                                      }
+                                    />
+
+                                    {/* Prima colecție din sortare → submeniu cu categorii */}
+                                    {featuredCollection && (
+                                      <MenuTrigger
+                                        label={featuredCollection.title}
+                                        onOpen={() =>
+                                          setActiveSubmenu("featured")
+                                        }
+                                      />
+                                    )}
+
+                                    {/* World of The Hunter → submeniu */}
+                                    <MenuTrigger
+                                      label="World of The Hunter"
+                                      onOpen={() => setActiveSubmenu("hunter")}
+                                    />
+
+                                    <li>
+                                      <LocalizedClientLink
+                                        href="/world-of-the-hunter/made-to-measure"
+                                        className="flex items-center py-3.5 font-display text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
+                                        onClick={handleClose}
+                                      >
+                                        Made to Measure
+                                      </LocalizedClientLink>
+                                    </li>
+                                  </ul>
+
+                                  {/* Secondary links — bottom */}
+                                  <ul className="flex flex-col mt-auto pt-10">
+                                    {[
+                                      { label: "Profil", href: "/account" },
+                                      { label: "Contact", href: "/contact" },
+                                      {
+                                        label: "Relații cu clienții",
+                                        href: "/relatii-clienti",
+                                      },
+                                      {
+                                        label: "Întrebări frecvente",
+                                        href: "/faq",
+                                      },
+                                    ].map(({ label, href }) => (
+                                      <li key={label}>
+                                        <LocalizedClientLink
+                                          href={href}
+                                          className="flex items-center py-2 font-sans text-[13px] uppercase tracking-[3px] text-[var(--theme-text-muted)] transition-colors duration-200 hover:text-hunter-gold"
+                                          onClick={handleClose}
+                                        >
+                                          {label}
+                                        </LocalizedClientLink>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </nav>
+
+                                {/* Footer */}
+                                <div className="shrink-0 px-8 pb-8 pt-6 flex flex-col gap-y-4 border-t border-[var(--theme-border)]">
+                                  {!!locales?.length && (
+                                    <LanguageSelect
+                                      locales={locales}
+                                      currentLocale={currentLocale}
+                                    />
                                   )}
-                                />
+                                </div>
                               </div>
-                            )}
-                            <div
-                              className="flex justify-between items-center text-[11px] uppercase tracking-[0.2em] text-[var(--theme-text-muted)]"
-                              onMouseEnter={countryToggleState.open}
-                              onMouseLeave={countryToggleState.close}
-                            >
-                              {regions && (
-                                <CountrySelect
-                                  toggleState={countryToggleState}
-                                  regions={regions}
-                                />
-                              )}
-                              <ArrowRightMini
-                                className={clx(
-                                  "transition-transform duration-150",
-                                  countryToggleState.state ? "-rotate-90" : ""
+
+                              {/* Flyout submenu — slides in from the right */}
+                              <AnimatePresence>
+                                {activeSubmenu && (
+                                  <motion.div
+                                    key={activeSubmenu}
+                                    initial={{ x: "100%" }}
+                                    animate={{ x: 0 }}
+                                    exit={{ x: "100%" }}
+                                    transition={{
+                                      duration: 0.38,
+                                      ease: [0.22, 1, 0.36, 1],
+                                    }}
+                                    className="absolute inset-0 z-10 bg-[var(--theme-bg)] shadow-2xl will-change-transform"
+                                  >
+                                    {activeSubmenu === "rtw" ? (
+                                      <ReadyToWearSubmenu
+                                        categories={categories ?? []}
+                                        collections={otherCollections}
+                                        onBack={() => setActiveSubmenu(null)}
+                                        close={handleClose}
+                                      />
+                                    ) : activeSubmenu === "accesorii" ? (
+                                      <AccesoriiSubmenu
+                                        categories={categories ?? []}
+                                        onBack={() => setActiveSubmenu(null)}
+                                        close={handleClose}
+                                      />
+                                    ) : activeSubmenu === "featured" &&
+                                      featuredCollection ? (
+                                      <FeaturedCollectionSubmenu
+                                        collection={featuredCollection}
+                                        categories={categories ?? []}
+                                        onBack={() => setActiveSubmenu(null)}
+                                        close={handleClose}
+                                      />
+                                    ) : (
+                                      <WorldOfTheHunterSubmenu
+                                        onBack={() => setActiveSubmenu(null)}
+                                        close={handleClose}
+                                      />
+                                    )}
+                                  </motion.div>
                                 )}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </PopoverPanel>
-                    </TransitionChild>
-                  </Transition>,
-                  document.body
-                )}
-            </>
-          )}
+                              </AnimatePresence>
+                            </PopoverPanel>
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>,
+                    document.body
+                  )}
+              </>
+            )
+          }}
         </Popover>
       </div>
     </div>

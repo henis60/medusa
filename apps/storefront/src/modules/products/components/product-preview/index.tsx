@@ -50,13 +50,32 @@ const COLOR_MAP: Record<string, string> = {
 
 function ColorSwatches({ product }: { product: HttpTypes.StoreProduct }) {
   const colorOption = product.options?.find((o) =>
-    ["color", "colour"].includes(o.title?.toLowerCase() ?? "")
+    ["color", "colour", "culoare"].includes(o.title?.toLowerCase() ?? "")
   )
   if (!colorOption?.values?.length) return null
 
+  // Find the hex stored per-variant (metadata.color_hex) for a given color value.
+  const hexFromVariants = (value?: string) => {
+    if (!value) return null
+    const variant = product.variants?.find((v) =>
+      v.options?.some(
+        (o) => o.option_id === colorOption.id && o.value === value
+      )
+    )
+    const hex = (variant?.metadata?.color_hex as string | undefined) ?? null
+    return hex && /^#?[0-9a-fA-F]{3,8}$/.test(hex)
+      ? hex.startsWith("#")
+        ? hex
+        : `#${hex}`
+      : null
+  }
+
   const colors = colorOption.values.map((v) => ({
     label: v.value,
-    hex: COLOR_MAP[v.value?.toLowerCase()] ?? "#c0b8b0",
+    hex:
+      hexFromVariants(v.value) ??
+      COLOR_MAP[v.value?.toLowerCase()] ??
+      "#c0b8b0",
   }))
 
   if (colors.length <= 1) return null
@@ -96,7 +115,7 @@ export default async function ProductPreview({
   return (
     <ProductCardLink
       href={`/products/${product.handle}`}
-      className="group flex flex-col relative w-full justify-between cursor-pointer"
+      className="group flex flex-col relative w-full cursor-pointer"
       style={
         {
           touchAction: "manipulation",
@@ -114,7 +133,7 @@ export default async function ProductPreview({
 
       {/* Card info — mobile */}
       <div
-        className="mt-2.5 flex flex-col gap-0.5 sm:hidden"
+        className="mt-4 flex flex-col gap-0.5 sm:hidden"
         style={{ minHeight: "2.5rem" }}
       >
         <p
@@ -134,29 +153,21 @@ export default async function ProductPreview({
       </div>
 
       {/* Card info — desktop */}
-      <div
-        className={`mt-2.5 hidden sm:flex items-start justify-between gap-3 transition-opacity duration-300 ${
-          forceDark ? "group-hover:opacity-0" : ""
-        }`}
-      >
-        <div className="flex flex-col gap-0.5 min-w-0">
-          <p
-            className={`font-sans text-[11px] uppercase tracking-[2px] leading-snug truncate transition-colors duration-300 ${
-              forceDark
-                ? "text-hunter-ivory/80 group-hover:text-hunter-gold"
-                : "text-[var(--theme-text)] group-hover:text-hunter-gold"
-            }`}
-            data-testid="product-title"
-          >
-            {product.title}
-          </p>
+      <div className="mt-4 hidden sm:flex flex-col gap-0.5">
+        <p
+          className={`font-sans text-[11px] uppercase tracking-[2px] leading-snug line-clamp-2 transition-colors duration-300 ${
+            forceDark
+              ? "text-hunter-ivory/80 group-hover:text-hunter-gold"
+              : "text-[var(--theme-text)] group-hover:text-hunter-gold"
+          }`}
+          data-testid="product-title"
+        >
+          {product.title}
+        </p>
+        <div className="flex items-center justify-between gap-2">
           <ColorSwatches product={product} />
+          {cheapestPrice && <PreviewPrice price={cheapestPrice} />}
         </div>
-        {cheapestPrice && (
-          <div className="shrink-0">
-            <PreviewPrice price={cheapestPrice} />
-          </div>
-        )}
       </div>
     </ProductCardLink>
   )

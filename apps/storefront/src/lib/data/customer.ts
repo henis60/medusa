@@ -59,7 +59,26 @@ export const updateCustomer = async (body: HttpTypes.StoreUpdateCustomer) => {
   return updateRes
 }
 
+async function verifyRecaptcha(token: string | null): Promise<boolean> {
+  const secret = process.env.RECAPTCHA_SECRET_KEY
+  if (!secret || !token) return false
+  try {
+    const res = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ secret, response: token }).toString(),
+    })
+    const data = await res.json()
+    return data.success === true && (data.score ?? 1) >= 0.5
+  } catch {
+    return false
+  }
+}
+
 export async function signup(_currentState: unknown, formData: FormData) {
+  const recaptchaOk = await verifyRecaptcha(formData.get("recaptchaToken") as string | null)
+  if (!recaptchaOk) return "Verificare anti-spam eșuată. Încearcă din nou."
+
   const password = formData.get("password") as string
   const customerForm = {
     email: formData.get("email") as string,
@@ -105,6 +124,9 @@ export async function signup(_currentState: unknown, formData: FormData) {
 }
 
 export async function login(_currentState: unknown, formData: FormData) {
+  const recaptchaOk = await verifyRecaptcha(formData.get("recaptchaToken") as string | null)
+  if (!recaptchaOk) return "Verificare anti-spam eșuată. Încearcă din nou."
+
   const email = formData.get("email") as string
   const password = formData.get("password") as string
 
@@ -120,14 +142,17 @@ export async function login(_currentState: unknown, formData: FormData) {
     return String(error)
   }
 
-  try {
-    await transferCart()
-  } catch (error) {
-    return String(error)
+  // Cart transfer is best-effort: the cart-mismatch handler retries it silently
+  // after login, so a failure here must never block sign-in.
+  await transferCart().catch(() => {})
+
+  const redirectTo = formData.get("redirectTo") as string | null
+  if (redirectTo) {
+    redirect(redirectTo)
   }
 }
 
-export async function signout(countryCode: string) {
+export async function signout() {
   await sdk.auth.logout()
 
   await removeAuthToken()
@@ -140,7 +165,53 @@ export async function signout(countryCode: string) {
   const cartCacheTag = await getCacheTag("carts")
   revalidateTag(cartCacheTag)
 
-  redirect(`/${countryCode}/account`)
+  redirect("/account")
+}
+
+export async function resetPassword(
+  token: string,
+  _currentState: unknown,
+  formData: FormData
+) {
+  const password = formData.get("password") as string
+  const passwordConfirm = formData.get("password_confirm") as string
+
+  if (password !== passwordConfirm) {
+    return "Parolele nu coincid."
+  }
+
+  if (password.length < 8) {
+    return "Parola trebuie să aibă cel puțin 8 caractere."
+  }
+
+  try {
+    await sdk.auth.updateProvider("customer", "emailpass", {
+      token,
+      password,
+    })
+    return "success"
+  } catch (error) {
+    return "Link-ul de resetare este invalid sau a expirat."
+  }
+}
+
+export async function requestPasswordReset(
+  _currentState: unknown,
+  formData: FormData
+) {
+  const recaptchaOk = await verifyRecaptcha(formData.get("recaptchaToken") as string | null)
+  if (!recaptchaOk) return "Verificare anti-spam eșuată. Încearcă din nou."
+
+  const email = formData.get("email") as string
+
+  try {
+    await sdk.auth.resetPassword("customer", "emailpass", {
+      identifier: email,
+    })
+    return "success"
+  } catch (error) {
+    return "A apărut o eroare. Te rugăm să încerci din nou."
+  }
 }
 
 export async function transferCart() {

@@ -16,14 +16,14 @@ const CartTemplate = ({
       <div className="page-container" data-testid="cart-container">
         {cart?.items?.length ? (
           <>
-            <div className="mb-5 small:mb-10 border-b border-[var(--theme-border)] pb-4 small:pb-6">
+            {/* <div className="mb-5 small:mb-10 border-b border-[var(--theme-border)] pb-4 small:pb-6">
               <h1 className="font-sans text-[11px] small:text-[13px] uppercase tracking-[5px] text-[var(--theme-text)]">
                 Coș
                 <span className="ml-3 text-[var(--theme-text-muted)]">
                   ({cart.items.reduce((s, i) => s + i.quantity, 0)})
                 </span>
               </h1>
-            </div>
+            </div> */}
 
             <div className="grid grid-cols-1 small:grid-cols-[1fr_320px] gap-x-16 medium:gap-x-24 items-start">
               <div className="flex flex-col gap-y-8">

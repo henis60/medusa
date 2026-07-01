@@ -10,6 +10,7 @@ import { HttpTypes } from "@medusajs/types"
 import CountrySelect from "@modules/checkout/components/country-select"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import Input from "@modules/common/components/input"
+import LocalitySelect from "@modules/common/components/locality-select"
 import Modal from "@modules/common/components/modal"
 import { clx } from "@modules/common/components/ui"
 import Spinner from "@modules/common/icons/spinner"
@@ -102,7 +103,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
             onClick={open}
             data-testid="address-edit-button"
           >
-            Edit
+            Editează
           </button>
           <button
             className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-rose-500 transition-colors flex items-center gap-1.5"
@@ -114,36 +115,88 @@ const EditAddress: React.FC<EditAddressProps> = ({
             ) : (
               <Trash className="w-3 h-3" />
             )}
-            Remove
+            Șterge
           </button>
         </div>
       </div>
 
       <Modal isOpen={state} close={close} data-testid="edit-address-modal">
         <Modal.Title>
-          <span className="font-display text-[22px] leading-[1]">Edit address</span>
+          <span className="font-display text-[22px] leading-[1]">
+            Editează adresa
+          </span>
         </Modal.Title>
         <form action={formAction}>
           <input type="hidden" name="addressId" value={address.id} />
           <Modal.Body>
             <div className="grid grid-cols-1 gap-y-2 w-full">
               <div className="grid grid-cols-2 gap-x-2">
-                <Input label="First name" name="first_name" required autoComplete="given-name" defaultValue={address.first_name || undefined} data-testid="first-name-input" />
-                <Input label="Last name" name="last_name" required autoComplete="family-name" defaultValue={address.last_name || undefined} data-testid="last-name-input" />
+                <Input
+                  label="Prenume"
+                  name="first_name"
+                  required
+                  autoComplete="given-name"
+                  defaultValue={address.first_name || undefined}
+                  data-testid="first-name-input"
+                />
+                <Input
+                  label="Nume de familie"
+                  name="last_name"
+                  required
+                  autoComplete="family-name"
+                  defaultValue={address.last_name || undefined}
+                  data-testid="last-name-input"
+                />
               </div>
-              <Input label="Company" name="company" autoComplete="organization" defaultValue={address.company || undefined} data-testid="company-input" />
-              <Input label="Address" name="address_1" required autoComplete="address-line1" defaultValue={address.address_1 || undefined} data-testid="address-1-input" />
-              <Input label="Apartment, suite, etc." name="address_2" autoComplete="address-line2" defaultValue={address.address_2 || undefined} data-testid="address-2-input" />
-              <div className="grid grid-cols-[144px_1fr] gap-x-2">
-                <Input label="Postal code" name="postal_code" required autoComplete="postal-code" defaultValue={address.postal_code || undefined} data-testid="postal-code-input" />
-                <Input label="City" name="city" required autoComplete="locality" defaultValue={address.city || undefined} data-testid="city-input" />
-              </div>
-              <Input label="Province / State" name="province" autoComplete="address-level1" defaultValue={address.province || undefined} data-testid="state-input" />
-              <CountrySelect name="country_code" region={region} required autoComplete="country" defaultValue={address.country_code || undefined} data-testid="country-select" />
-              <Input label="Phone" name="phone" autoComplete="phone" defaultValue={address.phone || undefined} data-testid="phone-input" />
+              <Input
+                label="Adresă"
+                name="address_1"
+                required
+                autoComplete="address-line1"
+                defaultValue={address.address_1 || undefined}
+                data-testid="address-1-input"
+              />
+              <Input
+                label="Apartament, etaj, etc."
+                name="address_2"
+                autoComplete="address-line2"
+                defaultValue={address.address_2 || undefined}
+                data-testid="address-2-input"
+              />
+              <Input
+                label="Cod poștal"
+                name="postal_code"
+                autoComplete="postal-code"
+                defaultValue={address.postal_code || undefined}
+                data-testid="postal-code-input"
+              />
+              <LocalitySelect
+                countyFieldName="province"
+                cityFieldName="city"
+                countyValue={address.province || undefined}
+                cityValue={address.city || undefined}
+                required
+              />
+              <CountrySelect
+                name="country_code"
+                region={region}
+                required
+                autoComplete="country"
+                defaultValue={address.country_code || undefined}
+                data-testid="country-select"
+              />
+              <Input
+                label="Telefon"
+                name="phone"
+                autoComplete="phone"
+                defaultValue={address.phone || undefined}
+                data-testid="phone-input"
+              />
             </div>
             {formState.error && (
-              <p className="font-sans text-[10px] text-rose-500 mt-2">{formState.error}</p>
+              <p className="font-sans text-[10px] text-rose-500 mt-2">
+                {formState.error}
+              </p>
             )}
           </Modal.Body>
           <Modal.Footer>
@@ -154,13 +207,13 @@ const EditAddress: React.FC<EditAddressProps> = ({
                 className="h-10 px-6 font-sans text-[10px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)] transition-colors"
                 data-testid="cancel-button"
               >
-                Cancel
+                Anulează
               </button>
               <SubmitButton
                 className="h-10 px-6 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent font-sans uppercase tracking-[3px] text-[10px]"
                 data-testid="save-button"
               >
-                Save
+                Salvează
               </SubmitButton>
             </div>
           </Modal.Footer>
