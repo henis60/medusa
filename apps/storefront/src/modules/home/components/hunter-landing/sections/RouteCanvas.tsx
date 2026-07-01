@@ -12,6 +12,13 @@ export default function RouteCanvas() {
     if (!ctx) return
     let stopped = false
 
+    // next/font exposes the loaded family through a CSS var (not the literal
+    // "Raleway" name), and canvas ctx.font can't resolve var() itself.
+    const ralewayFamily =
+      getComputedStyle(document.documentElement)
+        .getPropertyValue("--font-raleway")
+        .trim() || "Raleway"
+
     function resize() {
       cvs!.width = cvs!.offsetWidth
       cvs!.height = cvs!.offsetHeight
@@ -278,8 +285,8 @@ export default function RouteCanvas() {
         ctx!.fill()
         const small = W < 480
         ctx!.font = isHub
-          ? `400 ${small ? 8 : 11}px 'Raleway',sans-serif`
-          : `300 ${small ? 7 : 9.5}px 'Raleway',sans-serif`
+          ? `400 ${small ? 8 : 11}px ${ralewayFamily},sans-serif`
+          : `300 ${small ? 7 : 9.5}px ${ralewayFamily},sans-serif`
         ctx!.letterSpacing = isHub
           ? small
             ? "1.5px"

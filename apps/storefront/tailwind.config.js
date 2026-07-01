@@ -80,11 +80,13 @@ module.exports = {
         "3xl": "2rem",
       },
       fontFamily: {
-        sans: ["Raleway", "Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Ubuntu", "sans-serif"],
+        // Font files are loaded via next/font in layout.tsx; these vars are
+        // defined on <html> and mirrored to --rl/--pd/--cg/--ci in globals.css
+        sans: ["var(--font-raleway)", "Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Ubuntu", "sans-serif"],
         // The Hunter House brand book type system
-        display: ['"Playfair Display"', "Georgia", "serif"],
-        serif: ['"Cormorant Garamond"', "serif"],
-        cinzel: ['"Cinzel"', "serif"],
+        display: ["var(--font-playfair)", "Georgia", "serif"],
+        serif: ["var(--font-cormorant)", "serif"],
+        cinzel: ["var(--font-cinzel)", "serif"],
       },
       keyframes: {
         ring: {

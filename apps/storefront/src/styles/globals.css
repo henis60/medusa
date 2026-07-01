@@ -38,11 +38,11 @@
   --dark: #0d1f17;
   --dark2: #111a14;
 
-  /* Typography — The Hunter House brand book */
-  --pd: "Playfair Display", Georgia, serif;
-  --cg: "Cormorant Garamond", serif;
-  --rl: "Raleway", sans-serif;
-  --ci: "Cinzel", serif;
+  /* Typography — The Hunter House brand book (loaded via next/font in layout.tsx) */
+  --pd: var(--font-playfair), Georgia, serif;
+  --cg: var(--font-cormorant), serif;
+  --rl: var(--font-raleway), sans-serif;
+  --ci: var(--font-cinzel), serif;
 }
 
 @layer base {
@@ -3796,7 +3796,7 @@ html {
 .count-badge::after {
   content: attr(data-badge);
   font-size: 10px;
-  font-family: "Raleway";
+  font-family: var(--rl);
   font-weight: 700;
   letter-spacing: normal;
   color: #0d0d0d;
