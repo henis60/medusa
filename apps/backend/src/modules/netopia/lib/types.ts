@@ -8,6 +8,37 @@ export interface NetopiaOptions {
   language: string
 }
 
+export interface NetopiaBillingInfo {
+  email: string
+  phone: string
+  firstName: string
+  lastName: string
+  city: string
+  country: number
+  countryName: string
+  details: string
+  postalCode: string
+  state: string
+}
+
+export interface NetopiaBrowserInfo {
+  BROWSER_USER_AGENT?: string
+  OS?: string
+  OS_VERSION?: string
+  MOBILE?: string
+  SCREEN_POINT?: string
+  SCREEN_PRINT?: string
+  BROWSER_COLOR_DEPTH?: string
+  BROWSER_SCREEN_HEIGHT?: string
+  BROWSER_SCREEN_WIDTH?: string
+  BROWSER_PLUGINS?: string
+  BROWSER_JAVA_ENABLED?: string
+  BROWSER_LANGUAGE?: string
+  BROWSER_TZ?: string
+  BROWSER_TZ_OFFSET?: string
+  IP_ADDRESS?: string
+}
+
 export interface NetopiaStartRequest {
   config: {
     notifyUrl: string
@@ -21,18 +52,8 @@ export interface NetopiaStartRequest {
     description: string
     amount: number
     currency: string
-    billing: {
-      email: string
-      phone: string
-      firstName: string
-      lastName: string
-      city: string
-      country: number
-      countryName: string
-      details: string
-      postalCode: string
-      state: string
-    }
+    billing: NetopiaBillingInfo
+    shipping?: NetopiaBillingInfo
     products?: Array<{
       name: string
       code: string
@@ -53,6 +74,7 @@ export interface NetopiaStartRequest {
       expYear: number
       secretCode: string
     }
+    data?: NetopiaBrowserInfo
   }
 }
 
