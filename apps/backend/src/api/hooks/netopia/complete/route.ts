@@ -1,6 +1,13 @@
-import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 
-const STOREFRONT_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:8000"
+// The storefront base URL is configured as VITE_STOREFRONT_URL across the
+// backend (subscribers, admin). NEXT_PUBLIC_BASE_URL is not set here, so fall
+// back to VITE_STOREFRONT_URL before the localhost default — otherwise the
+// post-payment return redirect sends the shopper to localhost.
+const STOREFRONT_URL =
+  process.env.NEXT_PUBLIC_BASE_URL ??
+  process.env.VITE_STOREFRONT_URL ??
+  "http://localhost:8000";
 
 /**
  * Netopia return redirect handler.
@@ -12,25 +19,25 @@ const STOREFRONT_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:800
  * errorCode≠0 → plată eșuată → redirect direct cu failed=1
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
-  const sessionId = req.query.session_id as string | undefined
-  const errorCode = req.query.errorCode as string | undefined
-  const ntpStatus = req.query.status as string | undefined
+  const sessionId = req.query.session_id as string | undefined;
+  const errorCode = req.query.errorCode as string | undefined;
+  const ntpStatus = req.query.status as string | undefined;
 
   if (!sessionId) {
-    return res.redirect(`${STOREFRONT_URL}/cart`)
+    return res.redirect(`${STOREFRONT_URL}/cart`);
   }
 
-  const returnBase = `${STOREFRONT_URL}/checkout/netopia/return`
+  const returnBase = `${STOREFRONT_URL}/checkout/netopia/return`;
 
   // errorCode != 0 sau status explicit de eroare → card refuzat / anulat
   const failed =
     (errorCode !== undefined && errorCode !== "0") ||
     ntpStatus === "12" ||
-    ntpStatus === "REJECTED"
+    ntpStatus === "REJECTED";
 
   if (failed) {
-    return res.redirect(`${returnBase}?session_id=${sessionId}&failed=1`)
+    return res.redirect(`${returnBase}?session_id=${sessionId}&failed=1`);
   }
 
-  return res.redirect(`${returnBase}?session_id=${sessionId}`)
+  return res.redirect(`${returnBase}?session_id=${sessionId}`);
 }
