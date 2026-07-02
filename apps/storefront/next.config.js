@@ -26,12 +26,13 @@ const urlToRemotePattern = (value) => {
  * @type {import('next').NextConfig}
  */
 const nextConfig = {
+  // Emit a minimal standalone server for smaller, faster container deploys.
+  output: "standalone",
   reactStrictMode: true,
-  logging: {
-    fetches: {
-      fullUrl: true,
-    },
-  },
+  // Verbose fetch logging helps in dev but is noisy/slower in production.
+  ...(process.env.NODE_ENV === "production"
+    ? {}
+    : { logging: { fetches: { fullUrl: true } } }),
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -62,12 +63,12 @@ const nextConfig = {
       ...urlToRemotePattern(process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL),
       ...(S3_HOSTNAME && S3_PATHNAME
         ? [
-            {
-              protocol: "https",
-              hostname: S3_HOSTNAME,
-              pathname: S3_PATHNAME,
-            },
-          ]
+          {
+            protocol: "https",
+            hostname: S3_HOSTNAME,
+            pathname: S3_PATHNAME,
+          },
+        ]
         : []),
     ],
   },

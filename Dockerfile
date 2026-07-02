@@ -38,5 +38,7 @@ RUN npm install --omit=dev --legacy-peer-deps --prefer-offline --no-audit --no-f
 ENV NODE_ENV=production
 EXPOSE 9000
 
-# Run DB migrations, then start the server.
-CMD ["sh", "-c", "npx medusa db:migrate && npm run start"]
+# Start the server only. DB migrations run via Railway's Pre-Deploy Command
+# (`npx medusa db:migrate`) so they execute once per deploy instead of on every
+# replica boot (faster starts, no migration races across replicas).
+CMD ["sh", "-c", "npm run start"]

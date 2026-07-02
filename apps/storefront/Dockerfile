@@ -3,8 +3,9 @@
 # Build context = repo ROOT. In the Railway service settings set:
 #   - Root Directory: (leave empty / repo root)
 #   - Dockerfile Path: apps/storefront/Dockerfile
-FROM node:20-slim
 
+# ---- Builder: install deps and build the standalone output ----
+FROM node:20-slim AS builder
 WORKDIR /app
 
 # The storefront is a leaf workspace (no internal @dtc/* deps), so we install it
@@ -25,14 +26,32 @@ ARG NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
 ENV NEXT_PUBLIC_MEDUSA_BACKEND_URL=${NEXT_PUBLIC_MEDUSA_BACKEND_URL}
 ENV NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=${NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY}
 
-# Build the app. Heap headroom is scoped to THIS step only — a high runtime heap
-# limit on a small container makes V8 skip GC and get OOM-killed.
+# Build. Heap headroom is scoped to THIS step only. `output: "standalone"` in
+# next.config.js emits .next/standalone with a minimal server + traced deps.
 COPY apps/storefront ./
 RUN NODE_OPTIONS=--max-old-space-size=2048 npm run build
 
+# ---- Runner: copy only the standalone output for a small runtime image ----
+FROM node:20-slim AS runner
+WORKDIR /app
 ENV NODE_ENV=production
-EXPOSE 8000
+# Force binding to all interfaces; otherwise Next's standalone server can pick up
+# the container HOSTNAME and become unreachable behind Railway's proxy.
+ENV HOSTNAME=0.0.0.0
 
-# Bind to Railway's injected $PORT (falls back to 8000 locally). The package.json
-# "start" script hardcodes "-p 8000", so we call next directly with $PORT.
-CMD ["sh", "-c", "npx next start -p ${PORT:-8000}"]
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+
+# next/image optimization needs sharp at runtime. The standalone tracer can miss
+# its native binaries, so install sharp in isolation and merge it (and its deps)
+# into the standalone node_modules.
+RUN mkdir -p /tmp/sharp && cd /tmp/sharp \
+    && npm init -y >/dev/null 2>&1 \
+    && npm install sharp --no-audit --no-fund --legacy-peer-deps \
+    && cp -a /tmp/sharp/node_modules/. /app/node_modules/ \
+    && rm -rf /tmp/sharp
+
+EXPOSE 8000
+# Next's standalone server honors $PORT (injected by Railway) and $HOSTNAME.
+CMD ["sh", "-c", "node server.js"]
