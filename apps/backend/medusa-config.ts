@@ -1,14 +1,14 @@
-import { loadEnv, defineConfig, Modules } from '@medusajs/framework/utils'
-import { loadEawbOptionsFromEnv } from './src/modules/eawb/lib/config'
-import { loadNetopiaOptionsFromEnv } from './src/modules/netopia/lib/config'
+import { loadEnv, defineConfig, Modules } from "@medusajs/framework/utils";
+import { loadEawbOptionsFromEnv } from "./src/modules/eawb/lib/config";
+import { loadNetopiaOptionsFromEnv } from "./src/modules/netopia/lib/config";
 
-loadEnv(process.env.NODE_ENV || 'development', process.cwd())
+loadEnv(process.env.NODE_ENV || "development", process.cwd());
 
-const netopiaOptions = loadNetopiaOptionsFromEnv()
+const netopiaOptions = loadNetopiaOptionsFromEnv();
 const netopiaConfigured = [
-  netopiaOptions.apiKey,       // NETOPIA_SECRET
+  netopiaOptions.apiKey, // NETOPIA_SECRET
   netopiaOptions.posSignature, // NETOPIA_ID
-].every(Boolean)
+].every(Boolean);
 
 const paymentProviders = netopiaConfigured
   ? [
@@ -18,9 +18,9 @@ const paymentProviders = netopiaConfigured
         options: { ...netopiaOptions, capture: true },
       },
     ]
-  : []
+  : [];
 
-const eawbOptions = loadEawbOptionsFromEnv()
+const eawbOptions = loadEawbOptionsFromEnv();
 const eawbFulfillmentProviders = [
   // Manual provider is always included so existing shipping options continue to work
   {
@@ -36,7 +36,7 @@ const eawbFulfillmentProviders = [
         },
       ]
     : []),
-]
+];
 
 // Use S3 (Cloudflare R2) for file storage when its env vars are present, so
 // uploads persist across redeploys and get public URLs. Falls back to the
@@ -47,7 +47,7 @@ const s3Configured = [
   process.env.S3_SECRET_ACCESS_KEY,
   process.env.S3_BUCKET,
   process.env.S3_ENDPOINT,
-].every(Boolean)
+].every(Boolean);
 
 const fileProvider = s3Configured
   ? {
@@ -70,20 +70,60 @@ const fileProvider = s3Configured
         // BACKEND_URL to the public domain so uploaded files get reachable URLs.
         backend_url: `${process.env.BACKEND_URL ?? "http://localhost:9000"}/static`,
       },
-    }
+    };
+
+// When REDIS_URL is present (production), replace the in-memory Event Bus,
+// Locking, Workflow Engine and Cache with their Redis-backed counterparts so
+// they work across multiple instances and stop leaking memory. Without it,
+// Medusa keeps the in-memory defaults (fine for local dev).
+const redisUrl = process.env.REDIS_URL;
+const redisModules = redisUrl
+  ? [
+      {
+        resolve: "@medusajs/medusa/cache-redis",
+        options: { redisUrl },
+      },
+      {
+        resolve: "@medusajs/medusa/event-bus-redis",
+        options: { redisUrl },
+      },
+      {
+        resolve: "@medusajs/medusa/workflow-engine-redis",
+        options: { redis: { url: redisUrl } },
+      },
+      {
+        resolve: "@medusajs/medusa/locking",
+        options: {
+          providers: [
+            {
+              resolve: "@medusajs/medusa/locking-redis",
+              id: "locking-redis",
+              isDefault: true,
+              options: { redisUrl },
+            },
+          ],
+        },
+      },
+    ]
+  : [];
 
 module.exports = defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
+    // When REDIS_URL is set, Medusa uses Redis for the session store instead of
+    // the in-memory MemoryStore (which leaks memory and can't scale past one
+    // process). Left undefined locally so dev keeps working without Redis.
+    redisUrl: process.env.REDIS_URL,
     http: {
       storeCors: process.env.STORE_CORS!,
       adminCors: process.env.ADMIN_CORS!,
       authCors: process.env.AUTH_CORS!,
       jwtSecret: process.env.JWT_SECRET || "supersecret",
       cookieSecret: process.env.COOKIE_SECRET || "supersecret",
-    }
+    },
   },
   modules: [
+    ...redisModules,
     {
       resolve: "@medusajs/medusa/fulfillment",
       options: {
@@ -120,4 +160,4 @@ module.exports = defineConfig({
       },
     },
   ],
-})
+});
