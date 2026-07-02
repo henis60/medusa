@@ -17,11 +17,21 @@ const STOREFRONT_URL =
  *
  * errorCode=0 → plată reușită (sau în procesare) → polling în storefront
  * errorCode≠0 → plată eșuată → redirect direct cu failed=1
+ *
+ * Pe mobile, după provocarea 3DS, Netopia întoarce browserul printr-un POST
+ * (formular auto-submit din pagina ACS), nu printr-un GET ca pe desktop. Fără
+ * un handler POST, cererea primea 404 și Netopia afișa „eroare generală"
+ * înainte de redirect. Tratăm ambele metode identic.
  */
-export async function GET(req: MedusaRequest, res: MedusaResponse) {
-  const sessionId = req.query.session_id as string | undefined;
-  const errorCode = req.query.errorCode as string | undefined;
-  const ntpStatus = req.query.status as string | undefined;
+function handleReturn(req: MedusaRequest, res: MedusaResponse) {
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const sessionId = (req.query.session_id ?? body.session_id) as
+    | string
+    | undefined;
+  const errorCode = (req.query.errorCode ?? body.errorCode) as
+    | string
+    | undefined;
+  const ntpStatus = (req.query.status ?? body.status) as string | undefined;
 
   if (!sessionId) {
     return res.redirect(`${STOREFRONT_URL}/cart`);
@@ -40,4 +50,12 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   }
 
   return res.redirect(`${returnBase}?session_id=${sessionId}`);
+}
+
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  return handleReturn(req, res);
+}
+
+export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  return handleReturn(req, res);
 }
