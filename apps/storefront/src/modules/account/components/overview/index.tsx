@@ -4,6 +4,7 @@ import { useState } from "react"
 import { HttpTypes } from "@medusajs/types"
 import NewsletterStatus from "./newsletter-status"
 import { signout } from "@lib/data/customer"
+import { emitCartUpdated } from "@lib/util/cart-events"
 import { ArrowRightOnRectangle } from "@medusajs/icons"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { convertToLocale } from "@lib/util/money"
@@ -31,6 +32,9 @@ const Overview = ({ customer, orders }: OverviewProps) => {
   const [expanded, setExpanded] = useState(false)
 
   const handleLogout = async () => {
+    // Logout drops the cart cookie server-side; clear the client-held cart
+    // (badge + drawer) too. Before signout — its redirect ends execution.
+    emitCartUpdated(null)
     await signout()
   }
 

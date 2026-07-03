@@ -3220,6 +3220,10 @@ a.cb-value:hover {
   mask-composite: exclude;
   padding: 1px;
 }
+/* While the page is actively scrolling, keep the golden sweep running. */
+.appt-ping--scrolling {
+  animation: apptSpin 2.5s linear infinite;
+}
 
 /* ════════════════════════════════════
          RESPONSIVE

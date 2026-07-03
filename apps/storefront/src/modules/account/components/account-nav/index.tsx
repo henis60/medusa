@@ -5,6 +5,7 @@ import { clx } from "@modules/common/components/ui"
 import { usePathname, useRouter } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
 import { signout } from "@lib/data/customer"
+import { emitCartUpdated } from "@lib/util/cart-events"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { motion } from "framer-motion"
@@ -47,6 +48,9 @@ const AccountNav = ({
   }
 
   const handleLogout = async () => {
+    // Logout drops the cart cookie server-side; clear the client-held cart
+    // (badge + drawer) too. Before signout — its redirect ends execution.
+    emitCartUpdated(null)
     await signout()
   }
 

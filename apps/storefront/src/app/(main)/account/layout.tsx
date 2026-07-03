@@ -16,7 +16,9 @@ export default async function AccountPageLayout({
   const customer = await retrieveCustomer().catch(() => null)
 
   if (!customer) {
-    return <div className="flex-1">{login}</div>
+    // flex column so the login template can stretch to full viewport height
+    // (important on mobile, where the form otherwise floats mid-page).
+    return <div className="flex-1 flex flex-col">{login}</div>
   }
 
   return (

@@ -11,6 +11,7 @@ type Props = {
 
 export default function AppointmentButton({ transparent, hideOnTop, onClick }: Props) {
   const [scrolled, setScrolled] = useState(false)
+  const [isScrolling, setIsScrolling] = useState(false)
 
   useEffect(() => {
     if (!hideOnTop) return
@@ -19,6 +20,22 @@ export default function AppointmentButton({ transparent, hideOnTop, onClick }: P
     window.addEventListener("scroll", onScroll, { passive: true })
     return () => window.removeEventListener("scroll", onScroll)
   }, [hideOnTop])
+
+  // Keep the golden border sweep animating while the page is being scrolled
+  // (stops ~250ms after the last scroll event).
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout> | null = null
+    const onScroll = () => {
+      setIsScrolling(true)
+      if (timeout) clearTimeout(timeout)
+      timeout = setTimeout(() => setIsScrolling(false), 250)
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => {
+      window.removeEventListener("scroll", onScroll)
+      if (timeout) clearTimeout(timeout)
+    }
+  }, [])
 
   const visible = !hideOnTop || scrolled
 
@@ -40,7 +57,12 @@ export default function AppointmentButton({ transparent, hideOnTop, onClick }: P
         }`}
         aria-label="Programare"
       >
-        <span className="appt-ping absolute inset-0 pointer-events-none" aria-hidden="true" />
+        <span
+          className={`appt-ping absolute inset-0 pointer-events-none ${
+            isScrolling ? "appt-ping--scrolling" : ""
+          }`}
+          aria-hidden="true"
+        />
 
         {/* Mobile: icon */}
         <span className="flex small:hidden items-center justify-center w-9 h-9">

@@ -110,7 +110,9 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
           transition={{ duration: 0.2 }}
         >
           {/* Overlay */}
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={handleClose} />
+          {/* Overlay is intentionally NOT clickable — the modal closes only
+              via the X button, so mid-form taps outside don't lose input. */}
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
 
           {/* Panel */}
           <motion.div

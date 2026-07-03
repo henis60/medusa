@@ -27,7 +27,7 @@ const LoginTemplate = ({ redirectTo }: Props) => {
   const showTabs = currentView !== LOGIN_VIEW.FORGOT_PASSWORD
 
   return (
-    <div className="flex flex-col min-h-[60vh]">
+    <div className="flex flex-col flex-1 min-h-[60vh]">
       {currentView === LOGIN_VIEW.FORGOT_PASSWORD && (
         <div className="page-container pt-3 small:pt-6 pb-0">
           <button
@@ -39,7 +39,7 @@ const LoginTemplate = ({ redirectTo }: Props) => {
           </button>
         </div>
       )}
-      <div className="flex flex-col items-center justify-center flex-1 px-6 py-16">
+      <div className="flex flex-col items-center justify-center flex-1 px-5 py-6 small:px-6 small:py-16">
         <div className="w-full max-w-sm">
           {showTabs && (
             <div className="flex border-b border-[var(--theme-border)] mb-10">
