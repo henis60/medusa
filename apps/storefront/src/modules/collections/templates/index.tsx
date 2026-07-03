@@ -1,22 +1,16 @@
 import { Suspense } from "react"
 
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
-import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import PaginatedProducts from "@modules/store/templates/paginated-products"
 import { HttpTypes } from "@medusajs/types"
 
 export default function CollectionTemplate({
   collection,
-  page,
   countryCode,
 }: {
-  sortBy?: SortOptions
   collection: HttpTypes.StoreCollection
-  page?: string
   countryCode: string
 }) {
-  const pageNumber = page ? parseInt(page) : 1
-
   const words = collection.title.split(" ")
   const last = words.pop()
   const rest = words.join(" ")
@@ -55,7 +49,6 @@ export default function CollectionTemplate({
         >
           <PaginatedProducts
             sortBy="created_at"
-            page={pageNumber}
             collectionId={collection.id}
             countryCode={countryCode}
           />

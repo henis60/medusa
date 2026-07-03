@@ -1,8 +1,27 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { HttpTypes } from "@medusajs/types"
 import { retrieveCart } from "@lib/data/cart"
 import CartDropdown from "../cart-dropdown"
 
-export default async function CartButton() {
-  const cart = await retrieveCart().catch(() => null)
+/**
+ * Client-side cart badge: renders instantly with an empty cart and hydrates
+ * the real cart after mount, so the nav can be part of a static/ISR shell
+ * (no cookies read during server render).
+ */
+export default function CartButton() {
+  const [cart, setCart] = useState<HttpTypes.StoreCart | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    retrieveCart()
+      .then((data) => !cancelled && setCart(data))
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return <CartDropdown cart={cart} />
 }

@@ -10,17 +10,14 @@ import { HttpTypes } from "@medusajs/types"
 
 export default function CategoryTemplate({
   category,
-  sortBy,
-  page,
   countryCode,
 }: {
   category: HttpTypes.StoreProductCategory
-  sortBy?: SortOptions
-  page?: string
   countryCode: string
 }) {
-  const pageNumber = page ? parseInt(page) : 1
-  const sort = sortBy || "created_at"
+  // Static shell renders the default sort; the client grid re-sorts from
+  // ?sortBy= after hydration (see InfiniteProducts).
+  const sort: SortOptions = "created_at"
 
   if (!category || !countryCode) notFound()
 
@@ -104,7 +101,6 @@ export default function CategoryTemplate({
         >
           <PaginatedProducts
             sortBy={sort}
-            page={pageNumber}
             categoryId={category.id}
             countryCode={countryCode}
           />

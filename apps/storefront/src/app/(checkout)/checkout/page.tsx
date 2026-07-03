@@ -11,14 +11,18 @@ export const metadata: Metadata = {
   title: "Checkout",
 }
 
+// Per-user page — always rendered on request, never prerendered.
+export const dynamic = "force-dynamic"
+
 export default async function Checkout() {
-  const cart = await retrieveCart()
+  const [cart, customer] = await Promise.all([
+    retrieveCart(),
+    retrieveCustomer(),
+  ])
 
   if (!cart) {
     return notFound()
   }
-
-  const customer = await retrieveCustomer()
 
   return (
     <>

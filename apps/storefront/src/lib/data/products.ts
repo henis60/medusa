@@ -4,7 +4,7 @@ import { sdk } from "@lib/config"
 import { sortProducts } from "@lib/util/sort-products"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
-import { getAuthHeaders, getCacheOptions } from "./cookies"
+import { getAuthHeaders, getGlobalCacheOptions } from "./cookies"
 import { getRegion, retrieveRegion } from "./regions"
 
 export const listProducts = async ({
@@ -51,9 +51,7 @@ export const listProducts = async ({
     ...(await getAuthHeaders()),
   }
 
-  const next = {
-    ...(await getCacheOptions("products")),
-  }
+  const next = getGlobalCacheOptions("products")
 
   return sdk.client
     .fetch<{ products: HttpTypes.StoreProduct[]; count: number }>(
@@ -84,7 +82,9 @@ export const listProducts = async ({
       return {
         response: {
           products: published,
-          count: published.length,
+          // API total, not the filtered page length — pagination needs the
+          // full count. Slightly overcounts if drafts exist, acceptable.
+          count,
         },
         nextPage: nextPage,
         queryParams,
@@ -93,8 +93,12 @@ export const listProducts = async ({
 }
 
 /**
- * This will fetch 100 products to the Next.js cache and sort them based on the sortBy parameter.
- * It will then return the paginated products based on the page and limit parameters.
+ * Paginated + sorted product listing.
+ *
+ * For the default created_at sort the API sorts and paginates for us, so we
+ * fetch only the requested page. Price sorts still fetch 100 products and
+ * sort in memory, because API-side ordering by cheapest variant price is
+ * unreliable (medusajs/medusa#11029, #12900).
  */
 export const listProductsWithSort = async ({
   page = 0,
@@ -112,6 +116,18 @@ export const listProductsWithSort = async ({
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductParams
 }> => {
   const limit = queryParams?.limit || 12
+
+  if (sortBy !== "price_asc" && sortBy !== "price_desc") {
+    return listProducts({
+      pageParam: Math.max(page, 1),
+      queryParams: {
+        ...queryParams,
+        limit,
+        order: "-created_at",
+      },
+      countryCode,
+    })
+  }
 
   const {
     response: { products, count },

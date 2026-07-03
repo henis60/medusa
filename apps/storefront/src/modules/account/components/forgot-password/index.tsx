@@ -6,9 +6,7 @@ import { LOGIN_VIEW } from "@modules/account/templates/login-template"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import { requestPasswordReset } from "@lib/data/customer"
-import Script from "next/script"
-
-const RECAPTCHA_SITEKEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!
+import { useRecaptcha } from "@lib/hooks/use-recaptcha"
 
 type Props = {
   setCurrentView: (view: LOGIN_VIEW) => void
@@ -16,30 +14,22 @@ type Props = {
 
 const ForgotPassword = ({ setCurrentView }: Props) => {
   const [message, formAction] = useActionState(requestPasswordReset, null)
+  const { preload, getToken } = useRecaptcha()
 
   const isSuccess = message === "success"
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
-    try {
-      await new Promise<void>((resolve) => window.grecaptcha.ready(resolve))
-      const token = await window.grecaptcha.execute(RECAPTCHA_SITEKEY, {
-        action: "password_reset",
-      })
+    const token = await getToken("password_reset")
+    if (token) {
       formData.set("recaptchaToken", token)
-    } catch {
-      // proceed without token — server will reject
     }
     startTransition(() => formAction(formData))
   }
 
   return (
     <div className="w-full max-w-sm flex flex-col items-center">
-      <Script
-        src={`https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITEKEY}`}
-        strategy="lazyOnload"
-      />
       <h1 className="font-display text-[42px] leading-[1] text-[var(--theme-text)] mb-2">
         Resetare Parolă
       </h1>
@@ -65,7 +55,7 @@ const ForgotPassword = ({ setCurrentView }: Props) => {
           </button>
         </div>
       ) : (
-        <form className="w-full" onSubmit={handleSubmit}>
+        <form className="w-full" onSubmit={handleSubmit} onFocusCapture={preload}>
           <Input
             label="Email"
             name="email"

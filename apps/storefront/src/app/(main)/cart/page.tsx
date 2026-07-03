@@ -9,13 +9,17 @@ export const metadata: Metadata = {
   description: "View your cart",
 }
 
-export default async function Cart() {
-  const cart = await retrieveCart().catch((error) => {
-    console.error(error)
-    return notFound()
-  })
+// Per-user page — always rendered on request, never prerendered.
+export const dynamic = "force-dynamic"
 
-  const customer = await retrieveCustomer()
+export default async function Cart() {
+  const [cart, customer] = await Promise.all([
+    retrieveCart().catch((error) => {
+      console.error(error)
+      return notFound()
+    }),
+    retrieveCustomer(),
+  ])
 
   return <CartTemplate cart={cart} customer={customer} />
 }

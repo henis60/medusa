@@ -1,7 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
-import { getAuthHeaders, getCacheOptions } from "./cookies"
+import { getAuthHeaders, getGlobalCacheOptions } from "./cookies"
 import { HttpTypes } from "@medusajs/types"
 
 export const listCartPaymentMethods = async (regionId: string) => {
@@ -9,9 +9,8 @@ export const listCartPaymentMethods = async (regionId: string) => {
     ...(await getAuthHeaders()),
   }
 
-  const next = {
-    ...(await getCacheOptions("payment_providers")),
-  }
+  // Payment providers vary only by region — share one cache entry per region.
+  const next = getGlobalCacheOptions("payment_providers")
 
   return sdk.client
     .fetch<HttpTypes.StorePaymentProviderListResponse>(

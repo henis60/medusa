@@ -4,17 +4,14 @@ import { notFound } from "next/navigation"
 import { getCollectionByHandle, listCollections } from "@lib/data/collections"
 import { StoreCollection } from "@medusajs/types"
 import CollectionTemplate from "@modules/collections/templates"
-import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
 type Props = {
   params: Promise<Record<string, string>>
-  searchParams: Promise<{
-    page?: string
-    sortBy?: SortOptions
-  }>
 }
 
-export const PRODUCT_LIMIT = 12
+// Static + ISR: sort/continuous loading are handled client-side, so the page
+// reads no searchParams and serves cached HTML without hitting the backend.
+export const revalidate = 3600
 
 export async function generateStaticParams() {
   const { collections } = await listCollections({ fields: "*products" })
@@ -43,25 +40,14 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 }
 
 export default async function CollectionPage(props: Props) {
-  const searchParams = await props.searchParams
   const params = await props.params
-  const { sortBy, page } = searchParams
 
-  const collection = await getCollectionByHandle(params.handle).then(
-    (collection) => collection
-  )
+  const collection = await getCollectionByHandle(params.handle)
 
   if (!collection) {
     notFound()
   }
 
-  return (
-    <CollectionTemplate
-      collection={collection}
-      page={page}
-      sortBy={sortBy}
-      countryCode={"ro"}
-    />
-  )
+  return <CollectionTemplate collection={collection} countryCode={"ro"} />
 }
 

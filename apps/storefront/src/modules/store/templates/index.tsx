@@ -16,18 +16,15 @@ import PaginatedProducts from "./paginated-products"
 
 const StoreTemplate = async ({
   sortBy,
-  page,
   countryCode,
   collectionId,
   categoryId,
 }: {
   sortBy?: SortOptions
-  page?: string
   countryCode: string
   collectionId?: string
   categoryId?: string
 }) => {
-  const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "created_at"
 
   const [{ collections }, categories, collectionWithCats] = await Promise.all([
@@ -119,7 +116,6 @@ const StoreTemplate = async ({
             <Suspense fallback={<SkeletonProductGrid />}>
               <PaginatedProducts
                 sortBy={sort}
-                page={pageNumber}
                 countryCode={countryCode}
                 collectionId={collectionId}
                 categoryId={categoryId}

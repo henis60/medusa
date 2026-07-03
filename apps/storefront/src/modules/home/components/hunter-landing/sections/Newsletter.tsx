@@ -1,24 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import Script from "next/script"
-
-const RECAPTCHA_SITEKEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!
-
-declare global {
-  interface Window {
-    grecaptcha: {
-      ready: (cb: () => void) => void
-      execute: (siteKey: string, opts: { action: string }) => Promise<string>
-    }
-  }
-}
+import { useRecaptcha } from "@lib/hooks/use-recaptcha"
 
 type Status = "idle" | "loading" | "success" | "error"
 
 const Newsletter = () => {
   const [status, setStatus] = useState<Status>("idle")
   const [errorMsg, setErrorMsg] = useState("")
+  const { preload, getToken } = useRecaptcha()
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -28,14 +18,10 @@ const Newsletter = () => {
     const email = (new FormData(e.currentTarget).get("EMAIL") as string)?.trim()
 
     try {
-      const recaptchaToken = await new Promise<string>((resolve, reject) => {
-        window.grecaptcha.ready(() => {
-          window.grecaptcha
-            .execute(RECAPTCHA_SITEKEY, { action: "newsletter" })
-            .then(resolve)
-            .catch(reject)
-        })
-      })
+      const recaptchaToken = await getToken("newsletter")
+      if (!recaptchaToken) {
+        throw new Error("recaptcha")
+      }
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/newsletter`,
@@ -69,11 +55,6 @@ const Newsletter = () => {
 
   return (
     <>
-      <Script
-        src={`https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITEKEY}`}
-        strategy="lazyOnload"
-      />
-
       <section className="section subscribe-sec" id="subscribe">
         <div className="section-inner">
           <div className="subscribe-layout">
@@ -124,7 +105,7 @@ const Newsletter = () => {
                     </p>
                   </div>
                 ) : (
-                  <form onSubmit={handleSubmit}>
+                  <form onSubmit={handleSubmit} onFocusCapture={preload}>
                     <div style={{ display: "flex" }}>
                       <input
                         type="email"

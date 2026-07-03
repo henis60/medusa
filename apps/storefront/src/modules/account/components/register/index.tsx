@@ -7,9 +7,7 @@ import ErrorMessage from "@modules/checkout/components/error-message"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { signup } from "@lib/data/customer"
-import Script from "next/script"
-
-const RECAPTCHA_SITEKEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!
+import { useRecaptcha } from "@lib/hooks/use-recaptcha"
 
 type Props = {
   setCurrentView: (view: LOGIN_VIEW) => void
@@ -20,16 +18,14 @@ const Register = ({ setCurrentView }: Props) => {
     signup as (state: string | null, formData: FormData) => Promise<string | null>,
     null as string | null
   )
+  const { preload, getToken } = useRecaptcha()
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
-    try {
-      await new Promise<void>((resolve) => window.grecaptcha.ready(resolve))
-      const token = await window.grecaptcha.execute(RECAPTCHA_SITEKEY, { action: "register" })
+    const token = await getToken("register")
+    if (token) {
       formData.set("recaptchaToken", token)
-    } catch {
-      // proceed without token — server will reject
     }
     startTransition(() => formAction(formData))
   }
@@ -39,10 +35,6 @@ const Register = ({ setCurrentView }: Props) => {
       className="w-full max-w-sm flex flex-col items-center"
       data-testid="register-page"
     >
-      <Script
-        src={`https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITEKEY}`}
-        strategy="lazyOnload"
-      />
       <h1 className="font-display text-[42px] leading-[1] text-[var(--theme-text)] mb-2">
         Creează un Cont
       </h1>
@@ -50,7 +42,11 @@ const Register = ({ setCurrentView }: Props) => {
         Creează-ți profilul și accesează o experiență de cumpărături îmbunătățită.
       </p>
 
-      <form className="w-full flex flex-col" onSubmit={handleSubmit}>
+      <form
+        className="w-full flex flex-col"
+        onSubmit={handleSubmit}
+        onFocusCapture={preload}
+      >
         <div className="flex flex-col w-full gap-y-3">
           <Input
             label="Prenume"

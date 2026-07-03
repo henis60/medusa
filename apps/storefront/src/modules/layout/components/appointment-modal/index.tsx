@@ -2,16 +2,8 @@
 
 import { useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import Script from "next/script"
 import AppointmentDatePicker from "@modules/programare/components/appointment-date-picker"
-
-const RECAPTCHA_SITEKEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? "6LdnohktAAAAAOnmNaDbJ1bBeKx3irV5qgeqoOI5"
-
-declare global {
-  interface Window {
-    grecaptcha: { ready: (cb: () => void) => void; execute: (k: string, o: { action: string }) => Promise<string> }
-  }
-}
+import { useRecaptcha } from "@lib/hooks/use-recaptcha"
 
 const inputClass = (err?: boolean) =>
   `w-full h-10 bg-transparent border px-3 font-sans text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none transition-colors ${
@@ -43,6 +35,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
   const [step, setStep] = useState(0)
   const [dir, setDir] = useState(1)
   const [status, setStatus] = useState<Status>("idle")
+  const { preload, getToken } = useRecaptcha()
 
   const [date, setDate] = useState("")
   const [time, setTime] = useState("")
@@ -82,11 +75,8 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
     setErrors({}); setStatus("loading")
 
     try {
-      const recaptchaToken = await new Promise<string>((resolve, reject) => {
-        window.grecaptcha.ready(() =>
-          window.grecaptcha.execute(RECAPTCHA_SITEKEY, { action: "appointment" }).then(resolve).catch(reject)
-        )
-      })
+      const recaptchaToken = await getToken("appointment")
+      if (!recaptchaToken) { setStatus("error"); return }
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/contact`, {
         method: "POST",
@@ -119,8 +109,6 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
         >
-          <Script src={`https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITEKEY}`} strategy="lazyOnload" />
-
           {/* Overlay */}
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={handleClose} />
 
@@ -129,6 +117,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
             className="relative z-10 w-full max-w-md bg-white"
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 16 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            onFocusCapture={preload}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">

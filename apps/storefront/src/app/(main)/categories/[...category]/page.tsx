@@ -4,15 +4,14 @@ import { notFound } from "next/navigation"
 import { getCategoryByHandle, listCategories } from "@lib/data/categories"
 import { HttpTypes } from "@medusajs/types"
 import CategoryTemplate from "@modules/categories/templates"
-import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
 type Props = {
-  params: Promise<Record<string, string>>
-  searchParams: Promise<{
-    sortBy?: SortOptions
-    page?: string
-  }>
+  params: Promise<{ category: string[] }>
 }
+
+// Static + ISR: sort/continuous loading are handled client-side, so the page
+// reads no searchParams and serves cached HTML without hitting the backend.
+export const revalidate = 3600
 
 export async function generateStaticParams() {
   const product_categories = await listCategories()
@@ -50,9 +49,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 }
 
 export default async function CategoryPage(props: Props) {
-  const searchParams = await props.searchParams
   const params = await props.params
-  const { sortBy, page } = searchParams
 
   const productCategory = await getCategoryByHandle(params.category)
 
@@ -60,13 +57,6 @@ export default async function CategoryPage(props: Props) {
     notFound()
   }
 
-  return (
-    <CategoryTemplate
-      category={productCategory}
-      sortBy={sortBy}
-      page={page}
-      countryCode={"ro"}
-    />
-  )
+  return <CategoryTemplate category={productCategory} countryCode={"ro"} />
 }
 

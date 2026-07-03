@@ -348,6 +348,9 @@ const SideMenu = ({
 }: SideMenuProps) => {
   const [mounted, setMounted] = useState(false)
   const [activeSubmenu, setActiveSubmenu] = useState<SubmenuKey | null>(null)
+  // Locale is resolved client-side from the cookie so the nav can be part of
+  // a static/ISR shell (the server no longer reads the locale cookie).
+  const [cookieLocale, setCookieLocale] = useState<string | null>(null)
 
   // Remaining collections (all except the first/featured) for Ready to Wear
   const otherCollections = (collections ?? []).slice(1)
@@ -355,7 +358,13 @@ const SideMenu = ({
 
   useEffect(() => {
     setMounted(true)
+    const match = document.cookie.match(/(?:^|;\s*)_medusa_locale=([^;]+)/)
+    if (match) {
+      setCookieLocale(decodeURIComponent(match[1]))
+    }
   }, [])
+
+  const resolvedLocale = currentLocale ?? cookieLocale
 
   return (
     <div className="h-full">
@@ -520,7 +529,7 @@ const SideMenu = ({
                                   {!!locales?.length && (
                                     <LanguageSelect
                                       locales={locales}
-                                      currentLocale={currentLocale}
+                                      currentLocale={resolvedLocale}
                                     />
                                   )}
                                 </div>

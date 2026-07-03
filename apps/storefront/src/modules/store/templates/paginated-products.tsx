@@ -1,10 +1,8 @@
 import { listProductsWithSort } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
-import ProductPreview from "@modules/products/components/product-preview"
-import { Pagination } from "@modules/store/components/pagination"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
-import AnimatedProductCard from "@modules/store/components/animated-product-card"
 import AnimatedGrid from "@modules/store/components/animated-grid"
+import InfiniteProducts from "@modules/store/components/infinite-products"
 
 const PRODUCT_LIMIT = 6
 
@@ -13,19 +11,20 @@ type PaginatedProductsParams = {
   collection_id?: string[]
   category_id?: string[]
   id?: string[]
-  order?: string
 }
 
+/**
+ * Server-renders the first batch of products (static/ISR-friendly) and hands
+ * off to the InfiniteProducts client component for continuous loading.
+ */
 export default async function PaginatedProducts({
   sortBy,
-  page,
   collectionId,
   categoryId,
   productsIds,
   countryCode,
 }: {
   sortBy?: SortOptions
-  page: number
   collectionId?: string
   categoryId?: string
   productsIds?: string[]
@@ -47,9 +46,7 @@ export default async function PaginatedProducts({
     queryParams["id"] = productsIds
   }
 
-  if (sortBy === "created_at") {
-    queryParams["order"] = "created_at"
-  }
+  const sort = sortBy || "created_at"
 
   const region = await getRegion(countryCode)
 
@@ -60,13 +57,11 @@ export default async function PaginatedProducts({
   const {
     response: { products, count },
   } = await listProductsWithSort({
-    page,
+    page: 1,
     queryParams,
-    sortBy,
+    sortBy: sort,
     countryCode,
   })
-
-  const totalPages = Math.ceil(count / PRODUCT_LIMIT)
 
   if (products.length === 0) {
     return (
@@ -89,27 +84,17 @@ export default async function PaginatedProducts({
 
   return (
     <AnimatedGrid>
-      <div className="-mx-4 small:mx-0">
-        <ul
-          className="grid grid-cols-2 w-full small:grid-cols-2 medium:grid-cols-3 gap-[4px] small:gap-x-8 small:gap-y-16"
-          data-testid="products-list"
-        >
-          {products.map((p, i) => {
-            return (
-              <AnimatedProductCard key={p.id} index={i}>
-                <ProductPreview product={p} region={region} />
-              </AnimatedProductCard>
-            )
-          })}
-        </ul>
-      </div>
-      {totalPages > 1 && (
-        <Pagination
-          data-testid="product-pagination"
-          page={page}
-          totalPages={totalPages}
-        />
-      )}
+      <InfiniteProducts
+        initialProducts={products}
+        count={count}
+        region={region}
+        countryCode={countryCode}
+        limit={PRODUCT_LIMIT}
+        initialSort={sort}
+        collectionId={collectionId}
+        categoryId={categoryId}
+        productsIds={productsIds}
+      />
     </AnimatedGrid>
   )
 }

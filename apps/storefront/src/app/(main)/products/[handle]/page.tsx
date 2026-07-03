@@ -6,6 +6,10 @@ import ProductTemplate from "@modules/products/templates"
 
 const COUNTRY = "ro"
 
+// Static + ISR: cookie-free data fetches (see getProductByHandle), so pages
+// prerender at build and regenerate in the background every hour.
+export const revalidate = 3600
+
 type Props = {
   params: Promise<{ handle: string }>
 }

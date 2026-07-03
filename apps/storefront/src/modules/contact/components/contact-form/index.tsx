@@ -1,18 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import Script from "next/script"
-
-const RECAPTCHA_SITEKEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!
-
-declare global {
-  interface Window {
-    grecaptcha: {
-      ready: (cb: () => void) => void
-      execute: (siteKey: string, opts: { action: string }) => Promise<string>
-    }
-  }
-}
+import { useRecaptcha } from "@lib/hooks/use-recaptcha"
 
 const inputClass = (err?: boolean) =>
   `w-full h-10 bg-transparent border px-3 font-sans text-sm text-[var(--theme-text)] placeholder:text-[var(--theme-text-muted)] focus:outline-none transition-colors ${
@@ -36,6 +25,7 @@ function validateEmail(v: string) {
 export default function ContactForm() {
   const [status, setStatus] = useState<Status>("idle")
   const [errors, setErrors] = useState<Errors>({})
+  const { preload, getToken } = useRecaptcha()
 
   const validate = (data: FormData): Errors => {
     const e: Errors = {}
@@ -60,14 +50,11 @@ export default function ContactForm() {
     setStatus("loading")
 
     try {
-      const recaptchaToken = await new Promise<string>((resolve, reject) => {
-        window.grecaptcha.ready(() => {
-          window.grecaptcha
-            .execute(RECAPTCHA_SITEKEY, { action: "contact" })
-            .then(resolve)
-            .catch(reject)
-        })
-      })
+      const recaptchaToken = await getToken("contact")
+      if (!recaptchaToken) {
+        setStatus("error")
+        return
+      }
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/contact`,
@@ -121,11 +108,12 @@ export default function ContactForm() {
 
   return (
     <>
-      <Script
-        src={`https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITEKEY}`}
-        strategy="lazyOnload"
-      />
-      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+      <form
+        onSubmit={handleSubmit}
+        onFocusCapture={preload}
+        noValidate
+        className="flex flex-col gap-4"
+      >
         <div className="grid grid-cols-1 small:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="name" error={errors.name}>Nume</Label>
