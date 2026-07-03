@@ -20,6 +20,10 @@ export const listCartShippingMethods = async (cartId: string) => {
         method: "GET",
         query: {
           cart_id: cartId,
+          // +data exposes the provider option payload (eAWB carrier_id /
+          // service_id) — the checkout uses service_id to detect locker
+          // delivery structurally instead of parsing the option name.
+          fields: "+data",
         },
         headers,
         next,

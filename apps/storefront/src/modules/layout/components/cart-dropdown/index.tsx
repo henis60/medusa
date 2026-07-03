@@ -19,71 +19,7 @@ import {
 } from "@lib/util/cart-events"
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
-import { COLOR_OPTION_NAMES } from "@lib/util/product"
-
-function getVariantImageUrl(item: HttpTypes.StoreCartLineItem): string | null {
-  const variant = item.variant as any
-  const product = variant?.product
-  if (!variant || !product) return item.thumbnail ?? null
-
-  // 1. Variant-specific thumbnail
-  if (variant.thumbnail) return variant.thumbnail
-
-  // Product images come back sorted by rank; keep that order everywhere.
-  const allImages: { id?: string; url?: string }[] = product.images ?? []
-
-  // 2. Variant-specific images: show the variant's own first image
-  if (variant.images?.length) return variant.images[0].url ?? null
-
-  // 3. Map by color option index → product images
-  const options: {
-    id?: string
-    title?: string
-    values?: { value?: string }[]
-  }[] = product.options ?? []
-  const colorOption = options.find((o) =>
-    COLOR_OPTION_NAMES.includes(o?.title?.toLowerCase() ?? "")
-  )
-
-  if (colorOption && allImages.length) {
-    // Use options.values (creation order = image upload order)
-    const colorValues: string[] = (colorOption.values ?? [])
-      .map((v: { value?: string }) => v.value)
-      .filter((v): v is string => !!v)
-
-    // Fallback: derive from product variants if options.values empty
-    if (!colorValues.length) {
-      const allVariants: any[] = product.variants ?? []
-      const fromVariants = Array.from(
-        new Set(
-          allVariants
-            .map(
-              (v: any) =>
-                v.options?.find((o: any) => o.option_id === colorOption.id)
-                  ?.value
-            )
-            .filter(Boolean) as string[]
-        )
-      )
-      colorValues.push(...fromVariants)
-    }
-
-    const variantColor = variant.options?.find(
-      (o: { option_id?: string }) => o.option_id === colorOption.id
-    )?.value
-    const idx = variantColor ? colorValues.indexOf(variantColor) : -1
-    if (idx >= 0 && idx < allImages.length) return allImages[idx].url ?? null
-  }
-
-  // 4. First product image
-  if (allImages.length) return allImages[0].url ?? null
-
-  // 5. Product thumbnail
-  if (product.thumbnail) return product.thumbnail
-
-  // 6. Line item thumbnail as last resort
-  return item.thumbnail ?? null
-}
+import { getCartItemImageUrl } from "@lib/util/variant-image"
 
 const CartDropdown = ({
   cart: cartState,
@@ -300,7 +236,7 @@ const CartDropdown = ({
                                 : 1
                             )
                             .map((item) => {
-                              const imgSrc = getVariantImageUrl(item)
+                              const imgSrc = getCartItemImageUrl(item)
                               const hasDiscount =
                                 (item.total ?? 0) < (item.original_total ?? 0)
                               return (

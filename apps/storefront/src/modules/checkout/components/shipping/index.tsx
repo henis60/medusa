@@ -22,10 +22,17 @@ import Divider from "@modules/common/components/divider"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 
-// A shipping option that delivers to a parcel locker (its name ends in
-// "... la locker") requires the customer to pick a specific locker.
-const isLockerOption = (o: HttpTypes.StoreCartShippingOption) =>
-  /la locker\s*$/i.test(o.name ?? "")
+// A shipping option that delivers to a parcel locker requires the customer
+// to pick a specific locker. Detection is purely structural: the eAWB
+// provider stores the Europarcel service on the option's data, and services
+// 2 (door→locker) and 4 (locker→locker) deliver to a locker. Non-eAWB
+// options never open the picker — it can only list eAWB lockers anyway.
+const LOCKER_SERVICE_IDS = [2, 4]
+
+const isLockerOption = (o: HttpTypes.StoreCartShippingOption) => {
+  const serviceId = Number((o.data as { service_id?: number })?.service_id)
+  return LOCKER_SERVICE_IDS.includes(serviceId)
+}
 
 const PICKUP_OPTION_ON = "__PICKUP_ON"
 const PICKUP_OPTION_OFF = "__PICKUP_OFF"

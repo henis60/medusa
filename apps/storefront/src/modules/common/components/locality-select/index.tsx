@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import {
   Combobox,
@@ -12,6 +12,15 @@ import { useEffect, useState } from "react"
 
 type County = { id: number; name: string; code: string }
 type Locality = { id: number; name: string }
+
+// Case-, diacritics- and whitespace-insensitive comparison key.
+const normalize = (s: string | null | undefined): string =>
+  (s ?? "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase()
 
 // Module-level caches so the datasets are fetched at most once per session.
 let countiesCache: County[] | null = null
@@ -189,11 +198,15 @@ const LocalitySelect = ({
   }, [])
 
   // Preselect county from an incoming value (e.g. saved/edited address).
+  // Tolerant matching: older addresses may store the value without
+  // diacritics ("Bucuresti"), with different casing, extra whitespace, or as
+  // the county code ("CJ") — normalize before comparing.
   useEffect(() => {
     if (!counties.length || !countyValue) return
-    const match = counties.find(
-      (c) => c.name.toLowerCase() === countyValue.toLowerCase()
-    )
+    const wanted = normalize(countyValue)
+    const match =
+      counties.find((c) => normalize(c.name) === wanted) ??
+      counties.find((c) => normalize(c.code) === wanted)
     if (match && match.id !== county?.id) setCounty(match)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [counties, countyValue])
@@ -210,9 +223,8 @@ const LocalitySelect = ({
   // Preselect locality from an incoming value once its county's list is loaded.
   useEffect(() => {
     if (!localities.length || !cityValue) return
-    const match = localities.find(
-      (l) => l.name.toLowerCase() === cityValue.toLowerCase()
-    )
+    const wanted = normalize(cityValue)
+    const match = localities.find((l) => normalize(l.name) === wanted)
     if (match && match.id !== city?.id) setCity(match)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localities, cityValue])
