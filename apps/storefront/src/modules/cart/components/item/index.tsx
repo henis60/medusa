@@ -1,6 +1,7 @@
 "use client"
 
 import { updateLineItem, deleteLineItem } from "@lib/data/cart"
+import { emitCartUpdated } from "@lib/util/cart-events"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -86,9 +87,9 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
   const changeQuantity = async (qty: number) => {
     if (qty < 1 || updating) return
     setUpdating(true)
-    await updateLineItem({ lineId: item.id, quantity: qty }).finally(() =>
-      setUpdating(false)
-    )
+    await updateLineItem({ lineId: item.id, quantity: qty })
+      .then(() => emitCartUpdated())
+      .finally(() => setUpdating(false))
   }
 
   const hasDiscount = (item.total ?? 0) < (item.original_total ?? 0)
@@ -173,7 +174,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
               </span>
             </LocalizedClientLink>
             <button
-              onClick={() => deleteLineItem(item.id)}
+              onClick={() => deleteLineItem(item.id).then(() => emitCartUpdated())}
               aria-label="Șterge"
               data-testid="product-delete-button"
               className="shrink-0 text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors mt-[2px]"

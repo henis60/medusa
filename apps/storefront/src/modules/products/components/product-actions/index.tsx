@@ -1,6 +1,7 @@
 "use client"
 
 import { addToCart } from "@lib/data/cart"
+import { emitCartUpdated } from "@lib/util/cart-events"
 import { useIntersection } from "@lib/hooks/use-in-view"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@modules/common/components/ui"
@@ -218,6 +219,7 @@ export default function ProductActions({
       quantity: 1,
       countryCode,
     })
+    emitCartUpdated()
 
     setIsAdding(false)
   }

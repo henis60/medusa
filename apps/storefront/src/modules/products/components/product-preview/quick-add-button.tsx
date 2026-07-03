@@ -1,6 +1,7 @@
 "use client"
 
 import { addToCart } from "@lib/data/cart"
+import { emitCartUpdated } from "@lib/util/cart-events"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
@@ -23,6 +24,7 @@ export default function QuickAddButton({ variantId, productHandle, hasMultipleOp
 
     setAdding(true)
     await addToCart({ variantId, quantity: 1, countryCode })
+    emitCartUpdated()
     setAdding(false)
   }
 

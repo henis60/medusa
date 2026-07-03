@@ -11,6 +11,7 @@ import CountBadge from "@modules/common/components/count-badge"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
 import { deleteLineItem, updateLineItem } from "@lib/data/cart"
+import { emitCartUpdated } from "@lib/util/cart-events"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { COLOR_OPTION_NAMES } from "@lib/util/product"
@@ -96,7 +97,10 @@ const CartDropdown = ({
     }, 0) || 0
 
   const subtotal = cartState?.subtotal ?? 0
-  const itemRef = useRef<number>(totalItems || 0)
+  // null = count not known yet (cart hydrates client-side after mount).
+  // Prevents the drawer from auto-opening on the initial null → N transition
+  // at every page load; it only opens on a real change (add to cart).
+  const itemRef = useRef<number | null>(cartState ? totalItems : null)
 
   const pathname = usePathname()
 
@@ -311,7 +315,11 @@ const CartDropdown = ({
                                         </span>
                                       </LocalizedClientLink>
                                       <button
-                                        onClick={() => deleteLineItem(item.id)}
+                                        onClick={() =>
+                                          deleteLineItem(item.id).then(() =>
+                                            emitCartUpdated()
+                                          )
+                                        }
                                         aria-label="Șterge"
                                         data-testid="cart-item-remove-button"
                                         className="shrink-0 mt-[1px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
@@ -361,7 +369,7 @@ const CartDropdown = ({
                                               updateLineItem({
                                                 lineId: item.id,
                                                 quantity: item.quantity - 1,
-                                              })
+                                              }).then(() => emitCartUpdated())
                                           }}
                                           disabled={item.quantity <= 1}
                                           aria-label="Scade cantitate"
@@ -391,7 +399,7 @@ const CartDropdown = ({
                                             updateLineItem({
                                               lineId: item.id,
                                               quantity: item.quantity + 1,
-                                            })
+                                            }).then(() => emitCartUpdated())
                                           }
                                           aria-label="Crește cantitate"
                                           className="w-7 h-7 flex items-center justify-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"

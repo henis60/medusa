@@ -1,6 +1,7 @@
 "use client"
 
 import { addToCart } from "@lib/data/cart"
+import { emitCartUpdated } from "@lib/util/cart-events"
 import { HttpTypes } from "@medusajs/types"
 import { useState, useMemo, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
@@ -285,6 +286,7 @@ export default function QuickAddOverlay({
       quantity: 1,
       countryCode,
     })
+    emitCartUpdated()
     setAdding(false)
     setSelected({})
     setMobileOpen(false)

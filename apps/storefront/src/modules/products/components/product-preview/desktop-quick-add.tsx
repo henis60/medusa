@@ -1,6 +1,7 @@
 "use client"
 
 import { addToCart } from "@lib/data/cart"
+import { emitCartUpdated } from "@lib/util/cart-events"
 import { HttpTypes } from "@medusajs/types"
 import { useState, useMemo } from "react"
 import { COLOR_OPTION_NAMES as COLOR_TITLES } from "@lib/util/product"
@@ -192,6 +193,7 @@ export default function DesktopQuickAdd({
       quantity: 1,
       countryCode,
     })
+    emitCartUpdated()
     setAdding(false)
     setSelected({})
   }
