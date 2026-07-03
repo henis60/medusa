@@ -281,12 +281,12 @@ export default function QuickAddOverlay({
     e.stopPropagation()
     if (!effectiveVariant?.id || adding) return
     setAdding(true)
-    await addToCart({
+    const freshCart = await addToCart({
       variantId: effectiveVariant.id,
       quantity: 1,
       countryCode,
     })
-    emitCartUpdated()
+    emitCartUpdated(freshCart, { action: "add" })
     setAdding(false)
     setSelected({})
     setMobileOpen(false)

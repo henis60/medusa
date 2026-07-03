@@ -23,8 +23,8 @@ export default function QuickAddButton({ variantId, productHandle, hasMultipleOp
     if (!variantId) return
 
     setAdding(true)
-    await addToCart({ variantId, quantity: 1, countryCode })
-    emitCartUpdated()
+    const freshCart = await addToCart({ variantId, quantity: 1, countryCode })
+    emitCartUpdated(freshCart, { action: "add" })
     setAdding(false)
   }
 

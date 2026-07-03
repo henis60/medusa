@@ -11,8 +11,13 @@ import CountBadge from "@modules/common/components/count-badge"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
 import { deleteLineItem, updateLineItem } from "@lib/data/cart"
-import { emitCartUpdated } from "@lib/util/cart-events"
-import { useEffect, useRef, useState } from "react"
+import {
+  emitCartUpdated,
+  onCartUpdated,
+  optimisticRemoveItem,
+  optimisticSetQuantity,
+} from "@lib/util/cart-events"
+import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { COLOR_OPTION_NAMES } from "@lib/util/product"
 
@@ -97,12 +102,34 @@ const CartDropdown = ({
     }, 0) || 0
 
   const subtotal = cartState?.subtotal ?? 0
-  // null = count not known yet (cart hydrates client-side after mount).
-  // Prevents the drawer from auto-opening on the initial null → N transition
-  // at every page load; it only opens on a real change (add to cart).
-  const itemRef = useRef<number | null>(cartState ? totalItems : null)
 
   const pathname = usePathname()
+
+  // Instant UX: apply the change locally right away (optimistic), then
+  // replace with the server-confirmed cart from the same single round-trip.
+  // On error, a payload-less event makes the badge refetch the true state.
+  const handleDeleteItem = (lineId: string) => {
+    if (cartState) {
+      emitCartUpdated(optimisticRemoveItem(cartState, lineId), {
+        optimistic: true,
+      })
+    }
+    deleteLineItem(lineId)
+      .then((fresh) => emitCartUpdated(fresh))
+      .catch(() => emitCartUpdated())
+  }
+
+  const handleSetQuantity = (lineId: string, quantity: number) => {
+    if (quantity < 1) return
+    if (cartState) {
+      emitCartUpdated(optimisticSetQuantity(cartState, lineId, quantity), {
+        optimistic: true,
+      })
+    }
+    updateLineItem({ lineId, quantity })
+      .then((fresh) => emitCartUpdated(fresh))
+      .catch(() => emitCartUpdated())
+  }
 
   useEffect(() => {
     if (!cartDrawerOpen) {
@@ -185,15 +212,16 @@ const CartDropdown = ({
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [])
 
-  // Open drawer when cart items change, except when already on cart page.
+  // Open the drawer ONLY on an explicit add-to-cart event (never on cart
+  // hydration or page navigation), except when already on the cart page.
   useEffect(() => {
-    if (itemRef.current !== totalItems && !pathname.includes("/cart")) {
-      open()
-    }
-
-    itemRef.current = totalItems
+    return onCartUpdated((detail) => {
+      if (detail.action === "add" && !pathname.includes("/cart")) {
+        open()
+      }
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [totalItems, pathname])
+  }, [pathname])
 
   return (
     <div className="h-full z-50">
@@ -315,11 +343,7 @@ const CartDropdown = ({
                                         </span>
                                       </LocalizedClientLink>
                                       <button
-                                        onClick={() =>
-                                          deleteLineItem(item.id).then(() =>
-                                            emitCartUpdated()
-                                          )
-                                        }
+                                        onClick={() => handleDeleteItem(item.id)}
                                         aria-label="Șterge"
                                         data-testid="cart-item-remove-button"
                                         className="shrink-0 mt-[1px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
@@ -364,13 +388,12 @@ const CartDropdown = ({
                                     <div className="flex items-end justify-between mt-3">
                                       <div className="flex items-center gap-2 border border-[var(--theme-border)]">
                                         <button
-                                          onClick={() => {
-                                            if (item.quantity > 1)
-                                              updateLineItem({
-                                                lineId: item.id,
-                                                quantity: item.quantity - 1,
-                                              }).then(() => emitCartUpdated())
-                                          }}
+                                          onClick={() =>
+                                            handleSetQuantity(
+                                              item.id,
+                                              item.quantity - 1
+                                            )
+                                          }
                                           disabled={item.quantity <= 1}
                                           aria-label="Scade cantitate"
                                           className="w-7 h-7 flex items-center justify-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] disabled:opacity-30 transition-colors"
@@ -396,10 +419,10 @@ const CartDropdown = ({
                                         </span>
                                         <button
                                           onClick={() =>
-                                            updateLineItem({
-                                              lineId: item.id,
-                                              quantity: item.quantity + 1,
-                                            }).then(() => emitCartUpdated())
+                                            handleSetQuantity(
+                                              item.id,
+                                              item.quantity + 1
+                                            )
                                           }
                                           aria-label="Crește cantitate"
                                           className="w-7 h-7 flex items-center justify-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"

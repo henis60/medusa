@@ -214,12 +214,12 @@ export default function ProductActions({
 
     setIsAdding(true)
 
-    await addToCart({
+    const freshCart = await addToCart({
       variantId: selectedVariant.id,
       quantity: 1,
       countryCode,
     })
-    emitCartUpdated()
+    emitCartUpdated(freshCart, { action: "add" })
 
     setIsAdding(false)
   }

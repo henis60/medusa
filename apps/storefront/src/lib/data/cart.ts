@@ -155,6 +155,10 @@ export async function addToCart({
       revalidateTag(fulfillmentCacheTag)
     })
     .catch(medusaError)
+
+  // Return the fresh cart so the client can update the badge/drawer without
+  // a second server-action round-trip.
+  return await retrieveCart(cart.id)
 }
 
 export async function updateLineItem({
@@ -188,6 +192,9 @@ export async function updateLineItem({
       revalidateTag(fulfillmentCacheTag)
     })
     .catch(medusaError)
+
+  // Fresh cart for instant client-side reconciliation (single round-trip).
+  return await retrieveCart(cartId)
 }
 
 export async function deleteLineItem(lineId: string) {
@@ -215,6 +222,9 @@ export async function deleteLineItem(lineId: string) {
       revalidateTag(fulfillmentCacheTag)
     })
     .catch(medusaError)
+
+  // Fresh cart for instant client-side reconciliation (single round-trip).
+  return await retrieveCart(cartId)
 }
 
 export async function setShippingMethod({

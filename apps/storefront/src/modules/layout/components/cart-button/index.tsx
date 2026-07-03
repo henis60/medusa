@@ -9,8 +9,11 @@ import CartDropdown from "../cart-dropdown"
 /**
  * Client-side cart badge: renders instantly with an empty cart and hydrates
  * the real cart after mount, so the nav can be part of a static/ISR shell
- * (no cookies read during server render). Refetches whenever a component
- * emits the cart:updated event (add/update/delete).
+ * (no cookies read during server render).
+ *
+ * Updates on cart:updated events: if the event carries a cart payload
+ * (optimistic copy or server-returned fresh cart) it's applied directly —
+ * zero extra round-trips; otherwise it refetches.
  */
 export default function CartButton() {
   const [cart, setCart] = useState<HttpTypes.StoreCart | null>(null)
@@ -25,7 +28,13 @@ export default function CartButton() {
     }
 
     refetch()
-    const unsubscribe = onCartUpdated(refetch)
+    const unsubscribe = onCartUpdated((detail) => {
+      if (detail.cart !== undefined) {
+        if (!cancelled) setCart(detail.cart)
+      } else {
+        refetch()
+      }
+    })
 
     return () => {
       cancelled = true

@@ -88,7 +88,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
     if (qty < 1 || updating) return
     setUpdating(true)
     await updateLineItem({ lineId: item.id, quantity: qty })
-      .then(() => emitCartUpdated())
+      .then((fresh) => emitCartUpdated(fresh))
       .finally(() => setUpdating(false))
   }
 
@@ -174,7 +174,9 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
               </span>
             </LocalizedClientLink>
             <button
-              onClick={() => deleteLineItem(item.id).then(() => emitCartUpdated())}
+              onClick={() =>
+                deleteLineItem(item.id).then((fresh) => emitCartUpdated(fresh))
+              }
               aria-label="Șterge"
               data-testid="product-delete-button"
               className="shrink-0 text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors mt-[2px]"

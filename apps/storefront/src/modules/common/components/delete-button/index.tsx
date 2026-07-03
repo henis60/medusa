@@ -18,7 +18,7 @@ const DeleteButton = ({
   const handleDelete = async (id: string) => {
     setIsDeleting(true)
     await deleteLineItem(id)
-      .then(() => emitCartUpdated())
+      .then((fresh) => emitCartUpdated(fresh))
       .catch((_err) => {
         setIsDeleting(false)
       })
