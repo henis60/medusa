@@ -13,7 +13,7 @@ const EmptyCartMessage = () => {
         Nu ai adăugat niciun produs în coș.
       </p>
       <LocalizedClientLink
-        href="/store"
+        href="/ready-to-wear"
         className="mt-2 px-8 py-3 font-sans text-[10px] uppercase tracking-[4px] border border-hunter-gold text-hunter-gold hover:bg-hunter-gold hover:text-hunter-dark transition-colors"
       >
         Descoperă colecția

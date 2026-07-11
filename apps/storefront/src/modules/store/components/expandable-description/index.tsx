@@ -31,23 +31,23 @@ export default function ExpandableDescription({
 
   return (
     <div className={clx("relative", className)}>
+      {/* Always reserves 3 lines — blank space if the text is shorter. */}
       <p
         ref={ref}
         className={clx(
-          "font-serif text-sm small:text-lg text-[var(--theme-text-muted)] leading-relaxed",
-          !expanded && "line-clamp-2 small:line-clamp-3"
+          "font-serif text-[13px] small:text-sm text-[var(--theme-text-muted)] leading-snug min-h-[4.125em]",
+          !expanded && "line-clamp-3"
         )}
       >
         {text}
       </p>
       {!expanded && clipped && (
-        <a
-          role="button"
+        <button
           onClick={() => setExpanded(true)}
-          className="absolute bottom-0 right-0 bg-[var(--theme-bg)] font-serif text-sm small:text-lg leading-relaxed text-hunter-gold hover:opacity-70 transition-opacity cursor-pointer"
+          className="mt-1 font-sans text-[10px] uppercase tracking-[2px] text-hunter-gold hover:opacity-80 transition-opacity"
         >
-          … citește mai mult
-        </a>
+          Citește mai mult
+        </button>
       )}
     </div>
   )

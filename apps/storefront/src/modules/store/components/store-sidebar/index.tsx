@@ -1,8 +1,6 @@
 "use client"
 
 import { HttpTypes } from "@medusajs/types"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useCallback } from "react"
 import { clx } from "@modules/common/components/ui"
 import { SortOptions } from "../refinement-list/sort-products"
 
@@ -13,74 +11,41 @@ type Props = {
   selectedCollection?: string
   selectedCategory?: string
   collectionCategories?: HttpTypes.StoreProductCategory[]
+  onSelectCategory: (id: string | null) => void
+  onSelectCollection: (id: string | null) => void
+  onSelectCollectionCategory: (collectionId: string, categoryId: string | null) => void
+  onClearFilters: () => void
 }
-
-const sortOptions: { value: SortOptions; label: string }[] = [
-  { value: "created_at", label: "Cele mai noi" },
-  { value: "price_asc", label: "Preț crescător" },
-  { value: "price_desc", label: "Preț descrescător" },
-]
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-3">
-      {children}
-    </p>
+    <div className="flex items-center gap-2.5 mb-4">
+      <span className="h-px w-5 bg-hunter-gold/60" />
+      <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)]">
+        {children}
+      </p>
+    </div>
   )
 }
 
+/**
+ * Desktop category/collection nav. Selection is driven entirely by the
+ * onSelect* callbacks (owned by StoreView), which update an optimistic
+ * local mirror of category/collection before syncing the URL — so
+ * highlighting and the subcategory reveal below update instantly, without
+ * waiting on however long the navigation itself takes to commit.
+ */
 export default function StoreSidebar({
   collections,
   categories,
-  sortBy,
   selectedCollection,
   selectedCategory,
   collectionCategories = [],
+  onSelectCategory,
+  onSelectCollection,
+  onSelectCollectionCategory,
+  onClearFilters,
 }: Props) {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
-  const updateParam = useCallback(
-    (key: string, value: string | null) => {
-      const params = new URLSearchParams(searchParams)
-      // categories and collections are mutually exclusive
-      if (key === "category") params.delete("collection")
-      if (key === "collection") params.delete("category")
-      if (value) {
-        params.set(key, value)
-      } else {
-        params.delete(key)
-      }
-      params.delete("page")
-      router.push(`${pathname}?${params.toString()}`)
-    },
-    [pathname, router, searchParams]
-  )
-
-  const clearAll = useCallback(() => {
-    const params = new URLSearchParams(searchParams)
-    params.delete("category")
-    params.delete("collection")
-    params.delete("page")
-    router.push(`${pathname}?${params.toString()}`)
-  }, [pathname, router, searchParams])
-
-  const setCollectionAndCategory = useCallback(
-    (collectionId: string, categoryId: string | null) => {
-      const params = new URLSearchParams(searchParams)
-      params.set("collection", collectionId)
-      if (categoryId) {
-        params.set("category", categoryId)
-      } else {
-        params.delete("category")
-      }
-      params.delete("page")
-      router.push(`${pathname}?${params.toString()}`)
-    },
-    [pathname, router, searchParams]
-  )
-
   const hasFilters = !!selectedCollection || !!selectedCategory
 
   // Only top-level categories at the first level
@@ -109,10 +74,10 @@ export default function StoreSidebar({
     <button
       onClick={onClick}
       className={clx(
-        "w-full text-left py-2 font-serif text-[22px] leading-none transition-colors duration-150",
+        "w-full text-left py-2 font-serif text-[20px] leading-none transition-all duration-150",
         active
-          ? "text-[var(--theme-gold)] italic"
-          : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
+          ? "text-[var(--theme-gold)] italic pl-1"
+          : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:pl-1"
       )}
     >
       {children}
@@ -130,40 +95,47 @@ export default function StoreSidebar({
               {topCategories.map((c) => {
                 const subs = subcategoriesOf(c.id)
                 const isActiveParent = activeParentId === c.id
+                const showSubs = subs.length > 0 && isActiveParent
                 return (
                   <div key={c.id}>
                     <NavItem
                       active={activeCategoryId === c.id}
                       onClick={() =>
-                        updateParam(
-                          "category",
-                          activeCategoryId === c.id ? null : c.id
-                        )
+                        onSelectCategory(activeCategoryId === c.id ? null : c.id)
                       }
                     >
                       {c.name}
                     </NavItem>
-                    {subs.length > 0 && isActiveParent && (
-                      <div className="flex flex-col pl-4 mt-1 mb-1 border-l border-[var(--theme-border)]">
-                        {subs.map((sub) => (
-                          <button
-                            key={sub.id}
-                            onClick={() =>
-                              updateParam(
-                                "category",
-                                activeCategoryId === sub.id ? c.id : sub.id
-                              )
-                            }
-                            className={clx(
-                              "w-full text-left py-1.5 font-serif text-[18px] leading-none transition-colors duration-150",
-                              activeCategoryId === sub.id
-                                ? "text-[var(--theme-gold)] italic"
-                                : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
-                            )}
-                          >
-                            {sub.name}
-                          </button>
-                        ))}
+                    {subs.length > 0 && (
+                      <div
+                        className="grid overflow-hidden transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                        style={{
+                          gridTemplateRows: showSubs ? "1fr" : "0fr",
+                          opacity: showSubs ? 1 : 0,
+                        }}
+                      >
+                        <div className="min-h-0 overflow-hidden">
+                          <div className="flex flex-col pl-4 mt-1 mb-1 border-l border-[var(--theme-border)]">
+                            {subs.map((sub) => (
+                              <button
+                                key={sub.id}
+                                onClick={() =>
+                                  onSelectCategory(
+                                    activeCategoryId === sub.id ? c.id : sub.id
+                                  )
+                                }
+                                className={clx(
+                                  "w-full text-left py-1.5 font-serif text-[18px] leading-none transition-colors duration-150",
+                                  activeCategoryId === sub.id
+                                    ? "text-[var(--theme-gold)] italic"
+                                    : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
+                                )}
+                              >
+                                {sub.name}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -175,7 +147,7 @@ export default function StoreSidebar({
 
         {/* Collections */}
         {collections.length > 0 && (
-          <div className="py-8 border-t border-[var(--theme-border)]">
+          <div className="pb-8">
             <SectionLabel>Colecții</SectionLabel>
             <nav className="flex flex-col">
               {collections.map((c) => {
@@ -184,12 +156,7 @@ export default function StoreSidebar({
                   <div key={c.id}>
                     <NavItem
                       active={isSelected && !selectedCategory}
-                      onClick={() =>
-                        updateParam(
-                          "collection",
-                          isSelected ? null : c.id
-                        )
-                      }
+                      onClick={() => onSelectCollection(isSelected ? null : c.id)}
                     >
                       {c.title}
                     </NavItem>
@@ -199,7 +166,7 @@ export default function StoreSidebar({
                           <button
                             key={cat.id}
                             onClick={() =>
-                              setCollectionAndCategory(
+                              onSelectCollectionCategory(
                                 c.id,
                                 selectedCategory === cat.id ? null : cat.id
                               )
@@ -226,7 +193,7 @@ export default function StoreSidebar({
         {hasFilters && (
           <div className="pt-8">
             <button
-              onClick={clearAll}
+              onClick={onClearFilters}
               className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-transparent hover:border-hunter-gold pb-0.5"
             >
               Resetează filtrele

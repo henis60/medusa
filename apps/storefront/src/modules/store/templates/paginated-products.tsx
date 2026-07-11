@@ -67,20 +67,29 @@ export default async function PaginatedProducts({
   })
 
   if (products.length === 0) {
+    // A fixed category/collection page (categoryId/collectionId baked into
+    // the static page, no client-side facet UI) — this is genuinely an
+    // empty category, not a filter combination returning zero results.
+    const isFixedContext = !!collectionId || !!categoryId
+
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-6 text-center">
         <p className="font-sans text-[10px] uppercase tracking-[5px] text-[var(--theme-text-muted)]">
           Niciun produs găsit
         </p>
         <p className="font-serif text-lg text-[var(--theme-text-muted)] max-w-xs">
-          Combinația de filtre selectată nu returnează rezultate.
+          {isFixedContext
+            ? "Nu există produse în această categorie momentan."
+            : "Combinația de filtre selectată nu returnează rezultate."}
         </p>
-        <a
-          href="/store"
-          className="mt-2 px-8 py-3 font-sans text-[10px] uppercase tracking-[4px] border border-hunter-gold text-hunter-gold hover:bg-hunter-gold hover:text-hunter-dark transition-colors"
-        >
-          Resetează filtrele
-        </a>
+        {!isFixedContext && (
+          <a
+            href="/ready-to-wear"
+            className="mt-2 px-8 py-3 font-sans text-[10px] uppercase tracking-[4px] border border-hunter-gold text-hunter-gold hover:bg-hunter-gold hover:text-hunter-dark transition-colors"
+          >
+            Resetează filtrele
+          </a>
+        )}
       </div>
     )
   }

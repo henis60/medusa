@@ -17,6 +17,17 @@ const Newsletter = () => {
 
     const email = (new FormData(e.currentTarget).get("EMAIL") as string)?.trim()
 
+    if (!email) {
+      setErrorMsg("Te rugăm să introduci adresa de email.")
+      setStatus("error")
+      return
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setErrorMsg("Adresa de email nu este validă.")
+      setStatus("error")
+      return
+    }
+
     try {
       const recaptchaToken = await getToken("newsletter")
       if (!recaptchaToken) {
@@ -58,28 +69,24 @@ const Newsletter = () => {
       <section className="section subscribe-sec" id="subscribe">
         <div className="section-inner">
           <div className="subscribe-layout">
-            <div className="subscribe-copy">
-              <div className="kicker rv">
-                <span className="kicker-bar" />
-                Newsletter
-              </div>
-              <h2 className="sec-title subscribe-title rv">
-                Noutăți și <em>colecții noi</em>
-              </h2>
-              <p className="sec-body-text subscribe-body rv">
-                Un email când lansăm. Apoi, doar ce merită citit.
-              </p>
-              <div className="line-draw subscribe-rule rv" />
-              <p className="subscribe-note rv">
-                Niciun spam. Te poți dezabona oricând.
-              </p>
-            </div>
-
             <div className="subscribe-form-wrap rv">
               <div className="subscribe-panel">
                 <p className="subscribe-panel-label">Abonare rapidă</p>
                 <p className="subscribe-panel-copy">
                   Primești lansări, evenimente și colecții noi înaintea tuturor.
+                </p>
+
+                <p
+                  style={{
+                    fontFamily: "var(--rl)",
+                    fontSize: "9px",
+                    letterSpacing: "1.5px",
+                    textTransform: "uppercase",
+                    color: "rgba(232,213,163,0.3)",
+                    margin: "0 0 16px",
+                  }}
+                >
+                  Niciun spam. Te poți dezabona oricând.
                 </p>
 
                 {status === "success" ? (
@@ -105,7 +112,11 @@ const Newsletter = () => {
                     </p>
                   </div>
                 ) : (
-                  <form onSubmit={handleSubmit} onFocusCapture={preload}>
+                  <form
+                    onSubmit={handleSubmit}
+                    onFocusCapture={preload}
+                    noValidate
+                  >
                     <div style={{ display: "flex" }}>
                       <input
                         type="email"
@@ -113,7 +124,6 @@ const Newsletter = () => {
                         name="EMAIL"
                         autoComplete="email"
                         placeholder="adresa@email.com"
-                        required
                         className="newsletter-email-input"
                         style={{
                           flex: 1,
@@ -126,7 +136,6 @@ const Newsletter = () => {
                           borderRight: "none",
                           color: "var(--ivory)",
                           padding: "0 14px",
-                          height: "44px",
                           outline: "none",
                           caretColor: "var(--gold)",
                         }}
@@ -142,48 +151,59 @@ const Newsletter = () => {
                       <button
                         type="submit"
                         disabled={status === "loading"}
+                        className="newsletter-submit-btn"
                         style={{
-                          flexShrink: 0,
-                          fontFamily: "var(--rl)",
-                          fontSize: "11px",
-                          letterSpacing: "4px",
-                          textTransform: "uppercase",
-                          color: "var(--dark)",
-                          background: "var(--gold)",
-                          border: "none",
-                          padding: "0 20px",
-                          height: "44px",
                           cursor: status === "loading" ? "default" : "pointer",
                           opacity: status === "loading" ? 0.55 : 1,
-                          transition: "opacity 0.3s",
                         }}
                       >
                         {status === "loading" ? "..." : "Înscrie-mă"}
                       </button>
                     </div>
 
-                    <p style={{ margin: "10px 0 0", fontFamily: "var(--rl)", fontSize: "9px", color: "rgba(232,213,163,0.3)", letterSpacing: "0.5px" }}>
+                    <p
+                      style={{
+                        margin: "10px 0 0",
+                        fontFamily: "var(--rl)",
+                        fontSize: "9px",
+                        color: "rgba(232,213,163,0.3)",
+                        letterSpacing: "0.5px",
+                      }}
+                    >
                       Protejat de reCAPTCHA —{" "}
-                      <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(201,168,76,0.5)", textDecoration: "underline" }}>Confidențialitate</a>
-                      {" "}&amp;{" "}
-                      <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(201,168,76,0.5)", textDecoration: "underline" }}>Termeni</a>
+                      <a
+                        href="https://policies.google.com/privacy"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: "rgba(201,168,76,0.5)",
+                          textDecoration: "underline",
+                        }}
+                      >
+                        Confidențialitate
+                      </a>{" "}
+                      &amp;{" "}
+                      <a
+                        href="https://policies.google.com/terms"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: "rgba(201,168,76,0.5)",
+                          textDecoration: "underline",
+                        }}
+                      >
+                        Termeni
+                      </a>
                     </p>
 
                     {status === "error" && (
-                      <div
-                        style={{
-                          marginTop: "8px",
-                          background: "rgba(114,47,55,0.22)",
-                          border: "1px solid rgba(139,69,19,0.5)",
-                          padding: "10px 14px",
-                        }}
-                      >
+                      <div style={{ marginTop: "8px" }}>
                         <p
                           style={{
                             fontFamily: "var(--rl)",
-                            fontSize: "11px",
-                            letterSpacing: "2px",
-                            color: "rgba(232,213,163,0.85)",
+                            fontSize: "10px",
+                            letterSpacing: "1px",
+                            color: "rgba(200,120,120,0.75)",
                             margin: 0,
                             textAlign: "center",
                           }}

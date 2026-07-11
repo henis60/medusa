@@ -25,14 +25,10 @@ function PriceChevron({ dir }: { dir: "up" | "down" }) {
   )
 }
 
-const sortOptions: {
-  value: SortOptions
-  label: string
-  icon?: "up" | "down"
-}[] = [
+const sortOptions: { value: SortOptions; label: string }[] = [
   { value: "created_at", label: "Cele mai noi" },
-  { value: "price_asc", label: "Preț", icon: "up" },
-  { value: "price_desc", label: "Preț", icon: "down" },
+  { value: "price_asc", label: "Preț crescător" },
+  { value: "price_desc", label: "Preț descrescător" },
 ]
 
 export default function StoreSortSelect({ sortBy }: { sortBy: SortOptions }) {
@@ -78,7 +74,6 @@ export default function StoreSortSelect({ sortBy }: { sortBy: SortOptions }) {
                 )}
               >
                 {opt.label}
-                {opt.icon && <PriceChevron dir={opt.icon} />}
               </motion.button>
             ))}
           </motion.div>
@@ -87,7 +82,7 @@ export default function StoreSortSelect({ sortBy }: { sortBy: SortOptions }) {
       <button
         onClick={() => setOpen((v) => !v)}
         className={clx(
-          "font-sans text-[10px] uppercase tracking-[3px] transition-colors underline underline-offset-2",
+          "font-sans text-[10px] uppercase tracking-[3px] transition-colors",
           open
             ? "text-hunter-gold"
             : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"

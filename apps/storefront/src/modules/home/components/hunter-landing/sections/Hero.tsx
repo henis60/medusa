@@ -127,7 +127,7 @@ const Hero = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease, delay: 1.1 }}
         >
-          <LocalizedClientLink href="/store" className="hero-cta">
+          <LocalizedClientLink href="/ready-to-wear" className="hero-cta">
             <span className="hero-cta-text">Explorează Colecția</span>
             <span className="hero-cta-arrow">→</span>
           </LocalizedClientLink>

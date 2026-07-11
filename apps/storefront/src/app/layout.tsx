@@ -48,7 +48,7 @@ export const metadata: Metadata = {
       { url: "/favicon.svg", media: "(prefers-color-scheme: light)" },
       { url: "/favicon-dark.svg", media: "(prefers-color-scheme: dark)" },
     ],
-    apple: "/favicon.svg",
+    apple: "/apple-touch-icon.png",
   },
 }
 

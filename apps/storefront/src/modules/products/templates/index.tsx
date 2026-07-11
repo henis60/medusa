@@ -43,17 +43,17 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
         className="page-container pt-3 small:pt-6 pb-0"
       >
         <LocalizedClientLink
-          href="/store"
+          href="/ready-to-wear"
           className="inline-flex items-center gap-2 text-[var(--theme-text-muted)] hover:text-[var(--theme-gold)] transition-colors font-sans text-[11px] uppercase tracking-[3px]"
         >
           <span>←</span>
-          <span>Înapoi la shop</span>
+          <span>Înapoi la colecție</span>
         </LocalizedClientLink>
       </AnimatedColumn>
 
       {/* Main product section */}
       <div
-        className="page-container grid grid-cols-1 small:grid-cols-[1fr_400px] gap-x-16 py-8 small:pb-12 pt-2 small:pt-8 small:max-w-5xl"
+        className="page-container grid grid-cols-1 small:grid-cols-[1fr_420px] gap-x-20 py-8 small:pb-16 pt-2 small:pt-8"
         data-testid="product-container"
       >
         {/* Images — left, scrolls with page */}

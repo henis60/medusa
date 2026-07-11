@@ -1,36 +1,31 @@
 "use client"
 
 import { HttpTypes } from "@medusajs/types"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useCallback, useEffect, useRef, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { useEffect, useRef, useState, forwardRef } from "react"
 import { clx } from "@modules/common/components/ui"
-import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
-import StoreSortSelect from "@modules/store/components/store-sort-select"
 
 type Props = {
   categories: HttpTypes.StoreProductCategory[]
   collections: HttpTypes.StoreCollection[]
   selectedCategory?: string
   selectedCollection?: string
-  sortBy?: SortOptions
   collectionCategories?: HttpTypes.StoreProductCategory[]
+  onSelectCategory: (id: string | null) => void
+  onSelectCollection: (id: string | null) => void
+  onSelectCollectionCategory: (collectionId: string, categoryId: string | null) => void
 }
 
 // Horizontally scrollable row with edge fades that appear/disappear with scroll
-function FadeScroller({
-  children,
-  className,
-}: {
-  children: React.ReactNode
-  className?: string
-}) {
-  const ref = useRef<HTMLDivElement>(null)
+const FadeScroller = forwardRef<
+  HTMLDivElement,
+  { children: React.ReactNode; className?: string }
+>(function FadeScroller({ children, className }, forwardedRef) {
+  const innerRef = useRef<HTMLDivElement>(null)
   const [fadeLeft, setFadeLeft] = useState(false)
   const [fadeRight, setFadeRight] = useState(false)
 
   useEffect(() => {
-    const el = ref.current
+    const el = innerRef.current
     if (!el) return
     const update = () => {
       setFadeLeft(el.scrollLeft > 1)
@@ -54,133 +49,76 @@ function FadeScroller({
 
   return (
     <div className="relative">
-      <div ref={ref} className={className}>
+      <div
+        ref={(node) => {
+          innerRef.current = node
+          if (typeof forwardedRef === "function") forwardedRef(node)
+          else if (forwardedRef) forwardedRef.current = node
+        }}
+        className={className}
+      >
         {children}
       </div>
       {fadeLeft && (
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-white to-transparent" />
+        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-[var(--theme-bg)] to-transparent" />
       )}
       {fadeRight && (
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white to-transparent" />
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-[var(--theme-bg)] to-transparent" />
       )}
     </div>
   )
-}
+})
 
+/**
+ * Horizontal category/collection nav — sits directly under the page
+ * title/description, above the divider. Plain underlined links, no boxes.
+ *
+ * Selection is driven entirely by the onSelect* callbacks (owned by
+ * StoreView), which update an optimistic local mirror of category/collection
+ * before syncing the URL — so highlighting and the subcategory reveal below
+ * update instantly, regardless of how long the navigation itself takes.
+ */
 export default function CategoryPills({
   categories,
   collections,
   selectedCategory,
   selectedCollection,
-  sortBy = "created_at",
   collectionCategories = [],
+  onSelectCategory,
+  onSelectCollection,
+  onSelectCollectionCategory,
 }: Props) {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
+  // The actual scrollable element (FadeScroller's outer div) — not the inner
+  // content wrapper, whose bounds always equal the full unclipped content.
+  const scrollerRef = useRef<HTMLDivElement>(null)
 
-  const catsRef = useRef<HTMLDivElement>(null)
-  const [catsFade, setCatsFade] = useState(false)
-  const [catsFadeLeft, setCatsFadeLeft] = useState(false)
-
-  // Scroll active pill into view when selection changes
   useEffect(() => {
-    const container = catsRef.current
-    if (!container) return
+    const scroller = scrollerRef.current
+    if (!scroller) return
     requestAnimationFrame(() => {
-      const active = container.querySelector<HTMLElement>(
-        "[data-active='true']"
-      )
+      const active = scroller.querySelector<HTMLElement>("[data-active='true']")
       if (!active) return
-      const cr = container.getBoundingClientRect()
+      const cr = scroller.getBoundingClientRect()
       const ar = active.getBoundingClientRect()
       if (ar.left < cr.left || ar.right > cr.right) {
-        active.scrollIntoView({
-          behavior: "smooth",
-          block: "nearest",
-          inline: "nearest",
-        })
+        active.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" })
       }
     })
   }, [selectedCategory, selectedCollection])
 
-  useEffect(() => {
-    const el = catsRef.current
-    if (!el) return
-    const update = () => {
-      setCatsFade(Math.ceil(el.scrollLeft + el.clientWidth) < el.scrollWidth)
-      setCatsFadeLeft(el.scrollLeft > 1)
-    }
-    const resizeObs = new ResizeObserver(update)
-    const mutationObs = new MutationObserver(() =>
-      requestAnimationFrame(update)
-    )
-    resizeObs.observe(el)
-    mutationObs.observe(el, { childList: true, subtree: true })
-    el.addEventListener("scroll", update, { passive: true })
-    const id = requestAnimationFrame(update)
-    return () => {
-      cancelAnimationFrame(id)
-      resizeObs.disconnect()
-      mutationObs.disconnect()
-      el.removeEventListener("scroll", update)
-    }
-  }, [])
-
-  const update = useCallback(
-    (key: string, value: string | null) => {
-      const params = new URLSearchParams(searchParams)
-      if (key === "category") params.delete("collection")
-      if (key === "collection") params.delete("category")
-      if (value) params.set(key, value)
-      else params.delete(key)
-      params.delete("page")
-      router.push(`${pathname}?${params.toString()}`)
-    },
-    [pathname, router, searchParams]
-  )
-
-  const setCollectionAndCategory = useCallback(
-    (collectionId: string, categoryId: string | null) => {
-      const params = new URLSearchParams(searchParams)
-      params.set("collection", collectionId)
-      if (categoryId) params.set("category", categoryId)
-      else params.delete("category")
-      params.delete("page")
-      router.push(`${pathname}?${params.toString()}`)
-    },
-    [pathname, router, searchParams]
-  )
-
-  const chip = (active: boolean) =>
+  const link = (active: boolean) =>
     clx(
-      "shrink-0 font-sans uppercase text-[12px] tracking-[2px] leading-none px-4 py-2 border transition-colors whitespace-nowrap",
+      "shrink-0 scroll-ml-6 scroll-mr-6 font-sans text-[12px] tracking-[0.5px] leading-none pb-1 border-b-[1.5px] whitespace-nowrap transition-colors",
       active
-        ? "border-hunter-gold/60 text-hunter-gold"
-        : "border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:border-[var(--theme-text-muted)]"
+        ? "text-[var(--theme-text)] border-[var(--theme-text)]"
+        : "text-[var(--theme-text-muted)] border-transparent hover:text-[var(--theme-text)]"
     )
 
-  const chipVariants = {
-    hidden: { opacity: 0, y: 10 },
-    show: (i: number) => ({
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.3,
-        delay: i * 0.05,
-        ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
-      },
-    }),
-  }
-
-  // Only top-level categories at the first level
   const topCategories = categories.filter((c) => !c.parent_category)
-  // Active category only when NOT in collection context
   const activeCategoryId = selectedCollection ? null : selectedCategory
   const selectedCat = activeCategoryId
     ? categories.find((c) => c.id === activeCategoryId)
     : null
-  // The parent whose subcategories should be revealed as sub-chips
   const activeParentId = selectedCat
     ? selectedCat.parent_category?.id ?? selectedCat.id
     : null
@@ -188,178 +126,100 @@ export default function CategoryPills({
     ? categories.filter((c) => c.parent_category?.id === activeParentId)
     : []
 
-  const divider = (
-    <span className="shrink-0 w-px h-5 bg-[var(--theme-border)]" />
-  )
+  if (topCategories.length === 0 && collections.length === 0) return null
 
   return (
-    <div className="small:hidden sticky top-16 z-50 bg-white">
-      {/* Categories + Collections row */}
-      {(collections.length > 0 || categories.length > 0) && (
-        <div>
-          <div className="page-container">
-            <div className="relative">
-              <div
-                ref={catsRef}
-                className="flex items-center gap-3 overflow-x-auto pt-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-              >
-                {topCategories.map((c, i) => {
-                  const isActive =
-                    activeCategoryId === c.id || activeParentId === c.id
-                  return (
-                    <motion.button
-                      key={c.id}
-                      custom={i}
-                      variants={chipVariants}
-                      initial="hidden"
-                      animate="show"
-                      data-active={isActive ? "true" : undefined}
-                      onClick={() =>
-                        update(
-                          "category",
-                          activeCategoryId === c.id ? null : c.id
-                        )
-                      }
-                      className={chip(isActive)}
-                    >
-                      {c.name}
-                    </motion.button>
-                  )
-                })}
-                {collections.length > 0 && divider}
-                {collections.map((c, i) => {
-                  const isActive = selectedCollection === c.id
-                  return (
-                    <motion.button
-                      key={c.id}
-                      custom={categories.length + 1 + i}
-                      variants={chipVariants}
-                      initial="hidden"
-                      animate="show"
-                      data-active={isActive ? "true" : undefined}
-                      onClick={() =>
-                        update(
-                          "collection",
-                          selectedCollection === c.id ? null : c.id
-                        )
-                      }
-                      className={chip(isActive)}
-                    >
-                      {c.title}
-                    </motion.button>
-                  )
-                })}
-              </div>
-              {catsFadeLeft && (
-                <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-white to-transparent" />
-              )}
-              {catsFade && (
-                <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white to-transparent" />
-              )}
-            </div>
-          </div>
-
-          {/* Subcategory chips (for categories) */}
-          <AnimatePresence initial={false}>
-            {subChips.length > 0 && (
-              <motion.div
-                key={activeParentId ?? "subchips"}
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-                className="overflow-hidden"
-              >
-                <div className="page-container">
-                  <FadeScroller className="flex items-center gap-2 overflow-x-auto pt-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                    {subChips.map((sub, i) => {
-                      const active = activeCategoryId === sub.id
-                      return (
-                        <motion.button
-                          key={sub.id}
-                          initial={{ opacity: 0, y: 6 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{
-                            duration: 0.25,
-                            delay: 0.05 + i * 0.04,
-                            ease: "easeOut",
-                          }}
-                          onClick={() =>
-                            update(
-                              "category",
-                              active ? (activeParentId as string) : sub.id
-                            )
-                          }
-                          className={clx(
-                            "shrink-0 font-sans text-[10px] uppercase tracking-[2px] px-3 py-1.5 border transition-colors whitespace-nowrap",
-                            active
-                              ? "border-hunter-gold/60 text-hunter-gold"
-                              : "border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:border-[var(--theme-text-muted)]"
-                          )}
-                        >
-                          {sub.name}
-                        </motion.button>
-                      )
-                    })}
-                  </FadeScroller>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Collection category chips */}
-          <AnimatePresence initial={false}>
-            {selectedCollection && collectionCategories.length > 0 && (
-              <motion.div
-                key={selectedCollection + "-cats"}
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-                className="overflow-hidden"
-              >
-                <div className="page-container">
-                  <FadeScroller className="flex items-center gap-2 overflow-x-auto pt-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                    {collectionCategories.map((cat, i) => {
-                      const active = selectedCategory === cat.id
-                      return (
-                        <motion.button
-                          key={cat.id}
-                          initial={{ opacity: 0, y: 6 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{
-                            duration: 0.25,
-                            delay: 0.05 + i * 0.04,
-                            ease: "easeOut",
-                          }}
-                          onClick={() =>
-                            setCollectionAndCategory(
-                              selectedCollection,
-                              active ? null : cat.id
-                            )
-                          }
-                          className={clx(
-                            "shrink-0 font-sans text-[10px] uppercase tracking-[2px] px-3 py-1.5 border transition-colors whitespace-nowrap",
-                            active
-                              ? "border-hunter-gold/60 text-hunter-gold"
-                              : "border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:border-[var(--theme-text-muted)]"
-                          )}
-                        >
-                          {cat.name}
-                        </motion.button>
-                      )
-                    })}
-                  </FadeScroller>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+    <div className="small:hidden">
+      <FadeScroller
+        ref={scrollerRef}
+        className="flex items-center gap-5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        <div className="flex items-center gap-5">
+          <button
+            data-active={!selectedCategory && !selectedCollection ? "true" : undefined}
+            onClick={() => {
+              onSelectCategory(null)
+              onSelectCollection(null)
+            }}
+            className={link(!selectedCategory && !selectedCollection)}
+          >
+            Toate
+          </button>
+          {topCategories.map((c) => (
+            <button
+              key={c.id}
+              data-active={activeCategoryId === c.id || activeParentId === c.id ? "true" : undefined}
+              onClick={() => onSelectCategory(activeCategoryId === c.id ? null : c.id)}
+              className={link(activeCategoryId === c.id || activeParentId === c.id)}
+            >
+              {c.name}
+            </button>
+          ))}
+          {collections.map((c) => (
+            <button
+              key={c.id}
+              data-active={selectedCollection === c.id ? "true" : undefined}
+              onClick={() => onSelectCollection(selectedCollection === c.id ? null : c.id)}
+              className={link(selectedCollection === c.id)}
+            >
+              {c.title}
+            </button>
+          ))}
         </div>
-      )}
+      </FadeScroller>
 
-      {/* Sort row */}
-      <div className="page-container py-3 flex justify-end">
-        <StoreSortSelect sortBy={sortBy} />
+      {/* Subcategory reveal row — CSS-only grid-rows trick, always mounted.
+          Switching between two categories that both have subcategories just
+          swaps the children with no collapse/expand replay; the height
+          transition only plays when toggling to/from zero subcategories. */}
+      <div
+        className="grid overflow-hidden transition-[grid-template-rows,opacity] duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+        style={{
+          gridTemplateRows: subChips.length > 0 ? "1fr" : "0fr",
+          opacity: subChips.length > 0 ? 1 : 0,
+        }}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <FadeScroller className="flex items-center gap-4 overflow-x-auto pt-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {subChips.map((sub) => (
+              <button
+                key={sub.id}
+                onClick={() =>
+                  onSelectCategory(activeCategoryId === sub.id ? (activeParentId as string) : sub.id)
+                }
+                className={link(activeCategoryId === sub.id)}
+              >
+                {sub.name}
+              </button>
+            ))}
+          </FadeScroller>
+        </div>
+      </div>
+
+      {/* Collection sub-category reveal row — same CSS-only approach. */}
+      <div
+        className="grid overflow-hidden transition-[grid-template-rows,opacity] duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+        style={{
+          gridTemplateRows:
+            selectedCollection && collectionCategories.length > 0 ? "1fr" : "0fr",
+          opacity: selectedCollection && collectionCategories.length > 0 ? 1 : 0,
+        }}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <FadeScroller className="flex items-center gap-4 overflow-x-auto pt-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {collectionCategories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() =>
+                  onSelectCollectionCategory(selectedCollection!, selectedCategory === cat.id ? null : cat.id)
+                }
+                className={link(selectedCategory === cat.id)}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </FadeScroller>
+        </div>
       </div>
     </div>
   )

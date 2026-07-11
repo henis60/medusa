@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { Popover, PopoverPanel } from "@headlessui/react"
 import { AnimatePresence, motion } from "framer-motion"
@@ -69,7 +69,7 @@ const SideMenuScrollGuard = ({ open }: ScrollGuardProps) => {
 }
 
 const subLinkClass =
-  "block py-3.5 font-display text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] hover:text-hunter-gold transition-colors"
+  "block py-2.5 small:py-3.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] hover:text-hunter-gold transition-colors"
 
 type SubmenuKey = "rtw" | "accesorii" | "featured" | "hunter"
 
@@ -84,7 +84,7 @@ function MenuTrigger({ label, onOpen }: { label: string; onOpen: () => void }) {
       <button
         type="button"
         onClick={onOpen}
-        className="w-full flex items-center justify-between py-3.5 font-display text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
+        className="w-full flex items-center justify-between py-2.5 small:py-3.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
       >
         <span>{label}</span>
         <svg
@@ -187,7 +187,7 @@ function FeaturedCollectionSubmenu({
           {productCategories.map((c) => (
             <li key={c.id}>
               <LocalizedClientLink
-                href={`/store?collection=${collection.id}&category=${c.id}`}
+                href={`/ready-to-wear?collection=${collection.id}&category=${c.id}`}
                 className={subLinkClass}
                 onClick={close}
               >
@@ -223,7 +223,7 @@ function ReadyToWearSubmenu({
         <ul className="flex flex-col">
           <li>
             <LocalizedClientLink
-              href="/store"
+              href="/ready-to-wear"
               className="block py-2.5 font-sans text-[11px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
               onClick={close}
             >
@@ -233,7 +233,7 @@ function ReadyToWearSubmenu({
           {nonAccesoriiCategories.map((c) => (
             <li key={c.id}>
               <LocalizedClientLink
-                href={`/store?category=${c.id}`}
+                href={`/ready-to-wear?category=${c.id}`}
                 className={subLinkClass}
                 onClick={close}
               >
@@ -285,7 +285,7 @@ function AccesoriiSubmenu({
           {parent && (
             <li>
               <LocalizedClientLink
-                href={`/store?category=${parent.id}`}
+                href={`/ready-to-wear?category=${parent.id}`}
                 className="block py-2.5 font-sans text-[11px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
                 onClick={close}
               >
@@ -296,7 +296,7 @@ function AccesoriiSubmenu({
           {subcategories.map((c) => (
             <li key={c.id}>
               <LocalizedClientLink
-                href={`/store?category=${c.id}`}
+                href={`/ready-to-wear?category=${c.id}`}
                 className={subLinkClass}
                 onClick={close}
               >
@@ -327,7 +327,7 @@ function WorldOfTheHunterSubmenu({
         <ul className="flex flex-col">
           {STYLE_GUIDES.map((g) => (
             <li key={g.label}>
-              <span className="block py-3.5 font-display text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text-muted)] cursor-default">
+              <span className="block py-2.5 small:py-3.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text-muted)] cursor-default">
                 {g.label}
               </span>
             </li>
@@ -449,20 +449,20 @@ const SideMenu = ({
                                     <li>
                                       <LocalizedClientLink
                                         href="/"
-                                        className="flex items-center py-3.5 font-display text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
+                                        className="flex items-center py-2.5 small:py-3.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
                                         onClick={handleClose}
                                       >
                                         Home
                                       </LocalizedClientLink>
                                     </li>
 
-                                    {/* Ready to Wear → submeniu */}
+                                    {/* Ready to Wear â†’ submeniu */}
                                     <MenuTrigger
                                       label="Ready to Wear"
                                       onOpen={() => setActiveSubmenu("rtw")}
                                     />
 
-                                    {/* Accesorii → submeniu */}
+                                    {/* Accesorii â†’ submeniu */}
                                     <MenuTrigger
                                       label="Accesorii"
                                       onOpen={() =>
@@ -480,7 +480,7 @@ const SideMenu = ({
                                       />
                                     )}
 
-                                    {/* World of The Hunter → submeniu */}
+                                    {/* World of The Hunter â†’ submeniu */}
                                     <MenuTrigger
                                       label="World of The Hunter"
                                       onOpen={() => setActiveSubmenu("hunter")}
@@ -489,7 +489,7 @@ const SideMenu = ({
                                     <li>
                                       <LocalizedClientLink
                                         href="/world-of-the-hunter/made-to-measure"
-                                        className="flex items-center py-3.5 font-display text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
+                                        className="flex items-center py-2.5 small:py-3.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
                                         onClick={handleClose}
                                       >
                                         Made to Measure

@@ -72,7 +72,7 @@ const Summary = ({ cart }: SummaryProps) => {
         </button>
       </LocalizedClientLink>
 
-      <LocalizedClientLink href="/store" className="text-center font-sans text-[11px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors">
+      <LocalizedClientLink href="/ready-to-wear" className="text-center font-sans text-[11px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors">
         Continuă cumpărăturile
       </LocalizedClientLink>
     </div>
