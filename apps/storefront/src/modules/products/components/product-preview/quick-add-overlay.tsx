@@ -5,7 +5,6 @@ import { emitCartUpdated } from "@lib/util/cart-events"
 import { HttpTypes } from "@medusajs/types"
 import { useState, useMemo, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
-import { AnimatePresence, motion } from "framer-motion"
 import { COLOR_OPTION_NAMES as COLOR_TITLES } from "@lib/util/product"
 
 const COLOR_MAP: Record<string, string> = {
@@ -241,16 +240,23 @@ export default function QuickAddOverlay({
   }
 
   const selectLabel = useMemo(() => {
-    const missing = options.find((o) => !selected[o.id ?? ""])
+    // Ignore options with a single value — there's no real choice to make,
+    // so they shouldn't drive the prompt (e.g. "Selectează culoarea" when
+    // there's only one color).
+    const missing = options.find(
+      (o) => !selected[o.id ?? ""] && (o.values?.length ?? 0) > 1
+    )
     if (!missing) return "Selectează"
     const isColor = COLOR_TITLES.includes(missing.title?.toLowerCase() ?? "")
     return isColor ? "Selectează culoarea" : "Selectează mărimea"
   }, [options, selected])
 
   const mobileTriggerLabel = useMemo(() => {
-    const first = options[0]
-    if (!first) return "Alege mărimea"
-    const isColor = COLOR_TITLES.includes(first.title?.toLowerCase() ?? "")
+    // Prefer the first option that actually offers more than one value.
+    const meaningful =
+      options.find((o) => (o.values?.length ?? 0) > 1) ?? options[0]
+    if (!meaningful) return "Alege mărimea"
+    const isColor = COLOR_TITLES.includes(meaningful.title?.toLowerCase() ?? "")
     return isColor ? "Alege culoarea" : "Alege mărimea"
   }, [options])
 
@@ -430,48 +436,31 @@ export default function QuickAddOverlay({
       {mounted &&
         createPortal(
           <>
-            <AnimatePresence>
-              {mobileOpen && (
-                <motion.div
-                  key="qao-backdrop"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.25 }}
-                  className="fixed inset-0 z-[9020] bg-black/50 sm:hidden"
-                  onTouchEnd={(e) => {
-                    e.preventDefault()
-                    ;(
-                      window as typeof window & { __overlayClosedAt?: number }
-                    ).__overlayClosedAt = Date.now()
-                    closeOverlay()
-                  }}
-                  onClick={closeOverlay}
-                />
-              )}
-            </AnimatePresence>
-            <AnimatePresence>
-              {mobileOpen && (
-                <motion.div
-                  key="qao-sheet"
-                  initial={{ y: "100%" }}
-                  animate={{ y: dragOffset }}
-                  exit={{ y: "100%" }}
-                  transition={
-                    dragging.current
-                      ? { duration: 0 }
-                      : {
-                          duration: 0.38,
-                          ease: [0.22, 1, 0.36, 1] as [
-                            number,
-                            number,
-                            number,
-                            number
-                          ],
-                        }
-                  }
-                  className="fixed inset-x-0 bottom-0 z-[9021] bg-[var(--theme-bg)] border-t border-[var(--theme-border)] sm:hidden"
-                >
+            <div
+              className={`fixed inset-0 z-[9020] bg-black/50 sm:hidden transition-opacity duration-200 ${
+                mobileOpen ? "opacity-100" : "opacity-0"
+              }`}
+              style={{ pointerEvents: mobileOpen ? "auto" : "none" }}
+              onTouchEnd={(e) => {
+                e.preventDefault()
+                ;(
+                  window as typeof window & { __overlayClosedAt?: number }
+                ).__overlayClosedAt = Date.now()
+                closeOverlay()
+              }}
+              onClick={closeOverlay}
+            />
+            <div
+              style={{
+                transform: `translateY(${mobileOpen ? dragOffset : 1000}px)`,
+                transition: dragging.current
+                  ? "none"
+                  : "transform 0.32s cubic-bezier(0.22,1,0.36,1)",
+                pointerEvents: mobileOpen ? "auto" : "none",
+              }}
+              aria-hidden={!mobileOpen}
+              className="fixed inset-x-0 bottom-0 z-[9021] bg-[var(--theme-bg)] rounded-t-2xl sm:hidden"
+            >
                   {/* Drag handle */}
                   <div
                     className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing touch-none"
@@ -479,22 +468,8 @@ export default function QuickAddOverlay({
                     onTouchMove={onDragMove}
                     onTouchEnd={onDragEnd}
                   >
-                    <div className="w-10 h-1 rounded-full bg-[var(--theme-border)]" />
+                    <div className="w-9 h-1 rounded-full bg-[var(--theme-border)]" />
                   </div>
-
-                  {/* Header */}
-                  {title && (
-                    <div
-                      className="px-6 py-3 border-b border-[var(--theme-border)] touch-none"
-                      onTouchStart={onDragStart}
-                      onTouchMove={onDragMove}
-                      onTouchEnd={onDragEnd}
-                    >
-                      <span className="font-sans text-[10px] uppercase tracking-[4px] text-[var(--theme-text-muted)]">
-                        {title}
-                      </span>
-                    </div>
-                  )}
 
                   {/* Options */}
                   <div className="px-6 py-5 flex flex-col gap-6 overflow-y-auto max-h-[50dvh]">
@@ -527,7 +502,7 @@ export default function QuickAddOverlay({
                                     )
                                   }
                                   disabled={unavailable}
-                                  className={`inline-flex items-center justify-center h-10 min-w-[56px] px-4 border font-sans text-[11px] leading-none uppercase tracking-[2px] transition-colors duration-150 ${
+                                  className={`inline-flex items-center justify-center h-8 min-w-[48px] px-3 border font-sans text-[11px] leading-none uppercase tracking-[2px] transition-colors duration-150 ${
                                     isSelected
                                       ? "border-hunter-gold bg-hunter-gold/10 text-[var(--theme-text)]"
                                       : unavailable
@@ -577,9 +552,7 @@ export default function QuickAddOverlay({
                         : "Adaugă în coș"}
                     </button>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                </div>
           </>,
           document.body
         )}

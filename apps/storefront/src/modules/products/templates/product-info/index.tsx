@@ -13,10 +13,11 @@ const ProductInfo = ({ product, action }: ProductInfoProps) => {
     <div id="product-info" className="flex flex-col gap-y-4">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 flex-wrap min-w-0">
+          <span className="h-px w-5 bg-hunter-gold/60 shrink-0" />
           {product.collection ? (
             <LocalizedClientLink
               href={`/collections/${product.collection.handle}`}
-              className="font-sans text-[9px] uppercase tracking-[6px] text-hunter-green dark:text-hunter-green-m hover:text-hunter-gold transition-colors"
+              className="font-sans text-[9px] uppercase tracking-[5px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
             >
               {product.collection.title}
             </LocalizedClientLink>
@@ -25,7 +26,7 @@ const ProductInfo = ({ product, action }: ProductInfoProps) => {
               <LocalizedClientLink
                 key={cat.id}
                 href={`/categories/${cat.handle}`}
-                className="font-sans text-[9px] uppercase tracking-[6px] text-hunter-green dark:text-hunter-green-m hover:text-hunter-gold transition-colors"
+                className="font-sans text-[9px] uppercase tracking-[5px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
               >
                 {cat.name}
               </LocalizedClientLink>
@@ -36,14 +37,14 @@ const ProductInfo = ({ product, action }: ProductInfoProps) => {
       </div>
       <Heading
         level="h2"
-        className="font-display text-4xl leading-tight text-[var(--theme-text)]"
+        className="font-display text-4xl small:text-[42px] leading-[1.05] text-[var(--theme-text)]"
         data-testid="product-title"
       >
         {product.title}
       </Heading>
       {product.subtitle && (
         <Text
-          className="font-serif text-base leading-relaxed text-[var(--theme-text-muted)] whitespace-pre-line"
+          className="font-serif italic text-[17px] leading-relaxed text-[var(--theme-text-muted)] whitespace-pre-line"
           data-testid="product-subtitle"
         >
           {product.subtitle}

@@ -237,8 +237,15 @@ const CartDropdown = ({
                             )
                             .map((item) => {
                               const imgSrc = getCartItemImageUrl(item)
+                              // Compare unit prices (quantity-independent) rather
+                              // than line totals — total vs original_total can
+                              // differ by a rounding cent from tax calculation
+                              // as quantity changes, even with no real discount.
+                              const compareAtUnitPrice = (item as any)
+                                .compare_at_unit_price as number | undefined
                               const hasDiscount =
-                                (item.total ?? 0) < (item.original_total ?? 0)
+                                typeof compareAtUnitPrice === "number" &&
+                                compareAtUnitPrice > (item.unit_price ?? 0)
                               return (
                                 <div
                                   key={item.id}
@@ -390,7 +397,9 @@ const CartDropdown = ({
                                         {hasDiscount && (
                                           <span className="font-serif italic text-[11px] text-[var(--theme-text-muted)] line-through">
                                             {convertToLocale({
-                                              amount: item.original_total ?? 0,
+                                              amount:
+                                                (compareAtUnitPrice ?? 0) *
+                                                item.quantity,
                                               currency_code:
                                                 cartState.currency_code,
                                             })}
@@ -454,7 +463,7 @@ const CartDropdown = ({
                         <p className="font-sans text-sm text-[var(--theme-text-muted)] max-w-xs">
                           Nu ai adăugat niciun produs în coș.
                         </p>
-                        <LocalizedClientLink href="/store" onClick={close}>
+                        <LocalizedClientLink href="/ready-to-wear" onClick={close}>
                           <button className="mt-2 px-8 py-3 font-sans text-[10px] uppercase tracking-[4px] border border-hunter-gold text-hunter-gold hover:bg-hunter-gold hover:text-hunter-dark transition-colors">
                             Descoperă colecția
                           </button>

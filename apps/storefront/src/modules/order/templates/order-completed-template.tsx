@@ -19,7 +19,7 @@ export default async function OrderCompletedTemplate({
       {/* Back link */}
       <div className="page-container pt-4 pb-0">
         <LocalizedClientLink
-          href="/store"
+          href="/ready-to-wear"
           className="inline-flex items-center gap-2 text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors font-sans text-[11px] uppercase tracking-[3px]"
         >
           <span>←</span>

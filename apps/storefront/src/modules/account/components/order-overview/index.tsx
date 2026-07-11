@@ -33,7 +33,7 @@ const OrderOverview = ({ orders }: { orders: HttpTypes.StoreOrder[] }) => {
           Descoperă colecția noastră și plasează prima ta comandă.
         </p>
       </div>
-      <LocalizedClientLink href="/store" passHref>
+      <LocalizedClientLink href="/ready-to-wear" passHref>
         <Button
           data-testid="continue-shopping-button"
           className="h-12 small:px-8 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent font-sans uppercase tracking-[3px] text-[11px]"

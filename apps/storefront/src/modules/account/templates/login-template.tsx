@@ -39,7 +39,7 @@ const LoginTemplate = ({ redirectTo }: Props) => {
           </button>
         </div>
       )}
-      <div className="flex flex-col items-center justify-center flex-1 px-5 py-6 small:px-6 small:py-16">
+      <div className="flex flex-col items-center justify-start flex-1 px-5 py-6 small:px-6 small:py-16">
         <div className="w-full max-w-sm">
           {showTabs && (
             <div className="flex border-b border-[var(--theme-border)] mb-10">

@@ -33,6 +33,6 @@ export const sdk = new Medusa({
 // NOTE: do NOT monkey-patch sdk.client.fetch to inject the locale cookie
 // globally. Reading cookies() inside every SDK call silently opts EVERY
 // route that fetches server-side (the Nav does, on all pages) into dynamic
-// rendering — that's what kept /, /store, /faq etc. from being static.
+// rendering — that's what kept /, /ready-to-wear, /faq etc. from being static.
 // Locale-dependent flows pass the locale explicitly instead (see cart.ts,
 // which sets it at cart creation).

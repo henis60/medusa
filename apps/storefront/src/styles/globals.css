@@ -851,7 +851,7 @@ body.hunter-landing-active::before {
          Uses the landing's native .section / .kicker / .sec-title classes so it
          matches the rest of the page, but is kept compact (no full-height). */
 .subscribe-sec {
-  background: #1e1502;
+  background: var(--dark);
   min-height: auto;
   display: block;
   padding-top: clamp(34px, 5vw, 52px);
@@ -862,33 +862,37 @@ body.hunter-landing-active::before {
   flex-direction: column;
   gap: clamp(22px, 3vw, 40px);
 }
-.subscribe-copy {
-  max-width: 620px;
-}
-.subscribe-title {
-  font-size: clamp(30px, 3.9vw, 52px);
-  line-height: 1.08;
-  margin-bottom: 14px;
-}
-.subscribe-body {
-  max-width: 540px;
-  font-size: 16px;
-  line-height: 1.68;
-  margin-bottom: 14px;
-}
-.subscribe-rule {
-  max-width: 230px;
-}
-.subscribe-note {
-  margin-top: 14px;
-  font-family: var(--rl);
-  font-size: 9px;
-  letter-spacing: 2.2px;
-  text-transform: uppercase;
-  color: rgba(232, 213, 163, 0.35);
-}
 .newsletter-email-input::placeholder {
   font-size: 14px;
+}
+.newsletter-email-input {
+  height: 44px;
+}
+@media (max-width: 768px) {
+  .newsletter-email-input {
+    height: 38px;
+  }
+}
+.newsletter-submit-btn {
+  flex-shrink: 0;
+  font-family: var(--rl);
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--dark);
+  background: var(--gold);
+  border: none;
+  padding: 0 20px;
+  height: 44px;
+  transition: opacity 0.3s;
+}
+@media (max-width: 768px) {
+  .newsletter-submit-btn {
+    font-size: 9px;
+    letter-spacing: 2px;
+    padding: 0 14px;
+    height: 38px;
+  }
 }
 .subscribe-form-wrap {
   width: 100%;
@@ -3555,17 +3559,15 @@ a.cb-value:hover {
   }
   .coll-card,
   .coll-card-tall {
-    min-height: 220px;
-    height: 220px;
+    min-height: 260px;
+    height: auto;
   }
   .coll-info {
     padding: 20px;
   }
   .coll-name {
-    font-size: 16px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 22px;
+    white-space: normal;
   }
   .coll-name br {
     display: none;

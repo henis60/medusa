@@ -13,32 +13,28 @@ type Props = {
   options?: HttpTypes.StoreProductOption[] | null
 }
 
-function getVariantFirstImageIndex(
-  variantId: string | null,
-  variants: HttpTypes.StoreProductVariant[] | null | undefined,
-  allImages: HttpTypes.StoreProductImage[]
-): number {
-  if (!variantId || !variants || !allImages.length) return 0
-
-  const variant = variants.find((v) => v.id === variantId)
-  if (!variant?.images?.length) return 0
-
-  // Jump to the variant's first image; if not found, stay on image 0.
-  const firstUrl = (variant.images[0] as HttpTypes.StoreProductImage).url
-  const idx = allImages.findIndex((img) => img.url === firstUrl)
-  return idx >= 0 ? idx : 0
-}
-
 export default function VariantAwareGallery({
   defaultImages,
   allImages,
   variants,
 }: Props) {
   const searchParams = useSearchParams()
-  const variantId = searchParams.get("v_id")
+  // ProductActions defaults to the first variant synchronously on mount and
+  // only writes ?v_id= afterwards (in an effect). Mirror that same default
+  // here so the gallery starts on the right image set immediately, instead
+  // of showing all images for one frame and then narrowing down.
+  const variantId = searchParams.get("v_id") ?? variants?.[0]?.id ?? null
 
-  // Always show all images; variant selection only changes which is active
-  const images = allImages.length ? allImages : defaultImages
+  const selectedVariant = variantId
+    ? variants?.find((v) => v.id === variantId)
+    : null
+  // Show only the selected variant's own images when it has any;
+  // otherwise fall back to the full product gallery.
+  const images = selectedVariant?.images?.length
+    ? (selectedVariant.images as HttpTypes.StoreProductImage[])
+    : allImages.length
+    ? allImages
+    : defaultImages
 
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [mainImageHeight, setMainImageHeight] = useState<number | null>(null)
@@ -56,11 +52,11 @@ export default function VariantAwareGallery({
     return () => observer.disconnect()
   }, [])
 
-  // Jump to variant's first image when variant changes
+  // Reset to the first image whenever the active image set changes
+  // (e.g. switching to a variant with its own images).
   useEffect(() => {
-    const idx = getVariantFirstImageIndex(variantId, variants, images)
-    setSelectedIndex(idx)
-  }, [variantId, variants, images])
+    setSelectedIndex(0)
+  }, [images])
 
   const selected = images[selectedIndex] ?? images[0]
   const count = images.length

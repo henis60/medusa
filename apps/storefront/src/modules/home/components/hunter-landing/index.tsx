@@ -141,8 +141,8 @@ const HunterLanding = ({ shopSlot }: { shopSlot?: React.ReactNode }) => {
       <Bar />
       <GiftCard />
       <Membership />
-      <Newsletter />
       <Contact />
+      <Newsletter />
       <HomepageFooter />
     </div>
   )

@@ -1,13 +1,32 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 
 import { listProductsWithSort } from "@lib/data/products"
+import { getProductPrice } from "@lib/util/get-product-price"
+import { getProductColors } from "@lib/util/product-colors"
 import ProductPreview from "@modules/products/components/product-preview"
 import AnimatedProductCard from "@modules/store/components/animated-product-card"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import StoreResultsBar, { ViewMode } from "@modules/store/components/store-results-bar"
+import { useSetStoreFacets } from "@modules/store/context/store-facets-context"
+
+function SkeletonCard() {
+  return (
+    <li className="animate-pulse">
+      <div className="aspect-[3/4] w-full bg-[var(--theme-surface)]" />
+      <div className="mt-4 flex flex-col gap-2">
+        <div className="h-2.5 w-3/4 bg-[var(--theme-surface)]" />
+        <div className="flex items-center justify-between">
+          <div className="h-2 w-8 bg-[var(--theme-surface)]" />
+          <div className="h-2.5 w-10 bg-[var(--theme-surface)]" />
+        </div>
+      </div>
+    </li>
+  )
+}
 
 type Props = {
   initialProducts: HttpTypes.StoreProduct[]
@@ -48,6 +67,7 @@ export default function InfiniteProducts({
   urlFiltered = false,
 }: Props) {
   const searchParams = useSearchParams()
+  const [view, setView] = useState<ViewMode>("grid")
   const sortBy = (searchParams.get("sortBy") as SortOptions) || "created_at"
   // On /store the filters live in the URL; on category/collection pages
   // they're fixed props baked into the static page.
@@ -57,6 +77,14 @@ export default function InfiniteProducts({
   const effectiveCategoryId = urlFiltered
     ? searchParams.get("category") ?? undefined
     : categoryId
+
+  // Price/color facets — client-side only (the API has no support for
+  // these filters), applied on top of whatever's been loaded so far.
+  const minPrice = urlFiltered ? Number(searchParams.get("minPrice")) || undefined : undefined
+  const maxPrice = urlFiltered ? Number(searchParams.get("maxPrice")) || undefined : undefined
+  const selectedColors = urlFiltered
+    ? (searchParams.get("color") ?? "").split(",").filter(Boolean)
+    : []
 
   // Filters the server-rendered `initialProducts` were fetched with (always
   // the unfiltered defaults on /store, since that page is static).
@@ -164,30 +192,102 @@ export default function InfiniteProducts({
     return () => observer.disconnect()
   }, [loadMore, hasMore])
 
+  // Distinct colors across everything loaded so far — grows as more pages
+  // load. Only relevant on /store, where the Filtre sheet shows them.
+  const colorFacets = useMemo(() => {
+    if (!urlFiltered) return []
+    const seen = new Set<string>()
+    for (const p of products) {
+      for (const { label } of getProductColors(p)) seen.add(label)
+    }
+    return Array.from(seen)
+  }, [products, urlFiltered])
+
+  // Price bounds across everything loaded so far — drives the slider range.
+  const priceBounds = useMemo((): [number, number] => {
+    if (!urlFiltered) return [0, 0]
+    let lo = Infinity
+    let hi = 0
+    for (const p of products) {
+      const price = getProductPrice({ product: p }).cheapestPrice?.calculated_price_number
+      if (price === undefined) continue
+      if (price < lo) lo = price
+      if (price > hi) hi = price
+    }
+    return lo === Infinity ? [0, 0] : [Math.floor(lo), Math.ceil(hi)]
+  }, [products, urlFiltered])
+
+  // Report facets up to StoreView (via context) so the desktop "Filtru"
+  // button — rendered next to Sort, outside this subtree — can show them.
+  const setStoreFacets = useSetStoreFacets()
+  useEffect(() => {
+    if (!urlFiltered) return
+    setStoreFacets({ priceBounds, colorFacets })
+  }, [urlFiltered, priceBounds, colorFacets, setStoreFacets])
+
+  const hasFacetFilter = !!minPrice || !!maxPrice || selectedColors.length > 0
+
+  // Price/color aren't supported by the API — filtered client-side over
+  // whatever's been loaded via infinite scroll so far.
+  const displayedProducts = useMemo(() => {
+    if (!hasFacetFilter) return products
+    return products.filter((p) => {
+      if (minPrice || maxPrice) {
+        const price = getProductPrice({ product: p }).cheapestPrice?.calculated_price_number
+        if (price === undefined) return false
+        if (minPrice && price < minPrice) return false
+        if (maxPrice && price > maxPrice) return false
+      }
+      if (selectedColors.length > 0) {
+        const productColors = getProductColors(p).map((c) => c.label)
+        if (!selectedColors.some((c) => productColors.includes(c))) return false
+      }
+      return true
+    })
+  }, [products, hasFacetFilter, minPrice, maxPrice, selectedColors])
+
   return (
     <>
-      <div className="-mx-4 small:mx-0">
+      {urlFiltered && (
+        <StoreResultsBar
+          count={hasFacetFilter ? displayedProducts.length : count}
+          view={view}
+          onViewChange={setView}
+          colorFacets={colorFacets}
+          priceBounds={priceBounds}
+        />
+      )}
+
+      <div>
         <ul
-          className="grid grid-cols-2 w-full small:grid-cols-2 medium:grid-cols-3 gap-[4px] small:gap-x-8 small:gap-y-16"
+          className={
+            view === "list"
+              ? "grid grid-cols-1 w-full small:grid-cols-2 medium:grid-cols-3 gap-y-8 small:gap-x-8 small:gap-y-16"
+              : "grid grid-cols-2 w-full small:grid-cols-2 medium:grid-cols-3 gap-x-3 gap-y-8 small:gap-x-8 small:gap-y-16"
+          }
           data-testid="products-list"
         >
-          {products.map((p, i) => (
+          {displayedProducts.map((p, i) => (
             <AnimatedProductCard key={p.id} index={i}>
               <ProductPreview product={p} region={region} />
             </AnimatedProductCard>
           ))}
+          {loading &&
+            Array.from({ length: products.length === 0 ? 6 : 3 }).map((_, i) => (
+              <SkeletonCard key={`skeleton-${i}`} />
+            ))}
         </ul>
       </div>
 
-      {hasMore && <div ref={sentinelRef} aria-hidden className="h-px" />}
-
-      {loading && (
-        <div className="flex justify-center py-10">
-          <span className="font-sans text-[10px] uppercase tracking-[4px] text-[var(--theme-text-muted)] animate-pulse">
-            Se încarcă…
-          </span>
+      {hasFacetFilter && displayedProducts.length === 0 && !loading && (
+        <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
+          <p className="font-serif text-base text-[var(--theme-text-muted)]">
+            Niciun produs nu corespunde filtrelor selectate.
+          </p>
         </div>
       )}
+
+      {hasMore && <div ref={sentinelRef} aria-hidden className="h-px" />}
     </>
   )
 }
