@@ -1,5 +1,4 @@
-import { getLocaleHeader } from "@lib/util/get-locale-header"
-import Medusa, { FetchArgs, FetchInput } from "@medusajs/js-sdk"
+import Medusa from "@medusajs/js-sdk"
 
 // Resolve the backend URL per runtime:
 // - Browser → NEXT_PUBLIC_MEDUSA_BACKEND_URL (public, inlined at build time).
@@ -31,26 +30,9 @@ export const sdk = new Medusa({
   publishableKey: process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY,
 })
 
-const originalFetch = sdk.client.fetch.bind(sdk.client)
-
-sdk.client.fetch = async <T>(
-  input: FetchInput,
-  init?: FetchArgs
-): Promise<T> => {
-  const headers = init?.headers ?? {}
-  let localeHeader: Record<string, string | null> | undefined
-  try {
-    localeHeader = await getLocaleHeader()
-    headers["x-medusa-locale"] ??= localeHeader["x-medusa-locale"]
-  } catch {}
-
-  const newHeaders = {
-    ...localeHeader,
-    ...headers,
-  }
-  init = {
-    ...init,
-    headers: newHeaders,
-  }
-  return originalFetch(input, init)
-}
+// NOTE: do NOT monkey-patch sdk.client.fetch to inject the locale cookie
+// globally. Reading cookies() inside every SDK call silently opts EVERY
+// route that fetches server-side (the Nav does, on all pages) into dynamic
+// rendering — that's what kept /, /store, /faq etc. from being static.
+// Locale-dependent flows pass the locale explicitly instead (see cart.ts,
+// which sets it at cart creation).
