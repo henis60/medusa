@@ -1,12 +1,10 @@
 "use client"
 
 import React, { useEffect } from "react"
+import dynamic from "next/dynamic"
 
 import Hero from "./sections/Hero"
 import Newsletter from "./sections/Newsletter"
-import Cursor from "./sections/Cursor"
-import DotNav from "./sections/DotNav"
-import BackToTop from "./sections/BackToTop"
 import About from "./sections/About"
 import Shop from "./sections/Shop"
 import QuoteBand from "./sections/QuoteBand"
@@ -18,6 +16,13 @@ import GiftCard from "./sections/GiftCard"
 import Membership from "./sections/Membership"
 import Contact from "./sections/Contact"
 import HomepageFooter from "./sections/HomepageFooter"
+
+// Purely decorative, JS-only overlays (custom cursor, section dots,
+// back-to-top). No server-rendered/SEO value, so load them after hydration
+// instead of shipping them in the critical bundle.
+const Cursor = dynamic(() => import("./sections/Cursor"), { ssr: false })
+const DotNav = dynamic(() => import("./sections/DotNav"), { ssr: false })
+const BackToTop = dynamic(() => import("./sections/BackToTop"), { ssr: false })
 
 const HunterLanding = ({ shopSlot }: { shopSlot?: React.ReactNode }) => {
   useEffect(() => {

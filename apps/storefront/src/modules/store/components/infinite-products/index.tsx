@@ -58,14 +58,35 @@ export default function InfiniteProducts({
     ? searchParams.get("category") ?? undefined
     : categoryId
 
-  const [products, setProducts] = useState(initialProducts)
+  // Filters the server-rendered `initialProducts` were fetched with (always
+  // the unfiltered defaults on /store, since that page is static).
+  const initialFiltersKey = JSON.stringify([initialSort, collectionId, categoryId])
+  // Refetch from page 1 when the URL-driven filters (sort, collection,
+  // category) differ from what the current list was fetched with — covers
+  // user changes and landing directly on a filtered URL whose static HTML
+  // used the defaults.
+  const filtersKey = JSON.stringify([
+    sortBy,
+    effectiveCollectionId,
+    effectiveCategoryId,
+  ])
+  // True when the URL already asks for a different view than what got
+  // server-rendered (e.g. a hard reload of /store?category=x). In that case
+  // we must NOT paint `initialProducts` even for a single frame — that's the
+  // wrong (unfiltered) catalog — so the very first render starts empty +
+  // loading instead, and the effect below fetches the correct page 1.
+  const needsInitialRefetch = filtersKey !== initialFiltersKey
+
+  const [products, setProducts] = useState(() =>
+    needsInitialRefetch ? [] : initialProducts
+  )
   const [page, setPage] = useState(1)
-  const [loading, setLoading] = useState(false)
-  const [hasMore, setHasMore] = useState(initialProducts.length < count)
-  // Filters the currently displayed list was fetched with. The server always
-  // renders the unfiltered default batch, so that's the starting point.
+  const [loading, setLoading] = useState(needsInitialRefetch)
+  const [hasMore, setHasMore] = useState(() =>
+    needsInitialRefetch ? true : initialProducts.length < count
+  )
   const activeFilters = useRef<string>(
-    JSON.stringify([initialSort, collectionId, categoryId])
+    needsInitialRefetch ? "" : initialFiltersKey
   )
   const sentinelRef = useRef<HTMLDivElement | null>(null)
 
@@ -80,16 +101,6 @@ export default function InfiniteProducts({
     }),
     [limit, effectiveCollectionId, effectiveCategoryId, productsIds]
   )
-
-  // Refetch from page 1 when the URL-driven filters (sort, collection,
-  // category) differ from what the current list was fetched with — covers
-  // user changes and landing directly on a filtered URL whose static HTML
-  // used the defaults.
-  const filtersKey = JSON.stringify([
-    sortBy,
-    effectiveCollectionId,
-    effectiveCategoryId,
-  ])
   useEffect(() => {
     if (filtersKey === activeFilters.current) return
     let cancelled = false

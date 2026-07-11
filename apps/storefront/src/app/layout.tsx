@@ -10,32 +10,33 @@ import {
   Raleway,
 } from "next/font/google"
 
+// All four families are Google variable fonts: omitting `weight` loads ONE
+// file per style covering every weight — fewer/lighter downloads than the
+// previous per-weight static files. `latin-ext` is required for Romanian
+// diacritics (ș, ț, ă live there; plain `latin` made them fall back to
+// system fonts).
 const playfairDisplay = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["400", "700", "900"],
+  subsets: ["latin", "latin-ext"],
   style: ["normal", "italic"],
   variable: "--font-playfair",
   display: "swap",
 })
 
 const cormorantGaramond = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
+  subsets: ["latin", "latin-ext"],
   style: ["normal", "italic"],
   variable: "--font-cormorant",
   display: "swap",
 })
 
 const raleway = Raleway({
-  subsets: ["latin"],
-  weight: ["200", "300", "400", "500", "600", "700"],
+  subsets: ["latin", "latin-ext"],
   variable: "--font-raleway",
   display: "swap",
 })
 
 const cinzel = Cinzel({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  subsets: ["latin", "latin-ext"],
   variable: "--font-cinzel",
   display: "swap",
 })

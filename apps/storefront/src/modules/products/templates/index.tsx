@@ -4,7 +4,6 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import ImageGallery from "@modules/products/components/image-gallery"
 import VariantAwareGallery from "@modules/products/components/image-gallery/variant-aware"
 import ProductActions from "@modules/products/components/product-actions"
-import ProductOnboardingCta from "@modules/products/components/product-onboarding-cta"
 import ProductTabs from "@modules/products/components/product-tabs"
 import RelatedProducts from "@modules/products/components/related-products"
 import ProductInfo from "@modules/products/templates/product-info"
@@ -75,7 +74,6 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
           delay={0.2}
           className="flex flex-col gap-y-6 small:sticky small:top-24 small:self-start py-4 small:py-0"
         >
-          <ProductOnboardingCta />
           <ProductInfo
             product={product}
             action={
