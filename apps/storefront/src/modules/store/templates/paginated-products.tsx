@@ -1,5 +1,5 @@
 import { listProductsWithSort } from "@lib/data/products"
-import { getRegion } from "@lib/data/regions"
+import { getRegionStatic } from "@lib/data/regions"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import AnimatedGrid from "@modules/store/components/animated-grid"
 import InfiniteProducts from "@modules/store/components/infinite-products"
@@ -23,12 +23,15 @@ export default async function PaginatedProducts({
   categoryId,
   productsIds,
   countryCode,
+  urlFiltered = false,
 }: {
   sortBy?: SortOptions
   collectionId?: string
   categoryId?: string
   productsIds?: string[]
   countryCode: string
+  /** /store only: client applies collection/category from the URL. */
+  urlFiltered?: boolean
 }) {
   const queryParams: PaginatedProductsParams = {
     limit: PRODUCT_LIMIT,
@@ -48,7 +51,7 @@ export default async function PaginatedProducts({
 
   const sort = sortBy || "created_at"
 
-  const region = await getRegion(countryCode)
+  const region = await getRegionStatic(countryCode)
 
   if (!region) {
     return null
@@ -94,6 +97,7 @@ export default async function PaginatedProducts({
         collectionId={collectionId}
         categoryId={categoryId}
         productsIds={productsIds}
+        urlFiltered={urlFiltered}
       />
     </AnimatedGrid>
   )

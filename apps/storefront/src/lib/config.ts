@@ -6,13 +6,22 @@ import Medusa, { FetchArgs, FetchInput } from "@medusajs/js-sdk"
 // - Server  → MEDUSA_BACKEND_URL when set (e.g. Railway's private network,
 //   http://backend.railway.internal:PORT — no public hop, no egress cost),
 //   otherwise it falls back to the public URL below.
+// - BUILD   → always the public URL: Railway's private network is only
+//   available at runtime, so generateStaticParams/prerender fetches during
+//   `next build` would fail against the private domain.
+const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build"
+
 let backendUrl = "http://localhost:9000"
 
 if (process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL) {
   backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL
 }
 
-if (typeof window === "undefined" && process.env.MEDUSA_BACKEND_URL) {
+if (
+  typeof window === "undefined" &&
+  !isBuildPhase &&
+  process.env.MEDUSA_BACKEND_URL
+) {
   backendUrl = process.env.MEDUSA_BACKEND_URL
 }
 

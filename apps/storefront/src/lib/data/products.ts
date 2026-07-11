@@ -4,7 +4,7 @@ import { sdk } from "@lib/config"
 import { sortProducts } from "@lib/util/sort-products"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
-import { getAuthHeaders, getGlobalCacheOptions } from "./cookies"
+import { getGlobalCacheOptions } from "./cookies"
 import { getRegion, retrieveRegion } from "./regions"
 
 export const listProducts = async ({
@@ -47,10 +47,9 @@ export const listProducts = async ({
     }
   }
 
-  const headers = {
-    ...(await getAuthHeaders()),
-  }
-
+  // No auth headers here: public catalog listing depends only on the
+  // publishable key + region (no customer-group pricing). Reading the JWT
+  // cookie would force every caller (homepage, store) to render dynamically.
   const next = getGlobalCacheOptions("products")
 
   return sdk.client
@@ -66,7 +65,6 @@ export const listProducts = async ({
             "*variants.calculated_price,+variants.inventory_quantity,*variants.images,*variants.options,+variants.metadata,*options,*options.values,+metadata,+tags,",
           ...queryParams,
         },
-        headers,
         next,
         cache: "force-cache",
       }

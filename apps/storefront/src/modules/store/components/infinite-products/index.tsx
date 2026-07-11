@@ -21,6 +21,12 @@ type Props = {
   collectionId?: string
   categoryId?: string
   productsIds?: string[]
+  /**
+   * When true (the /store page), collection/category come from the URL
+   * client-side and changes trigger a refetch. Category/collection pages
+   * keep their fixed props instead.
+   */
+  urlFiltered?: boolean
 }
 
 /**
@@ -39,33 +45,53 @@ export default function InfiniteProducts({
   collectionId,
   categoryId,
   productsIds,
+  urlFiltered = false,
 }: Props) {
   const searchParams = useSearchParams()
   const sortBy = (searchParams.get("sortBy") as SortOptions) || "created_at"
+  // On /store the filters live in the URL; on category/collection pages
+  // they're fixed props baked into the static page.
+  const effectiveCollectionId = urlFiltered
+    ? searchParams.get("collection") ?? undefined
+    : collectionId
+  const effectiveCategoryId = urlFiltered
+    ? searchParams.get("category") ?? undefined
+    : categoryId
 
   const [products, setProducts] = useState(initialProducts)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
   const [hasMore, setHasMore] = useState(initialProducts.length < count)
-  // Sort the currently displayed list was fetched with.
-  const activeSort = useRef<SortOptions>(initialSort)
+  // Filters the currently displayed list was fetched with. The server always
+  // renders the unfiltered default batch, so that's the starting point.
+  const activeFilters = useRef<string>(
+    JSON.stringify([initialSort, collectionId, categoryId])
+  )
   const sentinelRef = useRef<HTMLDivElement | null>(null)
 
   const buildQueryParams = useCallback(
     () => ({
       limit,
-      ...(collectionId ? { collection_id: [collectionId] } : {}),
-      ...(categoryId ? { category_id: [categoryId] } : {}),
+      ...(effectiveCollectionId
+        ? { collection_id: [effectiveCollectionId] }
+        : {}),
+      ...(effectiveCategoryId ? { category_id: [effectiveCategoryId] } : {}),
       ...(productsIds ? { id: productsIds } : {}),
     }),
-    [limit, collectionId, categoryId, productsIds]
+    [limit, effectiveCollectionId, effectiveCategoryId, productsIds]
   )
 
-  // Re-sort: refetch from page 1 when the sort in the URL differs from what
-  // the current list was fetched with (covers both user changes and landing
-  // directly on a ?sortBy= URL whose static HTML used the default sort).
+  // Refetch from page 1 when the URL-driven filters (sort, collection,
+  // category) differ from what the current list was fetched with — covers
+  // user changes and landing directly on a filtered URL whose static HTML
+  // used the defaults.
+  const filtersKey = JSON.stringify([
+    sortBy,
+    effectiveCollectionId,
+    effectiveCategoryId,
+  ])
   useEffect(() => {
-    if (sortBy === activeSort.current) return
+    if (filtersKey === activeFilters.current) return
     let cancelled = false
     setLoading(true)
     listProductsWithSort({
@@ -76,7 +102,7 @@ export default function InfiniteProducts({
     })
       .then(({ response }) => {
         if (cancelled) return
-        activeSort.current = sortBy
+        activeFilters.current = filtersKey
         setProducts(response.products)
         setPage(1)
         setHasMore(response.products.length < response.count)
@@ -85,16 +111,19 @@ export default function InfiniteProducts({
     return () => {
       cancelled = true
     }
-  }, [sortBy, buildQueryParams, countryCode])
+  }, [filtersKey, sortBy, buildQueryParams, countryCode])
 
   const loadMore = useCallback(() => {
     if (loading || !hasMore) return
+    // Don't append while the displayed list doesn't match the URL filters —
+    // the refetch effect above is about to replace it from page 1.
+    if (filtersKey !== activeFilters.current) return
     setLoading(true)
     const nextPage = page + 1
     listProductsWithSort({
       page: nextPage,
       queryParams: buildQueryParams(),
-      sortBy: activeSort.current,
+      sortBy,
       countryCode,
     })
       .then(({ response }) => {
@@ -109,7 +138,7 @@ export default function InfiniteProducts({
         setPage(nextPage)
       })
       .finally(() => setLoading(false))
-  }, [loading, hasMore, page, buildQueryParams, countryCode])
+  }, [loading, hasMore, page, filtersKey, sortBy, buildQueryParams, countryCode])
 
   useEffect(() => {
     const sentinel = sentinelRef.current

@@ -1,6 +1,5 @@
-﻿import { Metadata } from "next"
+import { Metadata } from "next"
 
-import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import StoreTemplate from "@modules/store/templates"
 
 export const metadata: Metadata = {
@@ -8,27 +7,11 @@ export const metadata: Metadata = {
   description: "Explore all of our products.",
 }
 
-type Params = {
-  searchParams: Promise<{
-    sortBy?: SortOptions
-    page?: string
-    collection?: string
-    category?: string
-  }>
-  params: Promise<Record<string, string>>
+// Static + ISR: the page reads no cookies and no searchParams on the server.
+// Filtering (collection / category / sortBy) is handled client-side from the
+// URL, refetching via server actions — see StoreView / InfiniteProducts.
+export const revalidate = 3600
+
+export default async function StorePage() {
+  return <StoreTemplate countryCode={"ro"} />
 }
-
-export default async function StorePage(props: Params) {
-  const searchParams = await props.searchParams
-  const { sortBy, collection, category } = searchParams
-
-  return (
-    <StoreTemplate
-      sortBy={sortBy}
-      countryCode={"ro"}
-      collectionId={collection}
-      categoryId={category}
-    />
-  )
-}
-

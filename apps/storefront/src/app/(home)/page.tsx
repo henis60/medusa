@@ -3,7 +3,7 @@ import { Metadata } from "next"
 
 import HunterLanding from "@modules/home/components/hunter-landing"
 import ShopCollection from "@modules/home/components/hunter-landing/sections/ShopCollection"
-import { getRegion } from "@lib/data/regions"
+import { getRegionStatic } from "@lib/data/regions"
 
 export const metadata: Metadata = {
   title: "The Hunter House — Return of the Elegant Gentleman",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export const revalidate = 3600
 
 export default async function Home() {
-  const region = await getRegion("ro")
+  const region = await getRegionStatic("ro")
   // Suspense lets the hero stream immediately; the shop section (2 API
   // calls: collections → products) pops in when ready.
   const shopSlot = region ? (
