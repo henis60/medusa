@@ -257,6 +257,7 @@ export default function InfiniteProducts({
       {urlFiltered && (
         <StoreResultsBar
           count={hasFacetFilter ? displayedProducts.length : totalCount}
+          loading={loading && filtersKey !== activeFilters.current}
           view={view}
           onViewChange={setView}
           colorFacets={colorFacets}

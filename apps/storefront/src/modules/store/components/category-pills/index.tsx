@@ -196,7 +196,10 @@ export default function CategoryPills({
         </div>
       </div>
 
-      {/* Collection sub-category reveal row — same CSS-only approach. */}
+      {/* Collection sub-category reveal row — collectionCategories is a
+          synchronous lookup (precomputed server-side for every collection),
+          so this is exactly the same always-mounted grid-rows swap as plain
+          categories above: no fetch, no gap, no glitch. */}
       <div
         className="grid overflow-hidden transition-[grid-template-rows,opacity] duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
         style={{

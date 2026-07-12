@@ -1,7 +1,6 @@
 "use client"
 
 import { HttpTypes } from "@medusajs/types"
-import { clx } from "@modules/common/components/ui"
 import { getProductPrice } from "@lib/util/get-product-price"
 import {
   isSimpleProduct,
@@ -120,30 +119,37 @@ const MobileActions: React.FC<MobileActionsProps> = ({
 
   return (
     <>
-      {/* Sticky bar */}
-      <div
-        className={clx(
-          "lg:hidden inset-x-0 bottom-0 fixed z-50 transition-transform duration-300",
-          !show && "translate-y-full pointer-events-none"
-        )}
-      >
-        <div className="bg-[var(--theme-bg)] border-t border-[var(--theme-border)] flex items-center gap-3 px-4 py-3">
-          <div className="flex-1 min-w-0">
-            <p className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text)] truncate">
-              {product.title}
-            </p>
-            {selectedPrice && (
-              <p className="font-sans text-[11px] text-hunter-gold mt-0.5">
-                {selectedPrice.calculated_price}
+      {/* Sticky bar — just appears, no transition. */}
+      {show && (
+        <div className="lg:hidden inset-x-0 bottom-0 fixed z-50">
+        {inStoreOnly ? (
+          <div className="bg-[var(--theme-bg)] border-t border-[var(--theme-border)] flex items-center gap-3 px-4 py-3">
+            <div className="flex-1 min-w-0">
+              <p className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text)] truncate">
+                {product.title}
               </p>
-            )}
-          </div>
-
-          {inStoreOnly ? (
+              {selectedPrice && (
+                <p className="font-sans text-[11px] text-hunter-gold mt-0.5">
+                  {selectedPrice.calculated_price}
+                </p>
+              )}
+            </div>
             <div className="font-sans text-[8px] uppercase tracking-[4px] text-[#cfd8d2] border border-[rgba(207,216,210,0.35)] px-4 py-2.5 text-center">
               Disponibil în magazin
             </div>
-          ) : isSimple ? (
+          </div>
+        ) : isSimple ? (
+          <div className="bg-[var(--theme-bg)] border-t border-[var(--theme-border)] flex items-center gap-3 px-4 py-3">
+            <div className="flex-1 min-w-0">
+              <p className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text)] truncate">
+                {product.title}
+              </p>
+              {selectedPrice && (
+                <p className="font-sans text-[11px] text-hunter-gold mt-0.5">
+                  {selectedPrice.calculated_price}
+                </p>
+              )}
+            </div>
             <Button
               onClick={handleAddToCart}
               disabled={!inStock}
@@ -152,16 +158,20 @@ const MobileActions: React.FC<MobileActionsProps> = ({
             >
               {!inStock ? "Indisponibil" : "Adaugă în coș"}
             </Button>
-          ) : (
-            <button
+          </div>
+        ) : (
+          <div className="bg-[var(--theme-bg)] border-t border-[var(--theme-border)] px-6 py-3">
+            <Button
               onClick={() => setOpen(true)}
-              className="font-sans text-[10px] uppercase tracking-[3px] border border-hunter-gold text-hunter-gold px-5 py-2.5 hover:bg-hunter-gold/10 transition-colors"
+              variant="primary"
+              className="w-full h-12 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent hover:!bg-hunter-gold-b font-sans uppercase tracking-[3px] text-[11px] transition-colors"
             >
-              Alege mărimea
-            </button>
-          )}
+              Adaugă în coș
+            </Button>
+          </div>
+        )}
         </div>
-      </div>
+      )}
 
       {/* Bottom sheet portal */}
       {mounted &&

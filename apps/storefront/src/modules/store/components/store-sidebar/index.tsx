@@ -159,8 +159,12 @@ export default function StoreSidebar({
                     >
                       {c.title}
                     </NavItem>
+                    {/* collectionCategories is a synchronous lookup
+                        (precomputed server-side for every collection), so
+                        this needs no loading state at all — same
+                        mount-on-select + fade-in as plain categories. */}
                     {isSelected && collectionCategories.length > 0 && (
-                      <div className="flex flex-col pl-4 mt-1 mb-1 border-l border-[var(--theme-border)]">
+                      <div className="flex flex-col pl-4 mt-1 mb-1 border-l border-[var(--theme-border)] animate-[fadeIn_0.22s_ease-out]">
                         {collectionCategories.map((cat) => (
                           <button
                             key={cat.id}

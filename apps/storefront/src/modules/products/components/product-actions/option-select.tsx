@@ -24,7 +24,18 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
   disabledValues,
   variants,
 }) => {
-  const SIZE_ORDER = ["xxs","xs","s","m","l","xl","xxl","2xl","3xl","4xl"]
+  const SIZE_ORDER = [
+    "xxs",
+    "xs",
+    "s",
+    "m",
+    "l",
+    "xl",
+    "xxl",
+    "2xl",
+    "3xl",
+    "4xl",
+  ]
   const isColorOption = isColorOptionTitle(title)
 
   const rawValues = (option.values ?? []).map((v) => v.value)
@@ -62,7 +73,7 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
   return (
     <div className="flex flex-col gap-y-3">
       <span className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
-        Select {title}
+        Selecteaza {title}
       </span>
       <div className="flex flex-wrap gap-2" data-testid={dataTestId}>
         {filteredOptions.map((v) => {
