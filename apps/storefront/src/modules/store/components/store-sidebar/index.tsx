@@ -106,35 +106,34 @@ export default function StoreSidebar({
                     >
                       {c.name}
                     </NavItem>
-                    {subs.length > 0 && (
-                      <div
-                        className="grid overflow-hidden transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
-                        style={{
-                          gridTemplateRows: showSubs ? "1fr" : "0fr",
-                          opacity: showSubs ? 1 : 0,
-                        }}
-                      >
-                        <div className="min-h-0 overflow-hidden">
-                          <div className="flex flex-col pl-4 mt-1 mb-1 border-l border-[var(--theme-border)]">
-                            {subs.map((sub) => (
-                              <button
-                                key={sub.id}
-                                onClick={() =>
-                                  onSelectCategory(
-                                    activeCategoryId === sub.id ? c.id : sub.id
-                                  )
-                                }
-                                className={clx(
-                                  "w-full text-left py-1.5 font-serif text-[18px] leading-none transition-colors duration-150",
-                                  activeCategoryId === sub.id
-                                    ? "text-[var(--theme-gold)] italic"
-                                    : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
-                                )}
-                              >
-                                {sub.name}
-                              </button>
-                            ))}
-                          </div>
+                    {/* Only the active parent's subcategories are mounted —
+                        keeping every category's row always-mounted (even at
+                        height 0) meant switching between two categories that
+                        both have subs animated one collapsing while the other
+                        expanded at the same time, showing the old ones
+                        briefly. Mount/unmount + a plain fade-in avoids that
+                        overlap entirely. */}
+                    {showSubs && (
+                      <div className="min-h-0 overflow-hidden animate-[fadeIn_0.22s_ease-out]">
+                        <div className="flex flex-col pl-4 mt-1 mb-1 border-l border-[var(--theme-border)]">
+                          {subs.map((sub) => (
+                            <button
+                              key={sub.id}
+                              onClick={() =>
+                                onSelectCategory(
+                                  activeCategoryId === sub.id ? c.id : sub.id
+                                )
+                              }
+                              className={clx(
+                                "w-full text-left py-1.5 font-serif text-[18px] leading-none transition-colors duration-150",
+                                activeCategoryId === sub.id
+                                  ? "text-[var(--theme-gold)] italic"
+                                  : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
+                              )}
+                            >
+                              {sub.name}
+                            </button>
+                          ))}
                         </div>
                       </div>
                     )}

@@ -862,6 +862,10 @@ body.hunter-landing-active::before {
   flex-direction: column;
   gap: clamp(22px, 3vw, 40px);
 }
+.subscribe-layout--inline {
+  margin-top: clamp(20px, 2.5vw, 32px);
+  padding-top: 0;
+}
 .newsletter-email-input::placeholder {
   font-size: 14px;
 }
@@ -2065,7 +2069,12 @@ body.hunter-landing-active::before {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 80px;
-  align-items: start;
+  align-items: stretch;
+}
+.contact-layout > div {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 /* socials — more visible */

@@ -60,7 +60,7 @@ const AddAddress = ({
             Adaugă adresă
           </span>
         </Modal.Title>
-        <form action={formAction}>
+        <form action={formAction} className="flex flex-col flex-1 min-h-0">
           <Modal.Body>
             <div className="flex flex-col gap-y-2 w-full">
               <div className="grid grid-cols-2 gap-x-2">

@@ -1,5 +1,7 @@
 "use client"
 
+import Newsletter from "./Newsletter"
+
 export default function Contact() {
   return (
     <section className="section contact-sec" id="contact">
@@ -36,7 +38,7 @@ export default function Contact() {
           </div>
           <div
             className="contact-blocks rv"
-            style={{ transitionDelay: "0.12s", alignSelf: "end" }}
+            style={{ transitionDelay: "0.12s" }}
           >
             <div className="cb">
               <div className="cb-type">Telefon</div>
@@ -104,6 +106,8 @@ export default function Contact() {
             </div>
           </div>
         </div>
+
+        <Newsletter />
       </div>
     </section>
   )

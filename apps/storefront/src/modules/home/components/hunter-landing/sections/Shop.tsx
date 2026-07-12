@@ -89,7 +89,7 @@ function ShopCard({
       <button
         className={`sg-fav${fav ? " is-on" : ""}`}
         type="button"
-        aria-label={fav ? "Elimină de la favorite" : "Adaugă la favorite"}
+        aria-label={fav ? "Elimină din wishlist" : "Adaugă în wishlist"}
         aria-pressed={fav}
         onClick={(e) => {
           e.preventDefault()

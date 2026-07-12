@@ -16,15 +16,43 @@ type ItemProps = {
 }
 
 const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
-  const [updating, setUpdating] = useState(false)
-
   const imgSrc = getCartItemImageUrl(item)
+  const [updating, setUpdating] = useState(false)
+  // Discovered ceiling from a rejected request (server said "not enough
+  // inventory") — the `inventory_quantity` field isn't reliably present on
+  // cart line items, so this is the fallback source of truth once we hit it.
+  const [maxQty, setMaxQty] = useState<number | null>(null)
 
-  const changeQuantity = async (qty: number) => {
-    if (qty < 1 || updating) return
+  const inventoryCap =
+    item.variant?.manage_inventory &&
+    !item.variant?.allow_backorder &&
+    typeof item.variant?.inventory_quantity === "number"
+      ? item.variant.inventory_quantity
+      : Infinity
+  const effectiveCap = Math.min(inventoryCap, maxQty ?? Infinity)
+
+  // No optimistic update — the displayed quantity only ever comes from
+  // `item.quantity` (server-confirmed). Buttons are disabled while a request
+  // is in flight so nothing can race.
+  const changeQuantity = (nextQty: number) => {
+    if (updating || nextQty > effectiveCap) return
+
+    if (nextQty < 1) {
+      setUpdating(true)
+      deleteLineItem(item.id)
+        .then((fresh) => emitCartUpdated(fresh))
+        .finally(() => setUpdating(false))
+      return
+    }
+
     setUpdating(true)
-    await updateLineItem({ lineId: item.id, quantity: qty })
+    updateLineItem({ lineId: item.id, quantity: nextQty })
       .then((fresh) => emitCartUpdated(fresh))
+      .catch((err) => {
+        if (/inventory/i.test(err instanceof Error ? err.message : "")) {
+          setMaxQty(item.quantity)
+        }
+      })
       .finally(() => setUpdating(false))
   }
 
@@ -154,12 +182,16 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
         {/* Bottom row: qty stepper left, price stack right */}
         <div className="flex items-end justify-between mt-5">
           {/* Qty stepper */}
-          <div className="flex items-center gap-3 border border-[var(--theme-border)]">
+          <div
+            className={`flex items-center gap-3 border border-[var(--theme-border)] transition-opacity ${
+              updating ? "opacity-60" : ""
+            }`}
+          >
             <button
               onClick={() => changeQuantity(item.quantity - 1)}
-              disabled={updating || item.quantity <= 1}
+              disabled={updating}
+              aria-label={item.quantity <= 1 ? "Șterge" : "Scade cantitate"}
               className="w-7 h-7 flex items-center justify-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] disabled:opacity-30 transition-colors"
-              aria-label="Scade cantitate"
             >
               <svg
                 width="9"
@@ -182,7 +214,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
             </span>
             <button
               onClick={() => changeQuantity(item.quantity + 1)}
-              disabled={updating}
+              disabled={updating || item.quantity >= effectiveCap}
               className="w-7 h-7 flex items-center justify-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] disabled:opacity-30 transition-colors"
               aria-label="Crește cantitate"
             >

@@ -13,6 +13,7 @@ import OptionSelect from "./option-select"
 import { useMemo, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { AnimatePresence, motion } from "framer-motion"
+import { useScrollLock } from "@lib/hooks/use-scroll-lock"
 
 type MobileActionsProps = {
   product: HttpTypes.StoreProduct
@@ -39,6 +40,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
 }) => {
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  useScrollLock(open)
 
   const sheetRef = useRef<HTMLDivElement>(null)
   const dragY = useRef(0)
