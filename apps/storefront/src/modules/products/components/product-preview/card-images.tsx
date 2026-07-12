@@ -67,27 +67,27 @@ export default function CardImages({ product, isFeatured, noOverlay, activeImage
           productTitle={product.title ?? undefined}
           productThumbnail={product.thumbnail}
         />
-
-        {/* Mobile trigger */}
-        {!noOverlay && !isInStoreOnly(product) && (
-          <div className="sm:hidden absolute bottom-0 inset-x-0 z-30">
-            <QuickAddOverlay
-              variants={variants}
-              options={options}
-              productHandle={product.handle ?? ""}
-              title={product.title ?? ""}
-              onVariantSelect={onVariantSelect}
-              mobileOnly
-            />
-          </div>
-        )}
-
-        {!noOverlay && isInStoreOnly(product) && (
-          <div className="sm:hidden absolute bottom-0 inset-x-0 z-20 py-2 font-sans text-[8px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] bg-[var(--theme-bg)] text-center">
-            Disponibil în magazin
-          </div>
-        )}
       </div>
+
+      {/* Mobile trigger — below the image, doesn't cover the photo */}
+      {!noOverlay && !isInStoreOnly(product) && (
+        <div className="sm:hidden">
+          <QuickAddOverlay
+            variants={variants}
+            options={options}
+            productHandle={product.handle ?? ""}
+            title={product.title ?? ""}
+            onVariantSelect={onVariantSelect}
+            mobileOnly
+          />
+        </div>
+      )}
+
+      {!noOverlay && isInStoreOnly(product) && (
+        <div className="sm:hidden py-2 font-sans text-[8px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] bg-[var(--theme-bg)] text-center">
+          Disponibil în magazin
+        </div>
+      )}
     </div>
   )
 }

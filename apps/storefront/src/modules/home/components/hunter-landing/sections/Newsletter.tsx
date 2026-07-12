@@ -66,11 +66,9 @@ const Newsletter = () => {
 
   return (
     <>
-      <section className="section subscribe-sec" id="subscribe">
-        <div className="section-inner">
-          <div className="subscribe-layout">
-            <div className="subscribe-form-wrap rv">
-              <div className="subscribe-panel">
+      <div className="subscribe-layout subscribe-layout--inline" id="subscribe">
+        <div className="subscribe-form-wrap rv">
+          <div className="subscribe-panel">
                 <p className="subscribe-panel-label">Abonare rapidă</p>
                 <p className="subscribe-panel-copy">
                   Primești lansări, evenimente și colecții noi înaintea tuturor.
@@ -217,8 +215,6 @@ const Newsletter = () => {
               </div>
             </div>
           </div>
-        </div>
-      </section>
     </>
   )
 }

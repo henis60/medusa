@@ -91,6 +91,30 @@ export const listProducts = async ({
 }
 
 /**
+ * Fetches full product data (with calculated prices + inventory) for a set
+ * of product ids — used by the wishlist page, which only keeps id/handle/
+ * title/thumbnail in localStorage and needs the rest fetched on demand.
+ */
+export const getProductsByIds = async ({
+  ids,
+  countryCode,
+}: {
+  ids: string[]
+  countryCode: string
+}): Promise<HttpTypes.StoreProduct[]> => {
+  if (!ids.length) return []
+
+  const {
+    response: { products },
+  } = await listProducts({
+    queryParams: { id: ids, limit: ids.length },
+    countryCode,
+  })
+
+  return products
+}
+
+/**
  * Paginated + sorted product listing.
  *
  * For the default created_at sort the API sorts and paginates for us, so we

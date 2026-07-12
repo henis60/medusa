@@ -113,6 +113,11 @@ export default function InfiniteProducts({
   const [hasMore, setHasMore] = useState(() =>
     needsInitialRefetch ? true : initialProducts.length < count
   )
+  // Total product count for whatever's currently selected — the `count` prop
+  // is only the server-rendered default (unfiltered) total, so it must be
+  // replaced with the refetch's own count once a category/collection filter
+  // changes it, otherwise the displayed number never updates.
+  const [totalCount, setTotalCount] = useState(count)
   const activeFilters = useRef<string>(
     needsInitialRefetch ? "" : initialFiltersKey
   )
@@ -145,6 +150,7 @@ export default function InfiniteProducts({
         setProducts(response.products)
         setPage(1)
         setHasMore(response.products.length < response.count)
+        setTotalCount(response.count)
       })
       .finally(() => !cancelled && setLoading(false))
     return () => {
@@ -250,7 +256,7 @@ export default function InfiniteProducts({
     <>
       {urlFiltered && (
         <StoreResultsBar
-          count={hasFacetFilter ? displayedProducts.length : count}
+          count={hasFacetFilter ? displayedProducts.length : totalCount}
           view={view}
           onViewChange={setView}
           colorFacets={colorFacets}

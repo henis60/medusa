@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { clx } from "@modules/common/components/ui"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import PriceRangeSlider from "@modules/store/components/price-range-slider"
+import { useScrollLock } from "@lib/hooks/use-scroll-lock"
 
 export type ViewMode = "grid" | "list"
 
@@ -80,6 +81,7 @@ export default function StoreResultsBar({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [open, setOpen] = useState(false)
+  useScrollLock(open)
   const [dragOffset, setDragOffset] = useState(0)
   const dragging = useRef(false)
   const startY = useRef(0)

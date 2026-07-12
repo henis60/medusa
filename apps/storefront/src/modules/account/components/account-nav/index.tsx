@@ -15,7 +15,6 @@ const NAV_ITEMS = [
   { label: "Detalii cont", href: "/account/detalii-cont" },
   { label: "Adrese salvate", href: "/account/addresses" },
   { label: "Comenzi", href: "/account/orders" },
-  { label: "Favorite", href: "/account/favorites" },
 ]
 
 const MOBILE_NAV_ITEMS = NAV_ITEMS.filter(({ href }) => href !== "/account")

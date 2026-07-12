@@ -4,7 +4,6 @@ import React, { useEffect } from "react"
 import dynamic from "next/dynamic"
 
 import Hero from "./sections/Hero"
-import Newsletter from "./sections/Newsletter"
 import About from "./sections/About"
 import Shop from "./sections/Shop"
 import QuoteBand from "./sections/QuoteBand"
@@ -142,7 +141,6 @@ const HunterLanding = ({ shopSlot }: { shopSlot?: React.ReactNode }) => {
       <GiftCard />
       <Membership />
       <Contact />
-      <Newsletter />
       <HomepageFooter />
     </div>
   )

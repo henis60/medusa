@@ -4,13 +4,14 @@ import { useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import AppointmentDatePicker from "@modules/programare/components/appointment-date-picker"
 import { useRecaptcha } from "@lib/hooks/use-recaptcha"
+import { useScrollLock } from "@lib/hooks/use-scroll-lock"
 
 const inputClass = (err?: boolean) =>
-  `w-full h-10 bg-transparent border px-3 font-sans text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none transition-colors ${
-    err ? "border-red-400/60" : "border-gray-200 focus:border-hunter-gold/60"
+  `w-full h-10 bg-transparent border px-3 font-sans text-sm text-[var(--theme-text)] placeholder:text-[var(--theme-text-muted)] focus:outline-none transition-colors ${
+    err ? "border-red-400/60" : "border-[var(--theme-border)] focus:border-hunter-gold/60"
   }`
 
-const labelClass = "font-sans text-[9px] uppercase tracking-[3px] text-gray-400 mb-2 flex items-center gap-1"
+const labelClass = "font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-2 flex items-center gap-1"
 
 const Label = ({ htmlFor, children, error }: { htmlFor?: string; children: React.ReactNode; error?: boolean }) => (
   <label htmlFor={htmlFor} className={labelClass}>
@@ -55,6 +56,8 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
   }
 
   const handleClose = () => { reset(); onClose() }
+
+  useScrollLock(open)
 
   const goTo = (next: number) => { setDir(next > step ? 1 : -1); setStep(next) }
 
@@ -105,31 +108,32 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[9020] flex items-center justify-center p-4"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
         >
           {/* Overlay */}
-          {/* Overlay is intentionally NOT clickable — the modal closes only
-              via the X button, so mid-form taps outside don't lose input. */}
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={handleClose}
+          />
 
           {/* Panel */}
           <motion.div
-            className="relative z-10 w-full max-w-md bg-white"
+            className="relative z-10 w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden bg-[var(--theme-bg)] border border-[var(--theme-border)] shadow-2xl"
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 16 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             onFocusCapture={preload}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
+            <div className="shrink-0 flex items-center justify-between px-6 pt-5 pb-4 border-b border-[var(--theme-border)]">
               <div>
                 <p className="font-sans text-[9px] uppercase tracking-[3px] text-hunter-gold/70 mb-0.5">The Hunter House</p>
-                <h2 className="font-display text-lg text-gray-900">Consultanță Made to Measure</h2>
+                <h2 className="font-display text-lg text-[var(--theme-text)]">Consultanță Made to Measure</h2>
               </div>
               <button
                 onClick={handleClose}
-                className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors cursor-pointer"
+                className="w-7 h-7 flex items-center justify-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors cursor-pointer"
                 aria-label="Închide"
               >
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -140,7 +144,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
 
             {/* Step indicator */}
             {status !== "success" && (
-              <div className={`flex border-b border-gray-100 transition-all duration-300 overflow-hidden ${step === 0 ? "max-h-0 opacity-0 border-transparent" : "max-h-16 opacity-100"}`}>
+              <div className={`shrink-0 flex border-b border-[var(--theme-border)] transition-all duration-300 overflow-hidden ${step === 0 ? "max-h-0 opacity-0 border-transparent" : "max-h-16 opacity-100"}`}>
                 {STEPS.map((label, i) => {
                   const n = i + 1
                   const active = step === n
@@ -153,7 +157,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
                         active ? "border-hunter-gold" : done ? "border-hunter-gold/30 cursor-pointer hover:border-hunter-gold/60" : "border-transparent"
                       }`}
                     >
-                      <span className={`font-sans text-[9px] uppercase tracking-[2px] transition-colors ${active ? "text-gray-700" : done ? "text-gray-400" : "text-gray-300"}`}>
+                      <span className={`font-sans text-[9px] uppercase tracking-[2px] transition-colors ${active ? "text-[var(--theme-text)]" : done ? "text-[var(--theme-text-muted)]" : "text-[var(--theme-text-muted)] opacity-50"}`}>
                         {label}
                       </span>
                     </div>
@@ -163,7 +167,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
             )}
 
             {/* Content */}
-            <div className="px-6 py-5">
+            <div className="px-6 py-5 flex-1 min-h-0 overflow-y-auto">
               <AnimatePresence mode="wait" initial={false}>
 
                 {status === "success" ? (
@@ -173,13 +177,13 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
                         <path d="M1 6L6 11L15 1" stroke="rgba(201,168,76,0.8)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </div>
-                    <p className="font-display text-xl text-gray-900">Cerere trimisă!</p>
-                    <p className="font-sans text-sm text-gray-500">
+                    <p className="font-display text-xl text-[var(--theme-text)]">Cerere trimisă!</p>
+                    <p className="font-sans text-sm text-[var(--theme-text-muted)]">
                       Te contactăm în maximum 24 de ore pentru a confirma programarea.
                     </p>
                     <button
                       onClick={handleClose}
-                      className="mt-2 font-sans text-[9px] uppercase tracking-[3px] text-gray-400 hover:text-hunter-gold transition-colors border-b border-current pb-0.5 cursor-pointer"
+                      className="mt-2 font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5 cursor-pointer"
                     >
                       Închide
                     </button>
@@ -187,10 +191,10 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
 
                 ) : step === 0 ? (
                   <motion.div key="intro" {...slide(dir)} className="flex flex-col gap-5 py-2">
-                    <p className="font-sans text-sm text-gray-600 leading-relaxed">
+                    <p className="font-sans text-sm text-[var(--theme-text-muted)] leading-relaxed">
                       O întâlnire personalizată în care discutăm despre stilul tău, alegem materialele potrivite și definim fiecare detaliu al costumului dorit. Te ghidăm în procesul de creare a unei ținute realizate special pentru tine.
                     </p>
-                    <div className="flex flex-col gap-2.5 border-t border-gray-100 pt-4">
+                    <div className="flex flex-col gap-2.5 border-t border-[var(--theme-border)] pt-4">
                       {[
                         "Alegerea materialelor și a detaliilor potrivite stilului tău",
                         "Măsurători precise pentru o potrivire impecabilă",
@@ -199,7 +203,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
                       ].map((item) => (
                         <div key={item} className="flex items-start gap-2.5">
                           <span className="mt-[6px] shrink-0 w-1 h-1 rounded-full bg-hunter-gold/50" />
-                          <p className="font-sans text-[12px] text-gray-500 leading-relaxed">{item}</p>
+                          <p className="font-sans text-[12px] text-[var(--theme-text-muted)] leading-relaxed">{item}</p>
                         </div>
                       ))}
                     </div>
@@ -234,7 +238,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
                       <textarea
                         id="m-message" rows={3} value={message}
                         onChange={e => setMessage(e.target.value)}
-                        className={`w-full bg-transparent border px-3 py-2.5 font-sans text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none transition-colors resize-none ${errors.message ? "border-red-400/60" : "border-gray-200 focus:border-hunter-gold/60"}`}
+                        className={`w-full bg-transparent border px-3 py-2.5 font-sans text-sm text-[var(--theme-text)] placeholder:text-[var(--theme-text-muted)] focus:outline-none transition-colors resize-none ${errors.message ? "border-red-400/60" : "border-[var(--theme-border)] focus:border-hunter-gold/60"}`}
                       />
                     </div>
                     {status === "error" && (
@@ -248,7 +252,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
 
             {/* Footer nav */}
             {status !== "success" && (
-              <div className="px-6 pb-5">
+              <div className="shrink-0 px-6 pb-5 pt-1">
                 {step === 0 ? (
                   <button
                     onClick={() => goTo(1)}

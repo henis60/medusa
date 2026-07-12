@@ -359,7 +359,7 @@ export default function QuickAddOverlay({
           className="w-full py-2 font-sans text-[8px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] bg-[var(--theme-bg)] transition-colors duration-150 active:border-hunter-gold active:text-hunter-gold"
           aria-label={mobileTriggerLabel}
         >
-          {mobileTriggerLabel}
+          Adaugă în coș
         </button>
       )}
 

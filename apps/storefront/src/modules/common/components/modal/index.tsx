@@ -3,6 +3,7 @@ import { clx } from "@modules/common/components/ui"
 import React, { Fragment } from "react"
 
 import { ModalProvider, useModal } from "@lib/context/modal-context"
+import { useScrollLock } from "@lib/hooks/use-scroll-lock"
 import X from "@modules/common/icons/x"
 
 type ModalProps = {
@@ -22,9 +23,11 @@ const Modal = ({
   children,
   'data-testid': dataTestId
 }: ModalProps) => {
+  useScrollLock(isOpen)
+
   return (
     <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-[75]" onClose={close}>
+      <Dialog as="div" className="relative z-[9020]" onClose={close}>
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
@@ -59,7 +62,7 @@ const Modal = ({
               <Dialog.Panel
                 data-testid={dataTestId}
                 className={clx(
-                  "flex flex-col justify-start w-full transform p-5 text-left align-middle transition-all max-h-[75vh] h-fit",
+                  "flex flex-col justify-start w-full transform p-5 text-left align-middle transition-all max-h-[85vh] h-fit overflow-hidden",
                   {
                     "max-w-md": size === "small",
                     "max-w-xl": size === "medium",
@@ -83,7 +86,7 @@ const Title: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { close } = useModal()
 
   return (
-    <Dialog.Title className="flex items-center justify-between mb-5 pb-5 border-b border-[var(--theme-border)]">
+    <Dialog.Title className="flex items-center justify-between mb-5 pb-5 border-b border-[var(--theme-border)] shrink-0">
       <div>{children}</div>
       <button
         onClick={close}
@@ -105,11 +108,15 @@ const Description: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 }
 
 const Body: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <div className="w-full overflow-y-auto">{children}</div>
+  return (
+    <div className="w-full flex-1 min-h-0 overflow-y-auto pr-2 -mr-2">
+      {children}
+    </div>
+  )
 }
 
 const Footer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <div className="flex items-center justify-end gap-x-4">{children}</div>
+  return <div className="flex items-center justify-end gap-x-4 shrink-0">{children}</div>
 }
 
 Modal.Title = Title

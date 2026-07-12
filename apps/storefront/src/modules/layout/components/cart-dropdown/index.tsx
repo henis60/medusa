@@ -11,12 +11,7 @@ import CountBadge from "@modules/common/components/count-badge"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
 import { deleteLineItem, updateLineItem } from "@lib/data/cart"
-import {
-  emitCartUpdated,
-  onCartUpdated,
-  optimisticRemoveItem,
-  optimisticSetQuantity,
-} from "@lib/util/cart-events"
+import { emitCartUpdated, onCartUpdated } from "@lib/util/cart-events"
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { getCartItemImageUrl } from "@lib/util/variant-image"
@@ -41,30 +36,39 @@ const CartDropdown = ({
 
   const pathname = usePathname()
 
-  // Instant UX: apply the change locally right away (optimistic), then
-  // replace with the server-confirmed cart from the same single round-trip.
-  // On error, a payload-less event makes the badge refetch the true state.
+  // No optimistic update — every change waits for the server response
+  // before the cart re-renders. `updatingLine` disables that line's buttons
+  // meanwhile so nothing can race.
+  const [updatingLine, setUpdatingLine] = useState<string | null>(null)
+  // Discovered ceiling from a rejected request ("not enough inventory") —
+  // inventory_quantity isn't reliably present on cart line items, so this is
+  // the fallback source of truth once we actually hit the limit.
+  const [maxQty, setMaxQty] = useState<Record<string, number>>({})
+
   const handleDeleteItem = (lineId: string) => {
-    if (cartState) {
-      emitCartUpdated(optimisticRemoveItem(cartState, lineId), {
-        optimistic: true,
-      })
-    }
+    setUpdatingLine(lineId)
     deleteLineItem(lineId)
       .then((fresh) => emitCartUpdated(fresh))
       .catch(() => emitCartUpdated())
+      .finally(() => setUpdatingLine(null))
   }
 
   const handleSetQuantity = (lineId: string, quantity: number) => {
-    if (quantity < 1) return
-    if (cartState) {
-      emitCartUpdated(optimisticSetQuantity(cartState, lineId, quantity), {
-        optimistic: true,
-      })
+    if (updatingLine) return
+    if (quantity < 1) {
+      handleDeleteItem(lineId)
+      return
     }
+
+    setUpdatingLine(lineId)
     updateLineItem({ lineId, quantity })
       .then((fresh) => emitCartUpdated(fresh))
-      .catch(() => emitCartUpdated())
+      .catch((err) => {
+        if (/inventory/i.test(err instanceof Error ? err.message : "")) {
+          setMaxQty((m) => ({ ...m, [lineId]: quantity - 1 }))
+        }
+      })
+      .finally(() => setUpdatingLine(null))
   }
 
   useEffect(() => {
@@ -329,7 +333,13 @@ const CartDropdown = ({
 
                                     {/* Bottom row: qty stepper left, price stack right */}
                                     <div className="flex items-end justify-between mt-3">
-                                      <div className="flex items-center gap-2 border border-[var(--theme-border)]">
+                                      <div
+                                        className={`flex items-center gap-2 border border-[var(--theme-border)] transition-opacity ${
+                                          updatingLine === item.id
+                                            ? "opacity-60"
+                                            : ""
+                                        }`}
+                                      >
                                         <button
                                           onClick={() =>
                                             handleSetQuantity(
@@ -337,8 +347,12 @@ const CartDropdown = ({
                                               item.quantity - 1
                                             )
                                           }
-                                          disabled={item.quantity <= 1}
-                                          aria-label="Scade cantitate"
+                                          disabled={updatingLine === item.id}
+                                          aria-label={
+                                            item.quantity <= 1
+                                              ? "Șterge"
+                                              : "Scade cantitate"
+                                          }
                                           className="w-7 h-7 flex items-center justify-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] disabled:opacity-30 transition-colors"
                                         >
                                           <svg
@@ -367,8 +381,27 @@ const CartDropdown = ({
                                               item.quantity + 1
                                             )
                                           }
+                                          disabled={(() => {
+                                            if (updatingLine === item.id)
+                                              return true
+                                            const inventoryCap =
+                                              !!item.variant
+                                                ?.manage_inventory &&
+                                              !item.variant?.allow_backorder &&
+                                              typeof item.variant
+                                                ?.inventory_quantity ===
+                                                "number"
+                                                ? item.variant
+                                                    .inventory_quantity
+                                                : Infinity
+                                            const cap = Math.min(
+                                              inventoryCap,
+                                              maxQty[item.id] ?? Infinity
+                                            )
+                                            return item.quantity >= cap
+                                          })()}
                                           aria-label="Crește cantitate"
-                                          className="w-7 h-7 flex items-center justify-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
+                                          className="w-7 h-7 flex items-center justify-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] disabled:opacity-30 transition-colors"
                                         >
                                           <svg
                                             width="9"

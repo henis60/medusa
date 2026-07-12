@@ -126,7 +126,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
             Editează adresa
           </span>
         </Modal.Title>
-        <form action={formAction}>
+        <form action={formAction} className="flex flex-col flex-1 min-h-0">
           <input type="hidden" name="addressId" value={address.id} />
           <Modal.Body>
             <div className="grid grid-cols-1 gap-y-2 w-full">

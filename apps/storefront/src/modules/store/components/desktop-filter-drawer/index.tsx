@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react"
 import { clx } from "@modules/common/components/ui"
 import PriceRangeSlider from "@modules/store/components/price-range-slider"
 import { useStoreFacets } from "@modules/store/context/store-facets-context"
+import { useScrollLock } from "@lib/hooks/use-scroll-lock"
 
 function FilterIcon() {
   return (
@@ -30,6 +31,7 @@ export default function DesktopFilterDrawer() {
   const searchParams = useSearchParams()
   const { priceBounds, colorFacets } = useStoreFacets()
   const [open, setOpen] = useState(false)
+  useScrollLock(open)
 
   // Applied filters — what the grid actually reflects right now.
   const appliedMinPrice = Number(searchParams.get("minPrice")) || priceBounds[0]

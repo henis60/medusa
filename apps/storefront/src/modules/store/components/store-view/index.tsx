@@ -138,9 +138,12 @@ export default function StoreView({
       setCollectionCategories([])
       return
     }
-    // Clear immediately so a collection switch never briefly shows the
-    // previous collection's subcategories while the new ones are fetched.
-    setCollectionCategories([])
+    // Don't clear to [] up front — that briefly collapses the subcategory
+    // row to nothing and then re-expands it once the fetch resolves, which
+    // reads as a glitch. Instead keep showing the previous collection's
+    // subcategories until the new ones are ready, then swap directly (same
+    // instant-swap approach used for plain categories, which don't need a
+    // fetch at all).
     let cancelled = false
     getCollectionWithProductCategories(collectionId)
       .then((collectionWithCats) => {

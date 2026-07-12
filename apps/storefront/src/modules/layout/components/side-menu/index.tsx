@@ -502,13 +502,10 @@ const SideMenu = ({
                                     {[
                                       { label: "Profil", href: "/account" },
                                       { label: "Contact", href: "/contact" },
+                                      { label: "Wishlist", href: "/wishlist" },
                                       {
                                         label: "Relații cu clienții",
                                         href: "/relatii-clienti",
-                                      },
-                                      {
-                                        label: "Întrebări frecvente",
-                                        href: "/faq",
                                       },
                                     ].map(({ label, href }) => (
                                       <li key={label}>
