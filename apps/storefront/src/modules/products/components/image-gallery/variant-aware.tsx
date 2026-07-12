@@ -111,7 +111,7 @@ export default function VariantAwareGallery({
         {count > 1 && (
           <div
             ref={thumbsRef}
-            className="flex flex-col gap-2 overflow-y-auto no-scrollbar w-16 shrink-0 cursor-grab active:cursor-grabbing"
+            className="hidden small:flex flex-col gap-2 overflow-y-auto no-scrollbar w-16 shrink-0 cursor-grab active:cursor-grabbing"
             style={mainImageHeight ? { maxHeight: mainImageHeight } : undefined}
             onMouseDown={onThumbMouseDown}
             onMouseMove={onThumbMouseMove}

@@ -1,10 +1,9 @@
 "use client"
 
-import { ReactNode, useCallback, useEffect, useMemo, useState } from "react"
+import { ReactNode, useCallback, useEffect, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 
-import { getCollectionWithProductCategories } from "@lib/data/collections"
 import StoreSidebar from "@modules/store/components/store-sidebar"
 import CategoryPills from "@modules/store/components/category-pills"
 import StoreSortSelect from "@modules/store/components/store-sort-select"
@@ -19,6 +18,10 @@ import { SortOptions } from "@modules/store/components/refinement-list/sort-prod
 type Props = {
   collections: HttpTypes.StoreCollection[]
   categories: HttpTypes.StoreProductCategory[]
+  /** Every collection's subcategories, precomputed server-side (see
+   *  templates/index.tsx) so selecting a collection is a synchronous lookup
+   *  — no client fetch, no loading gap, no glitch. */
+  collectionCategoriesMap: Record<string, HttpTypes.StoreProductCategory[]>
   children: ReactNode
 }
 
@@ -32,6 +35,7 @@ type Props = {
 export default function StoreView({
   collections,
   categories,
+  collectionCategoriesMap,
   children,
 }: Props) {
   const router = useRouter()
@@ -110,21 +114,12 @@ export default function StoreView({
     })
   }, [pushParams])
 
-  const categoriesWithChildren = useMemo(
-    () =>
-      new Set(
-        categories
-          .filter((c) => (c.category_children?.length ?? 0) > 0)
-          .map((c) => c.id)
-      ),
-    [categories]
-  )
-
-  // Sub-categories of the selected collection (for pills/sidebar), fetched
-  // on demand via server action when a collection is selected.
-  const [collectionCategories, setCollectionCategories] = useState<
-    HttpTypes.StoreProductCategory[]
-  >([])
+  // Precomputed server-side (see templates/index.tsx) — a synchronous
+  // lookup, same as plain categories, so there's no fetch/loading gap at all
+  // when switching collections.
+  const collectionCategories = collectionId
+    ? collectionCategoriesMap[collectionId] ?? []
+    : []
 
   // Price/color facets, reported up from InfiniteProducts (deep in
   // `children`) so the desktop "Filtru" button next to Sort can use them.
@@ -132,39 +127,6 @@ export default function StoreView({
     priceBounds: [0, 0],
     colorFacets: [],
   })
-
-  useEffect(() => {
-    if (!collectionId) {
-      setCollectionCategories([])
-      return
-    }
-    // Don't clear to [] up front — that briefly collapses the subcategory
-    // row to nothing and then re-expands it once the fetch resolves, which
-    // reads as a glitch. Instead keep showing the previous collection's
-    // subcategories until the new ones are ready, then swap directly (same
-    // instant-swap approach used for plain categories, which don't need a
-    // fetch at all).
-    let cancelled = false
-    getCollectionWithProductCategories(collectionId)
-      .then((collectionWithCats) => {
-        if (cancelled || !collectionWithCats?.products) return
-        const seen = new Set<string>()
-        const cats: HttpTypes.StoreProductCategory[] = []
-        for (const product of collectionWithCats.products) {
-          for (const cat of (product as any).categories ?? []) {
-            if (!seen.has(cat.id) && !categoriesWithChildren.has(cat.id)) {
-              seen.add(cat.id)
-              cats.push(cat)
-            }
-          }
-        }
-        setCollectionCategories(cats)
-      })
-      .catch(() => setCollectionCategories([]))
-    return () => {
-      cancelled = true
-    }
-  }, [collectionId, categoriesWithChildren])
 
   const activeCollection = collections.find((c) => c.id === collectionId)
   const activeCategory = categories.find((c) => c.id === categoryId)

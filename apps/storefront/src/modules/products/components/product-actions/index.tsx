@@ -2,7 +2,6 @@
 
 import { addToCart } from "@lib/data/cart"
 import { emitCartUpdated } from "@lib/util/cart-events"
-import { useIntersection } from "@lib/hooks/use-in-view"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@modules/common/components/ui"
 import Divider from "@modules/common/components/divider"
@@ -206,7 +205,37 @@ export default function ProductActions({
   const actionsRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLDivElement>(null)
 
-  const inView = useIntersection(buttonRef, "0px", 1)
+  // The sticky mobile bar is a stand-in for the real on-page button ONLY
+  // while it hasn't fully appeared on screen yet — shown from the top of the
+  // page, hidden once the real button's bottom edge has scrolled into view
+  // (i.e. the whole button is visible, not just a sliver of its top), and
+  // shown again if scrolled back up below that point.
+  const [showMobileBar, setShowMobileBar] = useState(true)
+
+  useEffect(() => {
+    const el = buttonRef.current
+    if (!el) return
+    let raf = 0
+    const check = () => {
+      raf = 0
+      // 12px early — the sticky bar's own vertical padding (py-3) — so the
+      // handoff feels seamless instead of both being visible for a moment.
+      setShowMobileBar(
+        el.getBoundingClientRect().bottom > window.innerHeight - 12
+      )
+    }
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(check)
+    }
+    check()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    window.addEventListener("resize", onScroll)
+    return () => {
+      window.removeEventListener("scroll", onScroll)
+      window.removeEventListener("resize", onScroll)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [])
 
   // add the selected variant to the cart
   const handleAddToCart = async () => {
@@ -315,7 +344,7 @@ export default function ProductActions({
           inStock={inStock}
           handleAddToCart={handleAddToCart}
           isAdding={isAdding}
-          show={!inView}
+          show={showMobileBar}
           optionsDisabled={!!disabled || isAdding}
         />
       </div>

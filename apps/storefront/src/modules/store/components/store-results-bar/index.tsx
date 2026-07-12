@@ -66,12 +66,14 @@ function FilterIcon() {
 
 export default function StoreResultsBar({
   count,
+  loading,
   view,
   onViewChange,
   colorFacets = [],
   priceBounds,
 }: {
   count: number
+  loading?: boolean
   view: ViewMode
   onViewChange: (v: ViewMode) => void
   colorFacets?: string[]
@@ -194,9 +196,13 @@ export default function StoreResultsBar({
 
   return (
     <div className="small:hidden flex items-center justify-between py-4">
-      <span className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text-muted)]">
-        {count} {count === 1 ? "produs" : "produse"}
-      </span>
+      {loading ? (
+        <span className="h-2.5 w-16 bg-[var(--theme-surface)] animate-pulse" />
+      ) : (
+        <span className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text-muted)]">
+          {count} {count === 1 ? "produs" : "produse"}
+        </span>
+      )}
 
       <div className="flex items-center gap-4">
         <button
