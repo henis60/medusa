@@ -77,6 +77,12 @@
     -webkit-font-smoothing: antialiased;
     transition: background-color 0.2s ease, color 0.2s ease;
   }
+
+  /* iOS: allow fast tap handling without 300ms delay */
+  a, button, [role="button"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
   h1,
   h2,
   h3 {
