@@ -187,7 +187,7 @@ function FeaturedCollectionSubmenu({
           {productCategories.map((c) => (
             <li key={c.id}>
               <LocalizedClientLink
-                href={`/ready-to-wear?collection=${collection.id}&category=${c.id}`}
+                href={`/ready-to-wear/${collection.handle}/${c.handle}`}
                 className={subLinkClass}
                 onClick={close}
               >
@@ -233,7 +233,7 @@ function ReadyToWearSubmenu({
           {nonAccesoriiCategories.map((c) => (
             <li key={c.id}>
               <LocalizedClientLink
-                href={`/ready-to-wear?category=${c.id}`}
+                href={`/ready-to-wear/${c.handle}`}
                 className={subLinkClass}
                 onClick={close}
               >
@@ -285,7 +285,7 @@ function AccesoriiSubmenu({
           {parent && (
             <li>
               <LocalizedClientLink
-                href={`/ready-to-wear?category=${parent.id}`}
+                href={`/ready-to-wear/${parent.handle}`}
                 className="block py-2.5 font-sans text-[11px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
                 onClick={close}
               >
@@ -296,7 +296,7 @@ function AccesoriiSubmenu({
           {subcategories.map((c) => (
             <li key={c.id}>
               <LocalizedClientLink
-                href={`/ready-to-wear?category=${c.id}`}
+                href={`/ready-to-wear/${c.handle}`}
                 className={subLinkClass}
                 onClick={close}
               >

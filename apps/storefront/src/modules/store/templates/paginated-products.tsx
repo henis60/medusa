@@ -1,5 +1,6 @@
 import { listProductsWithSort } from "@lib/data/products"
 import { getRegionStatic } from "@lib/data/regions"
+import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import AnimatedGrid from "@modules/store/components/animated-grid"
 import InfiniteProducts from "@modules/store/components/infinite-products"
@@ -24,14 +25,19 @@ export default async function PaginatedProducts({
   productsIds,
   countryCode,
   urlFiltered = false,
+  categories,
+  collections,
 }: {
   sortBy?: SortOptions
   collectionId?: string
   categoryId?: string
   productsIds?: string[]
   countryCode: string
-  /** /store only: client applies collection/category from the URL. */
+  /** /ready-to-wear only: client applies collection/category from the URL path. */
   urlFiltered?: boolean
+  /** Only needed when urlFiltered — resolves the path's handles back to ids. */
+  categories?: HttpTypes.StoreProductCategory[]
+  collections?: HttpTypes.StoreCollection[]
 }) {
   const queryParams: PaginatedProductsParams = {
     limit: PRODUCT_LIMIT,
@@ -107,6 +113,8 @@ export default async function PaginatedProducts({
         categoryId={categoryId}
         productsIds={productsIds}
         urlFiltered={urlFiltered}
+        categories={categories}
+        collections={collections}
       />
     </AnimatedGrid>
   )

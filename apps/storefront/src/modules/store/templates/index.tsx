@@ -69,6 +69,8 @@ const StoreTemplate = async ({ countryCode }: { countryCode: string }) => {
             sortBy="created_at"
             countryCode={countryCode}
             urlFiltered
+            categories={categories}
+            collections={collections}
           />
         </Suspense>
       </StoreView>

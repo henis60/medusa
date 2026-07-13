@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useSearchParams } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 
 import { listProductsWithSort } from "@lib/data/products"
@@ -12,18 +12,12 @@ import AnimatedProductCard from "@modules/store/components/animated-product-card
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import StoreResultsBar, { ViewMode } from "@modules/store/components/store-results-bar"
 import { useSetStoreFacets } from "@modules/store/context/store-facets-context"
+import SkeletonProductPreview from "@modules/skeletons/components/skeleton-product-preview"
 
 function SkeletonCard() {
   return (
-    <li className="animate-pulse">
-      <div className="aspect-[3/4] w-full bg-[var(--theme-surface)]" />
-      <div className="mt-4 flex flex-col gap-2">
-        <div className="h-2.5 w-3/4 bg-[var(--theme-surface)]" />
-        <div className="flex items-center justify-between">
-          <div className="h-2 w-8 bg-[var(--theme-surface)]" />
-          <div className="h-2.5 w-10 bg-[var(--theme-surface)]" />
-        </div>
-      </div>
+    <li>
+      <SkeletonProductPreview />
     </li>
   )
 }
@@ -41,12 +35,17 @@ type Props = {
   categoryId?: string
   productsIds?: string[]
   /**
-   * When true (the /store page), collection/category come from the URL
-   * client-side and changes trigger a refetch. Category/collection pages
-   * keep their fixed props instead.
+   * When true (the /ready-to-wear page), collection/category come from the
+   * URL path client-side and changes trigger a refetch. Category/collection
+   * pages keep their fixed props instead.
    */
   urlFiltered?: boolean
+  /** Only needed when urlFiltered — resolves the path's handles back to ids. */
+  categories?: HttpTypes.StoreProductCategory[]
+  collections?: HttpTypes.StoreCollection[]
 }
+
+const STORE_BASE_PATH = "/ready-to-wear"
 
 /**
  * Continuous loading product grid. The server renders the first batch
@@ -65,18 +64,37 @@ export default function InfiniteProducts({
   categoryId,
   productsIds,
   urlFiltered = false,
+  categories = [],
+  collections = [],
 }: Props) {
   const searchParams = useSearchParams()
+  const pathname = usePathname()
   const [view, setView] = useState<ViewMode>("grid")
   const sortBy = (searchParams.get("sortBy") as SortOptions) || "created_at"
-  // On /store the filters live in the URL; on category/collection pages
-  // they're fixed props baked into the static page.
-  const effectiveCollectionId = urlFiltered
-    ? searchParams.get("collection") ?? undefined
-    : collectionId
-  const effectiveCategoryId = urlFiltered
-    ? searchParams.get("category") ?? undefined
-    : categoryId
+  // On /ready-to-wear, collection/category come from the path
+  // (/ready-to-wear/<handle> or /ready-to-wear/<collection>/<category>) and
+  // are resolved back to ids here; on fixed category/collection pages
+  // they're just the static props baked into the page.
+  let effectiveCollectionId = collectionId
+  let effectiveCategoryId = categoryId
+  if (urlFiltered) {
+    const slug = pathname.startsWith(STORE_BASE_PATH)
+      ? pathname.slice(STORE_BASE_PATH.length).split("/").filter(Boolean)
+      : []
+    effectiveCollectionId = undefined
+    effectiveCategoryId = undefined
+    if (slug.length === 1) {
+      const cat = categories.find((c) => c.handle === slug[0])
+      if (cat) {
+        effectiveCategoryId = cat.id
+      } else {
+        effectiveCollectionId = collections.find((c) => c.handle === slug[0])?.id
+      }
+    } else if (slug.length >= 2) {
+      effectiveCollectionId = collections.find((c) => c.handle === slug[0])?.id
+      effectiveCategoryId = categories.find((c) => c.handle === slug[1])?.id
+    }
+  }
 
   // Price/color facets — client-side only (the API has no support for
   // these filters), applied on top of whatever's been loaded so far.
@@ -99,7 +117,7 @@ export default function InfiniteProducts({
     effectiveCategoryId,
   ])
   // True when the URL already asks for a different view than what got
-  // server-rendered (e.g. a hard reload of /store?category=x). In that case
+  // server-rendered (e.g. a hard reload of /ready-to-wear/costume). In that case
   // we must NOT paint `initialProducts` even for a single frame — that's the
   // wrong (unfiltered) catalog — so the very first render starts empty +
   // loading instead, and the effect below fetches the correct page 1.

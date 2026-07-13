@@ -7,11 +7,10 @@ import { Button } from "@modules/common/components/ui"
 import Divider from "@modules/common/components/divider"
 import OptionSelect from "@modules/products/components/product-actions/option-select"
 import isEqual from "lodash/isEqual"
-import { usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 import ProductPrice from "../product-price"
 import MobileActions from "./mobile-actions"
-import { useRouter } from "next/navigation"
+import { useSetSelectedVariant } from "@modules/products/context/selected-variant-context"
 import {
   isInStoreOnly,
   COLOR_OPTION_NAMES as COLOR_TITLES,
@@ -36,10 +35,6 @@ export default function ProductActions({
   product,
   disabled,
 }: ProductActionsProps) {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
   const [options, setOptions] = useState<Record<string, string | undefined>>(
     () => {
       if (product.variants?.length) {
@@ -116,22 +111,17 @@ export default function ProductActions({
     })
   }, [product.variants, options])
 
+  // Shared with VariantAwareGallery via context, not the URL — writing to
+  // the URL via the router used to re-suspend the Suspense boundary fed by
+  // ProductActionsWrapper (an async Server Component that refetches on every
+  // navigation) on every variant change, wiping this component's own
+  // `options` state right after. From the user's view, size/color selection
+  // appeared to silently reset itself.
+  const setSelectedVariantId = useSetSelectedVariant()
+
   useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString())
-    const value = isValidVariant ? selectedVariant?.id : null
-
-    if (params.get("v_id") === value) {
-      return
-    }
-
-    if (value) {
-      params.set("v_id", value)
-    } else {
-      params.delete("v_id")
-    }
-
-    router.replace(pathname + "?" + params.toString())
-  }, [selectedVariant, isValidVariant])
+    setSelectedVariantId(isValidVariant ? selectedVariant?.id ?? null : null)
+  }, [selectedVariant, isValidVariant, setSelectedVariantId])
 
   // check if the selected variant is in stock
   const inStock = useMemo(() => {
