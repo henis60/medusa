@@ -1,10 +1,10 @@
 "use client"
 
 import { HttpTypes } from "@medusajs/types"
-import { useSearchParams } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import Image from "next/image"
+import { useSelectedVariant } from "@modules/products/context/selected-variant-context"
 
 type Props = {
   defaultImages: HttpTypes.StoreProductImage[]
@@ -18,12 +18,11 @@ export default function VariantAwareGallery({
   allImages,
   variants,
 }: Props) {
-  const searchParams = useSearchParams()
-  // ProductActions defaults to the first variant synchronously on mount and
-  // only writes ?v_id= afterwards (in an effect). Mirror that same default
-  // here so the gallery starts on the right image set immediately, instead
-  // of showing all images for one frame and then narrowing down.
-  const variantId = searchParams.get("v_id") ?? variants?.[0]?.id ?? null
+  // Shared with ProductActions via context (not the URL) — the provider
+  // initializes to variants[0].id, matching ProductActions' own default, so
+  // the gallery starts on the right image set immediately instead of
+  // showing all images for one frame and then narrowing down.
+  const variantId = useSelectedVariant() ?? variants?.[0]?.id ?? null
 
   const selectedVariant = variantId
     ? variants?.find((v) => v.id === variantId)

@@ -14,6 +14,7 @@ import { HttpTypes } from "@medusajs/types"
 import ProductActionsWrapper from "./product-actions-wrapper"
 import ProductFavoriteButton from "@modules/products/components/product-favorite-button"
 import AnimatedColumn from "@modules/products/components/animated-column"
+import { SelectedVariantProvider } from "@modules/products/context/selected-variant-context"
 
 type ProductTemplateProps = {
   product: HttpTypes.StoreProduct
@@ -52,57 +53,59 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
       </AnimatedColumn>
 
       {/* Main product section */}
-      <div
-        className="page-container grid grid-cols-1 small:grid-cols-[1fr_420px] gap-x-20 py-8 small:pb-16 pt-2 small:pt-4"
-        data-testid="product-container"
-      >
-        {/* Images — left, scrolls with page */}
-        <AnimatedColumn direction="left" delay={0.1}>
-          <Suspense fallback={<ImageGallery images={images} />}>
-            <VariantAwareGallery
-              defaultImages={images}
-              variants={product.variants}
-              options={product.options}
-              allImages={product.images ?? []}
-            />
-          </Suspense>
-        </AnimatedColumn>
-
-        {/* Info + actions — right, sticky */}
-        <AnimatedColumn
-          direction="right"
-          delay={0.2}
-          className="flex flex-col gap-y-6 small:sticky small:top-24 small:self-start py-4 small:py-0"
+      <SelectedVariantProvider initialVariantId={product.variants?.[0]?.id ?? null}>
+        <div
+          className="page-container grid grid-cols-1 small:grid-cols-[1fr_420px] gap-x-20 py-8 small:pb-16 pt-2 small:pt-4"
+          data-testid="product-container"
         >
-          <ProductInfo
-            product={product}
-            action={
-              <ProductFavoriteButton
-                productId={product.id}
-                productHandle={product.handle ?? ""}
-                productTitle={product.title ?? ""}
-                productThumbnail={product.thumbnail ?? null}
+          {/* Images — left, scrolls with page */}
+          <AnimatedColumn direction="left" delay={0.1}>
+            <Suspense fallback={<ImageGallery images={images} />}>
+              <VariantAwareGallery
+                defaultImages={images}
+                variants={product.variants}
+                options={product.options}
+                allImages={product.images ?? []}
               />
-            }
-          />
-          <Suspense
-            fallback={
-              <ProductActions
-                disabled={true}
-                product={product}
-                region={region}
-              />
-            }
+            </Suspense>
+          </AnimatedColumn>
+
+          {/* Info + actions — right, sticky */}
+          <AnimatedColumn
+            direction="right"
+            delay={0.2}
+            className="flex flex-col gap-y-6 small:sticky small:top-24 small:self-start py-4 small:py-0"
           >
-            <ProductActionsWrapper
-              id={product.id}
-              region={region}
-              fallbackProduct={previewFallback ? product : undefined}
+            <ProductInfo
+              product={product}
+              action={
+                <ProductFavoriteButton
+                  productId={product.id}
+                  productHandle={product.handle ?? ""}
+                  productTitle={product.title ?? ""}
+                  productThumbnail={product.thumbnail ?? null}
+                />
+              }
             />
-          </Suspense>
-          <ProductTabs product={product} />
-        </AnimatedColumn>
-      </div>
+            <Suspense
+              fallback={
+                <ProductActions
+                  disabled={true}
+                  product={product}
+                  region={region}
+                />
+              }
+            >
+              <ProductActionsWrapper
+                id={product.id}
+                region={region}
+                fallbackProduct={previewFallback ? product : undefined}
+              />
+            </Suspense>
+            <ProductTabs product={product} />
+          </AnimatedColumn>
+        </div>
+      </SelectedVariantProvider>
 
       {/* Related / fits-with products */}
       <Suspense fallback={<SkeletonRelatedProducts />}>

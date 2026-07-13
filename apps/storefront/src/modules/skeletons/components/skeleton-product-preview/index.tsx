@@ -1,12 +1,21 @@
-import { Container } from "@modules/common/components/ui"
-
 const SkeletonProductPreview = () => {
   return (
     <div className="animate-pulse">
-      <Container className="aspect-[9/16] w-full bg-gray-100 bg-ui-bg-subtle" />
-      <div className="flex justify-between text-base-regular mt-2">
-        <div className="w-2/5 h-6 bg-gray-100"></div>
-        <div className="w-1/5 h-6 bg-gray-100"></div>
+      <div className="relative w-full overflow-hidden bg-white" style={{ paddingBottom: "133.333%" }}>
+        <div className="absolute inset-0 bg-[var(--theme-surface)]" />
+        <div className="absolute top-2 right-2 h-4 w-4 rounded-full bg-[var(--theme-surface-raised)]" />
+      </div>
+      <div className="mt-4 flex flex-col gap-2">
+        <div className="h-2.5 w-4/5 bg-[var(--theme-surface)]" />
+        <div className="h-2.5 w-2/5 bg-[var(--theme-surface)]" />
+        <div className="flex items-center justify-between mt-1">
+          <div className="flex items-center gap-1.5">
+            <div className="h-3 w-4 bg-[var(--theme-surface)]" />
+            <div className="h-3 w-4 bg-[var(--theme-surface)]" />
+            <div className="h-3 w-4 bg-[var(--theme-surface)]" />
+          </div>
+          <div className="h-2.5 w-10 bg-[var(--theme-surface)]" />
+        </div>
       </div>
     </div>
   )

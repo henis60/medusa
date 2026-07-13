@@ -13,6 +13,7 @@ type Props = {
   onSelectCategory: (id: string | null) => void
   onSelectCollection: (id: string | null) => void
   onSelectCollectionCategory: (collectionId: string, categoryId: string | null) => void
+  onClearFilters: () => void
 }
 
 // Horizontally scrollable row with edge fades that appear/disappear with scroll
@@ -87,6 +88,7 @@ export default function CategoryPills({
   onSelectCategory,
   onSelectCollection,
   onSelectCollectionCategory,
+  onClearFilters,
 }: Props) {
   // The actual scrollable element (FadeScroller's outer div) — not the inner
   // content wrapper, whose bounds always equal the full unclipped content.
@@ -137,10 +139,7 @@ export default function CategoryPills({
         <div className="flex items-center gap-5">
           <button
             data-active={!selectedCategory && !selectedCollection ? "true" : undefined}
-            onClick={() => {
-              onSelectCategory(null)
-              onSelectCollection(null)
-            }}
+            onClick={onClearFilters}
             className={link(!selectedCategory && !selectedCollection)}
           >
             Toate

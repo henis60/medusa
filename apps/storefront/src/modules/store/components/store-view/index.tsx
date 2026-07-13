@@ -32,6 +32,8 @@ type Props = {
  * pills, sidebar). The product grid refetches client-side in
  * InfiniteProducts using the same URL params.
  */
+const BASE_PATH = "/ready-to-wear"
+
 export default function StoreView({
   collections,
   categories,
@@ -41,9 +43,28 @@ export default function StoreView({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const urlCollectionId = searchParams.get("collection") ?? undefined
-  const urlCategoryId = searchParams.get("category") ?? undefined
   const sort = (searchParams.get("sortBy") as SortOptions) || "created_at"
+
+  // Category/collection live in the path (/ready-to-wear/<handle> or
+  // /ready-to-wear/<collection-handle>/<category-handle>), not query params
+  // — resolved here from the already-loaded categories/collections lists, so
+  // no extra fetch is needed to turn a handle back into an id.
+  const slug = pathname.startsWith(BASE_PATH)
+    ? pathname.slice(BASE_PATH.length).split("/").filter(Boolean)
+    : []
+  let urlCollectionId: string | undefined
+  let urlCategoryId: string | undefined
+  if (slug.length === 1) {
+    const cat = categories.find((c) => c.handle === slug[0])
+    if (cat) {
+      urlCategoryId = cat.id
+    } else {
+      urlCollectionId = collections.find((c) => c.handle === slug[0])?.id
+    }
+  } else if (slug.length >= 2) {
+    urlCollectionId = collections.find((c) => c.handle === slug[0])?.id
+    urlCategoryId = categories.find((c) => c.handle === slug[1])?.id
+  }
 
   // Optimistic mirror of collection/category — updated synchronously on
   // click, before router.push. The nav (mobile pills + desktop sidebar)
@@ -56,63 +77,65 @@ export default function StoreView({
   useEffect(() => setCollectionId(urlCollectionId), [urlCollectionId])
   useEffect(() => setCategoryId(urlCategoryId), [urlCategoryId])
 
-  const pushParams = useCallback(
-    (mutate: (params: URLSearchParams) => void) => {
+  const pushSlug = useCallback(
+    (nextSlug: string[]) => {
       const params = new URLSearchParams(searchParams)
-      mutate(params)
       params.delete("page")
-      router.push(`${pathname}?${params.toString()}`)
+      const qs = params.toString()
+      const path = nextSlug.length
+        ? `${BASE_PATH}/${nextSlug.join("/")}`
+        : BASE_PATH
+      router.push(qs ? `${path}?${qs}` : path)
     },
-    [pathname, router, searchParams]
+    [searchParams, router]
   )
 
   const selectCategory = useCallback(
     (id: string | null) => {
       setCategoryId(id ?? undefined)
       setCollectionId(undefined)
-      pushParams((params) => {
-        params.delete("collection")
-        if (id) params.set("category", id)
-        else params.delete("category")
-      })
+      const handle = id ? categories.find((c) => c.id === id)?.handle : undefined
+      pushSlug(handle ? [handle] : [])
     },
-    [pushParams]
+    [pushSlug, categories]
   )
 
   const selectCollection = useCallback(
     (id: string | null) => {
       setCollectionId(id ?? undefined)
       setCategoryId(undefined)
-      pushParams((params) => {
-        params.delete("category")
-        if (id) params.set("collection", id)
-        else params.delete("collection")
-      })
+      const handle = id ? collections.find((c) => c.id === id)?.handle : undefined
+      pushSlug(handle ? [handle] : [])
     },
-    [pushParams]
+    [pushSlug, collections]
   )
 
   const selectCollectionCategory = useCallback(
     (nextCollectionId: string, nextCategoryId: string | null) => {
       setCollectionId(nextCollectionId)
       setCategoryId(nextCategoryId ?? undefined)
-      pushParams((params) => {
-        params.set("collection", nextCollectionId)
-        if (nextCategoryId) params.set("category", nextCategoryId)
-        else params.delete("category")
-      })
+      const collectionHandle = collections.find(
+        (c) => c.id === nextCollectionId
+      )?.handle
+      const categoryHandle = nextCategoryId
+        ? categories.find((c) => c.id === nextCategoryId)?.handle
+        : undefined
+      pushSlug(
+        collectionHandle
+          ? categoryHandle
+            ? [collectionHandle, categoryHandle]
+            : [collectionHandle]
+          : []
+      )
     },
-    [pushParams]
+    [pushSlug, collections, categories]
   )
 
   const clearFilters = useCallback(() => {
     setCategoryId(undefined)
     setCollectionId(undefined)
-    pushParams((params) => {
-      params.delete("category")
-      params.delete("collection")
-    })
-  }, [pushParams])
+    pushSlug([])
+  }, [pushSlug])
 
   // Precomputed server-side (see templates/index.tsx) — a synchronous
   // lookup, same as plain categories, so there's no fetch/loading gap at all
@@ -166,6 +189,7 @@ export default function StoreView({
               onSelectCategory={selectCategory}
               onSelectCollection={selectCollection}
               onSelectCollectionCategory={selectCollectionCategory}
+              onClearFilters={clearFilters}
             />
           </div>
         </div>
