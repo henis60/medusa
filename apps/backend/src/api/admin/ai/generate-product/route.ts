@@ -1,6 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import Anthropic from "@anthropic-ai/sdk"
+import sharp from "sharp"
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -67,16 +68,23 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     ? `- "tags": array cu 2-5 taguri relevante alese exclusiv din această listă: ${JSON.stringify(tagValues)}. Array gol [] dacă niciunul nu se potrivește.`
     : `- "tags": array gol []`
 
-  // ── Fetch all images ───────────────────────────────────────────────────────
+  // ── Fetch all images and resize to 720p ────────────────────────────────────
   const urlsToFetch = (allImageUrls?.length ?? 0) > 1 ? allImageUrls! : [imageUrl]
   const fetchedImages: Anthropic.ImageBlockParam[] = []
   for (const url of urlsToFetch) {
     const resp = await fetch(url)
     if (!resp.ok) continue
     const buffer = await resp.arrayBuffer()
-    const base64 = Buffer.from(buffer).toString("base64")
     const ct = resp.headers.get("content-type") || "image/webp"
-    fetchedImages.push({ type: "image", source: { type: "base64", media_type: ct as any, data: base64 } })
+
+    // Resize to 720p (max 1280x720, maintaining aspect ratio) in memory
+    const resized = await sharp(Buffer.from(buffer))
+      .resize(1280, 720, { fit: "inside", withoutEnlargement: true })
+      .webp({ quality: 80 })
+      .toBuffer()
+
+    const base64 = resized.toString("base64")
+    fetchedImages.push({ type: "image", source: { type: "base64", media_type: "image/webp", data: base64 } })
   }
   if (!fetchedImages.length) {
     return res.status(400).json({ error: "Could not fetch image from URL" })

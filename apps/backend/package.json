@@ -23,6 +23,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",
     "@getbrevo/brevo": "^5.0.4",
+    "sharp": "^0.33.0",
     "@medusajs/admin-sdk": "2.15.5",
     "@medusajs/admin-shared": "2.15.5",
     "@medusajs/caching": "2.15.5",
