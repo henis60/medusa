@@ -983,6 +983,7 @@ body.hunter-landing-active::before {
 .rv {
   opacity: 0;
   transform: translateY(22px);
+  will-change: opacity, transform;
 }
 .rv.from-l {
   transform: translateX(-28px);
@@ -998,6 +999,15 @@ body.hunter-landing-active::before {
 .rv-group > * {
   opacity: 0;
   transform: translateY(18px);
+  will-change: opacity, transform;
+}
+
+/* Reduce motion preference — prefers-reduced-motion settings disable animations */
+@media (prefers-reduced-motion: reduce) {
+  .rv, .rv-group > *, .line-draw, .kicker {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 /* line draw — Framer Motion animates scaleX(0) → scaleX(1) */

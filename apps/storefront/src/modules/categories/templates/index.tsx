@@ -103,6 +103,7 @@ export default function CategoryTemplate({
             sortBy={sort}
             categoryId={category.id}
             countryCode={countryCode}
+            categoryWithChildren={category}
           />
         </Suspense>
       </div>

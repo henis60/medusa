@@ -51,6 +51,7 @@ export default function CollectionTemplate({
             sortBy="created_at"
             collectionId={collection.id}
             countryCode={countryCode}
+            collectionWithChildren={collection}
           />
         </Suspense>
       </div>

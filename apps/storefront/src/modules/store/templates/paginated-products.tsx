@@ -27,6 +27,8 @@ export default async function PaginatedProducts({
   urlFiltered = false,
   categories,
   collections,
+  categoryWithChildren,
+  collectionWithChildren,
 }: {
   sortBy?: SortOptions
   collectionId?: string
@@ -38,17 +40,45 @@ export default async function PaginatedProducts({
   /** Only needed when urlFiltered — resolves the path's handles back to ids. */
   categories?: HttpTypes.StoreProductCategory[]
   collections?: HttpTypes.StoreCollection[]
+  categoryWithChildren?: HttpTypes.StoreProductCategory
+  collectionWithChildren?: HttpTypes.StoreCollection
 }) {
   const queryParams: PaginatedProductsParams = {
     limit: PRODUCT_LIMIT,
   }
 
   if (collectionId) {
-    queryParams["collection_id"] = [collectionId]
+    // Collect collection + all its children recursively
+    const collectionIds = [collectionId]
+    const collectChildren = (col: HttpTypes.StoreCollection) => {
+      if ((col as any).collections?.length) {
+        (col as any).collections.forEach((child: HttpTypes.StoreCollection) => {
+          collectionIds.push(child.id)
+          collectChildren(child)
+        })
+      }
+    }
+    if (collectionWithChildren) {
+      collectChildren(collectionWithChildren)
+    }
+    queryParams["collection_id"] = collectionIds
   }
 
   if (categoryId) {
-    queryParams["category_id"] = [categoryId]
+    // Collect category + all its children recursively
+    const categoryIds = [categoryId]
+    const collectChildren = (cat: HttpTypes.StoreProductCategory) => {
+      if (cat.category_children?.length) {
+        cat.category_children.forEach((child) => {
+          categoryIds.push(child.id)
+          collectChildren(child)
+        })
+      }
+    }
+    if (categoryWithChildren) {
+      collectChildren(categoryWithChildren)
+    }
+    queryParams["category_id"] = categoryIds
   }
 
   if (productsIds) {

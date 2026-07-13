@@ -138,27 +138,6 @@ const MobileActions: React.FC<MobileActionsProps> = ({
               Disponibil în magazin
             </div>
           </div>
-        ) : isSimple ? (
-          <div className="bg-[var(--theme-bg)] border-t border-[var(--theme-border)] flex items-center gap-3 px-4 py-3">
-            <div className="flex-1 min-w-0">
-              <p className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text)] truncate">
-                {product.title}
-              </p>
-              {selectedPrice && (
-                <p className="font-sans text-[11px] text-hunter-gold mt-0.5">
-                  {selectedPrice.calculated_price}
-                </p>
-              )}
-            </div>
-            <Button
-              onClick={handleAddToCart}
-              disabled={!inStock}
-              isLoading={isAdding}
-              className="!bg-hunter-gold !text-hunter-dark !border-transparent font-sans uppercase tracking-[3px] text-[11px] px-6 py-3 rounded-none"
-            >
-              {!inStock ? "Indisponibil" : "Adaugă în coș"}
-            </Button>
-          </div>
         ) : (
           <div className="bg-[var(--theme-bg)] border-t border-[var(--theme-border)] px-6 py-3">
             <Button
