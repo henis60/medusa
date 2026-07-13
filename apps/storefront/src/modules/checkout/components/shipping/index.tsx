@@ -20,7 +20,7 @@ import { HttpTypes } from "@medusajs/types"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import Divider from "@modules/common/components/divider"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 // A shipping option that delivers to a parcel locker requires the customer
 // to pick a specific locker. Detection is purely structural: the eAWB
@@ -36,24 +36,6 @@ const isLockerOption = (o: HttpTypes.StoreCartShippingOption) => {
 
 const PICKUP_OPTION_ON = "__PICKUP_ON"
 const PICKUP_OPTION_OFF = "__PICKUP_OFF"
-
-// Caches calculated prices per cart + destination signature, so returning to
-// the delivery step (e.g. after going back from payment) reuses the result
-// instead of re-querying the courier. Changing the address busts the cache.
-const pricesCache = new Map<string, Record<string, number>>()
-
-function priceCacheKey(cart: HttpTypes.StoreCart): string {
-  const a = cart.shipping_address
-  const itemCount = (cart.items ?? []).reduce((s, i) => s + (i.quantity ?? 0), 0)
-  return [
-    cart.id,
-    a?.city ?? "",
-    a?.province ?? "",
-    a?.address_1 ?? "",
-    a?.country_code ?? "",
-    itemCount,
-  ].join("|")
-}
 
 type ShippingProps = {
   cart: HttpTypes.StoreCart
@@ -76,6 +58,10 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
   const [showPickupOptions, setShowPickupOptions] = useState<string>(PICKUP_OPTION_OFF)
   const [calculatedPricesMap, setCalculatedPricesMap] = useState<Record<string, number>>({})
   const [error, setError] = useState<string | null>(null)
+  // True when the last price fetch failed outright (network/API error) —
+  // shown as a retryable error, never cached, and never confused with a
+  // genuine "no courier serves this address" (empty prices map) result.
+  const [pricesFetchFailed, setPricesFetchFailed] = useState(false)
   const [shippingMethodId, setShippingMethodId] = useState<string | null>(
     cart.shipping_methods?.at(-1)?.shipping_option_id || null
   )
@@ -110,29 +96,46 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
       (calculatedPricesMap[o.id] ?? 0) > 0
   )
 
+  const fetchPrices = useCallback(() => {
+    setIsLoadingPrices(true)
+    setPricesFetchFailed(false)
+    // One request for all calculated options (backend queries Europarcel once).
+    // The backend already returns only positive prices; options absent from
+    // the map are treated as unavailable and disabled below.
+    listEawbShippingPrices(cart.id)
+      .then((prices) => {
+        setCalculatedPricesMap(prices)
+      })
+      .catch(() => {
+        setPricesFetchFailed(true)
+      })
+      .finally(() => setIsLoadingPrices(false))
+  }, [cart.id])
+
+  // Refetch only when the destination actually changes (address or item
+  // quantities, which the delivery price can depend on) — not on every
+  // re-render/re-visit of this step with the same destination.
+  const a = cart.shipping_address
+  const itemCount = (cart.items ?? []).reduce((s, i) => s + (i.quantity ?? 0), 0)
+  const destinationSignature = [
+    cart.id,
+    a?.city ?? "",
+    a?.province ?? "",
+    a?.address_1 ?? "",
+    a?.country_code ?? "",
+    itemCount,
+  ].join("|")
+
   useEffect(() => {
     const hasCalculated = _shippingMethods?.some(
       (sm) => sm.price_type === "calculated"
     )
     if (hasCalculated) {
-      const cacheKey = priceCacheKey(cart)
-      const cached = pricesCache.get(cacheKey)
-      if (cached) {
-        // Already computed for this cart + address — reuse, no recalculation.
-        setCalculatedPricesMap(cached)
-        setIsLoadingPrices(false)
-      } else {
-        setIsLoadingPrices(true)
-        // One request for all calculated options (backend queries Europarcel once).
-        // The backend already returns only positive prices; options absent from
-        // the map are treated as unavailable and disabled below.
-        listEawbShippingPrices(cart.id).then((prices) => {
-          pricesCache.set(cacheKey, prices)
-          setCalculatedPricesMap(prices)
-          setIsLoadingPrices(false)
-        })
-      }
+      fetchPrices()
     }
+  }, [destinationSignature])
+
+  useEffect(() => {
     if (_pickupMethods?.find((m) => m.id === shippingMethodId)) {
       setShowPickupOptions(PICKUP_OPTION_ON)
     }
@@ -330,7 +333,23 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
               </RadioGroup>
             )}
 
+            {!isLoadingPrices && pricesFetchFailed && (
+              <div className="flex items-center justify-between gap-3 py-2">
+                <p className="font-serif italic text-[13px] text-[var(--theme-text-muted)]">
+                  Nu am putut verifica prețurile de livrare. Încearcă din nou.
+                </p>
+                <button
+                  type="button"
+                  onClick={fetchPrices}
+                  className="font-sans text-[10px] uppercase tracking-[2px] text-hunter-gold hover:underline shrink-0"
+                >
+                  Reîncearcă
+                </button>
+              </div>
+            )}
+
             {!isLoadingPrices &&
+              !pricesFetchFailed &&
               (visibleShippingMethods?.length ?? 0) === 0 &&
               !hasPickupOptions && (
                 <p className="font-serif italic text-[13px] text-[var(--theme-text-muted)] py-2">

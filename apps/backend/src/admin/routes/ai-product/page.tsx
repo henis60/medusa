@@ -28,9 +28,6 @@ type Row = {
   tags: string;
   stock: string;
   inStoreOnly: boolean;
-  /** Resize to max 1600px + re-encode as webp before upload. Off = upload
-   *  the original bytes as-is (useful when the source is already an
-   *  optimized webp, to avoid a lossy double re-encode). */
   convertImages: boolean;
   files: File[];
   status: RowStatus;
@@ -72,24 +69,38 @@ function parseCsv(text: string): Partial<Row>[] {
     for (let i = 0; i < line.length; i++) {
       const ch = line[i];
       if (inQuotes) {
-        if (ch === '"' && line[i + 1] === '"') { current += '"'; i++; }
-        else if (ch === '"') { inQuotes = false; }
-        else { current += ch; }
+        if (ch === '"' && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else if (ch === '"') {
+          inQuotes = false;
+        } else {
+          current += ch;
+        }
       } else {
-        if (ch === '"') { inQuotes = true; }
-        else if (ch === ',') { cells.push(current.trim()); current = ""; }
-        else { current += ch; }
+        if (ch === '"') {
+          inQuotes = true;
+        } else if (ch === ",") {
+          cells.push(current.trim());
+          current = "";
+        } else {
+          current += ch;
+        }
       }
     }
     cells.push(current.trim());
     return cells;
   }
 
-  const headers = splitRow(lines[0]).map((h) => h.toLowerCase().replace(/\s+/g, "_"));
+  const headers = splitRow(lines[0]).map((h) =>
+    h.toLowerCase().replace(/\s+/g, "_"),
+  );
   return lines.slice(1).map((line) => {
     const values = splitRow(line);
     const row: Record<string, string> = {};
-    headers.forEach((h, i) => { row[h] = values[i] ?? ""; });
+    headers.forEach((h, i) => {
+      row[h] = values[i] ?? "";
+    });
     return row;
   });
 }
@@ -160,7 +171,9 @@ function buildVariants(
       prices: priceFor(si),
     }));
   }
-  return [{ title: "Default", sku: skuPrefix, options: {}, prices: priceFor(0) }];
+  return [
+    { title: "Default", sku: skuPrefix, options: {}, prices: priceFor(0) },
+  ];
 }
 
 function buildOptions(colors: string[], sizes: string[]) {
@@ -183,12 +196,21 @@ async function processImage(file: File): Promise<File> {
       const canvas = document.createElement("canvas");
       canvas.width = Math.round(img.width * scale);
       canvas.height = Math.round(img.height * scale);
-      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas
+        .getContext("2d")!
+        .drawImage(img, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(url);
       canvas.toBlob(
         (blob) => {
-          if (!blob) { reject(new Error("toBlob failed")); return; }
-          resolve(new File([blob], file.name.replace(/\.[^.]+$/, ".webp"), { type: "image/webp" }));
+          if (!blob) {
+            reject(new Error("toBlob failed"));
+            return;
+          }
+          resolve(
+            new File([blob], file.name.replace(/\.[^.]+$/, ".webp"), {
+              type: "image/webp",
+            }),
+          );
         },
         "image/webp",
         QUALITY,
@@ -201,7 +223,9 @@ async function processImage(file: File): Promise<File> {
 
 async function uploadFiles(files: File[], convert: boolean): Promise<string[]> {
   if (!files.length) return [];
-  const processed = convert ? await Promise.all(files.map(processImage)) : files;
+  const processed = convert
+    ? await Promise.all(files.map(processImage))
+    : files;
   const formData = new FormData();
   processed.forEach((f) => formData.append("files", f));
   const res = await fetch("/admin/uploads", {
@@ -274,47 +298,40 @@ function SelectCell({
   placeholder,
   disabled,
 }: {
-  value: string
-  onChange: (v: string) => void
-  options: { value: string; label: string }[]
-  placeholder: string
-  disabled?: boolean
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+  placeholder: string;
+  disabled?: boolean;
 }) {
-  const [open, setOpen] = useState(false)
-  const [rect, setRect] = useState<DOMRect | null>(null)
-  const btnRef = useRef<HTMLButtonElement>(null)
-  // The dropdown itself is rendered via a portal straight into
-  // document.body (see below), OUTSIDE the [data-select-cell] wrapper. The
-  // outside-click check below must also treat clicks inside the portal
-  // panel as "inside" — otherwise every option click is misread as an
-  // outside click on `mousedown` and closes the menu before the option's
-  // own onClick (which applies the selection) ever fires, so the value
-  // never sticks.
-  const panelRef = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState(false);
+  const [rect, setRect] = useState<DOMRect | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!open) return
+    if (!open) return;
     const handler = (e: MouseEvent) => {
-      const target = e.target as Node
+      const target = e.target as Node;
       const insideButton = btnRef.current
         ?.closest("[data-select-cell]")
-        ?.contains(target)
-      const insidePanel = panelRef.current?.contains(target)
+        ?.contains(target);
+      const insidePanel = panelRef.current?.contains(target);
       if (!insideButton && !insidePanel) {
-        setOpen(false)
+        setOpen(false);
       }
-    }
-    document.addEventListener("mousedown", handler)
-    return () => document.removeEventListener("mousedown", handler)
-  }, [open])
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
 
   const handleOpen = () => {
-    if (disabled) return
-    setRect(btnRef.current?.getBoundingClientRect() ?? null)
-    setOpen((o) => !o)
-  }
+    if (disabled) return;
+    setRect(btnRef.current?.getBoundingClientRect() ?? null);
+    setOpen((o) => !o);
+  };
 
-  const selected = options.find((o) => o.value === value)
+  const selected = options.find((o) => o.value === value);
 
   return (
     <div data-select-cell className="relative">
@@ -325,49 +342,69 @@ function SelectCell({
         onClick={handleOpen}
         className="w-full flex items-center justify-between gap-1 bg-ui-bg-field border border-ui-border-base rounded-md pl-2 pr-2 py-1 text-sm focus:outline-none focus:border-ui-border-interactive focus:ring-1 focus:ring-ui-border-interactive disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        <span className={`truncate ${selected ? "text-ui-fg-base" : "text-ui-fg-muted"}`}>
+        <span
+          className={`truncate ${selected ? "text-ui-fg-base" : "text-ui-fg-muted"}`}
+        >
           {selected?.label ?? placeholder}
         </span>
-        <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" className="flex-shrink-0 text-ui-fg-muted">
-          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          className="flex-shrink-0 text-ui-fg-muted"
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clipRule="evenodd"
+          />
         </svg>
       </button>
-      {open && rect && createPortal(
-        <div
-          ref={panelRef}
-          style={{
-            position: "fixed",
-            top: rect.bottom + 4,
-            left: rect.left,
-            minWidth: rect.width,
-            zIndex: 9999,
-          }}
-          className="bg-ui-bg-base border border-ui-border-base rounded-md shadow-elevation-flyout overflow-hidden"
-        >
-          <div className="max-h-48 overflow-y-auto">
-            <button
-              type="button"
-              onClick={() => { onChange(""); setOpen(false) }}
-              className="w-full text-left px-3 py-1.5 text-sm text-ui-fg-muted hover:bg-ui-bg-base-hover"
-            >
-              {placeholder}
-            </button>
-            {options.map((o) => (
+      {open &&
+        rect &&
+        createPortal(
+          <div
+            ref={panelRef}
+            style={{
+              position: "fixed",
+              top: rect.bottom + 4,
+              left: rect.left,
+              minWidth: rect.width,
+              zIndex: 9999,
+            }}
+            className="bg-ui-bg-base border border-ui-border-base rounded-md shadow-elevation-flyout overflow-hidden"
+          >
+            <div className="max-h-48 overflow-y-auto">
               <button
-                key={o.value}
                 type="button"
-                onClick={() => { onChange(o.value); setOpen(false) }}
-                className={`w-full text-left px-3 py-1.5 text-sm hover:bg-ui-bg-base-hover ${o.value === value ? "text-ui-fg-interactive font-medium" : "text-ui-fg-base"}`}
+                onClick={() => {
+                  onChange("");
+                  setOpen(false);
+                }}
+                className="w-full text-left px-3 py-1.5 text-sm text-ui-fg-muted hover:bg-ui-bg-base-hover"
               >
-                {o.label}
+                {placeholder}
               </button>
-            ))}
-          </div>
-        </div>,
-        document.body
-      )}
+              {options.map((o) => (
+                <button
+                  key={o.value}
+                  type="button"
+                  onClick={() => {
+                    onChange(o.value);
+                    setOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-1.5 text-sm hover:bg-ui-bg-base-hover ${o.value === value ? "text-ui-fg-interactive font-medium" : "text-ui-fg-base"}`}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
-  )
+  );
 }
 
 // ── Check cell ──────────────────────────────────────────────────────────────
@@ -377,9 +414,9 @@ function CheckCell({
   onChange,
   disabled,
 }: {
-  checked: boolean
-  onChange: (v: boolean) => void
-  disabled?: boolean
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  disabled?: boolean;
 }) {
   return (
     <button
@@ -396,19 +433,25 @@ function CheckCell({
     >
       {checked && (
         <svg viewBox="0 0 12 12" fill="none" className="w-3 h-3">
-          <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            d="M2 6l3 3 5-5"
+            stroke="white"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       )}
     </button>
-  )
+  );
 }
 
 // ── Blob URL cache — createObjectURL once per File, reuse on every render ──
 
-const _blobCache = new WeakMap<File, string>()
+const _blobCache = new WeakMap<File, string>();
 function blobUrl(f: File): string {
-  if (!_blobCache.has(f)) _blobCache.set(f, URL.createObjectURL(f))
-  return _blobCache.get(f)!
+  if (!_blobCache.has(f)) _blobCache.set(f, URL.createObjectURL(f));
+  return _blobCache.get(f)!;
 }
 
 // ── Row image upload ────────────────────────────────────────────────────────
@@ -537,16 +580,19 @@ const AIProductPage = () => {
   const categories = categoriesData?.product_categories ?? [];
   const collections = collectionsData?.collections ?? [];
   const tags: { id: string; value: string }[] = tagsData?.product_tags ?? [];
-  const inStoreTypeId = (productTypesData?.product_types ?? []).find(
-    (t: any) => t.value?.toLowerCase() === "in-store-only"
-  )?.id ?? null;
+  const inStoreTypeId =
+    (productTypesData?.product_types ?? []).find(
+      (t: any) => t.value?.toLowerCase() === "in-store-only",
+    )?.id ?? null;
   const firstLocationId = stockLocationsData?.stock_locations?.[0]?.id ?? null;
-  const onlineChannelId = (salesChannelsData?.sales_channels ?? []).find(
-    (sc: any) => sc.name?.toLowerCase() === "online"
-  )?.id ?? null;
-  const defaultShippingProfileId = (shippingProfilesData?.shipping_profiles ?? []).find(
-    (sp: any) => sp.name?.toLowerCase().includes("default")
-  )?.id ?? null;
+  const onlineChannelId =
+    (salesChannelsData?.sales_channels ?? []).find(
+      (sc: any) => sc.name?.toLowerCase() === "online",
+    )?.id ?? null;
+  const defaultShippingProfileId =
+    (shippingProfilesData?.shipping_profiles ?? []).find((sp: any) =>
+      sp.name?.toLowerCase().includes("default"),
+    )?.id ?? null;
 
   // ── CSV ──────────────────────────────────────────────────────────────────
 
@@ -643,10 +689,15 @@ const AIProductPage = () => {
     setProcessing(true);
 
     const CONCURRENCY = 5;
-    const toProcess = rows.filter((r) => r.status !== "done" && r.sku_prefix && r.files.length > 0);
-    const errored = rows.filter((r) => r.status !== "done" && (!r.sku_prefix || r.files.length === 0));
+    const toProcess = rows.filter(
+      (r) => r.status !== "done" && r.sku_prefix && r.files.length > 0,
+    );
+    const errored = rows.filter(
+      (r) => r.status !== "done" && (!r.sku_prefix || r.files.length === 0),
+    );
     errored.forEach((row) => {
-      if (!row.sku_prefix) updateRow(row.index, { status: "error", error: "SKU prefix lipsă" });
+      if (!row.sku_prefix)
+        updateRow(row.index, { status: "error", error: "SKU prefix lipsă" });
       else updateRow(row.index, { status: "error", error: "Lipsă imagini" });
     });
 
@@ -697,7 +748,9 @@ const AIProductPage = () => {
                 : {}),
               ...(() => {
                 if (!row.price_ron) return {};
-                const p = parseFloat(row.price_ron.split(";")[0].replace(",", "."));
+                const p = parseFloat(
+                  row.price_ron.split(";")[0].replace(",", "."),
+                );
                 return Number.isFinite(p) ? { price_ron: p } : {};
               })(),
               ...(extraInstructions.trim()
@@ -717,7 +770,10 @@ const AIProductPage = () => {
 
       // Reorder images as suggested by AI (front first, then back, then details)
       let imageOrderApplied = false;
-      if (aiResult.image_order?.length === imageUrls.length && imageUrls.length > 1) {
+      if (
+        aiResult.image_order?.length === imageUrls.length &&
+        imageUrls.length > 1
+      ) {
         imageUrls = aiResult.image_order.map((i) => imageUrls[i]);
         imageOrderApplied = true;
       }
@@ -739,8 +795,12 @@ const AIProductPage = () => {
           : (aiResult.sizes ?? []);
         const priceRonRaw = row.price_ron.trim();
         const priceRon: number | number[] = priceRonRaw.includes(";")
-          ? priceRonRaw.split(";").map((p) => parseFloat(p.replace(",", ".")) || 0)
-          : parseFloat(priceRonRaw.replace(",", ".")) || aiResult.price_ron || 0;
+          ? priceRonRaw
+              .split(";")
+              .map((p) => parseFloat(p.replace(",", ".")) || 0)
+          : parseFloat(priceRonRaw.replace(",", ".")) ||
+            aiResult.price_ron ||
+            0;
 
         const categoryName = row.category || aiResult.category || null;
         const categoryId = categoryName
@@ -772,10 +832,19 @@ const AIProductPage = () => {
           ...(material ? { material } : {}),
           thumbnail: imageUrls[0],
           images: imageUrls.map((url) => ({ url })),
-          metadata: { seo_title: aiResult.seo_title, seo_description: aiResult.seo_description },
-          ...(row.inStoreOnly && inStoreTypeId ? { type_id: inStoreTypeId } : {}),
-          ...(onlineChannelId ? { sales_channels: [{ id: onlineChannelId }] } : {}),
-          ...(defaultShippingProfileId ? { shipping_profile_id: defaultShippingProfileId } : {}),
+          metadata: {
+            seo_title: aiResult.seo_title,
+            seo_description: aiResult.seo_description,
+          },
+          ...(row.inStoreOnly && inStoreTypeId
+            ? { type_id: inStoreTypeId }
+            : {}),
+          ...(onlineChannelId
+            ? { sales_channels: [{ id: onlineChannelId }] }
+            : {}),
+          ...(defaultShippingProfileId
+            ? { shipping_profile_id: defaultShippingProfileId }
+            : {}),
           options: buildOptions(colors, sizes),
           variants: buildVariants(
             colors,
@@ -795,11 +864,13 @@ const AIProductPage = () => {
               : [];
             const finalTags = rowTags.length ? rowTags : (aiResult.tags ?? []);
             const tagIds = finalTags
-              .map((v) => tags.find((t) => t.value.toLowerCase() === v.toLowerCase())?.id)
+              .map(
+                (v) =>
+                  tags.find((t) => t.value.toLowerCase() === v.toLowerCase())
+                    ?.id,
+              )
               .filter(Boolean) as string[];
-            return tagIds.length
-              ? { tags: tagIds.map((id) => ({ id })) }
-              : {};
+            return tagIds.length ? { tags: tagIds.map((id) => ({ id })) } : {};
           })(),
         });
 
@@ -910,7 +981,10 @@ const AIProductPage = () => {
 
         // Set stock quantity — supports single value (10) or per-color (5;10;3)
         const stockValues = row.stock
-          ? row.stock.split(";").map((s) => parseInt(s.trim())).filter((n) => !isNaN(n))
+          ? row.stock
+              .split(";")
+              .map((s) => parseInt(s.trim()))
+              .filter((n) => !isNaN(n))
           : [];
         const stockForVariant = (variant: any): number => {
           if (stockValues.length === 0) return 0;
@@ -925,7 +999,11 @@ const AIProductPage = () => {
           const pos = product.variants.indexOf(variant);
           return stockValues[pos] ?? stockValues[0];
         };
-        if (firstLocationId && product.variants?.length && stockValues.length > 0) {
+        if (
+          firstLocationId &&
+          product.variants?.length &&
+          stockValues.length > 0
+        ) {
           try {
             // One fetch for all variants' inventory items (not one per variant)
             const { variants: freshVariants } = await sdk.client.fetch<{
@@ -943,14 +1021,19 @@ const AIProductPage = () => {
                   `/admin/inventory-items/${invItemId}/location-levels`,
                   {
                     method: "POST",
-                    body: { location_id: firstLocationId, stocked_quantity: stockForVariant(variant) },
+                    body: {
+                      location_id: firstLocationId,
+                      stocked_quantity: stockForVariant(variant),
+                    },
                   },
                 );
               }
             }
           } catch (e: any) {
             console.error("[stock] Failed:", e);
-            variantImageWarning = (variantImageWarning ? variantImageWarning + "; " : "") + `Stoc nesalvat: ${e.message ?? "eroare"}`;
+            variantImageWarning =
+              (variantImageWarning ? variantImageWarning + "; " : "") +
+              `Stoc nesalvat: ${e.message ?? "eroare"}`;
           }
         }
 
@@ -1015,13 +1098,13 @@ const AIProductPage = () => {
 
   return (
     <div className="flex flex-col gap-y-4 p-6 max-w-[1600px]">
-
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div>
           <Heading level="h1">AI Product Generator</Heading>
           <Text size="small" className="text-ui-fg-subtle mt-0.5">
-            Import CSV sau adaugă manual — AI completează titlul, descrierea și variantele din imagine.
+            Import CSV sau adaugă manual — AI completează titlul, descrierea și
+            variantele din imagine.
           </Text>
         </div>
         <div className="flex items-center gap-2">
@@ -1055,7 +1138,9 @@ const AIProductPage = () => {
               isLoading={processing}
               disabled={processing || !canProcess || pendingRows.length === 0}
             >
-              {processing ? "Procesez..." : `Generează ${pendingRows.length} produse`}
+              {processing
+                ? "Procesez..."
+                : `Generează ${pendingRows.length} produse`}
             </Button>
           )}
         </div>
@@ -1064,32 +1149,66 @@ const AIProductPage = () => {
       {/* ── How it works ── */}
       <details className="group">
         <summary className="cursor-pointer list-none flex items-center gap-1.5 text-sm text-ui-fg-subtle hover:text-ui-fg-base select-none w-fit">
-          <span className="transition-transform group-open:rotate-90 inline-block text-xs">▶</span>
+          <span className="transition-transform group-open:rotate-90 inline-block text-xs">
+            ▶
+          </span>
           Cum funcționează?
         </summary>
         <Container className="mt-2 px-5 py-4">
           <div className="grid grid-cols-1 small:grid-cols-5 gap-4">
             {[
-              { n: "1", title: "Introduci datele", body: "Importezi un CSV sau adaugi rânduri manual. Completezi fotografiile, prețul, SKU-ul și opțional culorile/mărimile/colecția." },
-              { n: "2", title: "Instrucțiuni opționale", body: 'Poți adăuga indicații pentru AI aplicate tuturor produselor — ex: "Accentuează căldura materialelor, colecție toamnă-iarnă 2025."' },
-              { n: "3", title: "AI analizează fotografiile", body: "Claude generează titlu, descriere elegantă, culori cu cod hex, mărimi, material, categorie, colecție sugerată, taguri și câmpuri SEO — plus ordinea optimă a pozelor." },
-              { n: "4", title: "Produsul e creat automat", body: "Cu toate variantele (Negru/S, Negru/M, Maro/L...), prețurile, imaginile asociate fiecărei culori și stocul inițial." },
-              { n: "5", title: "Verifici și publici", body: "Produsul e creat ca draft — nu apare în magazin. Din tabel poți face Preview ca să-l vezi înainte, apoi Publică pentru a-l face vizibil." },
+              {
+                n: "1",
+                title: "Introduci datele",
+                body: "Importezi un CSV sau adaugi rânduri manual. Completezi fotografiile, prețul, SKU-ul și opțional culorile/mărimile/colecția.",
+              },
+              {
+                n: "2",
+                title: "Instrucțiuni opționale",
+                body: 'Poți adăuga indicații pentru AI aplicate tuturor produselor — ex: "Accentuează căldura materialelor, colecție toamnă-iarnă 2025."',
+              },
+              {
+                n: "3",
+                title: "AI analizează fotografiile",
+                body: "Claude generează titlu, descriere elegantă, culori cu cod hex, mărimi, material, categorie, colecție sugerată, taguri și câmpuri SEO — plus ordinea optimă a pozelor.",
+              },
+              {
+                n: "4",
+                title: "Produsul e creat automat",
+                body: "Cu toate variantele (Negru/S, Negru/M, Maro/L...), prețurile, imaginile asociate fiecărei culori și stocul inițial.",
+              },
+              {
+                n: "5",
+                title: "Verifici și publici",
+                body: "Produsul e creat ca draft — nu apare în magazin. Din tabel poți face Preview ca să-l vezi înainte, apoi Publică pentru a-l face vizibil.",
+              },
             ].map(({ n, title, body }) => (
               <div key={n} className="flex gap-3">
                 <div className="flex-shrink-0 w-6 h-6 rounded-full bg-ui-bg-interactive flex items-center justify-center">
-                  <Text size="xsmall" weight="plus" className="text-white leading-none">{n}</Text>
+                  <Text
+                    size="xsmall"
+                    weight="plus"
+                    className="text-white leading-none"
+                  >
+                    {n}
+                  </Text>
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <Text size="small" weight="plus" className="text-ui-fg-base">{title}</Text>
-                  <Text size="small" className="text-ui-fg-subtle">{body}</Text>
+                  <Text size="small" weight="plus" className="text-ui-fg-base">
+                    {title}
+                  </Text>
+                  <Text size="small" className="text-ui-fg-subtle">
+                    {body}
+                  </Text>
                 </div>
               </div>
             ))}
           </div>
           <div className="mt-4 pt-3 border-t border-ui-border-base">
             <Text size="small" className="text-ui-fg-muted">
-              Câteva fotografii și un prefix de SKU sunt tot ce ai nevoie. În 30–60 de secunde, produsul apare în admin — cu descriere, variante, prețuri și stoc, gata de publicat.
+              Câteva fotografii și un prefix de SKU sunt tot ce ai nevoie. În
+              30–60 de secunde, produsul apare în admin — cu descriere,
+              variante, prețuri și stoc, gata de publicat.
             </Text>
           </div>
         </Container>
@@ -1250,7 +1369,9 @@ const AIProductPage = () => {
                     <td className="py-2 px-3">
                       <SelectCell
                         value={row.collection}
-                        onChange={(v) => updateField(row.index, "collection", v)}
+                        onChange={(v) =>
+                          updateField(row.index, "collection", v)
+                        }
                         placeholder="— colecție —"
                         disabled={disabled}
                         options={collections.map((c) => ({
@@ -1290,7 +1411,9 @@ const AIProductPage = () => {
                     <td className="py-2 px-3">
                       <CheckCell
                         checked={row.inStoreOnly}
-                        onChange={(v) => updateField(row.index, "inStoreOnly", v)}
+                        onChange={(v) =>
+                          updateField(row.index, "inStoreOnly", v)
+                        }
                         disabled={disabled}
                       />
                     </td>
@@ -1299,12 +1422,16 @@ const AIProductPage = () => {
                         <StatusBadge status={row.status} />
                         {row.warning && (
                           <div className="flex items-start gap-1">
-                            <span className="text-[10px] text-ui-fg-muted leading-tight">⚠ {row.warning}</span>
+                            <span className="text-[10px] text-ui-fg-muted leading-tight">
+                              ⚠ {row.warning}
+                            </span>
                           </div>
                         )}
                         {row.error && (
                           <div className="rounded bg-ui-bg-error px-1.5 py-0.5">
-                            <span className="text-[10px] text-ui-fg-error leading-tight">{row.error}</span>
+                            <span className="text-[10px] text-ui-fg-error leading-tight">
+                              {row.error}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -1325,7 +1452,9 @@ const AIProductPage = () => {
                               <button
                                 className="inline-flex items-center gap-1 text-[11px] text-ui-fg-subtle border border-ui-border-base rounded px-1.5 py-0.5 hover:bg-ui-bg-subtle hover:text-ui-fg-base transition-colors"
                                 onClick={async () => {
-                                  const { token } = await sdk.client.fetch<{ token: string }>(
+                                  const { token } = await sdk.client.fetch<{
+                                    token: string;
+                                  }>(
                                     `/admin/ai/preview-token?product_id=${row.productId}`,
                                   );
                                   window.open(
@@ -1340,10 +1469,13 @@ const AIProductPage = () => {
                             <button
                               className="inline-flex items-center gap-1 text-[11px] text-ui-fg-interactive border border-ui-border-interactive rounded px-1.5 py-0.5 hover:bg-ui-bg-interactive hover:text-white transition-colors"
                               onClick={async () => {
-                                await sdk.client.fetch(`/admin/products/${row.productId}`, {
-                                  method: "POST",
-                                  body: { status: "published" },
-                                });
+                                await sdk.client.fetch(
+                                  `/admin/products/${row.productId}`,
+                                  {
+                                    method: "POST",
+                                    body: { status: "published" },
+                                  },
+                                );
                                 toast.success(`${row.productTitle} publicat`);
                               }}
                             >
@@ -1361,8 +1493,18 @@ const AIProductPage = () => {
                           title="Șterge rând"
                           className="w-5 h-5 flex items-center justify-center rounded text-ui-fg-muted hover:text-ui-fg-error hover:bg-ui-bg-error transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-ui-fg-muted disabled:hover:bg-transparent"
                         >
-                          <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
-                            <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                          <svg
+                            width="10"
+                            height="10"
+                            viewBox="0 0 10 10"
+                            fill="currentColor"
+                          >
+                            <path
+                              d="M1 1l8 8M9 1L1 9"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                            />
                           </svg>
                         </button>
                       )}

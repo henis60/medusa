@@ -12,6 +12,10 @@ import { usePathname } from "next/navigation"
 import Image from "next/image"
 import { deleteLineItem, updateLineItem } from "@lib/data/cart"
 import { emitCartUpdated, onCartUpdated } from "@lib/util/cart-events"
+import {
+  isStaleDeploymentError,
+  reloadForNewDeployment,
+} from "@lib/util/stale-deployment"
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { getCartItemImageUrl } from "@lib/util/variant-image"
@@ -49,7 +53,13 @@ const CartDropdown = ({
     setUpdatingLine(lineId)
     deleteLineItem(lineId)
       .then((fresh) => emitCartUpdated(fresh))
-      .catch(() => emitCartUpdated())
+      .catch((err) => {
+        if (isStaleDeploymentError(err)) {
+          reloadForNewDeployment()
+          return
+        }
+        emitCartUpdated()
+      })
       .finally(() => setUpdatingLine(null))
   }
 
@@ -64,6 +74,10 @@ const CartDropdown = ({
     updateLineItem({ lineId, quantity })
       .then((fresh) => emitCartUpdated(fresh))
       .catch((err) => {
+        if (isStaleDeploymentError(err)) {
+          reloadForNewDeployment()
+          return
+        }
         if (/inventory/i.test(err instanceof Error ? err.message : "")) {
           setMaxQty((m) => ({ ...m, [lineId]: quantity - 1 }))
         }

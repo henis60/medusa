@@ -45,6 +45,12 @@ export const listEawbShippingPrices = async (
     ...(await getAuthHeaders()),
   }
 
+  // Deliberately no .catch(() => ({})) here — an empty object is
+  // indistinguishable from "no courier serves this address", and the caller
+  // caches that result per cart+address. Swallowing a transient error into
+  // {} used to get permanently cached as "no coverage" until the cart id
+  // changed (e.g. after clearing cookies). Let it throw; the caller decides
+  // whether to show an error and must NOT cache a thrown/failed attempt.
   return sdk.client
     .fetch<{ prices: Record<string, number> }>(`/store/eawb/shipping-prices`, {
       method: "GET",
@@ -53,7 +59,6 @@ export const listEawbShippingPrices = async (
       cache: "no-store",
     })
     .then(({ prices }) => prices ?? {})
-    .catch(() => ({}))
 }
 
 export type EawbLocker = { id: number; name: string; address: string }

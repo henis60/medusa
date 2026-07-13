@@ -2,6 +2,10 @@
 
 import { updateLineItem, deleteLineItem } from "@lib/data/cart"
 import { emitCartUpdated } from "@lib/util/cart-events"
+import {
+  isStaleDeploymentError,
+  reloadForNewDeployment,
+} from "@lib/util/stale-deployment"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -41,6 +45,9 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
       setUpdating(true)
       deleteLineItem(item.id)
         .then((fresh) => emitCartUpdated(fresh))
+        .catch((err) => {
+          if (isStaleDeploymentError(err)) reloadForNewDeployment()
+        })
         .finally(() => setUpdating(false))
       return
     }
@@ -49,6 +56,10 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
     updateLineItem({ lineId: item.id, quantity: nextQty })
       .then((fresh) => emitCartUpdated(fresh))
       .catch((err) => {
+        if (isStaleDeploymentError(err)) {
+          reloadForNewDeployment()
+          return
+        }
         if (/inventory/i.test(err instanceof Error ? err.message : "")) {
           setMaxQty(item.quantity)
         }
