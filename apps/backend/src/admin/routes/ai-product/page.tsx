@@ -28,6 +28,10 @@ type Row = {
   tags: string;
   stock: string;
   inStoreOnly: boolean;
+  /** Resize to max 1600px + re-encode as webp before upload. Off = upload
+   *  the original bytes as-is (useful when the source is already an
+   *  optimized webp, to avoid a lossy double re-encode). */
+  convertImages: boolean;
   files: File[];
   status: RowStatus;
   error?: string;
@@ -195,9 +199,9 @@ async function processImage(file: File): Promise<File> {
   });
 }
 
-async function uploadFiles(files: File[]): Promise<string[]> {
+async function uploadFiles(files: File[], convert: boolean): Promise<string[]> {
   if (!files.length) return [];
-  const processed = await Promise.all(files.map(processImage));
+  const processed = convert ? await Promise.all(files.map(processImage)) : files;
   const formData = new FormData();
   processed.forEach((f) => formData.append("files", f));
   const res = await fetch("/admin/uploads", {
@@ -279,11 +283,24 @@ function SelectCell({
   const [open, setOpen] = useState(false)
   const [rect, setRect] = useState<DOMRect | null>(null)
   const btnRef = useRef<HTMLButtonElement>(null)
+  // The dropdown itself is rendered via a portal straight into
+  // document.body (see below), OUTSIDE the [data-select-cell] wrapper. The
+  // outside-click check below must also treat clicks inside the portal
+  // panel as "inside" — otherwise every option click is misread as an
+  // outside click on `mousedown` and closes the menu before the option's
+  // own onClick (which applies the selection) ever fires, so the value
+  // never sticks.
+  const panelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!open) return
     const handler = (e: MouseEvent) => {
-      if (btnRef.current && !btnRef.current.closest("[data-select-cell]")?.contains(e.target as Node)) {
+      const target = e.target as Node
+      const insideButton = btnRef.current
+        ?.closest("[data-select-cell]")
+        ?.contains(target)
+      const insidePanel = panelRef.current?.contains(target)
+      if (!insideButton && !insidePanel) {
         setOpen(false)
       }
     }
@@ -317,6 +334,7 @@ function SelectCell({
       </button>
       {open && rect && createPortal(
         <div
+          ref={panelRef}
           style={{
             position: "fixed",
             top: rect.bottom + 4,
@@ -467,6 +485,15 @@ const AIProductPage = () => {
   const [processing, setProcessing] = useState(false);
   const [extraInstructions, setExtraInstructions] = useState("");
   const csvRef = useRef<HTMLInputElement>(null);
+  // Monotonic id source for new rows. Using `prev.length` (the old approach)
+  // collides after a delete: e.g. rows indexed 0,1,2 → delete index 1 → length
+  // is now 2 → a new row would also get index 2, duplicating an existing
+  // row's id. Since every updater matches rows by `r.index === index`, both
+  // rows then update together — edits to one (incl. select-cell choices)
+  // appear to "not stick" because they're immediately echoed/overwritten by
+  // the other row sharing the same id.
+  const nextRowIndexRef = useRef(0);
+  const nextRowIndex = () => nextRowIndexRef.current++;
 
   const { data: categoriesData } = useQuery({
     queryKey: ["admin-categories"],
@@ -538,12 +565,12 @@ const AIProductPage = () => {
       }
       setRows((prev) => {
         const existingBySkу = new Map(prev.map((r) => [r.sku_prefix, r]));
-        return parsed.map((raw, i) => {
+        return parsed.map((raw) => {
           const sku = raw.sku_prefix ?? "";
           const existing = existingBySkу.get(sku);
           return (
             existing ?? {
-              index: i,
+              index: nextRowIndex(),
               sku_prefix: sku,
               price_ron: raw.price_ron ?? "",
               colors: raw.colors ?? "",
@@ -554,6 +581,7 @@ const AIProductPage = () => {
               tags: raw.tags ?? "",
               stock: raw.stock ?? "",
               inStoreOnly: false,
+              convertImages: true,
               files: [],
               status: "idle" as RowStatus,
             }
@@ -586,7 +614,7 @@ const AIProductPage = () => {
     setRows((prev) => [
       ...prev,
       {
-        index: prev.length,
+        index: nextRowIndex(),
         sku_prefix: "",
         price_ron: "",
         colors: "",
@@ -597,6 +625,7 @@ const AIProductPage = () => {
         tags: "",
         stock: "",
         inStoreOnly: false,
+        convertImages: true,
         files: [],
         status: "idle",
       },
@@ -629,7 +658,7 @@ const AIProductPage = () => {
       updateRow(row.index, { status: "uploading" });
       let imageUrls: string[];
       try {
-        imageUrls = await uploadFiles(row.files);
+        imageUrls = await uploadFiles(row.files, row.convertImages);
       } catch (err: any) {
         updateRow(row.index, {
           status: "error",
@@ -1098,6 +1127,12 @@ const AIProductPage = () => {
                 <th className="text-left py-2 px-3 text-ui-fg-subtle font-medium text-xs">
                   Imagini <span className="text-ui-fg-error">*</span>
                 </th>
+                <th
+                  className="text-left py-2 px-3 text-ui-fg-subtle font-medium text-xs whitespace-nowrap"
+                  title="Redimensionează la max 1600px și reencodează webp. Dezactivează dacă sursa e deja webp optimizat, ca să eviți o a doua compresie."
+                >
+                  Conversie
+                </th>
                 <th className="text-left py-2 px-3 text-ui-fg-subtle font-medium text-xs">
                   SKU prefix <span className="text-ui-fg-error">*</span>
                 </th>
@@ -1157,6 +1192,15 @@ const AIProductPage = () => {
                       <ImageCell
                         row={row}
                         onFiles={(i, f) => updateField(i, "files", f)}
+                        disabled={disabled}
+                      />
+                    </td>
+                    <td className="py-2 px-3">
+                      <CheckCell
+                        checked={row.convertImages}
+                        onChange={(v) =>
+                          updateField(row.index, "convertImages", v)
+                        }
                         disabled={disabled}
                       />
                     </td>
