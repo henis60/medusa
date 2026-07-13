@@ -110,7 +110,7 @@ export default function VariantAwareGallery({
         {count > 1 && (
           <div
             ref={thumbsRef}
-            className="hidden small:flex flex-col gap-2 overflow-y-auto no-scrollbar w-16 shrink-0 cursor-grab active:cursor-grabbing"
+            className={`hidden small:flex flex-col gap-2 overflow-y-auto no-scrollbar w-16 shrink-0 ${count > 1 ? "cursor-grab active:cursor-grabbing" : ""}`}
             style={mainImageHeight ? { maxHeight: mainImageHeight } : undefined}
             onMouseDown={onThumbMouseDown}
             onMouseMove={onThumbMouseMove}
@@ -145,7 +145,7 @@ export default function VariantAwareGallery({
         {/* Main image */}
         <div
           ref={mainImageRef}
-          className="relative aspect-[3/4] flex-1 overflow-hidden cursor-grab active:cursor-grabbing select-none"
+          className={`relative aspect-[3/4] flex-1 overflow-hidden select-none ${count > 1 ? "cursor-grab active:cursor-grabbing" : ""}`}
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
           onMouseDown={onMouseDown}

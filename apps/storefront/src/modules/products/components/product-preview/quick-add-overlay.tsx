@@ -239,6 +239,26 @@ export default function QuickAddOverlay({
     return mapped.length >= Math.ceil(vals.length / 2)
   }
 
+  // Auto-select options with only one value
+  useEffect(() => {
+    const autoSelected: Record<string, string> = { ...selected }
+    let changed = false
+
+    options.forEach((opt) => {
+      if (!autoSelected[opt.id ?? ""] && opt.values?.length === 1) {
+        const value = opt.values[0].value
+        if (value) {
+          autoSelected[opt.id ?? ""] = value
+          changed = true
+        }
+      }
+    })
+
+    if (changed) {
+      setSelected(autoSelected)
+    }
+  }, [options])
+
   const selectLabel = useMemo(() => {
     // Ignore options with a single value — there's no real choice to make,
     // so they shouldn't drive the prompt (e.g. "Selectează culoarea" when
@@ -332,7 +352,8 @@ export default function QuickAddOverlay({
 
     setSelected(next)
 
-    if (onVariantSelect) {
+    // Only update variant image on desktop, keep images static on mobile
+    if (onVariantSelect && !mobileOnly) {
       const count = Object.values(next).filter(Boolean).length
       if (count === options.length) {
         const match =
