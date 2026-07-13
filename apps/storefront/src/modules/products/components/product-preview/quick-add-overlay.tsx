@@ -352,8 +352,7 @@ export default function QuickAddOverlay({
 
     setSelected(next)
 
-    // Only update variant image on desktop, keep images static on mobile
-    if (onVariantSelect && !mobileOnly) {
+    if (onVariantSelect) {
       const count = Object.values(next).filter(Boolean).length
       if (count === options.length) {
         const match =

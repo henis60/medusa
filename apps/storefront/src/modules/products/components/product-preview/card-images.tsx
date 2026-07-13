@@ -34,7 +34,7 @@ export default function CardImages({ product, isFeatured, noOverlay, activeImage
             alt={product.title ?? ""}
             fill
             sizes="(max-width: 1024px) 50vw, 25vw"
-            className={`object-contain object-center transition-all duration-700 ease-out ${showHover ? "group-hover:opacity-0" : activeImage ? "" : "group-hover:scale-[1.06]"}`}
+            className={`object-contain object-center transition-all duration-700 ease-out ${showHover ? "sm:group-hover:opacity-0" : activeImage ? "" : "sm:group-hover:scale-[1.06]"}`}
             priority={isFeatured}
           />
         )}
@@ -45,7 +45,7 @@ export default function CardImages({ product, isFeatured, noOverlay, activeImage
             alt={product.title ?? ""}
             fill
             sizes="(max-width: 1024px) 50vw, 25vw"
-            className="object-contain object-center opacity-0 scale-[1.03] transition-all duration-700 ease-out group-hover:opacity-100 group-hover:scale-100"
+            className="object-contain object-center opacity-0 scale-[1.03] transition-all duration-700 ease-out sm:group-hover:opacity-100 sm:group-hover:scale-100"
           />
         )}
 
