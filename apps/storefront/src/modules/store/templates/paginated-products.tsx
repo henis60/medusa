@@ -75,8 +75,11 @@ export default async function PaginatedProducts({
         })
       }
     }
-    if (categoryWithChildren) {
-      collectChildren(categoryWithChildren)
+
+    // If categoryWithChildren is passed, use it; otherwise find it from categories list
+    const catWithChildren = categoryWithChildren || categories?.find((c) => c.id === categoryId)
+    if (catWithChildren) {
+      collectChildren(catWithChildren)
     }
     queryParams["category_id"] = categoryIds
   }

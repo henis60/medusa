@@ -12,6 +12,7 @@ import AnimatedProductCard from "@modules/store/components/animated-product-card
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import StoreResultsBar, { ViewMode } from "@modules/store/components/store-results-bar"
 import { useSetStoreFacets } from "@modules/store/context/store-facets-context"
+import { useStoreCatalog } from "@modules/store/context/store-catalog-context"
 import SkeletonProductPreview from "@modules/skeletons/components/skeleton-product-preview"
 
 function SkeletonCard() {
@@ -64,9 +65,18 @@ export default function InfiniteProducts({
   categoryId,
   productsIds,
   urlFiltered = false,
-  categories = [],
-  collections = [],
+  categories: categoriesProp,
+  collections: collectionsProp,
 }: Props) {
+  // Falls back to the /ready-to-wear layout's context when not passed as a
+  // prop — the layout provides these once and persists across category/
+  // collection navigation, instead of this component's parent (the page,
+  // which fully remounts on every dynamic-segment change) re-fetching and
+  // re-passing them down.
+  const catalog = useStoreCatalog()
+  const categories = categoriesProp ?? catalog?.categories ?? []
+  const collections = collectionsProp ?? catalog?.collections ?? []
+
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const [view, setView] = useState<ViewMode>("grid")
@@ -83,16 +93,22 @@ export default function InfiniteProducts({
       : []
     effectiveCollectionId = undefined
     effectiveCategoryId = undefined
-    if (slug.length === 1) {
-      const cat = categories.find((c) => c.handle === slug[0])
+    // Category handles can contain slashes (nested subcategory handles like
+    // "accesorii/cravate"), so try matching the whole remaining path against
+    // a category handle first before treating it as collection(+category).
+    if (slug.length > 0) {
+      const fullPath = slug.join("/")
+      const cat = categories.find((c) => c.handle === fullPath)
       if (cat) {
         effectiveCategoryId = cat.id
+      } else if (slug.length === 1) {
+        effectiveCollectionId = collections.find((c) => c.handle === slug[0])?.id
       } else {
         effectiveCollectionId = collections.find((c) => c.handle === slug[0])?.id
+        effectiveCategoryId = categories.find(
+          (c) => c.handle === slug.slice(1).join("/")
+        )?.id
       }
-    } else if (slug.length >= 2) {
-      effectiveCollectionId = collections.find((c) => c.handle === slug[0])?.id
-      effectiveCategoryId = categories.find((c) => c.handle === slug[1])?.id
     }
   }
 

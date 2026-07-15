@@ -6,18 +6,23 @@ import {
   getCollectionWithProductCategories,
 } from "@lib/data/collections"
 import { listCategories } from "@lib/data/categories"
-import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
 import StoreView from "@modules/store/components/store-view"
 
-import PaginatedProducts from "./paginated-products"
+// Static + ISR: fetches the collection/category lists with cookie-free,
+// tag-cached calls. This is a LAYOUT (not the page) so it persists across
+// category/collection navigation — only the page segment (the product grid)
+// remounts when the URL's dynamic slug changes. Previously this all lived in
+// the page itself, so every category/collection click threw away and
+// rebuilt the whole sidebar/header (scroll position, open dropdowns,
+// animations) even though none of it actually depends on the slug — it
+// looked like the entire page was reloading.
+export const revalidate = 3600
 
-/**
- * Server side of the store page. Fetches the collection/category lists with
- * cookie-free, tag-cached calls and renders the default (unfiltered) product
- * grid — all static/ISR-friendly. URL filters (collection / category /
- * sortBy) are applied client-side by StoreView + InfiniteProducts.
- */
-const StoreTemplate = async ({ countryCode }: { countryCode: string }) => {
+export default async function ReadyToWearLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   const [{ collections }, categories] = await Promise.all([
     listCollections(),
     listCategories(),
@@ -57,25 +62,15 @@ const StoreTemplate = async ({ countryCode }: { countryCode: string }) => {
 
   return (
     // Suspense around StoreView: it reads useSearchParams client-side, which
-    // must sit under a boundary for the page to prerender statically.
+    // must sit under a boundary for the layout to prerender statically.
     <Suspense>
       <StoreView
         collections={collections}
         categories={categories}
         collectionCategoriesMap={collectionCategoriesMap}
       >
-        <Suspense fallback={<SkeletonProductGrid />}>
-          <PaginatedProducts
-            sortBy="created_at"
-            countryCode={countryCode}
-            urlFiltered
-            categories={categories}
-            collections={collections}
-          />
-        </Suspense>
+        {children}
       </StoreView>
     </Suspense>
   )
 }
-
-export default StoreTemplate

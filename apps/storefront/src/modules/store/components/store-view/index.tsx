@@ -13,6 +13,7 @@ import {
   StoreFacetsProvider,
   StoreFacets,
 } from "@modules/store/context/store-facets-context"
+import { StoreCatalogProvider } from "@modules/store/context/store-catalog-context"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
 type Props = {
@@ -49,22 +50,43 @@ export default function StoreView({
   // /ready-to-wear/<collection-handle>/<category-handle>), not query params
   // — resolved here from the already-loaded categories/collections lists, so
   // no extra fetch is needed to turn a handle back into an id.
+  //
+  // Category handles can themselves contain slashes (Medusa nests a
+  // subcategory's handle under its parent's, e.g. "accesorii/cravate"), so a
+  // 2+ segment path is ambiguous: it could be a plain nested-category handle
+  // or a collection/category pair. Try matching the whole remaining path
+  // against a category handle first — only fall back to the
+  // collection(+category) interpretation if that fails.
   const slug = pathname.startsWith(BASE_PATH)
     ? pathname.slice(BASE_PATH.length).split("/").filter(Boolean)
     : []
   let urlCollectionId: string | undefined
   let urlCategoryId: string | undefined
-  if (slug.length === 1) {
-    const cat = categories.find((c) => c.handle === slug[0])
+  if (slug.length > 0) {
+    const fullPath = slug.join("/")
+    const cat = categories.find((c) => c.handle === fullPath)
     if (cat) {
       urlCategoryId = cat.id
+    } else if (slug.length === 1) {
+      urlCollectionId = collections.find((c) => c.handle === slug[0])?.id
     } else {
       urlCollectionId = collections.find((c) => c.handle === slug[0])?.id
+      urlCategoryId = categories.find(
+        (c) => c.handle === slug.slice(1).join("/")
+      )?.id
     }
-  } else if (slug.length >= 2) {
-    urlCollectionId = collections.find((c) => c.handle === slug[0])?.id
-    urlCategoryId = categories.find((c) => c.handle === slug[1])?.id
   }
+
+  // Prefetch every category/collection route on mount so clicking a pill
+  // is an instant client-side swap instead of a visible round trip — without
+  // this, each click fetches the RSC payload on demand and the Suspense
+  // boundary around this component briefly renders nothing, which looks
+  // like the whole page reloading.
+  useEffect(() => {
+    categories.forEach((c) => router.prefetch(`${BASE_PATH}/${c.handle}`))
+    collections.forEach((c) => router.prefetch(`${BASE_PATH}/${c.handle}`))
+    router.prefetch(BASE_PATH)
+  }, [categories, collections, router])
 
   // Optimistic mirror of collection/category — updated synchronously on
   // click, before router.push. The nav (mobile pills + desktop sidebar)
@@ -221,7 +243,11 @@ export default function StoreView({
               onClearFilters={clearFilters}
             />
 
-            <div className="flex-1 min-w-0">{children}</div>
+            <div className="flex-1 min-w-0">
+              <StoreCatalogProvider value={{ categories, collections }}>
+                {children}
+              </StoreCatalogProvider>
+            </div>
           </div>
         </div>
       </div>

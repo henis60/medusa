@@ -25,6 +25,9 @@ const BackToTop = dynamic(() => import("./sections/BackToTop"), { ssr: false })
 
 const HunterLanding = ({ shopSlot }: { shopSlot?: React.ReactNode }) => {
   useEffect(() => {
+    // Mark hydration complete — allows .rv elements to animate
+    document.documentElement.classList.add("hydrated")
+
     const ac = new AbortController()
     const { signal } = ac
     let cancelled = false

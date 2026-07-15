@@ -33,7 +33,7 @@ function getSlots(date: Date): string[] {
 
 const labelClass = "font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-2 flex items-center gap-1"
 const inputBase = "w-full h-10 bg-transparent border border-[var(--theme-border)] px-3 font-sans text-sm focus:outline-none transition-colors"
-const dropBase = "absolute bottom-full mb-1 z-30 bg-white border border-gray-200 shadow-xl"
+const dropBase = "absolute bottom-full mb-1 z-[9025] bg-white border border-gray-200 shadow-xl"
 
 export default function AppointmentDatePicker({
   hasError,

@@ -3,7 +3,6 @@ const SkeletonProductPreview = () => {
     <div className="animate-pulse">
       <div className="relative w-full overflow-hidden bg-white" style={{ paddingBottom: "133.333%" }}>
         <div className="absolute inset-0 bg-[var(--theme-surface)]" />
-        <div className="absolute top-2 right-2 h-4 w-4 rounded-full bg-[var(--theme-surface-raised)]" />
       </div>
       <div className="mt-4 flex flex-col gap-2">
         <div className="h-2.5 w-4/5 bg-[var(--theme-surface)]" />
