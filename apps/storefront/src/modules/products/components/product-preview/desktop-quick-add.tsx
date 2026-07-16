@@ -156,6 +156,8 @@ export default function DesktopQuickAdd({
     let next = { ...selected, [optionId]: toggled }
 
     if (isColorOpt && toggled) {
+      // Changing color keeps the chosen size when the new color still has
+      // it; otherwise the size is deselected (never silently swapped).
       const sizeOpt = options.find(
         (o) => !COLOR_TITLES.includes(o.title?.toLowerCase() ?? "")
       )
@@ -166,8 +168,11 @@ export default function DesktopQuickAdd({
             .map((v) => vmap(v)[sizeOpt.id ?? ""])
             .filter(Boolean)
         )
-        const first = sizeOpt.values?.find((v) => available.has(v.value ?? ""))
-        if (first?.value) next = { ...next, [sizeOpt.id ?? ""]: first.value }
+        const current = selected[sizeOpt.id ?? ""]
+        if (current && !available.has(current)) {
+          const { [sizeOpt.id ?? ""]: _dropped, ...rest } = next
+          next = rest
+        }
       }
     }
 

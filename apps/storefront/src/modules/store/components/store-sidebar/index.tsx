@@ -13,7 +13,10 @@ type Props = {
   collectionCategories?: HttpTypes.StoreProductCategory[]
   onSelectCategory: (id: string | null) => void
   onSelectCollection: (id: string | null) => void
-  onSelectCollectionCategory: (collectionId: string, categoryId: string | null) => void
+  onSelectCollectionCategory: (
+    collectionId: string,
+    categoryId: string | null
+  ) => void
   onClearFilters: () => void
 }
 
@@ -77,7 +80,7 @@ export default function StoreSidebar({
         "w-full text-left py-2 font-serif text-[20px] leading-none transition-all duration-150",
         active
           ? "text-[var(--theme-gold)] italic pl-1"
-          : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:pl-1"
+          : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
       )}
     >
       {children}
@@ -101,7 +104,9 @@ export default function StoreSidebar({
                     <NavItem
                       active={activeCategoryId === c.id}
                       onClick={() =>
-                        onSelectCategory(activeCategoryId === c.id ? null : c.id)
+                        onSelectCategory(
+                          activeCategoryId === c.id ? null : c.id
+                        )
                       }
                     >
                       {c.name}
@@ -155,7 +160,9 @@ export default function StoreSidebar({
                   <div key={c.id}>
                     <NavItem
                       active={isSelected && !selectedCategory}
-                      onClick={() => onSelectCollection(isSelected ? null : c.id)}
+                      onClick={() =>
+                        onSelectCollection(isSelected ? null : c.id)
+                      }
                     >
                       {c.title}
                     </NavItem>

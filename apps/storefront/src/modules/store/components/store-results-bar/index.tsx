@@ -117,9 +117,6 @@ export default function StoreResultsBar({
   const priceActive =
     !!searchParams.get("minPrice") || !!searchParams.get("maxPrice")
   const filterCount = (priceActive ? 1 : 0) + (appliedColors.length > 0 ? 1 : 0)
-
-  // Draft — edited inside the sheet, only applied to the URL (and the grid)
-  // when "Arată produsele" is pressed.
   const [draftSort, setDraftSort] = useState(appliedSortBy)
   const [draftMinPrice, setDraftMinPrice] = useState(appliedMinPrice)
   const [draftMaxPrice, setDraftMaxPrice] = useState(appliedMaxPrice)
@@ -156,7 +153,8 @@ export default function StoreResultsBar({
 
   const applyDraft = () => {
     pushParams((params) => {
-      params.set("sortBy", draftSort)
+      if (draftSort !== "created_at") params.set("sortBy", draftSort)
+      else params.delete("sortBy")
       if (draftMinPrice > priceBounds[0])
         params.set("minPrice", String(draftMinPrice))
       else params.delete("minPrice")
@@ -173,26 +171,15 @@ export default function StoreResultsBar({
     setDraftMinPrice(priceBounds[0])
     setDraftMaxPrice(priceBounds[1])
     setDraftColors([])
+    setDraftSort("created_at")
     pushParams((params) => {
       params.delete("minPrice")
       params.delete("maxPrice")
       params.delete("color")
+      params.delete("sortBy")
     })
     setOpen(false)
   }
-
-  const row = (active: boolean, onClick: () => void, label: string) => (
-    <button
-      key={label}
-      onClick={onClick}
-      className={clx(
-        "w-full text-left py-3 font-serif text-[17px] leading-none transition-colors",
-        active ? "text-hunter-gold italic" : "text-[var(--theme-text-muted)]"
-      )}
-    >
-      {label}
-    </button>
-  )
 
   return (
     <div className="small:hidden flex items-center justify-between py-4">
@@ -256,8 +243,42 @@ export default function StoreResultsBar({
           </div>
 
           <div className="overflow-y-auto px-5 py-2 pb-8">
+            {/* Same sections + order as the desktop drawer: sort → price → colors */}
+            <div className="py-3">
+              <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-3">
+                Sortare
+              </p>
+              <div className="flex flex-col gap-1">
+                {sortOptions.map((opt) => {
+                  const active = draftSort === opt.value
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => setDraftSort(opt.value)}
+                      className={clx(
+                        "flex items-center gap-2.5 py-2 font-sans text-[11px] uppercase tracking-[1px] transition-colors text-left",
+                        active
+                          ? "text-hunter-gold"
+                          : "text-[var(--theme-text-muted)]"
+                      )}
+                    >
+                      <span
+                        className={clx(
+                          "w-3 h-3 rounded-full border transition-colors shrink-0",
+                          active
+                            ? "border-hunter-gold bg-hunter-gold"
+                            : "border-[var(--theme-border)]"
+                        )}
+                      />
+                      {opt.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
             {priceBounds[1] > priceBounds[0] && (
-              <div className="py-3">
+              <div className="py-3 border-t border-[var(--theme-border)]">
                 <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-3">
                   Preț
                 </p>
@@ -271,25 +292,6 @@ export default function StoreResultsBar({
                 />
               </div>
             )}
-
-            <div
-              className={clx(
-                "py-3",
-                priceBounds[1] > priceBounds[0] &&
-                  "border-t border-[var(--theme-border)]"
-              )}
-            >
-              <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-1">
-                Sortează
-              </p>
-              {sortOptions.map((opt) =>
-                row(
-                  draftSort === opt.value,
-                  () => setDraftSort(opt.value),
-                  opt.label
-                )
-              )}
-            </div>
 
             {colorFacets.length > 0 && (
               <div className="py-3 border-t border-[var(--theme-border)]">
@@ -331,7 +333,7 @@ export default function StoreResultsBar({
               onClick={applyDraft}
               className="flex-1 h-11 font-sans text-[10px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark"
             >
-              Arată produsele
+              Aplică filtre
             </button>
           </div>
         </div>

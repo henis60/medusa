@@ -33,14 +33,21 @@ function getSlots(date: Date): string[] {
 
 const labelClass = "font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-2 flex items-center gap-1"
 const inputBase = "w-full h-10 bg-transparent border border-[var(--theme-border)] px-3 font-sans text-sm focus:outline-none transition-colors"
-const dropBase = "absolute bottom-full mb-1 z-[9025] bg-white border border-gray-200 shadow-xl"
+const dropUpBase =
+  "absolute bottom-full mb-1 z-[9025] left-0 w-[272px] bg-white border border-gray-200 shadow-xl"
+const inlineBase = "mt-2 w-full bg-white border border-gray-200"
 
 export default function AppointmentDatePicker({
   hasError,
   onSelect,
+  inline = false,
 }: {
   hasError?: boolean
   onSelect?: (date: string, time: string) => void
+  // In the appointment modal the panel clips absolutely-positioned
+  // dropdowns (overflow-hidden + scroll area), so the pickers render
+  // in-flow there and push the content instead.
+  inline?: boolean
 }) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -145,7 +152,7 @@ export default function AppointmentDatePicker({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.15 }}
-              className={`${dropBase} left-0 w-[272px]`}
+              className={inline ? inlineBase : dropUpBase}
             >
               {/* Month nav */}
               <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-100">
@@ -205,7 +212,9 @@ export default function AppointmentDatePicker({
       <div ref={timeRef} className="relative w-full">
         <label className={labelClass}>
           Ora
-          <span className={`text-sm normal-case tracking-normal ${hasError && selectedDate && !selectedTime ? "text-red-400/80" : "text-hunter-gold/50"}`}>*</span>
+          <span className="normal-case tracking-normal text-[var(--theme-text-muted)]/60">
+            (opțional)
+          </span>
         </label>
         <button
           type="button"
@@ -235,7 +244,7 @@ export default function AppointmentDatePicker({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.15 }}
-              className={`${dropBase} left-0 w-[272px] p-2`}
+              className={`${inline ? inlineBase : dropUpBase} p-2`}
             >
               <div className="grid grid-cols-5 gap-1">
                 {slots.map((slot) => (

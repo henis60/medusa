@@ -6,6 +6,13 @@ import { clx } from "@modules/common/components/ui"
 import PriceRangeSlider from "@modules/store/components/price-range-slider"
 import { useStoreFacets } from "@modules/store/context/store-facets-context"
 import { useScrollLock } from "@lib/hooks/use-scroll-lock"
+import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+
+const SORT_OPTIONS: { value: SortOptions; label: string }[] = [
+  { value: "created_at", label: "Cele mai noi" },
+  { value: "price_asc", label: "Preț crescător" },
+  { value: "price_desc", label: "Preț descrescător" },
+]
 
 function FilterIcon() {
   return (
@@ -25,7 +32,11 @@ function FilterIcon() {
   )
 }
 
-export default function DesktopFilterDrawer() {
+export default function DesktopFilterDrawer({
+  sortBy,
+}: {
+  sortBy: SortOptions
+}) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -42,12 +53,10 @@ export default function DesktopFilterDrawer() {
   const priceActive =
     !!searchParams.get("minPrice") || !!searchParams.get("maxPrice")
   const filterCount = (priceActive ? 1 : 0) + (appliedColors.length > 0 ? 1 : 0)
-
-  // Draft — edited inside the drawer, only applied to the URL (and the
-  // grid) when "Arată produsele" is pressed.
   const [draftMinPrice, setDraftMinPrice] = useState(appliedMinPrice)
   const [draftMaxPrice, setDraftMaxPrice] = useState(appliedMaxPrice)
   const [draftColors, setDraftColors] = useState(appliedColors)
+  const [draftSort, setDraftSort] = useState<SortOptions>(sortBy)
 
   // Re-sync the draft from the URL every time the drawer opens.
   useEffect(() => {
@@ -55,6 +64,7 @@ export default function DesktopFilterDrawer() {
     setDraftMinPrice(appliedMinPrice)
     setDraftMaxPrice(appliedMaxPrice)
     setDraftColors(appliedColors)
+    setDraftSort(sortBy)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
@@ -87,6 +97,8 @@ export default function DesktopFilterDrawer() {
       else params.delete("maxPrice")
       if (draftColors.length) params.set("color", draftColors.join(","))
       else params.delete("color")
+      if (draftSort !== "created_at") params.set("sortBy", draftSort)
+      else params.delete("sortBy")
     })
     setOpen(false)
   }
@@ -95,10 +107,12 @@ export default function DesktopFilterDrawer() {
     setDraftMinPrice(priceBounds[0])
     setDraftMaxPrice(priceBounds[1])
     setDraftColors([])
+    setDraftSort("created_at")
     pushParams((params) => {
       params.delete("minPrice")
       params.delete("maxPrice")
       params.delete("color")
+      params.delete("sortBy")
     })
     setOpen(false)
   }
@@ -155,6 +169,40 @@ export default function DesktopFilterDrawer() {
         </div>
 
         <div className="overflow-y-auto px-6 py-2 flex-1">
+          {/* Sortare */}
+          <div className="py-4 border-b border-[var(--theme-border)]">
+            <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-3">
+              Sortare
+            </p>
+            <div className="flex flex-col gap-1">
+              {SORT_OPTIONS.map((opt) => {
+                const active = draftSort === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => setDraftSort(opt.value)}
+                    className={clx(
+                      "flex items-center gap-2.5 py-1.5 font-sans text-[11px] uppercase tracking-[1px] transition-colors text-left",
+                      active
+                        ? "text-hunter-gold"
+                        : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
+                    )}
+                  >
+                    <span
+                      className={clx(
+                        "w-3 h-3 rounded-full border transition-colors shrink-0",
+                        active
+                          ? "border-hunter-gold bg-hunter-gold"
+                          : "border-[var(--theme-border)]"
+                      )}
+                    />
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
           {priceBounds[1] > priceBounds[0] && (
             <div className="py-4">
               <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-3">
@@ -217,7 +265,7 @@ export default function DesktopFilterDrawer() {
             onClick={applyDraft}
             className="flex-1 h-11 font-sans text-[10px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark hover:opacity-90 transition-opacity"
           >
-            Arată produsele
+            Aplică filtre
           </button>
         </div>
       </div>

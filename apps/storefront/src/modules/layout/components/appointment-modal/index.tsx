@@ -22,11 +22,13 @@ const Label = ({ htmlFor, children, error }: { htmlFor?: string; children: React
 
 const STEPS = ["Data & Ora", "Contact"]
 
+// Enter-only animation. Exit choreography (AnimatePresence mode="wait")
+// hangs under React 19 + framer-motion 12 — the leaving step never finishes
+// its exit, so the next step (incl. the date picker) never mounts.
 const slide = (dir: number) => ({
   initial: { opacity: 0, x: dir * 32 },
   animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: dir * -32 },
-  transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] },
+  transition: { duration: 0.22, ease: "easeOut" as const },
 })
 
 type Status = "idle" | "loading" | "success" | "error"
@@ -168,9 +170,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
 
             {/* Content */}
             <div className="px-6 py-5 flex-1 min-h-0 overflow-y-auto">
-              <AnimatePresence mode="wait" initial={false}>
-
-                {status === "success" ? (
+              {status === "success" ? (
                   <motion.div key="success" {...slide(1)} className="text-center py-6 flex flex-col items-center gap-3">
                     <div className="w-10 h-10 rounded-full border border-hunter-gold/40 flex items-center justify-center mb-2">
                       <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
@@ -212,6 +212,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
                 ) : step === 1 ? (
                   <motion.div key="step1" {...slide(dir)}>
                     <AppointmentDatePicker
+                      inline
                       hasError={dateError}
                       onSelect={(d, t) => { setDate(d); setTime(t); setDateError(false) }}
                     />
@@ -246,8 +247,6 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
                     )}
                   </motion.div>
                 )}
-
-              </AnimatePresence>
             </div>
 
             {/* Footer nav */}

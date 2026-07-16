@@ -6,7 +6,6 @@ import { HttpTypes } from "@medusajs/types"
 
 import StoreSidebar from "@modules/store/components/store-sidebar"
 import CategoryPills from "@modules/store/components/category-pills"
-import StoreSortSelect from "@modules/store/components/store-sort-select"
 import ExpandableDescription from "@modules/store/components/expandable-description"
 import DesktopFilterDrawer from "@modules/store/components/desktop-filter-drawer"
 import {
@@ -216,11 +215,11 @@ export default function StoreView({
           </div>
         </div>
 
-        {/* Sort bar — desktop, between two dividers */}
+        {/* Filter bar — desktop, between two dividers (sorting lives inside
+            the drawer) */}
         <div className="hidden small:block border-b border-[var(--theme-border)]">
-          <div className="page-container flex items-center justify-between py-3">
-            <DesktopFilterDrawer />
-            <StoreSortSelect sortBy={sort} />
+          <div className="page-container flex items-center justify-end py-3">
+            <DesktopFilterDrawer sortBy={sort} />
           </div>
         </div>
 

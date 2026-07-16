@@ -150,12 +150,22 @@ function FavoriteRow({
               <button
                 onClick={handleAdd}
                 disabled={adding || !inStock}
-                className="shrink-0 h-9 w-[148px] flex items-center justify-center font-sans text-[9px] uppercase tracking-[2.5px] border transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{
-                  background: added ? "transparent" : "#c9a84c",
-                  color: added ? "#c9a84c" : "#0d0d0d",
-                  borderColor: added ? "#c9a84c" : "transparent",
-                }}
+                className="shrink-0 h-9 w-[148px] flex items-center justify-center font-sans text-[9px] uppercase tracking-[2.5px] border transition-colors disabled:cursor-not-allowed"
+                style={
+                  !inStock
+                    ? // Out of stock — secondary (outlined, muted), not a
+                      // dimmed primary
+                      {
+                        background: "transparent",
+                        color: "var(--theme-text-muted)",
+                        borderColor: "var(--theme-border)",
+                      }
+                    : {
+                        background: added ? "transparent" : "#c9a84c",
+                        color: added ? "#c9a84c" : "#0d0d0d",
+                        borderColor: added ? "#c9a84c" : "transparent",
+                      }
+                }
               >
                 {adding
                   ? "Se adaugă…"

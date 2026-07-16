@@ -86,10 +86,10 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
               className={clx(
                 "inline-flex items-center justify-center h-8 min-w-[48px] px-3 border font-sans text-[11px] leading-none uppercase tracking-[2px] transition-colors duration-150",
                 active
-                  ? "border border-hunter-gold bg-hunter-gold/10 text-[var(--theme-text)]"
+                  ? "border-hunter-gold bg-hunter-gold text-hunter-dark"
                   : unavailable
-                  ? "border border-[var(--theme-border)] text-[var(--theme-text-muted)] opacity-30 line-through cursor-not-allowed"
-                  : "border border-[var(--theme-border)] bg-transparent text-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
+                  ? "border-[var(--theme-border)] text-[var(--theme-text-muted)] opacity-30 line-through cursor-not-allowed"
+                  : "border-[var(--theme-border)] bg-transparent text-[var(--theme-text-muted)] hover:border-hunter-gold/60 hover:text-[var(--theme-text)]"
               )}
               disabled={disabled || unavailable}
               data-testid="option-button"

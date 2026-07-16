@@ -330,6 +330,8 @@ export default function QuickAddOverlay({
     let next = { ...selected, [optionId]: value }
 
     if (isColorOpt && next[optionId]) {
+      // Changing color keeps the chosen size when the new color still has
+      // it; otherwise the size is deselected (never silently swapped).
       const sizeOpt = options.find(
         (o) => !COLOR_TITLES.includes(o.title?.toLowerCase() ?? "")
       )
@@ -341,11 +343,9 @@ export default function QuickAddOverlay({
             .filter(Boolean)
         )
         const current = selected[sizeOpt.id]
-        if (!current || !available.has(current)) {
-          const first = sizeOpt.values?.find((v) =>
-            available.has(v.value ?? "")
-          )
-          if (first?.value) next = { ...next, [sizeOpt.id]: first.value }
+        if (current && !available.has(current)) {
+          const { [sizeOpt.id]: _dropped, ...rest } = next
+          next = rest
         }
       }
     }

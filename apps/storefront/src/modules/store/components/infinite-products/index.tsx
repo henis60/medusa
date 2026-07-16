@@ -320,10 +320,15 @@ export default function InfiniteProducts({
         </ul>
       </div>
 
-      {hasFacetFilter && displayedProducts.length === 0 && !loading && (
-        <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
+      {displayedProducts.length === 0 && !loading && (
+        <div
+          className="flex flex-col items-center justify-center py-16 gap-2 text-center"
+          data-testid="no-products-message"
+        >
           <p className="font-serif text-base text-[var(--theme-text-muted)]">
-            Niciun produs nu corespunde filtrelor selectate.
+            {hasFacetFilter
+              ? "Niciun produs nu corespunde filtrelor selectate."
+              : "Momentan nu există produse în această categorie."}
           </p>
         </div>
       )}
