@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { HttpTypes } from "@medusajs/types"
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL
@@ -8,24 +8,18 @@ const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ""
 
 export default function NewsletterStatus({
   customer,
+  initialSubscribed,
 }: {
   customer: HttpTypes.StoreCustomer | null
+  // Fetched server-side by the overview page so the box renders with the
+  // rest of the page instead of popping in after a client fetch.
+  initialSubscribed: boolean
 }) {
-  const [subscribed, setSubscribed] = useState<boolean | null>(null)
+  const [subscribed, setSubscribed] = useState<boolean>(initialSubscribed)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const email = customer?.email
-
-  useEffect(() => {
-    if (!email) return
-    fetch(`${BACKEND}/store/newsletter?email=${encodeURIComponent(email)}`, {
-      headers: { "x-publishable-api-key": PUBLISHABLE_KEY },
-    })
-      .then((r) => r.json())
-      .then((d) => setSubscribed(d.subscribed ?? false))
-      .catch(() => setSubscribed(false))
-  }, [email])
 
   const subscribe = async () => {
     if (!email || loading) return
@@ -79,7 +73,7 @@ export default function NewsletterStatus({
     }
   }
 
-  if (!email || subscribed === null) return null
+  if (!email) return null
 
   return (
     <div className="border border-[var(--theme-border)] p-6 flex flex-col small:flex-row items-start small:items-center justify-between gap-4">
@@ -118,8 +112,8 @@ export default function NewsletterStatus({
         disabled={loading}
         className={
           subscribed
-            ? "font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5 disabled:opacity-40"
-            : "font-sans text-[10px] uppercase tracking-[3px] text-hunter-dark bg-hunter-gold px-6 py-3 hover:bg-hunter-gold/90 transition-colors disabled:opacity-40"
+            ? "shrink-0 h-11 px-6 inline-flex items-center justify-center w-full small:w-auto border border-[var(--theme-border)] font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text)] hover:border-hunter-gold hover:text-hunter-gold active:border-hunter-gold active:text-hunter-gold transition-colors disabled:opacity-40"
+            : "shrink-0 h-11 px-6 inline-flex items-center justify-center w-full small:w-auto font-sans text-[10px] uppercase tracking-[3px] text-hunter-dark bg-hunter-gold hover:bg-hunter-gold/90 transition-colors disabled:opacity-40"
         }
       >
         {loading ? (

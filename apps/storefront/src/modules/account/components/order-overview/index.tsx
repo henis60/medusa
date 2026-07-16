@@ -9,10 +9,12 @@ import { HttpTypes } from "@medusajs/types"
 const OrderOverview = ({ orders }: { orders: HttpTypes.StoreOrder[] }) => {
   if (orders?.length) {
     return (
-      <div className="w-full small:px-8 py-4">
-        {orders.map((o) => (
-          <OrderCard key={o.id} order={o} />
-        ))}
+      <div className="w-full small:px-8 pt-2 small:pt-4 pb-4">
+        <div className="flex flex-col divide-y divide-[var(--theme-border)]">
+          {orders.map((o) => (
+            <OrderCard key={o.id} order={o} />
+          ))}
+        </div>
       </div>
     )
   }

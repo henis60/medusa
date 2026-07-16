@@ -35,7 +35,7 @@ const ResetPassword = ({ token }: Props) => {
               </p>
             </div>
             <LocalizedClientLink
-              href="/account"
+              href="/profil"
               className="font-sans text-[13px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
             >
               Mergi la autentificare

@@ -7,7 +7,6 @@ import {
 import useToggleState from "@lib/hooks/use-toggle-state"
 import { Trash } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
-import CountrySelect from "@modules/checkout/components/country-select"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import Input from "@modules/common/components/input"
 import LocalitySelect from "@modules/common/components/locality-select"
@@ -28,6 +27,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
   isActive = false,
 }) => {
   const [removing, setRemoving] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
   const [successState, setSuccessState] = useState(false)
   const { state, open, close: closeModal } = useToggleState(false)
 
@@ -52,9 +52,14 @@ const EditAddress: React.FC<EditAddressProps> = ({
 
   const removeAddress = async () => {
     setRemoving(true)
-    await deleteCustomerAddress(address.id)
+    setActionError(null)
+    const result = await deleteCustomerAddress(address.id)
+    if (!result.success) {
+      setActionError(result.error)
+    }
     setRemoving(false)
   }
+
 
   return (
     <>
@@ -97,7 +102,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-5 mt-5 pt-4 border-t border-[var(--theme-border)]">
+        <div className="flex items-center flex-wrap gap-x-5 gap-y-2 mt-5 pt-4 border-t border-[var(--theme-border)]">
           <button
             className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5"
             onClick={open}
@@ -106,7 +111,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
             Editează
           </button>
           <button
-            className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-rose-500 transition-colors flex items-center gap-1.5"
+            className="ml-auto font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-rose-500 transition-colors flex items-center gap-1.5"
             onClick={removeAddress}
             data-testid="address-delete-button"
           >
@@ -118,6 +123,14 @@ const EditAddress: React.FC<EditAddressProps> = ({
             Șterge
           </button>
         </div>
+        {actionError && (
+          <p
+            className="font-sans text-[10px] text-rose-500 mt-2"
+            data-testid="address-action-error"
+          >
+            {actionError}
+          </p>
+        )}
       </div>
 
       <Modal isOpen={state} close={close} data-testid="edit-address-modal">
@@ -130,7 +143,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
           <input type="hidden" name="addressId" value={address.id} />
           <Modal.Body>
             <div className="grid grid-cols-1 gap-y-2 w-full">
-              <div className="grid grid-cols-2 gap-x-2">
+              <div className="grid grid-cols-1 gap-y-2">
                 <Input
                   label="Prenume"
                   name="first_name"
@@ -140,7 +153,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
                   data-testid="first-name-input"
                 />
                 <Input
-                  label="Nume de familie"
+                  label="Nume"
                   name="last_name"
                   required
                   autoComplete="family-name"
@@ -148,6 +161,13 @@ const EditAddress: React.FC<EditAddressProps> = ({
                   data-testid="last-name-input"
                 />
               </div>
+              <Input
+                label="Companie (opțional)"
+                name="company"
+                autoComplete="organization"
+                defaultValue={address.company || undefined}
+                data-testid="company-input"
+              />
               <Input
                 label="Adresă"
                 name="address_1"
@@ -177,13 +197,11 @@ const EditAddress: React.FC<EditAddressProps> = ({
                 cityValue={address.city || undefined}
                 required
               />
-              <CountrySelect
+              {/* Shipping is RO-only — country is fixed, not user-facing */}
+              <input
+                type="hidden"
                 name="country_code"
-                region={region}
-                required
-                autoComplete="country"
-                defaultValue={address.country_code || undefined}
-                data-testid="country-select"
+                value={address.country_code || "ro"}
               />
               <Input
                 label="Telefon"
@@ -192,6 +210,18 @@ const EditAddress: React.FC<EditAddressProps> = ({
                 defaultValue={address.phone || undefined}
                 data-testid="phone-input"
               />
+              <label className="flex items-center gap-3 mt-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  name="is_default_billing"
+                  defaultChecked={!!address.is_default_billing}
+                  className="h-4 w-4 shrink-0 accent-[var(--theme-gold)]"
+                  data-testid="billing-checkbox"
+                />
+                <span className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text-muted)]">
+                  Folosește pentru facturare
+                </span>
+              </label>
             </div>
             {formState.error && (
               <p className="font-sans text-[10px] text-rose-500 mt-2">

@@ -2,39 +2,50 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
 
+const STATUS_LABEL: Record<string, string> = {
+  pending: "În așteptare",
+  not_fulfilled: "În procesare",
+  partially_fulfilled: "Parțial livrată",
+  fulfilled: "Livrată",
+  canceled: "Anulată",
+  returned: "Returnată",
+  partially_returned: "Parțial returnată",
+  requires_action: "Necesită acțiune",
+}
+
 type OrderCardProps = {
   order: HttpTypes.StoreOrder
 }
 
 const OrderCard = ({ order }: OrderCardProps) => {
+  const status = order.fulfillment_status
+    ? STATUS_LABEL[order.fulfillment_status] ?? order.fulfillment_status
+    : null
+
   return (
     <LocalizedClientLink
-      href={`/account/orders/details/${order.id}`}
+      href={`/profil/comenzi/${order.display_id}`}
       data-testid="order-card"
-      className="group flex items-center justify-between py-5 small:py-6 border-b border-[var(--theme-border)] last:border-none hover:bg-[var(--theme-surface)] px-3 -mx-3 transition-colors"
+      className="group flex items-center justify-between gap-4 py-5 px-3 -mx-3 hover:bg-[var(--theme-surface)] active:bg-[var(--theme-surface)] transition-colors"
     >
       <div className="flex flex-col gap-1.5">
         <span
-          className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)]"
+          className="font-display text-[22px] leading-none text-[var(--theme-text)]"
           data-testid="order-display-id"
         >
-          Comanda #{order.display_id}
+          #{order.display_id}
         </span>
         <span
-          className="font-serif text-[20px] small:text-[24px] leading-[1.1] text-[var(--theme-text)]"
-          data-testid="order-created-at"
+          className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text-muted)]"
+          data-testid="order-status"
         >
-          {new Date(order.created_at).toLocaleDateString("ro-RO", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          })}
+          {status && `${status}`}
         </span>
       </div>
 
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-4 shrink-0">
         <span
-          className="font-display text-[16px] small:text-[20px] leading-none text-hunter-gold"
+          className="font-sans text-[13px] tracking-[1px] text-hunter-gold"
           data-testid="order-amount"
         >
           {convertToLocale({
@@ -42,21 +53,12 @@ const OrderCard = ({ order }: OrderCardProps) => {
             currency_code: order.currency_code,
           })}
         </span>
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 14 14"
-          fill="none"
-          className="text-[var(--theme-text-muted)] group-hover:text-[var(--theme-text)] transition-colors"
+        <span
+          aria-hidden
+          className="font-serif text-[18px] text-hunter-gold/40 group-hover:text-hunter-gold group-active:text-hunter-gold group-active:translate-x-0.5 transition-all"
         >
-          <path
-            d="M5 2l5 5-5 5"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+          ›
+        </span>
       </div>
     </LocalizedClientLink>
   )

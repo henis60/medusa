@@ -26,9 +26,10 @@ const STATUS_LABEL: Record<string, string> = {
 type OverviewProps = {
   customer: HttpTypes.StoreCustomer | null
   orders: HttpTypes.StoreOrder[] | null
+  newsletterSubscribed: boolean
 }
 
-const Overview = ({ customer, orders }: OverviewProps) => {
+const Overview = ({ customer, orders, newsletterSubscribed }: OverviewProps) => {
   const [expanded, setExpanded] = useState(false)
 
   const handleLogout = async () => {
@@ -44,7 +45,7 @@ const Overview = ({ customer, orders }: OverviewProps) => {
 
   return (
     <div
-      className="h-full small:px-8 py-8 flex flex-col justify-between"
+      className="h-full small:px-8 pt-5 small:py-8 flex flex-col justify-between"
       data-testid="overview-page-wrapper"
     >
       <div className="flex flex-col gap-8">
@@ -71,11 +72,17 @@ const Overview = ({ customer, orders }: OverviewProps) => {
                   : "—"}
               </p>
             </div>
-            <span className="font-sans text-[8px] uppercase tracking-[3px] text-hunter-gold border border-hunter-gold/40 bg-hunter-gold/5 px-3 py-1.5 shrink-0 self-start">
+            <span className="font-sans text-[5px] small:text-[8px] uppercase tracking-[3px] text-hunter-gold border border-hunter-gold/40 bg-hunter-gold/5 px-1.5 small:px-3 py-1.5 shrink-0 self-start">
               Standard
             </span>
           </div>
         </div>
+        {/* Newsletter status */}
+        <NewsletterStatus
+          customer={customer}
+          initialSubscribed={newsletterSubscribed}
+        />
+
         {/* Active orders */}
         {activeOrders && activeOrders.length > 0 && (
           <div>
@@ -87,7 +94,7 @@ const Overview = ({ customer, orders }: OverviewProps) => {
                 (order) => (
                   <LocalizedClientLink
                     key={order.id}
-                    href={`/account/orders/details/${order.id}`}
+                    href={`/profil/comenzi/${order.display_id}`}
                     className="group flex items-center justify-between gap-4 p-4 hover:border-hunter-gold transition-colors"
                   >
                     <div className="flex flex-col gap-1">
@@ -125,17 +132,14 @@ const Overview = ({ customer, orders }: OverviewProps) => {
             )}
           </div>
         )}
-
-        {/* Newsletter status */}
-        <NewsletterStatus customer={customer} />
       </div>
 
       {/* Logout — mobile only */}
-      <div className="small:hidden mt-8 pt-6 border-t border-[var(--theme-border)]">
+      <div className="small:hidden mt-8">
         <button
           type="button"
           onClick={handleLogout}
-          className="flex items-center gap-2 font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
+          className="w-full h-11 inline-flex items-center justify-center gap-2 border border-[var(--theme-border)] font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text)] active:border-hunter-gold active:text-hunter-gold transition-colors"
           data-testid="logout-button"
         >
           <ArrowRightOnRectangle className="w-3.5 h-3.5" />

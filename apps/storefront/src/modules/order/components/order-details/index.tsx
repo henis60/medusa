@@ -14,7 +14,7 @@ const STATUS_RO: Record<string, string> = {
   returned: "Returnată",
   partially_returned: "Parțial returnată",
   requires_action: "Necesită acțiune",
-  captured: "Capturat",
+  captured: "Încasată",
   refunded: "Rambursat",
   partially_refunded: "Parțial rambursat",
   awaiting: "În așteptare",

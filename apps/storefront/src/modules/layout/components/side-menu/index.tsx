@@ -500,7 +500,7 @@ const SideMenu = ({
                                   {/* Secondary links — bottom */}
                                   <ul className="flex flex-col mt-auto pt-10">
                                     {[
-                                      { label: "Profil", href: "/account" },
+                                      { label: "Profil", href: "/profil" },
                                       { label: "Contact", href: "/contact" },
                                       { label: "Wishlist", href: "/wishlist" },
                                       {

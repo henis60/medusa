@@ -17,10 +17,12 @@ const OrderSummary = ({ order }: OrderSummaryProps) => {
         Sumar
       </p>
       <div className="flex flex-col gap-2">
+        {/* order.subtotal already includes shipping in Medusa v2 — the
+            products-only figure is item_subtotal (same as checkout) */}
         <div className="flex items-center justify-between font-sans text-[12px]">
           <span className="text-[var(--theme-text-muted)]">Subtotal</span>
           <span className="text-[var(--theme-text)]">
-            {fmt(order.subtotal)}
+            {fmt(order.item_subtotal)}
           </span>
         </div>
         {order.discount_total > 0 && (
@@ -45,12 +47,14 @@ const OrderSummary = ({ order }: OrderSummaryProps) => {
             {fmt(order.shipping_total)}
           </span>
         </div>
-        <div className="flex items-center justify-between font-sans text-[12px]">
-          <span className="text-[var(--theme-text-muted)]">Taxe</span>
-          <span className="text-[var(--theme-text)]">
-            {fmt(order.tax_total)}
-          </span>
-        </div>
+        {(order.tax_total ?? 0) > 0 && (
+          <div className="flex items-center justify-between font-sans text-[12px]">
+            <span className="text-[var(--theme-text-muted)]">Taxe</span>
+            <span className="text-[var(--theme-text)]">
+              {fmt(order.tax_total)}
+            </span>
+          </div>
+        )}
         <div className="border-t border-[var(--theme-border)] pt-3 mt-1 flex items-baseline justify-between">
           <span className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
             Total

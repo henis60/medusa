@@ -1,27 +1,45 @@
 "use client"
 
-import { Plus } from "@medusajs/icons"
 import { useActionState, useEffect, useState } from "react"
 
-import { addCustomerAddress } from "@lib/data/customer"
+import { updateCustomerProfile } from "@lib/data/customer"
 import useToggleState from "@lib/hooks/use-toggle-state"
 import { HttpTypes } from "@medusajs/types"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import Input from "@modules/common/components/input"
-import LocalitySelect from "@modules/common/components/locality-select"
 import Modal from "@modules/common/components/modal"
 
-const AddAddress = ({
-  region,
-  addresses,
+type ProfileDetailsProps = {
+  customer: HttpTypes.StoreCustomer
+}
+
+const Row = ({
+  label,
+  value,
+  testId,
 }: {
-  region: HttpTypes.StoreRegion
-  addresses: HttpTypes.StoreCustomerAddress[]
-}) => {
+  label: string
+  value: string
+  testId?: string
+}) => (
+  <div className="py-5 flex flex-col gap-1">
+    <span className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
+      {label}
+    </span>
+    <span
+      className="font-serif text-[15px] text-[var(--theme-text)]"
+      data-testid={testId}
+    >
+      {value}
+    </span>
+  </div>
+)
+
+const ProfileDetails = ({ customer }: ProfileDetailsProps) => {
   const [successState, setSuccessState] = useState(false)
   const { state, open, close: closeModal } = useToggleState(false)
 
-  const [formState, formAction] = useActionState(addCustomerAddress, {
+  const [formState, formAction] = useActionState(updateCustomerProfile, {
     success: false,
     error: null,
   } as { success: boolean; error: string | null })
@@ -41,22 +59,42 @@ const AddAddress = ({
   }, [formState])
 
   return (
-    <>
-      <button
-        className="border border-dashed border-[var(--theme-border)] px-6 py-6 min-h-[80px] flex items-center justify-center gap-3 w-full text-[var(--theme-text-muted)] hover:border-hunter-gold hover:text-hunter-gold transition-colors group"
-        onClick={open}
-        data-testid="add-address-button"
-      >
-        <Plus className="w-5 h-5 transition-transform group-hover:scale-110" />
-        <span className="font-sans text-[9px] uppercase tracking-[3px]">
-          Adaugă adresă nouă
-        </span>
-      </button>
+    <div data-testid="profile-details">
+      <div className="flex flex-col divide-y divide-[var(--theme-border)]">
+        <Row
+          label="Nume"
+          value={
+            `${customer.first_name ?? ""} ${customer.last_name ?? ""}`.trim() ||
+            "—"
+          }
+          testId="profile-name"
+        />
+        <Row
+          label="Adresă de email"
+          value={customer.email}
+          testId="profile-email"
+        />
+        <Row
+          label="Număr de telefon"
+          value={customer.phone || "—"}
+          testId="profile-phone"
+        />
+      </div>
 
-      <Modal isOpen={state} close={close} data-testid="add-address-modal">
+      <div className="mt-1 pt-5 border-t border-[var(--theme-border)]">
+        <button
+          className="w-full small:w-auto h-12 small:px-8 bg-hunter-gold text-hunter-dark hover:bg-hunter-gold/90 transition-colors font-sans uppercase tracking-[3px] text-[11px]"
+          onClick={open}
+          data-testid="profile-edit-button"
+        >
+          Editează
+        </button>
+      </div>
+
+      <Modal isOpen={state} close={close} data-testid="edit-profile-modal">
         <Modal.Title>
           <span className="font-display text-[22px] leading-[1]">
-            Adaugă adresă
+            Editează detaliile
           </span>
         </Modal.Title>
         <form action={formAction} className="flex flex-col flex-1 min-h-0">
@@ -68,6 +106,7 @@ const AddAddress = ({
                   name="first_name"
                   required
                   autoComplete="given-name"
+                  defaultValue={customer.first_name ?? ""}
                   data-testid="first-name-input"
                 />
                 <Input
@@ -75,63 +114,26 @@ const AddAddress = ({
                   name="last_name"
                   required
                   autoComplete="family-name"
+                  defaultValue={customer.last_name ?? ""}
                   data-testid="last-name-input"
                 />
               </div>
               <Input
-                label="Companie (opțional)"
-                name="company"
-                autoComplete="organization"
-                data-testid="company-input"
-              />
-              <Input
-                label="Adresă"
-                name="address_1"
-                required
-                autoComplete="address-line1"
-                data-testid="address-1-input"
-              />
-              <Input
-                label="Apartament, etaj, etc."
-                name="address_2"
-                autoComplete="address-line2"
-                data-testid="address-2-input"
-              />
-              <Input
-                label="Cod poștal"
-                name="postal_code"
-                autoComplete="postal-code"
-                data-testid="postal-code-input"
-              />
-              <LocalitySelect
-                countyFieldName="province"
-                cityFieldName="city"
-                required
-              />
-              {/* Shipping is RO-only — country is fixed, not user-facing */}
-              <input type="hidden" name="country_code" value="ro" />
-              <Input
                 label="Telefon"
                 name="phone"
-                autoComplete="phone"
+                type="tel"
+                autoComplete="tel"
+                defaultValue={customer.phone ?? ""}
                 data-testid="phone-input"
               />
-              <label className="flex items-center gap-3 mt-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  name="is_default_billing"
-                  className="h-4 w-4 shrink-0 accent-[var(--theme-gold)]"
-                  data-testid="billing-checkbox"
-                />
-                <span className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text-muted)]">
-                  Folosește pentru facturare
-                </span>
-              </label>
+              <p className="font-sans text-[10px] text-[var(--theme-text-muted)] mt-1">
+                Adresa de email nu poate fi modificată.
+              </p>
             </div>
             {formState.error && (
               <p
                 className="font-sans text-[10px] text-rose-500 mt-2"
-                data-testid="address-error"
+                data-testid="profile-error"
               >
                 {formState.error}
               </p>
@@ -157,8 +159,8 @@ const AddAddress = ({
           </Modal.Footer>
         </form>
       </Modal>
-    </>
+    </div>
   )
 }
 
-export default AddAddress
+export default ProfileDetails

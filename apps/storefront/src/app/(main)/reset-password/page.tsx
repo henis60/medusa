@@ -15,7 +15,7 @@ export default async function ResetPasswordPage({ searchParams }: Props) {
   const { token } = await searchParams
 
   if (!token) {
-    redirect("/account")
+    redirect("/profil")
   }
 
   return <ResetPassword token={token} />

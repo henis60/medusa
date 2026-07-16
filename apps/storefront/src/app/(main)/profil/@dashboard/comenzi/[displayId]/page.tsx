@@ -1,29 +1,24 @@
-import { retrieveOrder } from "@lib/data/orders"
+import { retrieveOrderByDisplayId } from "@lib/data/orders"
 import OrderDetailsTemplate from "@modules/order/templates/order-details-template"
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 type Props = {
-  params: Promise<{ id: string }>
+  params: Promise<{ displayId: string }>
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
-  const params = await props.params
-  const order = await retrieveOrder(params.id).catch(() => null)
-
-  if (!order) {
-    notFound()
-  }
+  const { displayId } = await props.params
 
   return {
-    title: `Order #${order.display_id}`,
-    description: `View your order`,
+    title: `Comanda #${displayId}`,
+    description: "Detaliile comenzii tale.",
   }
 }
 
 export default async function OrderDetailPage(props: Props) {
-  const params = await props.params
-  const order = await retrieveOrder(params.id).catch(() => null)
+  const { displayId } = await props.params
+  const order = await retrieveOrderByDisplayId(displayId).catch(() => null)
 
   if (!order) {
     notFound()

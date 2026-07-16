@@ -1,8 +1,8 @@
 import React from "react"
 
 import AccountNav from "../components/account-nav"
-import AccountBackLink from "../components/account-back-link"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import AccountWelcome from "../components/account-welcome"
+import AccountFaqStrip from "../components/account-faq-strip"
 import { HttpTypes } from "@medusajs/types"
 
 interface AccountLayoutProps {
@@ -15,44 +15,16 @@ const AccountLayout: React.FC<AccountLayoutProps> = ({
   children,
 }) => {
   return (
-    <div className="flex-1 py-6 sm:py-10" data-testid="account-page">
-      <div className="page-container">
-        {customer && (
-          <div className="border-b border-[var(--theme-border)] pb-6 sm:pb-10">
-            <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-2">
-              Profil
-            </p>
-            <h1 className="font-display text-4xl small:text-5xl text-[var(--theme-text)] leading-tight">
-              Bun venit înapoi,
-              <br />
-              <span className="italic text-hunter-gold">
-                {customer.first_name}
-              </span>
-            </h1>
-          </div>
-        )}
-        <div className="grid grid-cols-1 small:grid-cols-[220px_1fr] small:gap-10">
-          <div>{customer && <AccountNav customer={customer} />}</div>
+    <div className="flex-1 flex flex-col py-6 sm:py-10" data-testid="account-page">
+      <div className="page-container flex-1 flex flex-col">
+        {customer && <AccountWelcome customer={customer} />}
+        <div className="flex-1 grid grid-cols-1 small:grid-cols-[220px_1fr] small:gap-10 content-start small:content-stretch">
+          <div>{customer && <AccountNav />}</div>
           <div className="flex-1 min-w-0">{children}</div>
         </div>
 
-        {/* Footer strip */}
-        <div className="flex flex-col small:flex-row items-start small:items-center justify-between border-t border-[var(--theme-border)] pt-10 mt-16 gap-6">
-          <div>
-            <p className="font-display text-[20px] leading-[1.1] text-[var(--theme-text)] mb-2">
-              Ai întrebări?
-            </p>
-            <p className="font-sans text-[12px] text-[var(--theme-text-muted)]">
-              Găsește răspunsuri pe pagina de întrebări frecvente.
-            </p>
-          </div>
-          <LocalizedClientLink
-            href="/faq"
-            className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5"
-          >
-            Întrebări frecvente
-          </LocalizedClientLink>
-        </div>
+        {/* Footer strip (hides itself on order details) */}
+        <AccountFaqStrip />
       </div>
     </div>
   )

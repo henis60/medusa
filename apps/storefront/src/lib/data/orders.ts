@@ -29,6 +29,53 @@ export const retrieveOrder = async (id: string) => {
     .catch((err) => medusaError(err))
 }
 
+// Order detail URLs use the human-friendly display_id (/profil/comenzi/148)
+// instead of the internal order_… id. The store API can't fetch by
+// display_id directly, so we scan the customer's own orders for it (cheap:
+// almost no customer exceeds one page), then load the full order by id.
+export const retrieveOrderByDisplayId = async (displayId: string) => {
+  const wanted = Number(displayId)
+
+  if (!Number.isInteger(wanted) || wanted <= 0) {
+    return null
+  }
+
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  const next = {
+    ...(await getCacheOptions("orders")),
+  }
+
+  const pageSize = 100
+  for (let offset = 0; ; offset += pageSize) {
+    const { orders, count } = await sdk.client
+      .fetch<HttpTypes.StoreOrderListResponse>(`/store/orders`, {
+        method: "GET",
+        query: {
+          limit: pageSize,
+          offset,
+          order: "-created_at",
+          fields: "id,display_id",
+        },
+        headers,
+        next,
+        cache: "force-cache",
+      })
+      .catch((err) => medusaError(err))
+
+    const match = orders.find((o) => o.display_id === wanted)
+    if (match) {
+      return retrieveOrder(match.id)
+    }
+
+    if (offset + pageSize >= count) {
+      return null
+    }
+  }
+}
+
 export const listOrders = async (
   limit: number = 10,
   offset: number = 0,

@@ -12,9 +12,6 @@ const Items = ({ order }: ItemsProps) => {
 
   return (
     <div className="small:px-8 py-6">
-      <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-5">
-        Produse
-      </p>
       <div className="flex flex-col gap-5" data-testid="products-table">
         {items?.map((item) => (
           <Item key={item.id} item={item} currencyCode={order.currency_code} />

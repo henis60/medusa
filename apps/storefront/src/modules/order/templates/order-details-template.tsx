@@ -6,12 +6,21 @@ import Items from "@modules/order/components/items"
 import OrderDetails from "@modules/order/components/order-details"
 import OrderSummary from "@modules/order/components/order-summary"
 import ShippingDetails from "@modules/order/components/shipping-details"
-import Help from "@modules/order/components/help"
 import React, { useState } from "react"
 
 type OrderDetailsTemplateProps = {
   order: HttpTypes.StoreOrder
 }
+
+// On mobile each section reads as a bordered card (the account pages'
+// visual motif); on desktop the border disappears and the parent's
+// divide-y hairlines take over. Horizontal padding is mobile-only —
+// the section components bring their own small:px-8.
+const Section = ({ children }: { children: React.ReactNode }) => (
+  <div className="border border-[var(--theme-border)] px-4 small:px-0 small:border-0">
+    {children}
+  </div>
+)
 
 const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
   order,
@@ -44,42 +53,53 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full h-full flex flex-col">
       {/* Header */}
-      <div className="small:px-8 pt-8 pb-6 border-b border-[var(--theme-border)]">
+      {/* Mobile shows "Comanda #…" in the nav title bar instead */}
+      <div className="hidden small:flex items-baseline justify-between gap-6 small:px-8 small:pt-8 small:pb-6">
+        <h1 className="font-display text-[28px] small:text-[32px] leading-[1] text-[var(--theme-text)]">
+          Comanda #{order.display_id}
+        </h1>
         <LocalizedClientLink
-          href="/account/orders"
-          className="hidden small:inline-block font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5 mb-6"
+          href="/profil/comenzi"
+          className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5"
           data-testid="back-to-overview-button"
         >
           ← Înapoi la comenzi
         </LocalizedClientLink>
-        <div className="flex items-start justify-between gap-4">
-          <h1 className="font-display text-[28px] small:text-[32px] leading-[1] text-[var(--theme-text)]">
-            Comanda #{order.display_id}
-          </h1>
+      </div>
+
+      {/* Mobile: bordered cards (matching the account menu / active orders);
+          desktop: flat sections with hairline dividers, as before. */}
+      <div
+        className="flex-1 flex flex-col gap-5 small:gap-0 small:divide-y small:divide-[var(--theme-border)]"
+        data-testid="order-details-container"
+      >
+        {/* Products lead the page, flat (no card) */}
+        <Items order={order} />
+        <Section>
+          <OrderDetails order={order} showStatus />
+        </Section>
+        <Section>
+          <ShippingDetails order={order} />
+        </Section>
+        <Section>
+          <OrderSummary order={order} />
+        </Section>
+
+        {/* Invoice download — primary action */}
+        <div className="small:px-8 pt-1 small:pt-6 pb-2 small:pb-8 !border-t-0 flex flex-col small:items-end">
           <button
             onClick={handleDownloadInvoice}
             disabled={downloading}
-            className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5 mt-2 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full small:w-auto h-12 small:px-8 bg-hunter-gold text-hunter-dark hover:bg-hunter-gold/90 transition-colors font-sans uppercase tracking-[3px] text-[11px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {downloading ? "Se descarcă..." : "Descarcă factura"}
           </button>
+          {downloadError && (
+            <p className="mt-3 text-sm text-red-500">{downloadError}</p>
+          )}
         </div>
-        {downloadError && (
-          <p className="mt-2 text-sm text-red-500">{downloadError}</p>
-        )}
-      </div>
-
-      <div
-        className="flex flex-col divide-y divide-[var(--theme-border)]"
-        data-testid="order-details-container"
-      >
-        <OrderDetails order={order} showStatus />
-        <Items order={order} />
-        <ShippingDetails order={order} />
-        <OrderSummary order={order} />
-        <Help />
       </div>
     </div>
   )

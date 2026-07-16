@@ -166,7 +166,7 @@ export async function signout() {
   const cartCacheTag = await getCacheTag("carts")
   revalidateTag(cartCacheTag)
 
-  redirect("/account")
+  redirect("/profil")
 }
 
 export async function resetPassword(
@@ -186,10 +186,12 @@ export async function resetPassword(
   }
 
   try {
-    await sdk.auth.updateProvider("customer", "emailpass", {
-      token,
-      password,
-    })
+    await sdk.auth.updateProvider(
+      "customer",
+      "emailpass",
+      { password },
+      token
+    )
     return "success"
   } catch (error) {
     return "Link-ul de resetare este invalid sau a expirat."
@@ -230,11 +232,55 @@ export async function transferCart() {
   revalidateTag(cartCacheTag)
 }
 
+// A 401 on a write means the JWT expired while the cookie (and the
+// force-cached account pages) were still alive. Drop the stale token and
+// bust the customer cache so the next render lands on the login screen.
+const handleUnauthorized = async (
+  err: unknown
+): Promise<{ success: boolean; error: string } | null> => {
+  if (!/unauthorized/i.test(String(err))) {
+    return null
+  }
+  await removeAuthToken()
+  const customerCacheTag = await getCacheTag("customers")
+  revalidateTag(customerCacheTag)
+  return {
+    success: false,
+    error: "Sesiunea a expirat. Te rugăm să te autentifici din nou.",
+  }
+}
+
+export const updateCustomerProfile = async (
+  _currentState: Record<string, unknown>,
+  formData: FormData
+): Promise<{ success: boolean; error: string | null }> => {
+  const update: HttpTypes.StoreUpdateCustomer = {
+    first_name: formData.get("first_name") as string,
+    last_name: formData.get("last_name") as string,
+    phone: (formData.get("phone") as string) ?? "",
+  }
+
+  try {
+    await updateCustomer(update)
+    return { success: true, error: null }
+  } catch (err) {
+    return (
+      (await handleUnauthorized(err)) ?? {
+        success: false,
+        error: String(err),
+      }
+    )
+  }
+}
+
 export const addCustomerAddress = async (
   currentState: Record<string, unknown>,
   formData: FormData
 ): Promise<{ success: boolean; error: string | null }> => {
-  const isDefaultBilling = (currentState.isDefaultBilling as boolean) || false
+  const isDefaultBilling =
+    formData.get("is_default_billing") === "on" ||
+    (currentState.isDefaultBilling as boolean) ||
+    false
   const isDefaultShipping = (currentState.isDefaultShipping as boolean) || false
 
   const address = {
@@ -263,27 +309,37 @@ export const addCustomerAddress = async (
       revalidateTag(customerCacheTag)
       return { success: true, error: null }
     })
-    .catch((err) => {
-      return { success: false, error: err.toString() }
+    .catch(async (err) => {
+      return (
+        (await handleUnauthorized(err)) ?? {
+          success: false,
+          error: err.toString(),
+        }
+      )
     })
 }
 
 export const deleteCustomerAddress = async (
   addressId: string
-): Promise<void> => {
+): Promise<{ success: boolean; error: string | null }> => {
   const headers = {
     ...(await getAuthHeaders()),
   }
 
-  await sdk.store.customer
+  return sdk.store.customer
     .deleteAddress(addressId, headers)
     .then(async () => {
       const customerCacheTag = await getCacheTag("customers")
       revalidateTag(customerCacheTag)
       return { success: true, error: null }
     })
-    .catch((err) => {
-      return { success: false, error: err.toString() }
+    .catch(async (err) => {
+      return (
+        (await handleUnauthorized(err)) ?? {
+          success: false,
+          error: err.toString(),
+        }
+      )
     })
 }
 
@@ -308,6 +364,7 @@ export const updateCustomerAddress = async (
     postal_code: formData.get("postal_code") as string,
     province: formData.get("province") as string,
     country_code: formData.get("country_code") as string,
+    is_default_billing: formData.get("is_default_billing") === "on",
   } as HttpTypes.StoreUpdateCustomerAddress
 
   const phone = formData.get("phone") as string
@@ -327,7 +384,12 @@ export const updateCustomerAddress = async (
       revalidateTag(customerCacheTag)
       return { success: true, error: null }
     })
-    .catch((err) => {
-      return { success: false, error: err.toString() }
+    .catch(async (err) => {
+      return (
+        (await handleUnauthorized(err)) ?? {
+          success: false,
+          error: err.toString(),
+        }
+      )
     })
 }
