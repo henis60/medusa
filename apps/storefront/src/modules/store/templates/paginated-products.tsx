@@ -144,6 +144,7 @@ export default async function PaginatedProducts({
         initialSort={sort}
         collectionId={collectionId}
         categoryId={categoryId}
+        categoryIds={queryParams.category_id}
         productsIds={productsIds}
         urlFiltered={urlFiltered}
         categories={categories}

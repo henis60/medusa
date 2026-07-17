@@ -22,21 +22,11 @@ const Label = ({ htmlFor, children, error }: { htmlFor?: string; children: React
 
 const STEPS = ["Data & Ora", "Contact"]
 
-// Enter-only animation. Exit choreography (AnimatePresence mode="wait")
-// hangs under React 19 + framer-motion 12 — the leaving step never finishes
-// its exit, so the next step (incl. the date picker) never mounts.
-const slide = (dir: number) => ({
-  initial: { opacity: 0, x: dir * 32 },
-  animate: { opacity: 1, x: 0 },
-  transition: { duration: 0.22, ease: "easeOut" as const },
-})
-
 type Status = "idle" | "loading" | "success" | "error"
 
 export default function AppointmentModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   // step 0 = intro, step 1 = Data & Ora, step 2 = Contact
   const [step, setStep] = useState(0)
-  const [dir, setDir] = useState(1)
   const [status, setStatus] = useState<Status>("idle")
   const { preload, getToken } = useRecaptcha()
 
@@ -51,7 +41,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
   const [errors, setErrors] = useState<Record<string, boolean>>({})
 
   const reset = () => {
-    setStep(0); setDir(1); setStatus("idle")
+    setStep(0); setStatus("idle")
     setDate(""); setTime(""); setDateError(false)
     setName(""); setEmail(""); setPhone(""); setMessage("")
     setErrors({})
@@ -61,7 +51,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
 
   useScrollLock(open)
 
-  const goTo = (next: number) => { setDir(next > step ? 1 : -1); setStep(next) }
+  const goTo = (next: number) => setStep(next)
 
   const nextStep = () => {
     if (step === 1) {
@@ -171,7 +161,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
             {/* Content */}
             <div className="px-6 py-5 flex-1 min-h-0 overflow-y-auto">
               {status === "success" ? (
-                  <motion.div key="success" {...slide(1)} className="text-center py-6 flex flex-col items-center gap-3">
+                  <div key="success" className="text-center py-6 flex flex-col items-center gap-3">
                     <div className="w-10 h-10 rounded-full border border-hunter-gold/40 flex items-center justify-center mb-2">
                       <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
                         <path d="M1 6L6 11L15 1" stroke="rgba(201,168,76,0.8)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -187,10 +177,10 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
                     >
                       Închide
                     </button>
-                  </motion.div>
+                  </div>
 
                 ) : step === 0 ? (
-                  <motion.div key="intro" {...slide(dir)} className="flex flex-col gap-5 py-2">
+                  <div key="intro" className="flex flex-col gap-5 py-2">
                     <p className="font-sans text-sm text-[var(--theme-text-muted)] leading-relaxed">
                       O întâlnire personalizată în care discutăm despre stilul tău, alegem materialele potrivite și definim fiecare detaliu al costumului dorit. Te ghidăm în procesul de creare a unei ținute realizate special pentru tine.
                     </p>
@@ -207,19 +197,19 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
                         </div>
                       ))}
                     </div>
-                  </motion.div>
+                  </div>
 
                 ) : step === 1 ? (
-                  <motion.div key="step1" {...slide(dir)}>
+                  <div key="step1">
                     <AppointmentDatePicker
                       inline
                       hasError={dateError}
                       onSelect={(d, t) => { setDate(d); setTime(t); setDateError(false) }}
                     />
-                  </motion.div>
+                  </div>
 
                 ) : (
-                  <motion.div key="step2" {...slide(dir)} className="flex flex-col gap-3">
+                  <div key="step2" className="flex flex-col gap-3">
                     <div className="flex flex-col gap-3">
                       <div>
                         <Label htmlFor="m-name" error={errors.name}>Nume</Label>
@@ -245,7 +235,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
                     {status === "error" && (
                       <p className="font-sans text-xs text-red-400">Nu am putut trimite cererea. Încearcă din nou.</p>
                     )}
-                  </motion.div>
+                  </div>
                 )}
             </div>
 

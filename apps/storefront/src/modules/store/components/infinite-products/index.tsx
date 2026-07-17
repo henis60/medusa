@@ -44,6 +44,10 @@ type Props = {
   /** Only needed when urlFiltered — resolves the path's handles back to ids. */
   categories?: HttpTypes.StoreProductCategory[]
   collections?: HttpTypes.StoreCollection[]
+  /** Fixed category pages: the pre-expanded id list (category + all its
+   *  descendants) the server rendered with, so client refetches (e.g. on
+   *  sort change) keep including subcategory products. */
+  categoryIds?: string[]
 }
 
 const STORE_BASE_PATH = "/ready-to-wear"
@@ -67,6 +71,7 @@ export default function InfiniteProducts({
   urlFiltered = false,
   categories: categoriesProp,
   collections: collectionsProp,
+  categoryIds,
 }: Props) {
   // Falls back to the /ready-to-wear layout's context when not passed as a
   // prop — the layout provides these once and persists across category/
@@ -157,16 +162,52 @@ export default function InfiniteProducts({
   )
   const sentinelRef = useRef<HTMLDivElement | null>(null)
 
+  // A category with no products of its own still shows its subcategories'
+  // products — expand the selected category into itself + all descendants
+  // (the flat `categories` list carries each entry's category_children).
+  const expandCategoryIds = useCallback(
+    (id: string): string[] => {
+      const ids = [id]
+      const stack = [id]
+      while (stack.length) {
+        const cur = stack.pop()!
+        const cat = categories.find((c) => c.id === cur)
+        for (const child of cat?.category_children ?? []) {
+          if (!ids.includes(child.id)) {
+            ids.push(child.id)
+            stack.push(child.id)
+          }
+        }
+      }
+      return ids
+    },
+    [categories]
+  )
+
   const buildQueryParams = useCallback(
     () => ({
       limit,
       ...(effectiveCollectionId
         ? { collection_id: [effectiveCollectionId] }
         : {}),
-      ...(effectiveCategoryId ? { category_id: [effectiveCategoryId] } : {}),
+      ...(effectiveCategoryId
+        ? {
+            category_id: urlFiltered
+              ? expandCategoryIds(effectiveCategoryId)
+              : categoryIds ?? [effectiveCategoryId],
+          }
+        : {}),
       ...(productsIds ? { id: productsIds } : {}),
     }),
-    [limit, effectiveCollectionId, effectiveCategoryId, productsIds]
+    [
+      limit,
+      effectiveCollectionId,
+      effectiveCategoryId,
+      productsIds,
+      urlFiltered,
+      expandCategoryIds,
+      categoryIds,
+    ]
   )
   useEffect(() => {
     if (filtersKey === activeFilters.current) return
@@ -286,6 +327,16 @@ export default function InfiniteProducts({
     })
   }, [products, hasFacetFilter, minPrice, maxPrice, selectedColors])
 
+  // Client-side facets can filter a loaded page down to almost nothing —
+  // keep fetching until at least a minimum is on screen (4 on mobile, 6 on
+  // desktop) or the catalog runs out, so the grid never opens near-empty
+  // while more matching products exist on later pages.
+  useEffect(() => {
+    if (!hasMore || loading) return
+    const minVisible = window.matchMedia("(min-width: 1024px)").matches ? 6 : 4
+    if (displayedProducts.length < minVisible) loadMore()
+  }, [displayedProducts.length, hasMore, loading, loadMore])
+
   return (
     <>
       {urlFiltered && (
@@ -322,7 +373,7 @@ export default function InfiniteProducts({
 
       {displayedProducts.length === 0 && !loading && (
         <div
-          className="flex flex-col items-center justify-center py-16 gap-2 text-center"
+          className="flex flex-col items-center justify-center py-16 gap-5 text-center"
           data-testid="no-products-message"
         >
           <p className="font-serif text-base text-[var(--theme-text-muted)]">
@@ -330,6 +381,23 @@ export default function InfiniteProducts({
               ? "Niciun produs nu corespunde filtrelor selectate."
               : "Momentan nu există produse în această categorie."}
           </p>
+          {hasFacetFilter && (
+            <button
+              onClick={() => {
+                const params = new URLSearchParams(searchParams)
+                params.delete("minPrice")
+                params.delete("maxPrice")
+                params.delete("color")
+                params.delete("page")
+                const qs = params.toString()
+                router.push(qs ? `${pathname}?${qs}` : pathname)
+              }}
+              className="h-11 px-6 inline-flex items-center border border-[var(--theme-border)] font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text)] hover:border-hunter-gold hover:text-hunter-gold active:border-hunter-gold active:text-hunter-gold transition-colors"
+              data-testid="reset-filters-button"
+            >
+              Resetează filtrele
+            </button>
+          )}
         </div>
       )}
 

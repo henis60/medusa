@@ -52,7 +52,7 @@ export default function AppointmentButton({ transparent, hideOnTop, onClick }: P
         onClick={onClick}
         className={`flex transition-colors cursor-pointer ${
           transparent
-            ? "bg-transparent border-y border-l border-white/20 text-white/60 hover:text-white hover:border-white/40"
+            ? "bg-transparent border-y border-l border-white/20 text-white/60 hover:text-hunter-gold hover:border-hunter-gold/60"
             : "bg-[var(--theme-bg)] border-y border-l border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:text-hunter-gold hover:border-hunter-gold"
         }`}
         aria-label="Programare"

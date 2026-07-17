@@ -1,5 +1,6 @@
 import { Metadata } from "next"
 import FavoritesList from "@modules/wishlist/components/favorites-list"
+import AccountFaqStrip from "@modules/account/components/account-faq-strip"
 
 export const metadata: Metadata = {
   title: "Wishlist",
@@ -13,6 +14,7 @@ export default function WishlistPage() {
         Wishlist
       </h1>
       <FavoritesList />
+      <AccountFaqStrip />
     </div>
   )
 }

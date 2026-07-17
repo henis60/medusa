@@ -3,7 +3,7 @@
 import { addToCart } from "@lib/data/cart"
 import { emitCartUpdated } from "@lib/util/cart-events"
 import { HttpTypes } from "@medusajs/types"
-import { useState, useMemo } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { COLOR_OPTION_NAMES as COLOR_TITLES } from "@lib/util/product"
 
 const SIZE_ORDER = [
@@ -87,6 +87,21 @@ export default function DesktopQuickAdd({
   const countryCode = "ro"
   const [selected, setSelected] = useState<Record<string, string>>({})
   const [adding, setAdding] = useState(false)
+
+  // Single-value options are always selected (re-applied after any reset,
+  // e.g. post add-to-cart) — there's no real choice to make.
+  useEffect(() => {
+    const next = { ...selected }
+    let changed = false
+    options.forEach((opt) => {
+      const only = opt.values?.length === 1 ? opt.values[0].value : undefined
+      if (only && next[opt.id ?? ""] !== only) {
+        next[opt.id ?? ""] = only
+        changed = true
+      }
+    })
+    if (changed) setSelected(next)
+  }, [options, selected])
 
   const vmap = (v: HttpTypes.StoreProductVariant) =>
     v.options?.reduce((acc, o) => {

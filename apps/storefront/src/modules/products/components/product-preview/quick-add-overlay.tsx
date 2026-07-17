@@ -239,25 +239,24 @@ export default function QuickAddOverlay({
     return mapped.length >= Math.ceil(vals.length / 2)
   }
 
-  // Auto-select options with only one value
+  // Single-value options are always selected (re-applied after any reset,
+  // e.g. post add-to-cart or closing the sheet) — no real choice to make.
   useEffect(() => {
     const autoSelected: Record<string, string> = { ...selected }
     let changed = false
 
     options.forEach((opt) => {
-      if (!autoSelected[opt.id ?? ""] && opt.values?.length === 1) {
-        const value = opt.values[0].value
-        if (value) {
-          autoSelected[opt.id ?? ""] = value
-          changed = true
-        }
+      const only = opt.values?.length === 1 ? opt.values[0].value : undefined
+      if (only && autoSelected[opt.id ?? ""] !== only) {
+        autoSelected[opt.id ?? ""] = only
+        changed = true
       }
     })
 
     if (changed) {
       setSelected(autoSelected)
     }
-  }, [options])
+  }, [options, selected])
 
   const selectLabel = useMemo(() => {
     // Ignore options with a single value — there's no real choice to make,
