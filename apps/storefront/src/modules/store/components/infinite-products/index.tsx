@@ -274,30 +274,51 @@ export default function InfiniteProducts({
     return () => observer.disconnect()
   }, [loadMore, hasMore])
 
-  // Distinct colors across everything loaded so far — grows as more pages
-  // load. Only relevant on /store, where the Filtre sheet shows them.
+  // Colors + price bounds must reflect the WHOLE matching catalog, not just
+  // what's been loaded via infinite scroll so far — otherwise the Filtre
+  // sheet's options grow (and a selected color can vanish from the list)
+  // as the user scrolls. Fetched once per filter change, decoupled from the
+  // paginated `products` used for display.
+  const [facetProducts, setFacetProducts] = useState<HttpTypes.StoreProduct[]>([])
+  useEffect(() => {
+    if (!urlFiltered) return
+    let cancelled = false
+    listProductsWithSort({
+      page: 1,
+      queryParams: { ...buildQueryParams(), limit: 200 },
+      sortBy: "created_at",
+      countryCode,
+    }).then(({ response }) => {
+      if (!cancelled) setFacetProducts(response.products)
+    })
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlFiltered, filtersKey, countryCode])
+
   const colorFacets = useMemo(() => {
     if (!urlFiltered) return []
     const seen = new Set<string>()
-    for (const p of products) {
+    for (const p of facetProducts) {
       for (const { label } of getProductColors(p)) seen.add(label)
     }
     return Array.from(seen)
-  }, [products, urlFiltered])
+  }, [facetProducts, urlFiltered])
 
-  // Price bounds across everything loaded so far — drives the slider range.
+  // Price bounds across the whole matching catalog — drives the slider range.
   const priceBounds = useMemo((): [number, number] => {
     if (!urlFiltered) return [0, 0]
     let lo = Infinity
     let hi = 0
-    for (const p of products) {
+    for (const p of facetProducts) {
       const price = getProductPrice({ product: p }).cheapestPrice?.calculated_price_number
       if (price === undefined) continue
       if (price < lo) lo = price
       if (price > hi) hi = price
     }
     return lo === Infinity ? [0, 0] : [Math.floor(lo), Math.ceil(hi)]
-  }, [products, urlFiltered])
+  }, [facetProducts, urlFiltered])
 
   // Report facets up to StoreView (via context) so the desktop "Filtru"
   // button — rendered next to Sort, outside this subtree — can show them.

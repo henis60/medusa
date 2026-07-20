@@ -147,6 +147,14 @@ export default function StoreResultsBar({
       prev.includes(label) ? prev.filter((c) => c !== label) : [...prev, label]
     )
 
+  // A color the user already selected must stay visible even if it falls
+  // outside the current facet list (e.g. combined with another filter) —
+  // and lead the list so it's never scrolled out of sight by its own pick.
+  const displayedColors = [
+    ...draftColors,
+    ...colorFacets.filter((c) => !draftColors.includes(c)),
+  ]
+
   const draftFilterCount =
     (draftMinPrice > priceBounds[0] || draftMaxPrice < priceBounds[1] ? 1 : 0) +
     (draftColors.length > 0 ? 1 : 0)
@@ -277,29 +285,27 @@ export default function StoreResultsBar({
               </div>
             </div>
 
-            {priceBounds[1] > priceBounds[0] && (
-              <div className="py-3 border-t border-[var(--theme-border)]">
-                <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-3">
-                  Preț
-                </p>
-                <PriceRangeSlider
-                  bounds={priceBounds}
-                  value={[draftMinPrice, draftMaxPrice]}
-                  onCommit={([lo, hi]) => {
-                    setDraftMinPrice(lo)
-                    setDraftMaxPrice(hi)
-                  }}
-                />
-              </div>
-            )}
+            <div className="py-3 border-t border-[var(--theme-border)]">
+              <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-3">
+                Preț
+              </p>
+              <PriceRangeSlider
+                bounds={priceBounds}
+                value={[draftMinPrice, draftMaxPrice]}
+                onCommit={([lo, hi]) => {
+                  setDraftMinPrice(lo)
+                  setDraftMaxPrice(hi)
+                }}
+              />
+            </div>
 
-            {colorFacets.length > 0 && (
-              <div className="py-3 border-t border-[var(--theme-border)]">
-                <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-3">
-                  Culoare
-                </p>
+            <div className="py-3 border-t border-[var(--theme-border)]">
+              <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-3">
+                Culoare
+              </p>
+              {displayedColors.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {colorFacets.map((label) => {
+                  {displayedColors.map((label) => {
                     const active = draftColors.includes(label)
                     return (
                       <button
@@ -317,8 +323,12 @@ export default function StoreResultsBar({
                     )
                   })}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="font-sans text-[11px] text-[var(--theme-text-muted)] opacity-40">
+                  Nicio culoare disponibilă
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="sticky bottom-0 px-5 pt-4 pb-2 bg-[var(--theme-bg)] border-t border-[var(--theme-border)] flex gap-3">

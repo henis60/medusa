@@ -16,6 +16,9 @@ export default function PriceRangeSlider({
   onCommit: (v: [number, number]) => void
 }) {
   const [min, max] = bounds
+  // No price range to filter on (empty category, or nothing priced yet) —
+  // still shown, just inert, rather than the whole section disappearing.
+  const disabled = max <= min
   const [lo, setLo] = useState(value[0])
   const [hi, setHi] = useState(value[1])
 
@@ -24,48 +27,53 @@ export default function PriceRangeSlider({
     setHi(value[1])
   }, [value[0], value[1]])
 
-  if (max <= min) return null
+  const sliderMin = disabled ? 0 : min
+  const sliderMax = disabled ? 1 : max
+  const loValue = disabled ? sliderMin : lo
+  const hiValue = disabled ? sliderMax : hi
 
-  const pct = (v: number) => ((v - min) / (max - min)) * 100
+  const pct = (v: number) => ((v - sliderMin) / (sliderMax - sliderMin)) * 100
 
   return (
-    <div className="pt-1">
+    <div className={clx("pt-1", disabled && "opacity-40")}>
       <div className="relative h-5 flex items-center">
         <div className="absolute left-0 right-0 h-[3px] bg-[var(--theme-border)] rounded-full" />
         <div
           className="absolute h-[3px] bg-hunter-gold rounded-full"
-          style={{ left: `${pct(lo)}%`, right: `${100 - pct(hi)}%` }}
+          style={{ left: `${pct(loValue)}%`, right: `${100 - pct(hiValue)}%` }}
         />
         <input
           type="range"
-          min={min}
-          max={max}
-          value={lo}
+          disabled={disabled}
+          min={sliderMin}
+          max={sliderMax}
+          value={loValue}
           onChange={(e) => setLo(Math.min(Number(e.target.value), hi))}
           onMouseUp={() => onCommit([lo, hi])}
           onTouchEnd={() => onCommit([lo, hi])}
           className={clx(
-            "absolute w-full h-5 appearance-none bg-transparent pointer-events-none",
+            "absolute w-full h-5 appearance-none bg-transparent pointer-events-none disabled:pointer-events-none",
             thumbClass
           )}
         />
         <input
           type="range"
-          min={min}
-          max={max}
-          value={hi}
+          disabled={disabled}
+          min={sliderMin}
+          max={sliderMax}
+          value={hiValue}
           onChange={(e) => setHi(Math.max(Number(e.target.value), lo))}
           onMouseUp={() => onCommit([lo, hi])}
           onTouchEnd={() => onCommit([lo, hi])}
           className={clx(
-            "absolute w-full h-5 appearance-none bg-transparent pointer-events-none",
+            "absolute w-full h-5 appearance-none bg-transparent pointer-events-none disabled:pointer-events-none",
             thumbClass
           )}
         />
       </div>
       <div className="flex justify-between mt-1.5 font-sans text-[11px] text-[var(--theme-text-muted)]">
-        <span>{lo} LEI</span>
-        <span>{hi} LEI</span>
+        <span>{loValue} LEI</span>
+        <span>{hiValue} LEI</span>
       </div>
     </div>
   )
