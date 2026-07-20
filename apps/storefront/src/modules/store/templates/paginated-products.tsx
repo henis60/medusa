@@ -121,14 +121,12 @@ export default async function PaginatedProducts({
             ? "Nu există produse în această categorie momentan."
             : "Combinația de filtre selectată nu returnează rezultate."}
         </p>
-        {!isFixedContext && (
-          <a
-            href="/ready-to-wear"
-            className="mt-2 px-8 py-3 font-sans text-[10px] uppercase tracking-[4px] border border-hunter-gold text-hunter-gold hover:bg-hunter-gold hover:text-hunter-dark transition-colors"
-          >
-            Resetează filtrele
-          </a>
-        )}
+        <a
+          href="/ready-to-wear"
+          className="mt-2 px-8 py-3 font-sans text-[10px] uppercase tracking-[4px] border border-hunter-gold text-hunter-gold hover:bg-hunter-gold hover:text-hunter-dark transition-colors"
+        >
+          {isFixedContext ? "Vezi toate produsele" : "Resetează filtrele"}
+        </a>
       </div>
     )
   }
