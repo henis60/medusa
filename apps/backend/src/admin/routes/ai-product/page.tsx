@@ -3,8 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Button, Container, Heading, Text, Badge, toast } from "@medusajs/ui";
-import { Eye } from "@medusajs/icons";
+import { Eye, Photo, XMark } from "@medusajs/icons";
 import { sdk } from "../../lib/client";
+import MediaLibraryPicker from "../../components/media-library-picker";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -28,8 +29,7 @@ type Row = {
   tags: string;
   stock: string;
   inStoreOnly: boolean;
-  convertImages: boolean;
-  files: File[];
+  libraryUrls: string[];
   status: RowStatus;
   error?: string;
   warning?: string;
@@ -181,64 +181,6 @@ function buildOptions(colors: string[], sizes: string[]) {
   if (colors.length) opts.push({ title: "Culoare", values: colors });
   if (sizes.length) opts.push({ title: "Mărime", values: sizes });
   return opts;
-}
-
-// ── Upload helper ───────────────────────────────────────────────────────────
-
-async function processImage(file: File): Promise<File> {
-  const MAX_WIDTH = 1600;
-  const QUALITY = 0.85;
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      const scale = Math.min(1, MAX_WIDTH / img.width);
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      canvas
-        .getContext("2d")!
-        .drawImage(img, 0, 0, canvas.width, canvas.height);
-      URL.revokeObjectURL(url);
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) {
-            reject(new Error("toBlob failed"));
-            return;
-          }
-          resolve(
-            new File([blob], file.name.replace(/\.[^.]+$/, ".webp"), {
-              type: "image/webp",
-            }),
-          );
-        },
-        "image/webp",
-        QUALITY,
-      );
-    };
-    img.onerror = reject;
-    img.src = url;
-  });
-}
-
-async function uploadFiles(files: File[], convert: boolean): Promise<string[]> {
-  if (!files.length) return [];
-  const processed = convert
-    ? await Promise.all(files.map(processImage))
-    : files;
-  const formData = new FormData();
-  processed.forEach((f) => formData.append("files", f));
-  const res = await fetch("/admin/uploads", {
-    method: "POST",
-    body: formData,
-    credentials: "include",
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || "Upload failed");
-  }
-  const data = await res.json();
-  return data.files.map((f: any) => f.url);
 }
 
 // ── Status badge ────────────────────────────────────────────────────────────
@@ -446,77 +388,68 @@ function CheckCell({
   );
 }
 
-// ── Blob URL cache — createObjectURL once per File, reuse on every render ──
-
-const _blobCache = new WeakMap<File, string>();
-function blobUrl(f: File): string {
-  if (!_blobCache.has(f)) _blobCache.set(f, URL.createObjectURL(f));
-  return _blobCache.get(f)!;
-}
-
-// ── Row image upload ────────────────────────────────────────────────────────
+// ── Row images — chosen exclusively from the media library (uploading new
+// files, when needed, happens inside that picker's own upload flow) ────────
 
 function ImageCell({
   row,
-  onFiles,
   disabled,
+  onLibraryUrls,
 }: {
   row: Row;
-  onFiles: (index: number, files: File[]) => void;
   disabled: boolean;
+  onLibraryUrls: (index: number, urls: string[]) => void;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   return (
     <div className="flex flex-col gap-1 min-w-[100px]">
       <div className="flex flex-wrap gap-1">
-        {row.files.map((f, i) => (
-          <div key={i} className="relative group">
+        {row.libraryUrls.map((url, i) => (
+          <div key={`u-${i}`} className="relative group">
             <img
-              src={blobUrl(f)}
+              src={url}
               alt=""
               className="w-9 h-11 object-cover rounded border border-ui-border-base"
             />
             {!disabled && (
               <button
-                className="absolute -top-1 -right-1 bg-ui-bg-base border border-ui-border-base rounded-full w-4 h-4 text-[9px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-ui-fg-subtle hover:text-ui-fg-error"
+                className="absolute -top-1 -right-1 bg-ui-bg-base border border-ui-border-base rounded-full w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-ui-fg-subtle hover:text-ui-fg-error"
                 onClick={() =>
-                  onFiles(
+                  onLibraryUrls(
                     row.index,
-                    row.files.filter((_, j) => j !== i),
+                    row.libraryUrls.filter((_, j) => j !== i),
                   )
                 }
               >
-                ✕
+                <XMark className="w-2.5 h-2.5" />
               </button>
             )}
           </div>
         ))}
         {!disabled && (
           <button
-            onClick={() => inputRef.current?.click()}
-            className={`w-9 h-11 border border-dashed rounded flex items-center justify-center text-base transition-colors ${
-              row.files.length === 0
+            onClick={() => setPickerOpen(true)}
+            title="Alege din bibliotecă"
+            className={`w-9 h-11 border border-dashed rounded flex items-center justify-center transition-colors ${
+              row.libraryUrls.length === 0
                 ? "border-ui-border-interactive text-ui-fg-interactive hover:bg-ui-bg-subtle"
                 : "border-ui-border-base text-ui-fg-subtle hover:border-ui-border-strong hover:bg-ui-bg-subtle"
             }`}
           >
-            +
+            <Photo className="w-4 h-4" />
           </button>
         )}
       </div>
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        multiple
-        className="hidden"
-        onChange={(e) => {
-          const newFiles = Array.from(e.target.files ?? []);
-          if (newFiles.length) onFiles(row.index, [...row.files, ...newFiles]);
-          e.target.value = "";
-        }}
-      />
+      {pickerOpen && (
+        <MediaLibraryPicker
+          onClose={() => setPickerOpen(false)}
+          onSelect={(url) => {
+            onLibraryUrls(row.index, [...row.libraryUrls, url]);
+            setPickerOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -627,8 +560,7 @@ const AIProductPage = () => {
               tags: raw.tags ?? "",
               stock: raw.stock ?? "",
               inStoreOnly: false,
-              convertImages: true,
-              files: [],
+              libraryUrls: [],
               status: "idle" as RowStatus,
             }
           );
@@ -671,8 +603,7 @@ const AIProductPage = () => {
         tags: "",
         stock: "",
         inStoreOnly: false,
-        convertImages: true,
-        files: [],
+        libraryUrls: [],
         status: "idle",
       },
     ]);
@@ -682,18 +613,19 @@ const AIProductPage = () => {
 
   const canProcess =
     rows.length > 0 &&
-    rows.every((r) => r.files.length > 0 || r.status === "done");
+    rows.every((r) => r.libraryUrls.length > 0 || r.status === "done");
   const pendingRows = rows.filter((r) => r.status !== "done");
 
   const processAll = async () => {
     setProcessing(true);
 
     const CONCURRENCY = 5;
+    const hasImages = (r: Row) => r.libraryUrls.length > 0;
     const toProcess = rows.filter(
-      (r) => r.status !== "done" && r.sku_prefix && r.files.length > 0,
+      (r) => r.status !== "done" && r.sku_prefix && hasImages(r),
     );
     const errored = rows.filter(
-      (r) => r.status !== "done" && (!r.sku_prefix || r.files.length === 0),
+      (r) => r.status !== "done" && (!r.sku_prefix || !hasImages(r)),
     );
     errored.forEach((row) => {
       if (!row.sku_prefix)
@@ -705,18 +637,7 @@ const AIProductPage = () => {
     const processRow = async (row: Row) => {
       if (row.status === "done") return;
 
-      // Upload images
-      updateRow(row.index, { status: "uploading" });
-      let imageUrls: string[];
-      try {
-        imageUrls = await uploadFiles(row.files, row.convertImages);
-      } catch (err: any) {
-        updateRow(row.index, {
-          status: "error",
-          error: "Upload eșuat: " + (err.message || ""),
-        });
-        return;
-      }
+      let imageUrls: string[] = row.libraryUrls;
 
       // Generate with AI
       updateRow(row.index, { status: "generating" });
@@ -1246,12 +1167,6 @@ const AIProductPage = () => {
                 <th className="text-left py-2 px-3 text-ui-fg-subtle font-medium text-xs">
                   Imagini <span className="text-ui-fg-error">*</span>
                 </th>
-                <th
-                  className="text-left py-2 px-3 text-ui-fg-subtle font-medium text-xs whitespace-nowrap"
-                  title="Redimensionează la max 1600px și reencodează webp. Dezactivează dacă sursa e deja webp optimizat, ca să eviți o a doua compresie."
-                >
-                  Conversie
-                </th>
                 <th className="text-left py-2 px-3 text-ui-fg-subtle font-medium text-xs">
                   SKU prefix <span className="text-ui-fg-error">*</span>
                 </th>
@@ -1310,16 +1225,7 @@ const AIProductPage = () => {
                     <td className="py-2 px-3">
                       <ImageCell
                         row={row}
-                        onFiles={(i, f) => updateField(i, "files", f)}
-                        disabled={disabled}
-                      />
-                    </td>
-                    <td className="py-2 px-3">
-                      <CheckCell
-                        checked={row.convertImages}
-                        onChange={(v) =>
-                          updateField(row.index, "convertImages", v)
-                        }
+                        onLibraryUrls={(i, u) => updateField(i, "libraryUrls", u)}
                         disabled={disabled}
                       />
                     </td>

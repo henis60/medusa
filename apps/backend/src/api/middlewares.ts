@@ -1,4 +1,7 @@
 import { authenticate, defineMiddlewares } from "@medusajs/framework/http";
+import multer from "multer";
+
+const mediaUpload = multer({ storage: multer.memoryStorage() });
 
 export default defineMiddlewares({
   routes: [
@@ -12,6 +15,11 @@ export default defineMiddlewares({
       matcher: "/store/orders/:id/invoice",
       method: ["GET"],
       middlewares: [authenticate("customer", ["session", "bearer"])],
+    },
+    {
+      matcher: "/admin/media-library",
+      method: ["POST"],
+      middlewares: [mediaUpload.array("files")],
     },
   ],
 });

@@ -163,5 +163,8 @@ module.exports = defineConfig({
         providers: [fileProvider],
       },
     },
+    {
+      resolve: "./src/modules/media-library",
+    },
   ],
 });
