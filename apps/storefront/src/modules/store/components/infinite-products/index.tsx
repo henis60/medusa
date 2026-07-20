@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { usePathname, useSearchParams } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 
 import { listProductsWithSort } from "@lib/data/products"
@@ -84,6 +84,7 @@ export default function InfiniteProducts({
 
   const searchParams = useSearchParams()
   const pathname = usePathname()
+  const router = useRouter()
   const [view, setView] = useState<ViewMode>("grid")
   const sortBy = (searchParams.get("sortBy") as SortOptions) || "created_at"
   // On /ready-to-wear, collection/category come from the path

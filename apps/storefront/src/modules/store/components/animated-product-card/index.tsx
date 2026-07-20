@@ -12,7 +12,11 @@ export default function AnimatedProductCard({ index, children }: Props) {
     <motion.li
       initial={{ opacity: 0, y: 28 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
+      // Bottom margin is expanded (not shrunk) so a row that's only
+      // partially visible on load — e.g. row 2 on a short mobile
+      // viewport — still counts as "in view" and animates in immediately,
+      // instead of sitting invisible until the user scrolls further.
+      viewport={{ once: true, margin: "0px 0px 200px 0px" }}
       transition={{
         duration: 0.55,
         delay: (index % 6) * 0.07,
