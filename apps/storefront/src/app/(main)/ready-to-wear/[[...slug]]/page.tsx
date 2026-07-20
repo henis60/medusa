@@ -1,9 +1,7 @@
 import { Metadata } from "next"
-import { Suspense } from "react"
 
 import { listCategories } from "@lib/data/categories"
 import { listCollections } from "@lib/data/collections"
-import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
 import PaginatedProducts from "@modules/store/templates/paginated-products"
 
 type Props = {
@@ -71,8 +69,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function StorePage() {
   return (
-    <Suspense fallback={<SkeletonProductGrid />}>
-      <PaginatedProducts sortBy="created_at" countryCode={"ro"} urlFiltered />
-    </Suspense>
+    <PaginatedProducts sortBy="created_at" countryCode={"ro"} urlFiltered />
   )
 }

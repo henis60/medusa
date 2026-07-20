@@ -1,4 +1,3 @@
-import { Suspense } from "react"
 import { Metadata } from "next"
 
 import HunterLanding from "@modules/home/components/hunter-landing"
@@ -17,12 +16,10 @@ export const revalidate = 3600
 
 export default async function Home() {
   const region = await getRegionStatic("ro")
-  // Suspense lets the hero stream immediately; the shop section (2 API
-  // calls: collections → products) pops in when ready.
-  const shopSlot = region ? (
-    <Suspense fallback={null}>
-      <ShopCollection region={region} />
-    </Suspense>
-  ) : null
+  // Rendered inline (not behind Suspense) so the shop section is part of
+  // the same cached HTML as the rest of the page — a Suspense fallback of
+  // null here just meant this section popped in after hydration on every
+  // visit, since ISR already resolves the data at regen time, not per-request.
+  const shopSlot = region ? <ShopCollection region={region} /> : null
   return <HunterLanding shopSlot={shopSlot} />
 }
