@@ -500,6 +500,14 @@ const CartDropdown = ({
                               Vezi coșul
                             </Button>
                           </LocalizedClientLink>
+                          <button
+                            type="button"
+                            onClick={close}
+                            data-testid="continue-shopping-button"
+                            className="w-full h-12 font-sans uppercase tracking-[3px] text-[11px] text-[var(--theme-text)] border border-[var(--theme-border)] hover:border-hunter-gold hover:text-hunter-gold transition-colors"
+                          >
+                            Continuă cumpărăturile
+                          </button>
                         </div>
                       </>
                     ) : (
