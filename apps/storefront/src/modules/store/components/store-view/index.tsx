@@ -170,6 +170,7 @@ export default function StoreView({
   const [facets, setFacets] = useState<StoreFacets>({
     priceBounds: [0, 0],
     colorFacets: [],
+    hasProducts: true,
   })
 
   const activeCollection = collections.find((c) => c.id === collectionId)

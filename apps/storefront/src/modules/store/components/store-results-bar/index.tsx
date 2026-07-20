@@ -71,6 +71,7 @@ export default function StoreResultsBar({
   onViewChange,
   colorFacets = [],
   priceBounds,
+  hasProducts = true,
 }: {
   count: number
   loading?: boolean
@@ -78,6 +79,7 @@ export default function StoreResultsBar({
   onViewChange: (v: ViewMode) => void
   colorFacets?: string[]
   priceBounds: [number, number]
+  hasProducts?: boolean
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -150,9 +152,12 @@ export default function StoreResultsBar({
   // A color the user already selected must stay visible even if it falls
   // outside the current facet list (e.g. combined with another filter) —
   // and lead the list so it's never scrolled out of sight by its own pick.
+  // Ordered by the APPLIED selection, not the draft one, so toggling a
+  // swatch doesn't reshuffle the list mid-interaction — it only reorders
+  // once "Aplică filtre" commits the new selection.
   const displayedColors = [
-    ...draftColors,
-    ...colorFacets.filter((c) => !draftColors.includes(c)),
+    ...appliedColors,
+    ...colorFacets.filter((c) => !appliedColors.includes(c)),
   ]
 
   const draftFilterCount =
@@ -256,13 +261,19 @@ export default function StoreResultsBar({
               <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-3">
                 Sortare
               </p>
-              <div className="flex flex-col gap-1">
+              <div
+                className={clx(
+                  "flex flex-col gap-1",
+                  !hasProducts && "opacity-40 pointer-events-none"
+                )}
+              >
                 {sortOptions.map((opt) => {
                   const active = draftSort === opt.value
                   return (
                     <button
                       key={opt.value}
                       onClick={() => setDraftSort(opt.value)}
+                      disabled={!hasProducts}
                       className={clx(
                         "flex items-center gap-2.5 py-2 font-sans text-[11px] uppercase tracking-[1px] transition-colors text-left",
                         active

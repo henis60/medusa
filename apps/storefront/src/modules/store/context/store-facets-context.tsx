@@ -5,9 +5,14 @@ import { createContext, useContext } from "react"
 export type StoreFacets = {
   priceBounds: [number, number]
   colorFacets: string[]
+  hasProducts: boolean
 }
 
-const DEFAULT_FACETS: StoreFacets = { priceBounds: [0, 0], colorFacets: [] }
+const DEFAULT_FACETS: StoreFacets = {
+  priceBounds: [0, 0],
+  colorFacets: [],
+  hasProducts: true,
+}
 
 type Ctx = {
   facets: StoreFacets

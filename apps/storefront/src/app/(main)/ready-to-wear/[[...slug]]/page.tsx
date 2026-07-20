@@ -1,7 +1,9 @@
 import { Metadata } from "next"
+import { Suspense } from "react"
 
 import { listCategories } from "@lib/data/categories"
 import { listCollections } from "@lib/data/collections"
+import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
 import PaginatedProducts from "@modules/store/templates/paginated-products"
 
 type Props = {
@@ -68,7 +70,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function StorePage() {
+  // Suspense scopes the grid's own data-fetch suspension to just this
+  // subtree. Without it, the fetch bubbles up to the nearest ancestor
+  // Suspense boundary — the one in layout.tsx wrapping the ENTIRE StoreView
+  // (title, sidebar, grid) — which has no fallback, so the whole page went
+  // blank on every category/collection switch instead of just the grid.
   return (
-    <PaginatedProducts sortBy="created_at" countryCode={"ro"} urlFiltered />
+    <Suspense fallback={<SkeletonProductGrid />}>
+      <PaginatedProducts sortBy="created_at" countryCode={"ro"} urlFiltered />
+    </Suspense>
   )
 }

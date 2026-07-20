@@ -304,7 +304,9 @@ const CartDropdown = ({
                                         </span>
                                       </LocalizedClientLink>
                                       <button
-                                        onClick={() => handleDeleteItem(item.id)}
+                                        onClick={() =>
+                                          handleDeleteItem(item.id)
+                                        }
                                         aria-label="Șterge"
                                         data-testid="cart-item-remove-button"
                                         className="shrink-0 mt-[1px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
@@ -487,27 +489,29 @@ const CartDropdown = ({
                               })}
                             </span>
                           </div>
-                          <LocalizedClientLink
-                            href="/cart"
-                            passHref
-                            onClick={close}
-                            className="w-full"
-                          >
-                            <Button
-                              className="w-full h-12 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent hover:!bg-hunter-gold-b font-sans uppercase tracking-[3px] text-[11px]"
-                              data-testid="go-to-cart-button"
+                          <div className="flex flex-col gap-2">
+                            <LocalizedClientLink
+                              href="/cart"
+                              passHref
+                              onClick={close}
+                              className="w-full"
                             >
-                              Vezi coșul
-                            </Button>
-                          </LocalizedClientLink>
-                          <button
-                            type="button"
-                            onClick={close}
-                            data-testid="continue-shopping-button"
-                            className="w-full h-12 font-sans uppercase tracking-[3px] text-[11px] text-[var(--theme-text)] border border-[var(--theme-border)] hover:border-hunter-gold hover:text-hunter-gold transition-colors"
-                          >
-                            Continuă cumpărăturile
-                          </button>
+                              <Button
+                                className="w-full h-12 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent hover:!bg-hunter-gold-b font-sans uppercase tracking-[3px] text-[11px]"
+                                data-testid="go-to-cart-button"
+                              >
+                                Vezi coșul
+                              </Button>
+                            </LocalizedClientLink>
+                            <button
+                              type="button"
+                              onClick={close}
+                              data-testid="continue-shopping-button"
+                              className="w-full h-12 font-sans uppercase tracking-[3px] text-[11px] text-[var(--theme-text)] border border-[var(--theme-border)] hover:border-hunter-gold hover:text-hunter-gold transition-colors"
+                            >
+                              Continuă cumpărăturile
+                            </button>
+                          </div>
                         </div>
                       </>
                     ) : (
@@ -518,7 +522,10 @@ const CartDropdown = ({
                         <p className="font-sans text-sm text-[var(--theme-text-muted)] max-w-xs">
                           Nu ai adăugat niciun produs în coș.
                         </p>
-                        <LocalizedClientLink href="/ready-to-wear" onClick={close}>
+                        <LocalizedClientLink
+                          href="/ready-to-wear"
+                          onClick={close}
+                        >
                           <button className="mt-2 px-8 py-3 font-sans text-[10px] uppercase tracking-[4px] border border-hunter-gold text-hunter-gold hover:bg-hunter-gold hover:text-hunter-dark transition-colors">
                             Descoperă colecția
                           </button>

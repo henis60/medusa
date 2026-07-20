@@ -55,6 +55,17 @@ const HunterLanding = ({ shopSlot }: { shopSlot?: React.ReactNode }) => {
 
     // Scroll reveal via Framer Motion — loaded lazily so it's not part of
     // the initial JS bundle needed to render the home page.
+    // Skipped under prefers-reduced-motion: CSS already forces .rv content
+    // fully visible there (opacity: 1 !important), but a WAAPI animation
+    // from Framer Motion isn't a CSS transition/animation, so it isn't
+    // covered by the transition-duration: 0.001ms override — left running,
+    // it would still drive opacity from 0 back up to 1 on scroll, causing
+    // already-visible content to flash out and back in.
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
+    if (prefersReducedMotion) return
+
     import("framer-motion").then(({ animate, inView }) => {
       if (cancelled) return
 

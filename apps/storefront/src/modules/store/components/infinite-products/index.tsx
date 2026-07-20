@@ -323,10 +323,11 @@ export default function InfiniteProducts({
   // Report facets up to StoreView (via context) so the desktop "Filtru"
   // button — rendered next to Sort, outside this subtree — can show them.
   const setStoreFacets = useSetStoreFacets()
+  const hasProducts = totalCount > 0
   useEffect(() => {
     if (!urlFiltered) return
-    setStoreFacets({ priceBounds, colorFacets })
-  }, [urlFiltered, priceBounds, colorFacets, setStoreFacets])
+    setStoreFacets({ priceBounds, colorFacets, hasProducts })
+  }, [urlFiltered, priceBounds, colorFacets, hasProducts, setStoreFacets])
 
   const hasFacetFilter = !!minPrice || !!maxPrice || selectedColors.length > 0
 
@@ -369,6 +370,7 @@ export default function InfiniteProducts({
           onViewChange={setView}
           colorFacets={colorFacets}
           priceBounds={priceBounds}
+          hasProducts={hasProducts}
         />
       )}
 
