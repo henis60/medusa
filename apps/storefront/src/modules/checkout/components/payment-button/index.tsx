@@ -253,7 +253,9 @@ const NetopiaPaymentButton = ({
         setSubmitting(false)
         return
       }
-      window.location.href = redirectUrl
+      // `replace` (nu `href`): checkout-ul rămâne în afara istoricului, așa că
+      // butonul Back din pagina Netopia nu readuce o pagină posibil coruptă.
+      window.location.replace(redirectUrl)
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : String(err))
       setSubmitting(false)

@@ -256,7 +256,14 @@ export async function setShippingMethod({
 
 export async function initiatePaymentSession(
   cart: HttpTypes.StoreCart,
-  data: HttpTypes.StoreInitializePaymentSession
+  data: HttpTypes.StoreInitializePaymentSession,
+  // Când plata implică un redirect extern (Netopia), utilizatorul părăsește
+  // imediat aplicația. `revalidateTag` ar declanșa un refresh al rutei
+  // `/checkout` (force-dynamic) care se suprapune cu `window.location` — pe
+  // mobil navigarea externă e amânată, refresh-ul chiar rulează, iar dacă
+  // fetch-ul RSC eșuează pe o conexiune instabilă => "client-side exception".
+  // Sărim revalidarea în acel caz ca să eliminăm cursa.
+  { revalidate = true }: { revalidate?: boolean } = {}
 ) {
   const headers = {
     ...(await getAuthHeaders()),
@@ -265,8 +272,10 @@ export async function initiatePaymentSession(
   return sdk.store.payment
     .initiatePaymentSession(cart, data, {}, headers)
     .then(async (resp) => {
-      const cartCacheTag = await getCacheTag("carts")
-      revalidateTag(cartCacheTag)
+      if (revalidate) {
+        const cartCacheTag = await getCacheTag("carts")
+        revalidateTag(cartCacheTag)
+      }
       return resp
     })
     .catch(medusaError)
@@ -308,7 +317,7 @@ export async function initiateNetopiaPayment(
         : undefined,
       browser_info: browserInfo,
     },
-  })) as { payment_collection?: HttpTypes.StorePaymentCollection }
+  }, { revalidate: false })) as { payment_collection?: HttpTypes.StorePaymentCollection }
 
   const session = resp?.payment_collection?.payment_sessions?.find(
     (s) => s.provider_id === providerId
