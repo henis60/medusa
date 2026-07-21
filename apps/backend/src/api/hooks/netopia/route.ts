@@ -53,36 +53,46 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   const eventBus = req.scope.resolve(Modules.EVENT_BUS)
 
-  // Eveniment pentru Medusa — actualizează payment session
-  try {
-    await eventBus.emit(
-      {
-        name: PaymentWebhookEvents.WebhookReceived,
-        data: {
-          provider: PROVIDER_ID,
-          payload: { data: body, rawData: req.rawBody, headers: req.headers },
-        },
-      },
-      { delay: 5000, attempts: 3 }
-    )
-  } catch (err) {
-    logger.error(`Netopia IPN emit error: ${(err as Error).message}`)
-  }
+  // ACK ÎNAINTE de procesare. Netopia așteaptă răspunsul IPN cu un timeout scurt
+  // și, dacă întârzie, afișează "eroare generală" pe pagina de plată chiar și
+  // după o plată reușită. Punem Redis (`emit`) în afara căii critice a
+  // răspunsului: confirmăm recepția întâi, apoi emitem evenimentele.
+  //
+  // Fereastra "ack trimis, dar eveniment pierdut la un restart" e acoperită de
+  // redundanță: Netopia reîncearcă IPN-ul, iar pagina de return face polling și
+  // completează coșul independent — comenzile se finalizează oricum.
+  res.status(200).json({ errorCode: 0 })
 
-  // Eveniment custom — subscriber-ul completează coșul după ce sesiunea e autorizată
-  if ((ipnStatus === 3 || ipnStatus === 5) && orderID) {
+  void (async () => {
+    // Eveniment pentru Medusa — actualizează payment session
     try {
       await eventBus.emit(
         {
-          name: "netopia.payment.authorized",
-          data: { session_id: orderID },
+          name: PaymentWebhookEvents.WebhookReceived,
+          data: {
+            provider: PROVIDER_ID,
+            payload: { data: body, rawData: req.rawBody, headers: req.headers },
+          },
         },
-        { delay: 7000, attempts: 3 }
+        { delay: 5000, attempts: 3 }
       )
     } catch (err) {
-      logger.error(`Netopia IPN custom event error: ${(err as Error).message}`)
+      logger.error(`Netopia IPN emit error: ${(err as Error).message}`)
     }
-  }
 
-  return res.status(200).json({ errorCode: 0 })
+    // Eveniment custom — subscriber-ul completează coșul după ce sesiunea e autorizată
+    if ((ipnStatus === 3 || ipnStatus === 5) && orderID) {
+      try {
+        await eventBus.emit(
+          {
+            name: "netopia.payment.authorized",
+            data: { session_id: orderID },
+          },
+          { delay: 7000, attempts: 3 }
+        )
+      } catch (err) {
+        logger.error(`Netopia IPN custom event error: ${(err as Error).message}`)
+      }
+    }
+  })()
 }
