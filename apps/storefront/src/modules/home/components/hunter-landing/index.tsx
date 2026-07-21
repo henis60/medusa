@@ -66,6 +66,14 @@ const HunterLanding = ({ shopSlot }: { shopSlot?: React.ReactNode }) => {
     ).matches
     if (prefersReducedMotion) return
 
+    // Running animation controls, stopped on cleanup — otherwise an effect
+    // re-run (StrictMode double-invoke, Fast Refresh) leaves the first pass's
+    // WAAPI animations alive. Those commit opacity:1 to the element, and when
+    // the re-run's animate() fires with a delay, the delay window paints that
+    // committed 1 before jumping to the 0 keyframe — the "visible → vanish →
+    // reappear" flicker seen only on delayed .rv elements.
+    const controls: { stop: () => void }[] = []
+
     import("framer-motion").then(({ animate, inView }) => {
       if (cancelled) return
 
@@ -85,24 +93,34 @@ const HunterLanding = ({ shopSlot }: { shopSlot?: React.ReactNode }) => {
               if (isGroup) {
                 const staggerDelays = [0.04, 0.1, 0.16, 0.22, 0.28, 0.34]
                 Array.from(el.children).forEach((child, i) => {
-                  animate(
-                    child as HTMLElement,
-                    {
-                      opacity: [0, 1],
-                      transform: ["translateY(18px)", "none"],
-                    },
-                    {
-                      duration: 0.5,
-                      ease: [0.23, 1, 0.32, 1],
-                      delay: staggerDelays[i] ?? i * 0.06,
-                    }
+                  const childEl = child as HTMLElement
+                  // Pin to the hidden from-state synchronously so the delay
+                  // window can't paint a previously-committed opacity:1.
+                  childEl.style.opacity = "0"
+                  childEl.style.transform = "translateY(18px)"
+                  controls.push(
+                    animate(
+                      childEl,
+                      {
+                        opacity: [0, 1],
+                        transform: ["translateY(18px)", "none"],
+                      },
+                      {
+                        duration: 0.5,
+                        ease: [0.23, 1, 0.32, 1],
+                        delay: staggerDelays[i] ?? i * 0.06,
+                      }
+                    )
                   )
                 })
               } else if (isLineDraw) {
-                animate(
-                  htmlEl,
-                  { transform: ["scaleX(0)", "scaleX(1)"] },
-                  { duration: 0.65, ease: [0.23, 1, 0.32, 1] }
+                htmlEl.style.transform = "scaleX(0)"
+                controls.push(
+                  animate(
+                    htmlEl,
+                    { transform: ["scaleX(0)", "scaleX(1)"] },
+                    { duration: 0.65, ease: [0.23, 1, 0.32, 1] }
+                  )
                 )
               } else {
                 let fromTransform = "translateY(22px)"
@@ -112,14 +130,20 @@ const HunterLanding = ({ shopSlot }: { shopSlot?: React.ReactNode }) => {
                   fromTransform = "translateX(28px)"
                 else if (el.classList.contains("scale-in"))
                   fromTransform = "scale(0.94)"
-                animate(
-                  htmlEl,
-                  { opacity: [0, 1], transform: [fromTransform, "none"] },
-                  {
-                    duration: 0.55,
-                    ease: [0.23, 1, 0.32, 1],
-                    delay: isKicker ? 0 : delay,
-                  }
+                // Pin to the hidden from-state synchronously so the delay
+                // window can't paint a previously-committed opacity:1.
+                htmlEl.style.opacity = "0"
+                htmlEl.style.transform = fromTransform
+                controls.push(
+                  animate(
+                    htmlEl,
+                    { opacity: [0, 1], transform: [fromTransform, "none"] },
+                    {
+                      duration: 0.55,
+                      ease: [0.23, 1, 0.32, 1],
+                      delay: isKicker ? 0 : delay,
+                    }
+                  )
                 )
               }
               unsub()
@@ -133,6 +157,7 @@ const HunterLanding = ({ shopSlot }: { shopSlot?: React.ReactNode }) => {
     return () => {
       cancelled = true
       unsubs.forEach((unsub) => unsub())
+      controls.forEach((c) => c.stop())
       ac.abort()
       document.body.classList.remove("hunter-landing-active")
       document.body.classList.remove("hovering")
