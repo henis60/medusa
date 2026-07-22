@@ -229,12 +229,12 @@ Not an exhaustive pentest — the points worth being explicit about:
 - **No secrets in version control**, verified against full git history: no `.env` was ever committed, and `.env.template` ships with every field blank.
 - **[`admin/ai/generate-product`](apps/backend/src/api/admin/ai/generate-product/route.ts:75) does a server-side `fetch()` on attacker-suppliable URLs** — admin-gated today, but a latent SSRF vector if that route is ever reused in a less-trusted context.
 - **Netopia's IPN webhook (`hooks/netopia`) is intentionally unauthenticated at the network level** — its integrity relies entirely on the RSA signature check inside the handler.
-- **No rate limiting** on custom routes, including the Anthropic-backed AI route and the public contact/newsletter endpoints (reCAPTCHA is the only current defense there). The storefront's contact/newsletter/appointment forms and the login/signup/reset-password flows are already wired to surface a dedicated "too many attempts" message the moment a `429` comes back, so backend-side rate limiting can be added as a config change with no storefront work required.
+- **Rate limiting** on the public contact/newsletter endpoints, customer auth (login/register/reset-password), and the Anthropic-backed AI route ([`middlewares.ts`](apps/backend/src/api/middlewares.ts), `express-rate-limit`, per-IP), backed by the same Redis instance as cache/events/workflows so limits hold across instances. The storefront shows a dedicated "too many attempts" message on `429`.
 
 ## Known Limitations
 
 - **AI-generated product data is validated for shape, not correctness** — price, category, and variant grouping are model guesses; everything lands as a draft, but nothing forces a review before publish.
-- **Redis-backed scaling path is unverified** under an actual multi-instance deployment.
+- **Redis-backed scaling path is unverified** under an actual multi-instance deployment (cache/events/workflows/locking). Rate-limit counters were on this list too until they moved to `rate-limit-redis`, fixing the per-instance reset issue.
 
 ## Running Locally
 
@@ -272,7 +272,6 @@ To enable an optional integration, add its env vars to `apps/backend/.env` (Neto
 - **Docker Compose for local dev** — currently only a production Dockerfile exists; no one-command local Postgres/Redis stack.
 - **Multi-instance readiness audit** — confirm session, cache, and workflow-engine behavior under `REDIS_URL` in a real multi-instance deployment, not just config review.
 - **Remove insecure default fallbacks for session-signing secrets** — `JWT_SECRET`/`COOKIE_SECRET` should fail startup in production when unset rather than silently falling back to a built-in default.
-- **Actual rate limiting on public routes** (`store/contact`, `store/newsletter`, `admin/ai/generate-product`) — the storefront already renders a dedicated message for a `429`, but no middleware on the backend produces one yet.
 
 ## License
 
