@@ -1,6 +1,12 @@
 "use client"
 
-import { ReactNode, useCallback, useEffect, useState } from "react"
+import {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useState,
+  useTransition,
+} from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 
@@ -98,6 +104,13 @@ export default function StoreView({
   useEffect(() => setCollectionId(urlCollectionId), [urlCollectionId])
   useEffect(() => setCategoryId(urlCategoryId), [urlCategoryId])
 
+  // `<Link>` wraps its navigations in a transition automatically; a plain
+  // router.push() call does not. Without startTransition here, React has no
+  // signal to keep the previous grid mounted while the new route's Suspense
+  // boundary is pending — it just shows the fallback immediately, which is
+  // what caused the skeleton to flash on every category/collection switch.
+  const [, startTransition] = useTransition()
+
   const pushSlug = useCallback(
     (nextSlug: string[]) => {
       const params = new URLSearchParams(searchParams)
@@ -106,7 +119,9 @@ export default function StoreView({
       const path = nextSlug.length
         ? `${BASE_PATH}/${nextSlug.join("/")}`
         : BASE_PATH
-      router.push(qs ? `${path}?${qs}` : path)
+      startTransition(() => {
+        router.push(qs ? `${path}?${qs}` : path)
+      })
     },
     [searchParams, router]
   )

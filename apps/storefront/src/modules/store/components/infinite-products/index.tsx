@@ -10,7 +10,9 @@ import { getProductColors } from "@lib/util/product-colors"
 import ProductPreview from "@modules/products/components/product-preview"
 import AnimatedProductCard from "@modules/store/components/animated-product-card"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
-import StoreResultsBar, { ViewMode } from "@modules/store/components/store-results-bar"
+import StoreResultsBar, {
+  ViewMode,
+} from "@modules/store/components/store-results-bar"
 import { useSetStoreFacets } from "@modules/store/context/store-facets-context"
 import { useStoreCatalog } from "@modules/store/context/store-catalog-context"
 import SkeletonProductPreview from "@modules/skeletons/components/skeleton-product-preview"
@@ -108,9 +110,13 @@ export default function InfiniteProducts({
       if (cat) {
         effectiveCategoryId = cat.id
       } else if (slug.length === 1) {
-        effectiveCollectionId = collections.find((c) => c.handle === slug[0])?.id
+        effectiveCollectionId = collections.find(
+          (c) => c.handle === slug[0]
+        )?.id
       } else {
-        effectiveCollectionId = collections.find((c) => c.handle === slug[0])?.id
+        effectiveCollectionId = collections.find(
+          (c) => c.handle === slug[0]
+        )?.id
         effectiveCategoryId = categories.find(
           (c) => c.handle === slug.slice(1).join("/")
         )?.id
@@ -120,15 +126,23 @@ export default function InfiniteProducts({
 
   // Price/color facets — client-side only (the API has no support for
   // these filters), applied on top of whatever's been loaded so far.
-  const minPrice = urlFiltered ? Number(searchParams.get("minPrice")) || undefined : undefined
-  const maxPrice = urlFiltered ? Number(searchParams.get("maxPrice")) || undefined : undefined
+  const minPrice = urlFiltered
+    ? Number(searchParams.get("minPrice")) || undefined
+    : undefined
+  const maxPrice = urlFiltered
+    ? Number(searchParams.get("maxPrice")) || undefined
+    : undefined
   const selectedColors = urlFiltered
     ? (searchParams.get("color") ?? "").split(",").filter(Boolean)
     : []
 
   // Filters the server-rendered `initialProducts` were fetched with (always
   // the unfiltered defaults on /store, since that page is static).
-  const initialFiltersKey = JSON.stringify([initialSort, collectionId, categoryId])
+  const initialFiltersKey = JSON.stringify([
+    initialSort,
+    collectionId,
+    categoryId,
+  ])
   // Refetch from page 1 when the URL-driven filters (sort, collection,
   // category) differ from what the current list was fetched with — covers
   // user changes and landing directly on a filtered URL whose static HTML
@@ -259,7 +273,15 @@ export default function InfiniteProducts({
         setPage(nextPage)
       })
       .finally(() => setLoading(false))
-  }, [loading, hasMore, page, filtersKey, sortBy, buildQueryParams, countryCode])
+  }, [
+    loading,
+    hasMore,
+    page,
+    filtersKey,
+    sortBy,
+    buildQueryParams,
+    countryCode,
+  ])
 
   useEffect(() => {
     const sentinel = sentinelRef.current
@@ -279,7 +301,9 @@ export default function InfiniteProducts({
   // sheet's options grow (and a selected color can vanish from the list)
   // as the user scrolls. Fetched once per filter change, decoupled from the
   // paginated `products` used for display.
-  const [facetProducts, setFacetProducts] = useState<HttpTypes.StoreProduct[]>([])
+  const [facetProducts, setFacetProducts] = useState<HttpTypes.StoreProduct[]>(
+    []
+  )
   useEffect(() => {
     if (!urlFiltered) return
     let cancelled = false
@@ -312,7 +336,8 @@ export default function InfiniteProducts({
     let lo = Infinity
     let hi = 0
     for (const p of facetProducts) {
-      const price = getProductPrice({ product: p }).cheapestPrice?.calculated_price_number
+      const price = getProductPrice({ product: p }).cheapestPrice
+        ?.calculated_price_number
       if (price === undefined) continue
       if (price < lo) lo = price
       if (price > hi) hi = price
@@ -337,7 +362,8 @@ export default function InfiniteProducts({
     if (!hasFacetFilter) return products
     return products.filter((p) => {
       if (minPrice || maxPrice) {
-        const price = getProductPrice({ product: p }).cheapestPrice?.calculated_price_number
+        const price = getProductPrice({ product: p }).cheapestPrice
+          ?.calculated_price_number
         if (price === undefined) return false
         if (minPrice && price < minPrice) return false
         if (maxPrice && price > maxPrice) return false
@@ -374,7 +400,7 @@ export default function InfiniteProducts({
         />
       )}
 
-      <div>
+      <div className="small:pb-0 pb-8">
         <ul
           className={
             view === "list"
@@ -389,9 +415,9 @@ export default function InfiniteProducts({
             </AnimatedProductCard>
           ))}
           {loading &&
-            Array.from({ length: products.length === 0 ? 6 : 3 }).map((_, i) => (
-              <SkeletonCard key={`skeleton-${i}`} />
-            ))}
+            Array.from({ length: products.length === 0 ? 6 : 3 }).map(
+              (_, i) => <SkeletonCard key={`skeleton-${i}`} />
+            )}
         </ul>
       </div>
 
