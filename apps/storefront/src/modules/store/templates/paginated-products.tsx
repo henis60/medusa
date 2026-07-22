@@ -105,7 +105,14 @@ export default async function PaginatedProducts({
     countryCode,
   })
 
-  if (products.length === 0) {
+  // On the urlFiltered store page (/ready-to-wear) we must render the SAME
+  // component tree for every slug — always AnimatedGrid + InfiniteProducts,
+  // which renders its own empty state. Diverging into the static block below
+  // for empty categories (Costume, Camasi, Pantofi …) makes each slug a
+  // different subtree, which breaks Next's client-side navigation (it falls
+  // back to a full page reload on every switch). The static block is only for
+  // the fixed category/collection pages (urlFiltered=false).
+  if (products.length === 0 && !urlFiltered) {
     // A fixed category/collection page (categoryId/collectionId baked into
     // the static page, no client-side facet UI) — this is genuinely an
     // empty category, not a filter combination returning zero results.

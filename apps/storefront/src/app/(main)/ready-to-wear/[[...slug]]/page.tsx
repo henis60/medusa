@@ -73,13 +73,17 @@ export default async function StorePage({ params }: Props) {
   const { slug } = await params
 
   // Resolve the path's slug to a collection/category id HERE, server-side, so
-  // the statically-generated HTML for each slug already contains the correct
-  // FILTERED products. Without this, every slug rendered the same unfiltered
-  // catalog and the client had to blank + refetch on first open of a category
-  // (InfiniteProducts.needsInitialRefetch) — the flicker seen on the first
-  // visit to each category after a hard refresh. Mirror of the slug→id logic
-  // in StoreView / InfiniteProducts: a category handle can itself contain a
-  // slash (nested subcategory), so match the whole path first.
+  // the statically-generated HTML/RSC for each slug already contains the
+  // CORRECT filtered products. Without this, every slug rendered the same
+  // unfiltered catalog, so the client had to blank + skeleton + refetch the
+  // first time it opened a category (InfiniteProducts.needsInitialRefetch) —
+  // the first-visit-per-category flicker. Mirror of the slug→id logic in
+  // StoreView / InfiniteProducts: a category handle can itself contain a slash
+  // (nested subcategory), so match the whole remaining path first.
+  //
+  // IMPORTANT: PaginatedProducts must still render the SAME tree for every
+  // slug (see its urlFiltered guard) — otherwise empty categories diverge the
+  // subtree and Next falls back to a full reload on each switch.
   const [categories, { collections }] = await Promise.all([
     listCategories(),
     listCollections(),
