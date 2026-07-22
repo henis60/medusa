@@ -69,7 +69,7 @@ const SideMenuScrollGuard = ({ open }: ScrollGuardProps) => {
 }
 
 const subLinkClass =
-  "block py-2.5 small:py-3.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] hover:text-hunter-gold transition-colors"
+  "block py-2 small:py-2.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] hover:text-hunter-gold transition-colors"
 
 type SubmenuKey = "rtw" | "accesorii" | "featured" | "hunter"
 
@@ -84,7 +84,7 @@ function MenuTrigger({ label, onOpen }: { label: string; onOpen: () => void }) {
       <button
         type="button"
         onClick={onOpen}
-        className="w-full flex items-center justify-between py-2.5 small:py-3.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
+        className="w-full flex items-center justify-between py-2 small:py-2.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
       >
         <span>{label}</span>
         <svg
@@ -327,7 +327,7 @@ function WorldOfTheHunterSubmenu({
         <ul className="flex flex-col">
           {STYLE_GUIDES.map((g) => (
             <li key={g.label}>
-              <span className="block py-2.5 small:py-3.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text-muted)] cursor-default">
+              <span className="block py-2 small:py-2.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text-muted)] cursor-default">
                 {g.label}
               </span>
             </li>
@@ -449,7 +449,7 @@ const SideMenu = ({
                                     <li>
                                       <LocalizedClientLink
                                         href="/"
-                                        className="flex items-center py-2.5 small:py-3.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
+                                        className="flex items-center py-2 small:py-2.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
                                         onClick={handleClose}
                                       >
                                         Home
@@ -489,7 +489,7 @@ const SideMenu = ({
                                     <li>
                                       <LocalizedClientLink
                                         href="/world-of-the-hunter/made-to-measure"
-                                        className="flex items-center py-2.5 small:py-3.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
+                                        className="flex items-center py-2 small:py-2.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
                                         onClick={handleClose}
                                       >
                                         Made to Measure
