@@ -3,6 +3,9 @@ import { Metadata } from "next"
 import "styles/globals.css"
 import { ThemeProvider } from "../providers/theme-provider"
 import { FavoritesProvider } from "@lib/context/favorites-context"
+import { ConsentProvider } from "@lib/context/consent-context"
+import CookieConsent from "@modules/common/components/cookie-consent"
+import GoogleAnalytics from "@modules/common/components/google-analytics"
 import {
   Cinzel,
   Cormorant_Garamond,
@@ -60,10 +63,14 @@ export default function RootLayout(props: { children: React.ReactNode }) {
       className={`${playfairDisplay.variable} ${cormorantGaramond.variable} ${raleway.variable} ${cinzel.variable}`}
     >
       <body>
+        <GoogleAnalytics />
         <ThemeProvider>
-          <FavoritesProvider>
-            <main className="relative">{props.children}</main>
-          </FavoritesProvider>
+          <ConsentProvider>
+            <FavoritesProvider>
+              <main className="relative">{props.children}</main>
+              <CookieConsent />
+            </FavoritesProvider>
+          </ConsentProvider>
         </ThemeProvider>
       </body>
     </html>

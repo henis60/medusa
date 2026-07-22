@@ -15,6 +15,10 @@ import {
   listEawbShippingPrices,
 } from "@lib/data/fulfillment"
 import { convertToLocale } from "@lib/util/money"
+import {
+  lineItemsToTrackItems,
+  trackAddShippingInfo,
+} from "@lib/util/analytics"
 import { ChevronUpDown, Loader } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
 import ErrorMessage from "@modules/checkout/components/error-message"
@@ -142,7 +146,18 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
   }, [availableShippingMethods])
 
   const handleEdit = () => router.push(pathname + "?step=delivery", { scroll: false })
-  const handleSubmit = () => router.push(pathname + "?step=payment", { scroll: false })
+  const handleSubmit = () => {
+    const tier = availableShippingMethods?.find(
+      (m) => m.id === shippingMethodId
+    )?.name
+    trackAddShippingInfo(
+      lineItemsToTrackItems(cart.items),
+      cart.currency_code?.toUpperCase() || "RON",
+      cart.total ?? undefined,
+      tier ?? undefined
+    )
+    router.push(pathname + "?step=payment", { scroll: false })
+  }
 
   const handleSetShippingMethod = async (
     id: string,

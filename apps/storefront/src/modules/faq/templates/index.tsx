@@ -1,4 +1,7 @@
+"use client"
+
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import Accordion from "@modules/products/components/product-tabs/accordion"
 
 type FaqItem = { q: string; a: string }
 type FaqGroup = { title: string; items: FaqItem[] }
@@ -120,37 +123,15 @@ const FAQTemplate = () => {
             <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-5">
               {group.title}
             </p>
-            <div className="border-t border-[var(--theme-border)]">
+            <Accordion type="multiple">
               {group.items.map((item) => (
-                <details
-                  key={item.q}
-                  className="group border-b border-[var(--theme-border)]"
-                >
-                  <summary className="flex items-center justify-between gap-4 cursor-pointer list-none py-5">
-                    <span className="font-serif text-xl leading-snug text-[var(--theme-text)]">
-                      {item.q}
-                    </span>
-                    <span className="shrink-0 text-[var(--theme-text-muted)] transition-transform duration-200 group-open:rotate-45">
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 14 14"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                      >
-                        <line x1="7" y1="1" x2="7" y2="13" />
-                        <line x1="1" y1="7" x2="13" y2="7" />
-                      </svg>
-                    </span>
-                  </summary>
-                  <p className="font-sans text-sm leading-relaxed text-[var(--theme-text-muted)] pb-6 max-w-2xl">
+                <Accordion.Item key={item.q} title={item.q} value={item.q}>
+                  <p className="font-sans text-sm leading-relaxed text-[var(--theme-text-muted)] max-w-2xl">
                     {item.a}
                   </p>
-                </details>
+                </Accordion.Item>
               ))}
-            </div>
+            </Accordion>
           </section>
         ))}
 

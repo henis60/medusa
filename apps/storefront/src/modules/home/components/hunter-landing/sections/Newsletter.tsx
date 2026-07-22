@@ -87,7 +87,7 @@ const Newsletter = () => {
                     letterSpacing: "1.5px",
                     textTransform: "uppercase",
                     color: "rgba(232,213,163,0.3)",
-                    margin: "0 0 16px",
+                    margin: "0 0 22px",
                   }}
                 >
                   Niciun spam. Te poți dezabona oricând.
@@ -167,7 +167,7 @@ const Newsletter = () => {
 
                     <p
                       style={{
-                        margin: "10px 0 0",
+                        margin: "16px 0 0",
                         fontFamily: "var(--rl)",
                         fontSize: "9px",
                         color: "rgba(232,213,163,0.3)",
@@ -201,7 +201,7 @@ const Newsletter = () => {
                     </p>
 
                     {status === "error" && (
-                      <div style={{ marginTop: "8px" }}>
+                      <div style={{ marginTop: "12px" }}>
                         <p
                           style={{
                             fontFamily: "var(--rl)",

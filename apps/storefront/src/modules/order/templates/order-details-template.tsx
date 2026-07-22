@@ -6,7 +6,8 @@ import Items from "@modules/order/components/items"
 import OrderDetails from "@modules/order/components/order-details"
 import OrderSummary from "@modules/order/components/order-summary"
 import ShippingDetails from "@modules/order/components/shipping-details"
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
+import { lineItemsToTrackItems, trackPurchase } from "@lib/util/analytics"
 
 type OrderDetailsTemplateProps = {
   order: HttpTypes.StoreOrder
@@ -38,6 +39,27 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
 }) => {
   const [downloading, setDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState<string | null>(null)
+
+  // GA4 purchase — only on the standalone post-checkout success page (not when
+  // viewing a past order in the account). A sessionStorage guard prevents a
+  // duplicate hit on refresh/remount; GA also dedupes by transaction_id.
+  useEffect(() => {
+    if (!standalone) return
+    const key = `ga_purchase_${order.id}`
+    try {
+      if (sessionStorage.getItem(key)) return
+      sessionStorage.setItem(key, "1")
+    } catch {}
+    trackPurchase({
+      transactionId: String(order.display_id ?? order.id),
+      value: order.total ?? 0,
+      currency: order.currency_code?.toUpperCase() || "RON",
+      tax: order.tax_total ?? undefined,
+      shipping: order.shipping_total ?? undefined,
+      items: lineItemsToTrackItems(order.items),
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order.id, standalone])
 
   const handleDownloadInvoice = async () => {
     setDownloading(true)
@@ -81,7 +103,7 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
           className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5"
           data-testid="back-to-overview-button"
         >
-          {standalone ? "← Acasă" : "← Înapoi la comenzi"}
+          {standalone ? "← Acasă" : "← Înapoi"}
         </LocalizedClientLink>
         <h1 className="font-display text-[28px] small:text-[32px] leading-[1] text-[var(--theme-text)]">
           Comanda #{order.display_id}

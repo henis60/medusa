@@ -1,5 +1,5 @@
 import ContactForm from "@modules/contact/components/contact-form"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import AccountFaqStrip from "@modules/account/components/account-faq-strip"
 
 const ContactTemplate = () => {
   return (
@@ -100,17 +100,7 @@ const ContactTemplate = () => {
         </div>
 
         {/* FAQ link */}
-        <div className="flex items-center justify-between gap-4 border-t border-[var(--theme-border)] pt-4">
-          <p className="font-sans text-[12px] text-[var(--theme-text-muted)]">
-            Ai o întrebare rapidă?
-          </p>
-          <LocalizedClientLink
-            href="/faq"
-            className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5"
-          >
-            Întrebări frecvente
-          </LocalizedClientLink>
-        </div>
+        <AccountFaqStrip />
       </div>
     </div>
   )

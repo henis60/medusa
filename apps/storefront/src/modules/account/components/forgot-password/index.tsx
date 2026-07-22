@@ -51,11 +51,15 @@ const ForgotPassword = ({ setCurrentView }: Props) => {
             className="inline-flex items-center gap-2 text-[var(--theme-text-muted)] hover:text-[var(--theme-gold)] transition-colors font-sans text-[11px] uppercase tracking-[3px]"
           >
             <span>←</span>
-            <span>Înapoi la autentificare</span>
+            <span>Înapoi</span>
           </button>
         </div>
       ) : (
-        <form className="w-full" onSubmit={handleSubmit} onFocusCapture={preload}>
+        <form
+          className="w-full"
+          onSubmit={handleSubmit}
+          onFocusCapture={preload}
+        >
           <Input
             label="Email"
             name="email"

@@ -1,4 +1,5 @@
 import LegalLayout from "./legal-layout"
+import CookieSettings from "@modules/common/components/cookie-settings"
 
 const CookiePolicyTemplate = () => {
   return (
@@ -33,7 +34,8 @@ const CookiePolicyTemplate = () => {
               <li>
                 <span className="text-[var(--theme-text)]">Analitice:</span>{" "}
                 ne ajută să înțelegem cum este folosit site-ul, pentru a-l
-                îmbunătăți.
+                îmbunătăți. Folosim Google Analytics (GA4) în acest scop, iar
+                aceste cookies sunt plasate doar după ce îți exprimi acordul.
               </li>
             </ul>
           ),
@@ -42,20 +44,27 @@ const CookiePolicyTemplate = () => {
           title: "Cookies de la terți",
           body: (
             <p>
-              Unele cookies pot fi plasate de servicii terțe (ex. procesatorul de
-              plăți sau hărți încorporate). Acestea sunt guvernate de politicile
-              proprii ale furnizorilor respectivi.
+              Unele cookies pot fi plasate de servicii terțe (ex. Google
+              Analytics pentru statistici de utilizare, procesatorul de plăți
+              sau hărți încorporate). Acestea sunt guvernate de politicile
+              proprii ale furnizorilor respectivi. Cookies analitice de la
+              Google sunt activate doar după acordul tău și pot fi dezactivate
+              oricând din secțiunea de mai jos.
             </p>
           ),
         },
         {
           title: "Cum controlezi cookies",
           body: (
-            <p>
-              Poți gestiona sau șterge cookies din setările browserului tău.
-              Reține că dezactivarea anumitor cookies poate afecta funcționarea
-              site-ului (ex. coșul de cumpărături).
-            </p>
+            <>
+              <p>
+                Poți gestiona sau șterge cookies din setările browserului tău.
+                Reține că dezactivarea anumitor cookies poate afecta
+                funcționarea site-ului (ex. coșul de cumpărături). Îți poți
+                schimba oricând preferința pentru cookies analitice de mai jos.
+              </p>
+              <CookieSettings />
+            </>
           ),
         },
         {

@@ -15,6 +15,8 @@ import {
   isInStoreOnly,
   COLOR_OPTION_NAMES as COLOR_TITLES,
 } from "@lib/util/product"
+import { getProductPrice } from "@lib/util/get-product-price"
+import { trackViewItem, trackAddToCart } from "@lib/util/analytics"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -45,6 +47,22 @@ export default function ProductActions({
   )
   const [isAdding, setIsAdding] = useState(false)
   const countryCode = "ro"
+
+  // GA4 view_item — fire once when the product page mounts (consent-gated in
+  // the helper). Uses the cheapest variant price as the representative value.
+  useEffect(() => {
+    const { cheapestPrice } = getProductPrice({ product })
+    trackViewItem(
+      {
+        id: product.id,
+        name: product.title ?? "",
+        price: cheapestPrice?.calculated_price_number,
+        category: product.collection?.title ?? undefined,
+      },
+      cheapestPrice?.currency_code?.toUpperCase() || "RON"
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id])
 
   const selectedVariant = useMemo(() => {
     if (!product.variants || product.variants.length === 0) {
@@ -239,6 +257,22 @@ export default function ProductActions({
       countryCode,
     })
     emitCartUpdated(freshCart, { action: "add" })
+
+    const { variantPrice } = getProductPrice({
+      product,
+      variantId: selectedVariant.id,
+    })
+    trackAddToCart(
+      {
+        id: product.id,
+        name: product.title ?? "",
+        price: variantPrice?.calculated_price_number,
+        quantity: 1,
+        variant: selectedVariant.title ?? undefined,
+        category: product.collection?.title ?? undefined,
+      },
+      variantPrice?.currency_code?.toUpperCase() || "RON"
+    )
 
     setIsAdding(false)
   }

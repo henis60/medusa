@@ -2,6 +2,7 @@ import ItemsTemplate from "./items"
 import Summary from "./summary"
 import EmptyCartMessage from "../components/empty-cart-message"
 import SignInPrompt from "../components/sign-in-prompt"
+import CartViewTracker from "@modules/common/components/analytics/cart-view-tracker"
 import { HttpTypes } from "@medusajs/types"
 
 const CartTemplate = ({
@@ -16,6 +17,7 @@ const CartTemplate = ({
       <div className="page-container" data-testid="cart-container">
         {cart?.items?.length ? (
           <>
+            <CartViewTracker cart={cart} event="view_cart" />
             {/* <div className="mb-5 small:mb-10 border-b border-[var(--theme-border)] pb-4 small:pb-6">
               <h1 className="font-sans text-[11px] small:text-[13px] uppercase tracking-[5px] text-[var(--theme-text)]">
                 Coș
