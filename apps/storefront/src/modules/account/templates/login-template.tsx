@@ -42,7 +42,7 @@ const LoginTemplate = ({ redirectTo }: Props) => {
       <div className="flex flex-col items-center justify-start flex-1 px-5 py-6 small:px-6 small:py-16">
         <div className="w-full max-w-sm">
           {showTabs && (
-            <div className="flex border-b border-[var(--theme-border)] mb-10">
+            <div className="flex border border-[var(--theme-border)] p-1 mb-10">
               {TABS.map((tab) => {
                 const active = currentView === tab.view
                 return (
@@ -50,9 +50,9 @@ const LoginTemplate = ({ redirectTo }: Props) => {
                     key={tab.view}
                     onClick={() => setCurrentView(tab.view)}
                     className={[
-                      "flex-1 pb-3 font-sans text-[12px] uppercase tracking-[3px] transition-colors",
+                      "flex-1 h-10 font-sans text-[11px] uppercase tracking-[3px] transition-colors",
                       active
-                        ? "text-[var(--theme-text)] border-b-2 border-hunter-gold -mb-px"
+                        ? "bg-hunter-gold text-hunter-dark"
                         : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]",
                     ].join(" ")}
                   >
