@@ -33,7 +33,7 @@ export default function NetopiaReturnClient() {
       const result = await completeNetopiaBySession(sessionId)
 
       if (result.orderId) {
-        router.replace(`/order/${result.orderId}/confirmed`)
+        router.replace(`/comanda/${result.orderId}`)
         return
       }
 

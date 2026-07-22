@@ -10,6 +10,10 @@ import React, { useState } from "react"
 
 type OrderDetailsTemplateProps = {
   order: HttpTypes.StoreOrder
+  // True on the standalone /comanda/[id] success page, which has no
+  // AccountNav around it to supply a mobile title bar — false (default) for
+  // the /profil/comenzi/[displayId] account page, which does.
+  standalone?: boolean
 }
 
 // On mobile each section reads as a bordered card (the account pages'
@@ -24,6 +28,7 @@ const Section = ({ children }: { children: React.ReactNode }) => (
 
 const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
   order,
+  standalone,
 }) => {
   const [downloading, setDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState<string | null>(null)
@@ -54,18 +59,24 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
 
   return (
     <div className="w-full h-full flex flex-col">
-      {/* Header */}
-      {/* Mobile shows "Comanda #…" in the nav title bar instead */}
-      <div className="hidden small:flex items-baseline justify-between gap-6 small:px-8 small:pt-8 small:pb-6">
+      {/* Header — on the account page, mobile gets its title from
+          AccountNav's mobile bar instead, so it's hidden here below small: */}
+      <div
+        className={
+          standalone
+            ? "flex items-baseline justify-between gap-6 pb-6 small:px-8 small:pt-8"
+            : "hidden small:flex items-baseline justify-between gap-6 small:px-8 small:pt-8 small:pb-6"
+        }
+      >
         <h1 className="font-display text-[28px] small:text-[32px] leading-[1] text-[var(--theme-text)]">
           Comanda #{order.display_id}
         </h1>
         <LocalizedClientLink
-          href="/profil/comenzi"
+          href={standalone ? "/" : "/profil/comenzi"}
           className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5"
           data-testid="back-to-overview-button"
         >
-          ← Înapoi la comenzi
+          {standalone ? "← Acasă" : "← Înapoi la comenzi"}
         </LocalizedClientLink>
       </div>
 

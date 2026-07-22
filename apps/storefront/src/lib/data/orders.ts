@@ -18,8 +18,13 @@ export const retrieveOrder = async (id: string) => {
     .fetch<HttpTypes.StoreOrderResponse>(`/store/orders/${id}`, {
       method: "GET",
       query: {
+        // The order item's own thumbnail is just the product's generic
+        // image and ignores which variant (e.g. color) was ordered — the
+        // detail page resolves the real image via getCartItemImageUrl,
+        // which needs this same deep variant/product tree the cart fetches
+        // (see retrieveCart in ./cart.ts).
         fields:
-          "*payment_collections.payments,*items,*items.metadata,*items.variant,*items.product",
+          "*payment_collections.payments,*items,*items.metadata,*items.variant,+items.variant.thumbnail,*items.variant.images,*items.variant.product,+items.variant.product.thumbnail,*items.variant.product.images,+items.variant.product.options,+items.variant.product.options.values,*items.variant.product.variants,*items.variant.product.variants.options,*items.product",
       },
       headers,
       next,

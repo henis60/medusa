@@ -3,6 +3,7 @@ import LineItemOptions from "@modules/common/components/line-item-options"
 import LineItemPrice from "@modules/common/components/line-item-price"
 import LineItemUnitPrice from "@modules/common/components/line-item-unit-price"
 import Image from "next/image"
+import { getCartItemImageUrl } from "@lib/util/variant-image"
 
 type ItemProps = {
   item: HttpTypes.StoreCartLineItem | HttpTypes.StoreOrderLineItem
@@ -10,12 +11,14 @@ type ItemProps = {
 }
 
 const Item = ({ item, currencyCode }: ItemProps) => {
+  const imgSrc = getCartItemImageUrl(item)
+
   return (
     <div className="flex gap-4" data-testid="product-row">
       <div className="relative shrink-0 w-[72px] aspect-[3/4] overflow-hidden bg-[var(--theme-surface)]">
-        {item.thumbnail && (
+        {imgSrc && (
           <Image
-            src={item.thumbnail}
+            src={imgSrc}
             alt={item.product_title ?? ""}
             fill
             className="object-cover object-center"

@@ -13,12 +13,16 @@ const byRank = (images: ImageLike[]): ImageLike[] =>
   [...images].sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0))
 
 /**
- * Resolve the display image for a cart line item's variant, mirroring the
+ * Resolve the display image for a line item's variant, mirroring the
  * product-card logic (variant thumbnail → variant images → color-index
  * mapping into product images → product fallbacks).
+ *
+ * Shared by cart AND order line items — `item.thumbnail` alone is the
+ * product's generic thumbnail and ignores which variant (e.g. color) was
+ * actually ordered, so both call sites need this variant-aware lookup.
  */
 export function getCartItemImageUrl(
-  item: HttpTypes.StoreCartLineItem
+  item: HttpTypes.StoreCartLineItem | HttpTypes.StoreOrderLineItem
 ): string | null {
   const variant = item.variant as any
   const product = variant?.product
