@@ -13,12 +13,15 @@ type FavoritesContextType = {
   favorites: FavoriteItem[]
   isFavorite: (id: string) => boolean
   toggle: (item: FavoriteItem) => void
+  /** False until localStorage has been read on mount. */
+  loaded: boolean
 }
 
 const FavoritesContext = createContext<FavoritesContextType>({
   favorites: [],
   isFavorite: () => false,
   toggle: () => {},
+  loaded: false,
 })
 
 const STORAGE_KEY = "hunter_favorites"
@@ -53,7 +56,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <FavoritesContext.Provider value={{ favorites, isFavorite, toggle }}>
+    <FavoritesContext.Provider value={{ favorites, isFavorite, toggle, loaded }}>
       {children}
     </FavoritesContext.Provider>
   )

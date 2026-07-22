@@ -190,8 +190,30 @@ function FavoriteRow({
   )
 }
 
+function FavoritesListSkeleton() {
+  return (
+    <div className="flex flex-col divide-y divide-[var(--theme-border)] small:px-8 py-4">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="flex gap-4 py-4 px-3 -mx-3 animate-pulse">
+          <div className="w-16 h-20 shrink-0 bg-[var(--theme-surface)]" />
+          <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
+            <div className="flex flex-col gap-2">
+              <div className="h-3 w-3/5 bg-[var(--theme-surface)]" />
+              <div className="h-2.5 w-2/5 bg-[var(--theme-surface)]" />
+            </div>
+            <div className="flex items-end justify-between gap-4">
+              <div className="h-3 w-16 bg-[var(--theme-surface)]" />
+              <div className="h-9 w-[148px] bg-[var(--theme-surface)]" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function FavoritesList() {
-  const { favorites, toggle } = useFavorites()
+  const { favorites, toggle, loaded } = useFavorites()
   const [products, setProducts] = useState<Record<string, HttpTypes.StoreProduct>>({})
 
   useEffect(() => {
@@ -207,6 +229,10 @@ export default function FavoritesList() {
       cancelled = true
     }
   }, [favorites.map((f) => f.id).join(",")])
+
+  if (!loaded) {
+    return <FavoritesListSkeleton />
+  }
 
   if (favorites.length === 0) {
     return (
