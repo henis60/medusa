@@ -77,7 +77,7 @@ export default function Events() {
             <div
               key={event.id}
               className="ev rv"
-              style={{ transitionDelay: event.delay }}
+              data-rv-delay={event.delay}
             >
               <motion.div
                 className="ev-bar"

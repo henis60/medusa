@@ -107,7 +107,7 @@ export default function Space() {
       <div
         ref={zonesRef}
         className="zones rv"
-        style={{ transitionDelay: "0.12s" }}
+        data-rv-delay="0.12"
         onScroll={updateActive}
         onPointerDown={handlePointerDown}
         onClick={handleClick}

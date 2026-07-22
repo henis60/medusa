@@ -175,7 +175,7 @@ export default function Shop() {
           </p>
         </div>
 
-        <div className="shop-cats rv" style={{ transitionDelay: "0.1s" }}>
+        <div className="shop-cats rv" data-rv-delay="0.1">
           {categories.map((cat) => (
             <div key={cat} className="sc">
               {cat}
@@ -183,7 +183,7 @@ export default function Shop() {
           ))}
         </div>
 
-        <div className="shop-grid rv" style={{ transitionDelay: "0.15s" }}>
+        <div className="shop-grid rv" data-rv-delay="0.15">
           {products.map((product) => (
             <ShopCard
               key={product.id}

@@ -53,7 +53,7 @@ export default function Bar() {
           Selecție atentă de whisky, gin, vinuri și cocktailuri clasice. Fiecare
           sticlă aleasă cu grijă. Fiecare seară cu un ritm al ei.
         </p>
-        <div className="flex rv" style={{ transitionDelay: "0.12s" }}>
+        <div className="flex rv" data-rv-delay="0.12">
           <div className="bs">
             <CountUp target={80} suffix="+" />
             <div className="bs-lbl">Referințe de vin</div>

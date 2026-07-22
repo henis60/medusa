@@ -85,7 +85,13 @@ const HunterLanding = ({ shopSlot }: { shopSlot?: React.ReactNode }) => {
           const isLineDraw = el.classList.contains("line-draw")
           const isKicker =
             el.classList.contains("kicker") && !el.classList.contains("rv")
-          const delay = parseFloat(htmlEl.style.transitionDelay || "0")
+          // Stagger delay comes from a data attribute, NOT an inline
+          // transition-delay: many of these elements (links, buttons, grids)
+          // carry a CSS `transition` for hover, and a real transition-delay on
+          // them turns the reveal's synchronous opacity reset into a delayed
+          // CSS transition — the "visible → vanish → reappear" flash. framer
+          // is the sole animator; this is just data.
+          const delay = parseFloat(htmlEl.dataset.rvDelay || "0")
 
           let unsub = inView(
             htmlEl,
