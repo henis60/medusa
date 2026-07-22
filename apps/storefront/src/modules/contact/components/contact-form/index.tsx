@@ -25,6 +25,9 @@ function validateEmail(v: string) {
 export default function ContactForm() {
   const [status, setStatus] = useState<Status>("idle")
   const [errors, setErrors] = useState<Errors>({})
+  const [errorMsg, setErrorMsg] = useState(
+    "Nu am putut trimite mesajul. Verifică conexiunea și încearcă din nou."
+  )
   const { preload, getToken } = useRecaptcha()
 
   const validate = (data: FormData): Errors => {
@@ -48,6 +51,7 @@ export default function ContactForm() {
 
     setErrors({})
     setStatus("loading")
+    setErrorMsg("Nu am putut trimite mesajul. Verifică conexiunea și încearcă din nou.")
 
     try {
       const recaptchaToken = await getToken("contact")
@@ -74,9 +78,16 @@ export default function ContactForm() {
         }
       )
 
+      if (res.status === 429) {
+        setErrorMsg("Prea multe încercări. Te rugăm să revii peste câteva minute.")
+        setStatus("error")
+        return
+      }
+
       const json = await res.json()
 
       if (!res.ok) {
+        setErrorMsg("Nu am putut trimite mesajul. Verifică conexiunea și încearcă din nou.")
         setStatus("error")
         return
       }
@@ -137,9 +148,7 @@ export default function ContactForm() {
         </div>
 
         {status === "error" && (
-          <p className="font-sans text-xs text-red-400">
-            Nu am putut trimite mesajul. Verifică conexiunea și încearcă din nou.
-          </p>
+          <p className="font-sans text-xs text-red-400">{errorMsg}</p>
         )}
 
         <div className="flex flex-col gap-2">

@@ -1,9 +1,10 @@
 "use client"
 
 // Plasă de siguranță finală: prinde erori aruncate chiar din RootLayout
-// (providers, fonturi etc.), unde (main)/error.tsx nu ajunge să se monteze.
-// Next.js cere ca acest fișier să randeze propriile <html>/<body> — nu ne
-// putem baza pe CSS vars din ThemeProvider, deci culorile sunt hardcodate.
+// (providers, fonturi etc.), unde error.tsx-urile din grupurile de rute nu
+// ajung să se monteze. Next.js cere ca acest fișier să randeze propriile
+// <html>/<body> — nu ne putem baza pe CSS vars din ThemeProvider, deci
+// culorile sunt hardcodate.
 export default function GlobalError({
   error,
   reset,
@@ -20,21 +21,21 @@ export default function GlobalError({
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            gap: "1.5rem",
+            gap: "1rem",
             padding: "1.5rem",
             textAlign: "center",
             minHeight: "100vh",
             fontFamily: "system-ui, sans-serif",
           }}
         >
-          <h1 style={{ color: "#F5F1E8", fontSize: "1.5rem", margin: 0 }}>
+          <h1 style={{ color: "#F5F1E8", fontSize: "1.75rem", margin: 0 }}>
             A apărut o eroare
           </h1>
-          <p style={{ color: "#A39C8E", fontSize: "0.9rem", maxWidth: "24rem", margin: 0 }}>
+          <p style={{ color: "#A39C8E", fontSize: "0.85rem", maxWidth: "22rem", margin: 0 }}>
             Ceva nu a funcționat cum trebuie. Poți reîncerca sau reveni la
             pagina principală.
           </p>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginTop: "0.5rem" }}>
             <button
               onClick={reset}
               style={{
@@ -53,10 +54,12 @@ export default function GlobalError({
             <a
               href="/"
               style={{
-                color: "#A39C8E",
+                padding: "0.75rem 1.5rem",
+                border: "1px solid #c9a84c",
+                color: "#c9a84c",
                 fontSize: "10px",
                 textTransform: "uppercase",
-                letterSpacing: "3px",
+                letterSpacing: "4px",
                 textDecoration: "none",
               }}
             >

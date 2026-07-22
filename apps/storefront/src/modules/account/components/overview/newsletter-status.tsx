@@ -34,6 +34,10 @@ export default function NewsletterStatus({
         },
         body: JSON.stringify({ email }),
       })
+      if (res.status === 429) {
+        setError("Prea multe încercări. Te rugăm să revii peste câteva minute.")
+        return
+      }
       const data = await res.json()
       if (data.success) {
         setSubscribed(true)
@@ -60,6 +64,10 @@ export default function NewsletterStatus({
         },
         body: JSON.stringify({ email }),
       })
+      if (res.status === 429) {
+        setError("Prea multe încercări. Te rugăm să revii peste câteva minute.")
+        return
+      }
       const data = await res.json()
       if (data.success) {
         setSubscribed(false)

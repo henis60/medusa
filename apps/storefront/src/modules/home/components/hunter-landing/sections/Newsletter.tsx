@@ -47,6 +47,12 @@ const Newsletter = () => {
         }
       )
 
+      if (res.status === 429) {
+        setErrorMsg("Prea multe încercări. Te rugăm să revii peste câteva minute.")
+        setStatus("error")
+        return
+      }
+
       const json = await res.json()
 
       if (!res.ok) {

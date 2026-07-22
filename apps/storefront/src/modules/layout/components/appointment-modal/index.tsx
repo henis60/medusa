@@ -28,6 +28,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
   // step 0 = intro, step 1 = Data & Ora, step 2 = Contact
   const [step, setStep] = useState(0)
   const [status, setStatus] = useState<Status>("idle")
+  const [errorMsg, setErrorMsg] = useState("Nu am putut trimite cererea. Încearcă din nou.")
   const { preload, getToken } = useRecaptcha()
 
   const [date, setDate] = useState("")
@@ -45,6 +46,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
     setDate(""); setTime(""); setDateError(false)
     setName(""); setEmail(""); setPhone(""); setMessage("")
     setErrors({})
+    setErrorMsg("Nu am putut trimite cererea. Încearcă din nou.")
   }
 
   const handleClose = () => { reset(); onClose() }
@@ -68,6 +70,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
     if (message.trim().length < 2) e.message = true
     if (Object.keys(e).length) { setErrors(e); return }
     setErrors({}); setStatus("loading")
+    setErrorMsg("Nu am putut trimite cererea. Încearcă din nou.")
 
     try {
       const recaptchaToken = await getToken("appointment")
@@ -89,6 +92,11 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
         }),
       })
 
+      if (res.status === 429) {
+        setErrorMsg("Prea multe încercări. Te rugăm să revii peste câteva minute.")
+        setStatus("error")
+        return
+      }
       if (!res.ok) { setStatus("error"); return }
       setStatus("success")
     } catch {
@@ -233,7 +241,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
                       />
                     </div>
                     {status === "error" && (
-                      <p className="font-sans text-xs text-red-400">Nu am putut trimite cererea. Încearcă din nou.</p>
+                      <p className="font-sans text-xs text-red-400">{errorMsg}</p>
                     )}
                   </div>
                 )}

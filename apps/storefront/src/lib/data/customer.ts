@@ -2,6 +2,7 @@
 
 import { sdk } from "@lib/config"
 import medusaError from "@lib/util/medusa-error"
+import { isRateLimitError } from "@lib/util/is-rate-limit-error"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
@@ -120,6 +121,9 @@ export async function signup(_currentState: unknown, formData: FormData) {
 
     return createdCustomer
   } catch (error) {
+    if (isRateLimitError(error)) {
+      return "Prea multe încercări. Te rugăm să revii peste câteva minute."
+    }
     return String(error)
   }
 }
@@ -140,6 +144,9 @@ export async function login(_currentState: unknown, formData: FormData) {
         revalidateTag(customerCacheTag)
       })
   } catch (error) {
+    if (isRateLimitError(error)) {
+      return "Prea multe încercări. Te rugăm să revii peste câteva minute."
+    }
     return String(error)
   }
 
@@ -194,6 +201,9 @@ export async function resetPassword(
     )
     return "success"
   } catch (error) {
+    if (isRateLimitError(error)) {
+      return "Prea multe încercări. Te rugăm să revii peste câteva minute."
+    }
     return "Link-ul de resetare este invalid sau a expirat."
   }
 }
@@ -213,6 +223,9 @@ export async function requestPasswordReset(
     })
     return "success"
   } catch (error) {
+    if (isRateLimitError(error)) {
+      return "Prea multe încercări. Te rugăm să revii peste câteva minute."
+    }
     return "A apărut o eroare. Te rugăm să încerci din nou."
   }
 }
