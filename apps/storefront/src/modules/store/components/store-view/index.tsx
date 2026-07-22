@@ -1,13 +1,7 @@
 "use client"
 
-import {
-  ReactNode,
-  useCallback,
-  useEffect,
-  useState,
-  useTransition,
-} from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { ReactNode, useCallback, useEffect, useState } from "react"
+import { usePathname, useSearchParams } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 
 import StoreSidebar from "@modules/store/components/store-sidebar"
@@ -46,7 +40,6 @@ export default function StoreView({
   collectionCategoriesMap,
   children,
 }: Props) {
-  const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const sort = (searchParams.get("sortBy") as SortOptions) || "created_at"
@@ -82,70 +75,17 @@ export default function StoreView({
     }
   }
 
-  // Prefetching every category/collection route up front, all at once on
-  // mount, fired a burst of 8-10+ concurrent requests on every visit — fine
-  // against a local dev server, but on the deployed edge this burst could
-  // get an in-flight request aborted/reset, and Next's router treats that
-  // as a failed navigation and falls back to a full page reload (looks like
-  // the whole page refreshing on category click). Prefetching on hover
-  // instead spreads these out to just what the user is actually about to
-  // click, one at a time.
-  const prefetchSlug = useCallback(
-    (nextSlug: string[]) => {
-      const path = nextSlug.length
-        ? `${BASE_PATH}/${nextSlug.join("/")}`
-        : BASE_PATH
-      router.prefetch(path)
-    },
-    [router]
-  )
-
-  const prefetchCategory = useCallback(
-    (id: string) => {
-      const handle = categories.find((c) => c.id === id)?.handle
-      if (handle) prefetchSlug([handle])
-    },
-    [categories, prefetchSlug]
-  )
-
-  const prefetchCollection = useCallback(
-    (id: string) => {
-      const handle = collections.find((c) => c.id === id)?.handle
-      if (handle) prefetchSlug([handle])
-    },
-    [collections, prefetchSlug]
-  )
-
-  const prefetchCollectionCategory = useCallback(
-    (collectionId: string, categoryId: string) => {
-      const collectionHandle = collections.find((c) => c.id === collectionId)?.handle
-      const categoryHandle = categories.find((c) => c.id === categoryId)?.handle
-      if (collectionHandle && categoryHandle) {
-        prefetchSlug([collectionHandle, categoryHandle])
-      }
-    },
-    [categories, collections, prefetchSlug]
-  )
-
-  // Optimistic mirror of collection/category — updated synchronously on
-  // click, before router.push. The nav (mobile pills + desktop sidebar)
-  // reads these instead of the raw URL, so highlighting/subcategory reveal
-  // never waits on however long the navigation transition takes to commit.
-  // Synced back from the URL for anything that changes it externally
-  // (back/forward, direct links).
-  const [collectionId, setCollectionId] = useState(urlCollectionId)
-  const [categoryId, setCategoryId] = useState(urlCategoryId)
-  useEffect(() => setCollectionId(urlCollectionId), [urlCollectionId])
-  useEffect(() => setCategoryId(urlCategoryId), [urlCategoryId])
-
-  // `<Link>` wraps its navigations in a transition automatically; a plain
-  // router.push() call does not. Without startTransition here, React has no
-  // signal to keep the previous grid mounted while the new route's Suspense
-  // boundary is pending — it just shows the fallback immediately, which is
-  // what caused the skeleton to flash on every category/collection switch.
-  const [, startTransition] = useTransition()
-
-  const pushSlug = useCallback(
+  // Navigation is driven by real <Link> elements in the nav components (see
+  // buildHref below), NOT router.push. router.push inside startTransition
+  // would occasionally lose its in-flight RSC fetch to an abort race (a fast
+  // second click, or a concurrent server-action POST) and the App Router
+  // would bail to a full page reload. <Link> is managed by the router with
+  // proper request dedup/abort handling and prefetch={false} hover
+  // prefetching, so navigating never hard-reloads.
+  //
+  // buildHref turns a target slug into the href, preserving the current
+  // query string (sort etc.) minus `page`.
+  const buildHref = useCallback(
     (nextSlug: string[]) => {
       const params = new URLSearchParams(searchParams)
       params.delete("page")
@@ -153,59 +93,44 @@ export default function StoreView({
       const path = nextSlug.length
         ? `${BASE_PATH}/${nextSlug.join("/")}`
         : BASE_PATH
-      startTransition(() => {
-        router.push(qs ? `${path}?${qs}` : path)
-      })
+      return qs ? `${path}?${qs}` : path
     },
-    [searchParams, router]
+    [searchParams]
   )
 
-  const selectCategory = useCallback(
-    (id: string | null) => {
-      setCategoryId(id ?? undefined)
-      setCollectionId(undefined)
-      const handle = id ? categories.find((c) => c.id === id)?.handle : undefined
-      pushSlug(handle ? [handle] : [])
-    },
-    [pushSlug, categories]
-  )
+  // Optimistic mirror of collection/category — updated synchronously in the
+  // Link's onClick, so highlighting and the subcategory reveal update the
+  // instant it's clicked, without waiting for the navigation to commit. The
+  // <Link> href performs the actual navigation. Synced back from the URL for
+  // anything that changes it externally (back/forward, direct links) and
+  // once the click's navigation commits.
+  const [collectionId, setCollectionId] = useState(urlCollectionId)
+  const [categoryId, setCategoryId] = useState(urlCategoryId)
+  useEffect(() => setCollectionId(urlCollectionId), [urlCollectionId])
+  useEffect(() => setCategoryId(urlCategoryId), [urlCategoryId])
 
-  const selectCollection = useCallback(
-    (id: string | null) => {
-      setCollectionId(id ?? undefined)
-      setCategoryId(undefined)
-      const handle = id ? collections.find((c) => c.id === id)?.handle : undefined
-      pushSlug(handle ? [handle] : [])
-    },
-    [pushSlug, collections]
-  )
+  const selectCategory = useCallback((id: string | null) => {
+    setCategoryId(id ?? undefined)
+    setCollectionId(undefined)
+  }, [])
+
+  const selectCollection = useCallback((id: string | null) => {
+    setCollectionId(id ?? undefined)
+    setCategoryId(undefined)
+  }, [])
 
   const selectCollectionCategory = useCallback(
     (nextCollectionId: string, nextCategoryId: string | null) => {
       setCollectionId(nextCollectionId)
       setCategoryId(nextCategoryId ?? undefined)
-      const collectionHandle = collections.find(
-        (c) => c.id === nextCollectionId
-      )?.handle
-      const categoryHandle = nextCategoryId
-        ? categories.find((c) => c.id === nextCategoryId)?.handle
-        : undefined
-      pushSlug(
-        collectionHandle
-          ? categoryHandle
-            ? [collectionHandle, categoryHandle]
-            : [collectionHandle]
-          : []
-      )
     },
-    [pushSlug, collections, categories]
+    []
   )
 
   const clearFilters = useCallback(() => {
     setCategoryId(undefined)
     setCollectionId(undefined)
-    pushSlug([])
-  }, [pushSlug])
+  }, [])
 
   // Precomputed server-side (see templates/index.tsx) — a synchronous
   // lookup, same as plain categories, so there's no fetch/loading gap at all
@@ -261,6 +186,7 @@ export default function StoreView({
               onSelectCollection={selectCollection}
               onSelectCollectionCategory={selectCollectionCategory}
               onClearFilters={clearFilters}
+              buildHref={buildHref}
             />
           </div>
         </div>
@@ -290,9 +216,7 @@ export default function StoreView({
               onSelectCollection={selectCollection}
               onSelectCollectionCategory={selectCollectionCategory}
               onClearFilters={clearFilters}
-              onHoverCategory={prefetchCategory}
-              onHoverCollection={prefetchCollection}
-              onHoverCollectionCategory={prefetchCollectionCategory}
+              buildHref={buildHref}
             />
 
             <div className="flex-1 min-w-0">

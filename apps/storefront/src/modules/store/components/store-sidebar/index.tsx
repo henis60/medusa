@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { HttpTypes } from "@medusajs/types"
 import { clx } from "@modules/common/components/ui"
 import { SortOptions } from "../refinement-list/sort-products"
@@ -18,11 +19,8 @@ type Props = {
     categoryId: string | null
   ) => void
   onClearFilters: () => void
-  /** Warms the route's RSC payload on hover, just before the user clicks —
-   *  see StoreView for why this replaced prefetching everything on mount. */
-  onHoverCategory: (id: string) => void
-  onHoverCollection: (id: string) => void
-  onHoverCollectionCategory: (collectionId: string, categoryId: string) => void
+  /** Builds the href for a target slug, preserving current query params. */
+  buildHref: (nextSlug: string[]) => string
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -53,9 +51,7 @@ export default function StoreSidebar({
   onSelectCollection,
   onSelectCollectionCategory,
   onClearFilters,
-  onHoverCategory,
-  onHoverCollection,
-  onHoverCollectionCategory,
+  buildHref,
 }: Props) {
   const hasFilters = !!selectedCollection || !!selectedCategory
 
@@ -73,29 +69,34 @@ export default function StoreSidebar({
   const subcategoriesOf = (parentId: string) =>
     categories.filter((c) => c.parent_category?.id === parentId)
 
+  // prefetch={false}: the router still warms each route on hover/touch, but
+  // does NOT fire a viewport-prefetch burst for every visible link on mount
+  // (that burst was itself a source of aborted in-flight requests). onClick
+  // sets the optimistic highlight; the href does the actual navigation.
   const NavItem = ({
     active,
+    href,
     onClick,
-    onMouseEnter,
     children,
   }: {
     active: boolean
+    href: string
     onClick: () => void
-    onMouseEnter?: () => void
     children: React.ReactNode
   }) => (
-    <button
+    <Link
+      href={href}
+      prefetch={false}
       onClick={onClick}
-      onMouseEnter={onMouseEnter}
       className={clx(
-        "w-full text-left py-2 font-serif text-[20px] leading-none transition-all duration-150",
+        "block w-full text-left py-2 font-serif text-[20px] leading-none transition-all duration-150",
         active
           ? "text-[var(--theme-gold)] italic pl-1"
           : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
       )}
     >
       {children}
-    </button>
+    </Link>
   )
 
   return (
@@ -114,12 +115,16 @@ export default function StoreSidebar({
                   <div key={c.id}>
                     <NavItem
                       active={activeCategoryId === c.id}
+                      href={
+                        activeCategoryId === c.id
+                          ? buildHref([])
+                          : buildHref([c.handle])
+                      }
                       onClick={() =>
                         onSelectCategory(
                           activeCategoryId === c.id ? null : c.id
                         )
                       }
-                      onMouseEnter={() => onHoverCategory(c.id)}
                     >
                       {c.name}
                     </NavItem>
@@ -134,23 +139,28 @@ export default function StoreSidebar({
                       <div className="min-h-0 overflow-hidden animate-[fadeIn_0.22s_ease-out]">
                         <div className="flex flex-col pl-4 mt-1 mb-1 border-l border-[var(--theme-border)]">
                           {subs.map((sub) => (
-                            <button
+                            <Link
                               key={sub.id}
+                              href={
+                                activeCategoryId === sub.id
+                                  ? buildHref([c.handle])
+                                  : buildHref([sub.handle])
+                              }
+                              prefetch={false}
                               onClick={() =>
                                 onSelectCategory(
                                   activeCategoryId === sub.id ? c.id : sub.id
                                 )
                               }
-                              onMouseEnter={() => onHoverCategory(sub.id)}
                               className={clx(
-                                "w-full text-left py-1.5 font-serif text-[18px] leading-none transition-colors duration-150",
+                                "block w-full text-left py-1.5 font-serif text-[18px] leading-none transition-colors duration-150",
                                 activeCategoryId === sub.id
                                   ? "text-[var(--theme-gold)] italic"
                                   : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
                               )}
                             >
                               {sub.name}
-                            </button>
+                            </Link>
                           ))}
                         </div>
                       </div>
@@ -173,10 +183,12 @@ export default function StoreSidebar({
                   <div key={c.id}>
                     <NavItem
                       active={isSelected && !selectedCategory}
+                      href={
+                        isSelected ? buildHref([]) : buildHref([c.handle])
+                      }
                       onClick={() =>
                         onSelectCollection(isSelected ? null : c.id)
                       }
-                      onMouseEnter={() => onHoverCollection(c.id)}
                     >
                       {c.title}
                     </NavItem>
@@ -187,26 +199,29 @@ export default function StoreSidebar({
                     {isSelected && collectionCategories.length > 0 && (
                       <div className="flex flex-col pl-4 mt-1 mb-1 border-l border-[var(--theme-border)] animate-[fadeIn_0.22s_ease-out]">
                         {collectionCategories.map((cat) => (
-                          <button
+                          <Link
                             key={cat.id}
+                            href={
+                              selectedCategory === cat.id
+                                ? buildHref([c.handle])
+                                : buildHref([c.handle, cat.handle])
+                            }
+                            prefetch={false}
                             onClick={() =>
                               onSelectCollectionCategory(
                                 c.id,
                                 selectedCategory === cat.id ? null : cat.id
                               )
                             }
-                            onMouseEnter={() =>
-                              onHoverCollectionCategory(c.id, cat.id)
-                            }
                             className={clx(
-                              "w-full text-left py-1.5 font-serif text-[18px] leading-none transition-colors duration-150",
+                              "block w-full text-left py-1.5 font-serif text-[18px] leading-none transition-colors duration-150",
                               selectedCategory === cat.id
                                 ? "text-[var(--theme-gold)] italic"
                                 : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
                             )}
                           >
                             {cat.name}
-                          </button>
+                          </Link>
                         ))}
                       </div>
                     )}
@@ -219,12 +234,14 @@ export default function StoreSidebar({
 
         {hasFilters && (
           <div className="pt-8">
-            <button
+            <Link
+              href={buildHref([])}
+              prefetch={false}
               onClick={onClearFilters}
-              className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-transparent hover:border-hunter-gold pb-0.5"
+              className="inline-block font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-transparent hover:border-hunter-gold pb-0.5"
             >
               Resetează filtrele
-            </button>
+            </Link>
           </div>
         )}
       </div>

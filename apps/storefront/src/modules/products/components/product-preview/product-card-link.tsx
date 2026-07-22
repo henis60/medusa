@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useRef, useCallback } from "react"
 
@@ -60,7 +61,7 @@ export default function ProductCardLink({
   }, [])
 
   return (
-    <a
+    <Link
       href={fullHref}
       className={className}
       style={style}
@@ -69,6 +70,6 @@ export default function ProductCardLink({
       onClick={handleClick}
     >
       {children}
-    </a>
+    </Link>
   )
 }

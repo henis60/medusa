@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { HttpTypes } from "@medusajs/types"
 import { useEffect, useRef, useState, forwardRef } from "react"
 import { clx } from "@modules/common/components/ui"
@@ -14,6 +15,8 @@ type Props = {
   onSelectCollection: (id: string | null) => void
   onSelectCollectionCategory: (collectionId: string, categoryId: string | null) => void
   onClearFilters: () => void
+  /** Builds the href for a target slug, preserving current query params. */
+  buildHref: (nextSlug: string[]) => string
 }
 
 // Horizontally scrollable row with edge fades that appear/disappear with scroll
@@ -89,6 +92,7 @@ export default function CategoryPills({
   onSelectCollection,
   onSelectCollectionCategory,
   onClearFilters,
+  buildHref,
 }: Props) {
   // The actual scrollable element (FadeScroller's outer div) — not the inner
   // content wrapper, whose bounds always equal the full unclipped content.
@@ -127,6 +131,9 @@ export default function CategoryPills({
   const subChips = activeParentId
     ? categories.filter((c) => c.parent_category?.id === activeParentId)
     : []
+  const activeParentHandle = activeParentId
+    ? categories.find((c) => c.id === activeParentId)?.handle
+    : undefined
 
   if (topCategories.length === 0 && collections.length === 0) return null
 
@@ -137,32 +144,44 @@ export default function CategoryPills({
         className="flex items-center gap-5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         <div className="flex items-center gap-5">
-          <button
+          <Link
+            href={buildHref([])}
+            prefetch={false}
             data-active={!selectedCategory && !selectedCollection ? "true" : undefined}
             onClick={onClearFilters}
             className={link(!selectedCategory && !selectedCollection)}
           >
             Toate
-          </button>
+          </Link>
           {topCategories.map((c) => (
-            <button
+            <Link
               key={c.id}
+              href={
+                activeCategoryId === c.id ? buildHref([]) : buildHref([c.handle])
+              }
+              prefetch={false}
               data-active={activeCategoryId === c.id || activeParentId === c.id ? "true" : undefined}
               onClick={() => onSelectCategory(activeCategoryId === c.id ? null : c.id)}
               className={link(activeCategoryId === c.id || activeParentId === c.id)}
             >
               {c.name}
-            </button>
+            </Link>
           ))}
           {collections.map((c) => (
-            <button
+            <Link
               key={c.id}
+              href={
+                selectedCollection === c.id
+                  ? buildHref([])
+                  : buildHref([c.handle])
+              }
+              prefetch={false}
               data-active={selectedCollection === c.id ? "true" : undefined}
               onClick={() => onSelectCollection(selectedCollection === c.id ? null : c.id)}
               className={link(selectedCollection === c.id)}
             >
               {c.title}
-            </button>
+            </Link>
           ))}
         </div>
       </FadeScroller>
@@ -181,15 +200,21 @@ export default function CategoryPills({
         <div className="min-h-0 overflow-hidden">
           <FadeScroller className="flex items-center gap-4 overflow-x-auto pt-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {subChips.map((sub) => (
-              <button
+              <Link
                 key={sub.id}
+                href={
+                  activeCategoryId === sub.id
+                    ? buildHref(activeParentHandle ? [activeParentHandle] : [])
+                    : buildHref([sub.handle])
+                }
+                prefetch={false}
                 onClick={() =>
                   onSelectCategory(activeCategoryId === sub.id ? (activeParentId as string) : sub.id)
                 }
                 className={link(activeCategoryId === sub.id)}
               >
                 {sub.name}
-              </button>
+              </Link>
             ))}
           </FadeScroller>
         </div>
@@ -209,17 +234,30 @@ export default function CategoryPills({
       >
         <div className="min-h-0 overflow-hidden">
           <FadeScroller className="flex items-center gap-4 overflow-x-auto pt-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {collectionCategories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() =>
-                  onSelectCollectionCategory(selectedCollection!, selectedCategory === cat.id ? null : cat.id)
-                }
-                className={link(selectedCategory === cat.id)}
-              >
-                {cat.name}
-              </button>
-            ))}
+            {collectionCategories.map((cat) => {
+              const collectionHandle = collections.find(
+                (c) => c.id === selectedCollection
+              )?.handle
+              return (
+                <Link
+                  key={cat.id}
+                  href={
+                    selectedCategory === cat.id
+                      ? buildHref(collectionHandle ? [collectionHandle] : [])
+                      : buildHref(
+                          collectionHandle ? [collectionHandle, cat.handle] : []
+                        )
+                  }
+                  prefetch={false}
+                  onClick={() =>
+                    onSelectCollectionCategory(selectedCollection!, selectedCategory === cat.id ? null : cat.id)
+                  }
+                  className={link(selectedCategory === cat.id)}
+                >
+                  {cat.name}
+                </Link>
+              )
+            })}
           </FadeScroller>
         </div>
       </div>
