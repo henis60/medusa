@@ -18,6 +18,15 @@ const mediaUpload = multer({ storage: multer.memoryStorage() });
 // anyway.
 const redisUrl = process.env.REDIS_URL;
 const redisClient = redisUrl ? new Redis(redisUrl) : null;
+// ioredis emits "error" on every connection hiccup (not just the initial
+// connect) — with no listener, Node treats an unhandled EventEmitter "error"
+// as an uncaught exception and crashes the whole process, taking every
+// unrelated route down with it, not just the rate-limited ones. Logging is
+// enough here; `passOnStoreError` below (not this listener) is what keeps
+// individual requests working while Redis is unreachable.
+redisClient?.on("error", (err) => {
+  console.error("[rate-limit] Redis connection error:", err.message);
+});
 
 const redisStore = (prefix: string) =>
   redisClient
@@ -47,6 +56,10 @@ const publicFormLimiter = rateLimit({
   limit: 5,
   standardHeaders: true,
   legacyHeaders: false,
+  // If Redis is unreachable, let the request through rather than block it —
+  // degraded rate limiting beats a hard failure on every contact/newsletter
+  // submission, login, or AI generation.
+  passOnStoreError: true,
   store: redisStore("rl:form:"),
   handler: rateLimited("Prea multe încercări. Te rugăm să revii peste câteva minute."),
 });
@@ -59,6 +72,7 @@ const authLimiter = rateLimit({
   limit: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  passOnStoreError: true,
   store: redisStore("rl:auth:"),
   handler: rateLimited("Prea multe încercări. Te rugăm să revii peste câteva minute."),
 });
@@ -70,6 +84,7 @@ const aiGenerateLimiter = rateLimit({
   limit: 20,
   standardHeaders: true,
   legacyHeaders: false,
+  passOnStoreError: true,
   store: redisStore("rl:ai:"),
   handler: rateLimited("Prea multe cereri către AI. Te rugăm să revii peste câteva minute."),
 });
