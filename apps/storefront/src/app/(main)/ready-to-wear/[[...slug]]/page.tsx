@@ -69,7 +69,43 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function StorePage() {
+export default async function StorePage({ params }: Props) {
+  const { slug } = await params
+
+  // Resolve the path's slug to a collection/category id HERE, server-side, so
+  // the statically-generated HTML for each slug already contains the correct
+  // FILTERED products. Without this, every slug rendered the same unfiltered
+  // catalog and the client had to blank + refetch on first open of a category
+  // (InfiniteProducts.needsInitialRefetch) — the flicker seen on the first
+  // visit to each category after a hard refresh. Mirror of the slug→id logic
+  // in StoreView / InfiniteProducts: a category handle can itself contain a
+  // slash (nested subcategory), so match the whole path first.
+  const [categories, { collections }] = await Promise.all([
+    listCategories(),
+    listCollections(),
+  ])
+
+  let collectionId: string | undefined
+  let categoryId: string | undefined
+  if (slug?.length) {
+    const fullPath = slug.join("/")
+    const cat = categories.find((c) => c.handle === fullPath)
+    if (cat) {
+      categoryId = cat.id
+    } else if (slug.length === 1) {
+      collectionId = collections.find((c) => c.handle === slug[0])?.id
+    } else {
+      collectionId = collections.find((c) => c.handle === slug[0])?.id
+      categoryId = categories.find(
+        (c) => c.handle === slug.slice(1).join("/")
+      )?.id
+    }
+  }
+
+  const categoryWithChildren = categoryId
+    ? categories.find((c) => c.id === categoryId)
+    : undefined
+
   // Suspense scopes the grid's own data-fetch suspension to just this
   // subtree. Without it, the fetch bubbles up to the nearest ancestor
   // Suspense boundary — the one in layout.tsx wrapping the ENTIRE StoreView
@@ -77,7 +113,16 @@ export default async function StorePage() {
   // blank on every category/collection switch instead of just the grid.
   return (
     <Suspense fallback={<SkeletonProductGrid />}>
-      <PaginatedProducts sortBy="created_at" countryCode={"ro"} urlFiltered />
+      <PaginatedProducts
+        sortBy="created_at"
+        countryCode={"ro"}
+        urlFiltered
+        collectionId={collectionId}
+        categoryId={categoryId}
+        categories={categories}
+        collections={collections}
+        categoryWithChildren={categoryWithChildren}
+      />
     </Suspense>
   )
 }
