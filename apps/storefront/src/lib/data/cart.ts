@@ -2,6 +2,7 @@
 
 import { sdk } from "@lib/config"
 import medusaError from "@lib/util/medusa-error"
+import { orderIdToSlug } from "@lib/util/order-slug"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
@@ -543,7 +544,7 @@ export async function placeOrder(cartId?: string) {
     revalidateTag(orderCacheTag)
 
     removeCartId()
-    redirect(`/comanda/${cartRes?.order.id}`)
+    redirect(`/comanda/${orderIdToSlug(cartRes.order.id)}`)
   }
 
   return cartRes.cart

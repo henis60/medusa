@@ -1,6 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 import { generateTestInvoicePdf } from "../../../../lib/generate-test-invoice-pdf"
+import { createOblioInvoiceWorkflow } from "../../../../workflows/create-oblio-invoice"
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const { id } = req.params
@@ -87,5 +88,24 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     invoice_number: invoiceNumber,
     display_id: order.display_id,
     pdf_base64: pdfBase64,
+  })
+}
+
+// Manual retry for orders where the automatic order.placed subscriber never
+// produced an invoice (a transient Oblio outage, a missing/misconfigured env
+// var at the time, etc.) — there was previously no way to recover these
+// short of a direct DB edit. The workflow is idempotent (oblio-create-invoice
+// returns the existing series/number if metadata is already set), so this is
+// safe to call even if an invoice does exist.
+export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  const { id } = req.params
+
+  const { result } = await createOblioInvoiceWorkflow(req.scope).run({
+    input: { order_id: id },
+  })
+
+  return res.json({
+    invoice_series: result.series,
+    invoice_number: result.number,
   })
 }

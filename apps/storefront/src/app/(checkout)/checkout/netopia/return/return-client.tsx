@@ -1,6 +1,7 @@
 "use client"
 
 import { completeNetopiaBySession } from "@lib/data/cart"
+import { orderIdToSlug } from "@lib/util/order-slug"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 
@@ -33,7 +34,7 @@ export default function NetopiaReturnClient() {
       const result = await completeNetopiaBySession(sessionId)
 
       if (result.orderId) {
-        router.replace(`/comanda/${result.orderId}`)
+        router.replace(`/comanda/${orderIdToSlug(result.orderId)}`)
         return
       }
 

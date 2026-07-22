@@ -34,7 +34,7 @@ const ErrorContent = ({
       >
         {description}
       </p>
-      <div className="flex items-center gap-4 mt-2">
+      <div className="flex flex-col small:flex-row items-stretch small:items-center gap-4 mt-2 w-full max-w-xs small:max-w-none">
         {reset && (
           <button
             onClick={reset}
