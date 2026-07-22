@@ -6,6 +6,7 @@ const ORDER_ID_PREFIX = "order_"
  * account — but showing the raw, prefixed id in the URL bar is an
  * unnecessary tell that it's a Medusa store. Strip the prefix for display;
  * `orderIdFromSlug` restores it before any lookup.
+ * 
  */
 export function orderIdToSlug(orderId: string): string {
   return orderId.startsWith(ORDER_ID_PREFIX)
