@@ -18,6 +18,11 @@ type Props = {
     categoryId: string | null
   ) => void
   onClearFilters: () => void
+  /** Warms the route's RSC payload on hover, just before the user clicks —
+   *  see StoreView for why this replaced prefetching everything on mount. */
+  onHoverCategory: (id: string) => void
+  onHoverCollection: (id: string) => void
+  onHoverCollectionCategory: (collectionId: string, categoryId: string) => void
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -48,6 +53,9 @@ export default function StoreSidebar({
   onSelectCollection,
   onSelectCollectionCategory,
   onClearFilters,
+  onHoverCategory,
+  onHoverCollection,
+  onHoverCollectionCategory,
 }: Props) {
   const hasFilters = !!selectedCollection || !!selectedCategory
 
@@ -68,14 +76,17 @@ export default function StoreSidebar({
   const NavItem = ({
     active,
     onClick,
+    onMouseEnter,
     children,
   }: {
     active: boolean
     onClick: () => void
+    onMouseEnter?: () => void
     children: React.ReactNode
   }) => (
     <button
       onClick={onClick}
+      onMouseEnter={onMouseEnter}
       className={clx(
         "w-full text-left py-2 font-serif text-[20px] leading-none transition-all duration-150",
         active
@@ -108,6 +119,7 @@ export default function StoreSidebar({
                           activeCategoryId === c.id ? null : c.id
                         )
                       }
+                      onMouseEnter={() => onHoverCategory(c.id)}
                     >
                       {c.name}
                     </NavItem>
@@ -129,6 +141,7 @@ export default function StoreSidebar({
                                   activeCategoryId === sub.id ? c.id : sub.id
                                 )
                               }
+                              onMouseEnter={() => onHoverCategory(sub.id)}
                               className={clx(
                                 "w-full text-left py-1.5 font-serif text-[18px] leading-none transition-colors duration-150",
                                 activeCategoryId === sub.id
@@ -163,6 +176,7 @@ export default function StoreSidebar({
                       onClick={() =>
                         onSelectCollection(isSelected ? null : c.id)
                       }
+                      onMouseEnter={() => onHoverCollection(c.id)}
                     >
                       {c.title}
                     </NavItem>
@@ -180,6 +194,9 @@ export default function StoreSidebar({
                                 c.id,
                                 selectedCategory === cat.id ? null : cat.id
                               )
+                            }
+                            onMouseEnter={() =>
+                              onHoverCollectionCategory(c.id, cat.id)
                             }
                             className={clx(
                               "w-full text-left py-1.5 font-serif text-[18px] leading-none transition-colors duration-150",

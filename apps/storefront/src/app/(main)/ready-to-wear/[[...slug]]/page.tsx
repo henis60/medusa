@@ -3,7 +3,6 @@ import { Suspense } from "react"
 
 import { listCategories } from "@lib/data/categories"
 import { listCollections } from "@lib/data/collections"
-import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
 import PaginatedProducts from "@modules/store/templates/paginated-products"
 
 type Props = {
@@ -115,8 +114,14 @@ export default async function StorePage({ params }: Props) {
   // Suspense boundary — the one in layout.tsx wrapping the ENTIRE StoreView
   // (title, sidebar, grid) — which has no fallback, so the whole page went
   // blank on every category/collection switch instead of just the grid.
+  //
+  // fallback={null} (not <SkeletonProductGrid />): the prefetch cache the
+  // router relies on to avoid this fallback entirely doesn't always win the
+  // race, and a full skeleton grid flashing in for a moment reads as more
+  // jarring than a brief blank gap — InfiniteProducts already shows its own
+  // lightweight inline loading state once it's mounted.
   return (
-    <Suspense fallback={<SkeletonProductGrid />}>
+    <Suspense fallback={null}>
       <PaginatedProducts
         sortBy="created_at"
         countryCode={"ro"}

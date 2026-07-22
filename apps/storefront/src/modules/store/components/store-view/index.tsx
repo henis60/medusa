@@ -82,16 +82,50 @@ export default function StoreView({
     }
   }
 
-  // Prefetch every category/collection route on mount so clicking a pill
-  // is an instant client-side swap instead of a visible round trip — without
-  // this, each click fetches the RSC payload on demand and the Suspense
-  // boundary around this component briefly renders nothing, which looks
-  // like the whole page reloading.
-  useEffect(() => {
-    categories.forEach((c) => router.prefetch(`${BASE_PATH}/${c.handle}`))
-    collections.forEach((c) => router.prefetch(`${BASE_PATH}/${c.handle}`))
-    router.prefetch(BASE_PATH)
-  }, [categories, collections, router])
+  // Prefetching every category/collection route up front, all at once on
+  // mount, fired a burst of 8-10+ concurrent requests on every visit — fine
+  // against a local dev server, but on the deployed edge this burst could
+  // get an in-flight request aborted/reset, and Next's router treats that
+  // as a failed navigation and falls back to a full page reload (looks like
+  // the whole page refreshing on category click). Prefetching on hover
+  // instead spreads these out to just what the user is actually about to
+  // click, one at a time.
+  const prefetchSlug = useCallback(
+    (nextSlug: string[]) => {
+      const path = nextSlug.length
+        ? `${BASE_PATH}/${nextSlug.join("/")}`
+        : BASE_PATH
+      router.prefetch(path)
+    },
+    [router]
+  )
+
+  const prefetchCategory = useCallback(
+    (id: string) => {
+      const handle = categories.find((c) => c.id === id)?.handle
+      if (handle) prefetchSlug([handle])
+    },
+    [categories, prefetchSlug]
+  )
+
+  const prefetchCollection = useCallback(
+    (id: string) => {
+      const handle = collections.find((c) => c.id === id)?.handle
+      if (handle) prefetchSlug([handle])
+    },
+    [collections, prefetchSlug]
+  )
+
+  const prefetchCollectionCategory = useCallback(
+    (collectionId: string, categoryId: string) => {
+      const collectionHandle = collections.find((c) => c.id === collectionId)?.handle
+      const categoryHandle = categories.find((c) => c.id === categoryId)?.handle
+      if (collectionHandle && categoryHandle) {
+        prefetchSlug([collectionHandle, categoryHandle])
+      }
+    },
+    [categories, collections, prefetchSlug]
+  )
 
   // Optimistic mirror of collection/category — updated synchronously on
   // click, before router.push. The nav (mobile pills + desktop sidebar)
@@ -256,6 +290,9 @@ export default function StoreView({
               onSelectCollection={selectCollection}
               onSelectCollectionCategory={selectCollectionCategory}
               onClearFilters={clearFilters}
+              onHoverCategory={prefetchCategory}
+              onHoverCollection={prefetchCollection}
+              onHoverCollectionCategory={prefetchCollectionCategory}
             />
 
             <div className="flex-1 min-w-0">
