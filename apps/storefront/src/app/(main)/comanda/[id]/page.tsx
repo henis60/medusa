@@ -35,7 +35,7 @@ export default async function ComandaPage(props: Props) {
   const canDownloadInvoice = !!customer && customer.id === order.customer_id
 
   return (
-    <div className="page-container max-w-3xl py-6 small:py-10">
+    <div className="page-container max-w-3xl py-3 small:py-10">
       <OrderDetailsTemplate order={order} standalone canDownloadInvoice={canDownloadInvoice} />
     </div>
   )

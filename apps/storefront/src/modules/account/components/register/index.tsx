@@ -110,6 +110,16 @@ const Register = ({ setCurrentView }: Props) => {
         >
           Creează Cont
         </SubmitButton>
+
+        <button
+          type="button"
+          onClick={() => setCurrentView(LOGIN_VIEW.SIGN_IN)}
+          className="w-full mt-3 h-12 font-sans uppercase tracking-[3px] text-[11px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-hunter-gold hover:text-hunter-gold transition-colors"
+          data-testid="switch-to-login-button"
+        >
+          Am deja un cont
+        </button>
+
         <p className="font-sans text-[11px] text-[var(--theme-text-muted)] mt-4 text-center leading-relaxed">
           Protejat de reCAPTCHA —{" "}
           <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-hunter-gold transition-colors">Confidențialitate</a>

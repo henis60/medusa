@@ -32,9 +32,12 @@ const LegalLayout = ({ kicker, title, intro, sections }: Props) => {
       </div>
 
       {/* Sections */}
-      <div className="page-container py-10 flex flex-col gap-12 max-w-3xl">
+      <div className="page-container py-10 flex flex-col gap-12">
         {sections.map((s) => (
-          <section key={s.title} className="border-t border-[var(--theme-border)] pt-8">
+          <section
+            key={s.title}
+            className="border-t border-[var(--theme-border)] pt-8"
+          >
             <h2 className="font-display text-2xl leading-tight text-[var(--theme-text)] mb-4">
               {s.title}
             </h2>
