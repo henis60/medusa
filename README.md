@@ -10,7 +10,7 @@ I wrote this README as an engineering artifact — architecture, infrastructure,
 
 |                      | URL                                         |
 | -------------------- | ------------------------------------------- |
-| Storefront (staging) | [the-hunter-staging.up.railway.app](https://the-hunter-staging.up.railway.app) |
+| Storefront (staging) | [the-hunter-staging.up.railway.app](https://the-hunter-production.up.railway.app) |
 | Admin dashboard      | Available as a demo video on request — the admin runs against real staging data, so it isn't exposed publicly. |
 
 ## Contents
@@ -271,8 +271,6 @@ To enable an optional integration, add its env vars to `apps/backend/.env` (Neto
 - **Explicit feature flags** — replace the implicit "provider loads if its env vars exist" pattern with a documented, single source of truth for which integrations are active per environment.
 - **Docker Compose for local dev** — currently only a production Dockerfile exists; no one-command local Postgres/Redis stack.
 - **Multi-instance readiness audit** — confirm session, cache, and workflow-engine behavior under `REDIS_URL` in a real multi-instance deployment, not just config review.
-- **Remove insecure default fallbacks for session-signing secrets** — `JWT_SECRET`/`COOKIE_SECRET` should fail startup in production when unset rather than silently falling back to a built-in default.
-
 ## License
 
 Proprietary — this is The Hunter House's codebase. The source is shown here for portfolio/demonstration purposes; see [LICENSE](LICENSE) for terms. No permission is granted to reuse, copy, or redistribute it.
