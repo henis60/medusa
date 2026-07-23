@@ -3,6 +3,46 @@ import { Metadata } from "next"
 import "styles/globals.css"
 import { ThemeProvider } from "../providers/theme-provider"
 import { FavoritesProvider } from "@lib/context/favorites-context"
+import { ConsentProvider } from "@lib/context/consent-context"
+import CookieConsent from "@modules/common/components/cookie-consent"
+import GoogleAnalytics from "@modules/common/components/google-analytics"
+import {
+  Cinzel,
+  Cormorant_Garamond,
+  Playfair_Display,
+  Raleway,
+} from "next/font/google"
+
+// All four families are Google variable fonts: omitting `weight` loads ONE
+// file per style covering every weight — fewer/lighter downloads than the
+// previous per-weight static files. `latin-ext` is required for Romanian
+// diacritics (ș, ț, ă live there; plain `latin` made them fall back to
+// system fonts).
+const playfairDisplay = Playfair_Display({
+  subsets: ["latin", "latin-ext"],
+  style: ["normal", "italic"],
+  variable: "--font-playfair",
+  display: "swap",
+})
+
+const cormorantGaramond = Cormorant_Garamond({
+  subsets: ["latin", "latin-ext"],
+  style: ["normal", "italic"],
+  variable: "--font-cormorant",
+  display: "swap",
+})
+
+const raleway = Raleway({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-raleway",
+  display: "swap",
+})
+
+const cinzel = Cinzel({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-cinzel",
+  display: "swap",
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),
@@ -11,30 +51,26 @@ export const metadata: Metadata = {
       { url: "/favicon.svg", media: "(prefers-color-scheme: light)" },
       { url: "/favicon-dark.svg", media: "(prefers-color-scheme: dark)" },
     ],
-    apple: "/favicon.svg",
+    apple: "/apple-touch-icon.png",
   },
 }
 
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin=""
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Raleway:wght@200;300;400;500;600;700&family=Cinzel:wght@400;500;600&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${playfairDisplay.variable} ${cormorantGaramond.variable} ${raleway.variable} ${cinzel.variable}`}
+    >
       <body>
+        <GoogleAnalytics />
         <ThemeProvider>
-          <FavoritesProvider>
-            <main className="relative">{props.children}</main>
-          </FavoritesProvider>
+          <ConsentProvider>
+            <FavoritesProvider>
+              <main className="relative">{props.children}</main>
+              <CookieConsent />
+            </FavoritesProvider>
+          </ConsentProvider>
         </ThemeProvider>
       </body>
     </html>

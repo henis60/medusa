@@ -1,10 +1,11 @@
 "use client"
 
 import { addToCart } from "@lib/data/cart"
+import { emitCartUpdated } from "@lib/util/cart-events"
 import { HttpTypes } from "@medusajs/types"
-import { useParams } from "next/navigation"
 import { useState, useMemo, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
+import { COLOR_OPTION_NAMES as COLOR_TITLES } from "@lib/util/product"
 
 const COLOR_MAP: Record<string, string> = {
   black: "#1a1a1a",
@@ -139,7 +140,7 @@ export default function QuickAddOverlay({
   mobileOnly,
   desktopOnly,
 }: Props) {
-  const countryCode = useParams().countryCode as string
+  const countryCode = "ro"
   const [selected, setSelected] = useState<Record<string, string>>({})
   const [adding, setAdding] = useState(false)
   const [added, setAdded] = useState(false)
@@ -172,7 +173,6 @@ export default function QuickAddOverlay({
     setMobileOpen(false)
   }
 
-  const COLOR_TITLES = ["color", "colour", "culoare"]
   const vmap = (v: HttpTypes.StoreProductVariant) =>
     v.options?.reduce((acc, o) => {
       if (o.option_id) acc[o.option_id] = o.value
@@ -239,17 +239,43 @@ export default function QuickAddOverlay({
     return mapped.length >= Math.ceil(vals.length / 2)
   }
 
+  // Single-value options are always selected (re-applied after any reset,
+  // e.g. post add-to-cart or closing the sheet) — no real choice to make.
+  useEffect(() => {
+    const autoSelected: Record<string, string> = { ...selected }
+    let changed = false
+
+    options.forEach((opt) => {
+      const only = opt.values?.length === 1 ? opt.values[0].value : undefined
+      if (only && autoSelected[opt.id ?? ""] !== only) {
+        autoSelected[opt.id ?? ""] = only
+        changed = true
+      }
+    })
+
+    if (changed) {
+      setSelected(autoSelected)
+    }
+  }, [options, selected])
+
   const selectLabel = useMemo(() => {
-    const missing = options.find((o) => !selected[o.id ?? ""])
+    // Ignore options with a single value — there's no real choice to make,
+    // so they shouldn't drive the prompt (e.g. "Selectează culoarea" when
+    // there's only one color).
+    const missing = options.find(
+      (o) => !selected[o.id ?? ""] && (o.values?.length ?? 0) > 1
+    )
     if (!missing) return "Selectează"
     const isColor = COLOR_TITLES.includes(missing.title?.toLowerCase() ?? "")
     return isColor ? "Selectează culoarea" : "Selectează mărimea"
   }, [options, selected])
 
   const mobileTriggerLabel = useMemo(() => {
-    const first = options[0]
-    if (!first) return "Alege mărimea"
-    const isColor = COLOR_TITLES.includes(first.title?.toLowerCase() ?? "")
+    // Prefer the first option that actually offers more than one value.
+    const meaningful =
+      options.find((o) => (o.values?.length ?? 0) > 1) ?? options[0]
+    if (!meaningful) return "Alege mărimea"
+    const isColor = COLOR_TITLES.includes(meaningful.title?.toLowerCase() ?? "")
     return isColor ? "Alege culoarea" : "Alege mărimea"
   }, [options])
 
@@ -280,11 +306,12 @@ export default function QuickAddOverlay({
     e.stopPropagation()
     if (!effectiveVariant?.id || adding) return
     setAdding(true)
-    await addToCart({
+    const freshCart = await addToCart({
       variantId: effectiveVariant.id,
       quantity: 1,
       countryCode,
     })
+    emitCartUpdated(freshCart, { action: "add" })
     setAdding(false)
     setSelected({})
     setMobileOpen(false)
@@ -302,6 +329,8 @@ export default function QuickAddOverlay({
     let next = { ...selected, [optionId]: value }
 
     if (isColorOpt && next[optionId]) {
+      // Changing color keeps the chosen size when the new color still has
+      // it; otherwise the size is deselected (never silently swapped).
       const sizeOpt = options.find(
         (o) => !COLOR_TITLES.includes(o.title?.toLowerCase() ?? "")
       )
@@ -313,11 +342,9 @@ export default function QuickAddOverlay({
             .filter(Boolean)
         )
         const current = selected[sizeOpt.id]
-        if (!current || !available.has(current)) {
-          const first = sizeOpt.values?.find((v) =>
-            available.has(v.value ?? "")
-          )
-          if (first?.value) next = { ...next, [sizeOpt.id]: first.value }
+        if (current && !available.has(current)) {
+          const { [sizeOpt.id]: _dropped, ...rest } = next
+          next = rest
         }
       }
     }
@@ -351,7 +378,7 @@ export default function QuickAddOverlay({
           className="w-full py-2 font-sans text-[8px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] bg-[var(--theme-bg)] transition-colors duration-150 active:border-hunter-gold active:text-hunter-gold"
           aria-label={mobileTriggerLabel}
         >
-          {mobileTriggerLabel}
+          Adaugă în coș
         </button>
       )}
 
@@ -429,11 +456,10 @@ export default function QuickAddOverlay({
         createPortal(
           <>
             <div
-              className={`fixed inset-0 z-[9020] bg-black/50 transition-opacity duration-300 sm:hidden ${
-                mobileOpen
-                  ? "opacity-100 pointer-events-auto"
-                  : "opacity-0 pointer-events-none"
+              className={`fixed inset-0 z-[9020] bg-black/50 sm:hidden transition-opacity duration-200 ${
+                mobileOpen ? "opacity-100" : "opacity-0"
               }`}
+              style={{ pointerEvents: mobileOpen ? "auto" : "none" }}
               onTouchEnd={(e) => {
                 e.preventDefault()
                 ;(
@@ -443,125 +469,109 @@ export default function QuickAddOverlay({
               }}
               onClick={closeOverlay}
             />
-
             <div
-              className={`fixed inset-x-0 bottom-0 z-[9021] bg-[var(--theme-bg)] border-t border-[var(--theme-border)] sm:hidden${
-                dragOffset === 0
-                  ? " transition-transform duration-300 ease-out"
-                  : ""
-              }`}
               style={{
-                transform: mobileOpen
-                  ? `translateY(${dragOffset}px)`
-                  : "translateY(100%)",
+                transform: `translateY(${mobileOpen ? dragOffset : 1000}px)`,
+                transition: dragging.current
+                  ? "none"
+                  : "transform 0.32s cubic-bezier(0.22,1,0.36,1)",
+                pointerEvents: mobileOpen ? "auto" : "none",
               }}
+              aria-hidden={!mobileOpen}
+              className="fixed inset-x-0 bottom-0 z-[9021] bg-[var(--theme-bg)] rounded-t-2xl sm:hidden"
             >
-              {/* Drag handle */}
-              <div
-                className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing touch-none"
-                onTouchStart={onDragStart}
-                onTouchMove={onDragMove}
-                onTouchEnd={onDragEnd}
-              >
-                <div className="w-10 h-1 rounded-full bg-[var(--theme-border)]" />
-              </div>
+                  {/* Drag handle */}
+                  <div
+                    className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing touch-none"
+                    onTouchStart={onDragStart}
+                    onTouchMove={onDragMove}
+                    onTouchEnd={onDragEnd}
+                  >
+                    <div className="w-9 h-1 rounded-full bg-[var(--theme-border)]" />
+                  </div>
 
-              {/* Header */}
-              {title && (
-                <div
-                  className="px-6 py-3 border-b border-[var(--theme-border)] touch-none"
-                  onTouchStart={onDragStart}
-                  onTouchMove={onDragMove}
-                  onTouchEnd={onDragEnd}
-                >
-                  <span className="font-sans text-[10px] uppercase tracking-[4px] text-[var(--theme-text-muted)]">
-                    {title}
-                  </span>
+                  {/* Options */}
+                  <div className="px-6 py-5 flex flex-col gap-6 overflow-y-auto max-h-[50dvh]">
+                    {options.map((option) => {
+                      const sortedValues = sortOptionValues(
+                        option.values ?? [],
+                        false
+                      )
+                      return (
+                        <div key={option.id} className="flex flex-col gap-3">
+                          <span className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
+                            {option.title}
+                          </span>
+                          <div className="flex flex-wrap gap-2">
+                            {sortedValues.map((v) => {
+                              const isSelected =
+                                selected[option.id ?? ""] === v.value
+                              const unavailable = getDisabledValues(
+                                option.id ?? ""
+                              ).has(v.value ?? "")
+                              return (
+                                <button
+                                  key={v.id}
+                                  onClick={(e) =>
+                                    !unavailable &&
+                                    handleOptionClick(
+                                      e,
+                                      option.id ?? "",
+                                      v.value ?? ""
+                                    )
+                                  }
+                                  disabled={unavailable}
+                                  className={`inline-flex items-center justify-center h-8 min-w-[48px] px-3 border font-sans text-[11px] leading-none uppercase tracking-[2px] transition-colors duration-150 ${
+                                    isSelected
+                                      ? "border-hunter-gold bg-hunter-gold/10 text-[var(--theme-text)]"
+                                      : unavailable
+                                      ? "border-[var(--theme-border)] text-[var(--theme-text-muted)] opacity-30 line-through cursor-not-allowed"
+                                      : "border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)]"
+                                  }`}
+                                >
+                                  {v.value}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="px-6 py-4 border-t border-[var(--theme-border)] flex gap-3">
+                    <button
+                      onTouchEnd={(e) => {
+                        e.preventDefault()
+                        closeOverlay()
+                      }}
+                      onClick={closeOverlay}
+                      className="flex-1 py-3 font-sans text-[10px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)] transition-colors"
+                    >
+                      Înapoi
+                    </button>
+                    <button
+                      onClick={handleAdd}
+                      disabled={
+                        adding ||
+                        !inStock ||
+                        (!effectiveVariant && options.length > 0)
+                      }
+                      className="flex-[2] py-3 font-sans text-[10px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {adding
+                        ? "Se adaugă…"
+                        : added
+                        ? "Adăugat ✓"
+                        : !effectiveVariant && options.length > 0
+                        ? selectLabel
+                        : !inStock
+                        ? "Stoc epuizat"
+                        : "Adaugă în coș"}
+                    </button>
+                  </div>
                 </div>
-              )}
-
-              {/* Options */}
-              <div className="px-6 py-5 flex flex-col gap-6 overflow-y-auto max-h-[50dvh]">
-                {options.map((option) => {
-                  const sortedValues = sortOptionValues(
-                    option.values ?? [],
-                    false
-                  )
-                  return (
-                    <div key={option.id} className="flex flex-col gap-3">
-                      <span className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
-                        {option.title}
-                      </span>
-                      <div className="flex flex-wrap gap-2">
-                        {sortedValues.map((v) => {
-                          const isSelected =
-                            selected[option.id ?? ""] === v.value
-                          const unavailable = getDisabledValues(
-                            option.id ?? ""
-                          ).has(v.value ?? "")
-                          return (
-                            <button
-                              key={v.id}
-                              onClick={(e) =>
-                                !unavailable &&
-                                handleOptionClick(
-                                  e,
-                                  option.id ?? "",
-                                  v.value ?? ""
-                                )
-                              }
-                              disabled={unavailable}
-                              className={`inline-flex items-center justify-center h-10 min-w-[56px] px-4 border font-sans text-[11px] leading-none uppercase tracking-[2px] transition-colors duration-150 ${
-                                isSelected
-                                  ? "border-hunter-gold bg-hunter-gold/10 text-[var(--theme-text)]"
-                                  : unavailable
-                                  ? "border-[var(--theme-border)] text-[var(--theme-text-muted)] opacity-30 line-through cursor-not-allowed"
-                                  : "border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)]"
-                              }`}
-                            >
-                              {v.value}
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-
-              {/* Footer */}
-              <div className="px-6 py-4 border-t border-[var(--theme-border)] flex gap-3">
-                <button
-                  onTouchEnd={(e) => {
-                    e.preventDefault()
-                    closeOverlay()
-                  }}
-                  onClick={closeOverlay}
-                  className="flex-1 py-3 font-sans text-[10px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)] transition-colors"
-                >
-                  Înapoi
-                </button>
-                <button
-                  onClick={handleAdd}
-                  disabled={
-                    adding ||
-                    !inStock ||
-                    (!effectiveVariant && options.length > 0)
-                  }
-                  className="flex-[2] py-3 font-sans text-[10px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {adding
-                    ? "Se adaugă…"
-                    : added
-                    ? "Adăugat ✓"
-                    : !effectiveVariant && options.length > 0
-                    ? selectLabel
-                    : !inStock
-                    ? "Stoc epuizat"
-                    : "Adaugă în coș"}
-                </button>
-              </div>
-            </div>
           </>,
           document.body
         )}

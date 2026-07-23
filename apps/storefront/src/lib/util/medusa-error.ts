@@ -19,10 +19,10 @@ export default function medusaError(error: unknown): never {
     console.error("Headers:", err.response.headers)
 
     const data = err.response.data
-    const message =
-      typeof data === "object" && data !== null
+    const message: string =
+      (typeof data === "object" && data !== null
         ? data.message || String(data)
-        : data
+        : data) || `Request failed with status ${err.response.status}`
 
     throw new Error(message.charAt(0).toUpperCase() + message.slice(1) + ".")
   } else if (err.request) {

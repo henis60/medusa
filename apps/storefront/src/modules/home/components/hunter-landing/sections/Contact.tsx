@@ -1,5 +1,7 @@
 "use client"
 
+import Newsletter from "./Newsletter"
+
 export default function Contact() {
   return (
     <section className="section contact-sec" id="contact">
@@ -13,7 +15,7 @@ export default function Contact() {
               Totul începe cu
               <br />o <em>conversație.</em>
             </h2>
-            <p className="contact-desc rv" style={{ transitionDelay: "0.08s" }}>
+            <p className="contact-desc rv" data-rv-delay="0.08">
               Rezervă o consultație de stil, o sesiune Made to Measure sau o
               experiență la The Hunter Bar.
             </p>
@@ -22,9 +24,9 @@ export default function Contact() {
               href="https://wa.me/40771793211"
               target="_blank"
               rel="noopener noreferrer"
+              data-rv-delay="0.14"
               style={{
                 marginTop: "20px",
-                transitionDelay: "0.14s",
                 display: "block",
                 textDecoration: "none",
               }}
@@ -36,7 +38,7 @@ export default function Contact() {
           </div>
           <div
             className="contact-blocks rv"
-            style={{ transitionDelay: "0.12s", alignSelf: "end" }}
+            data-rv-delay="0.12"
           >
             <div className="cb">
               <div className="cb-type">Telefon</div>
@@ -72,7 +74,8 @@ export default function Contact() {
             </div>
             <div
               className="socials rv"
-              style={{ marginTop: "28px", transitionDelay: "0.2s" }}
+              data-rv-delay="0.2"
+              style={{ marginTop: "28px" }}
             >
               <a
                 href="https://instagram.com/thehunter.house"
@@ -104,6 +107,8 @@ export default function Contact() {
             </div>
           </div>
         </div>
+
+        <Newsletter />
       </div>
     </section>
   )

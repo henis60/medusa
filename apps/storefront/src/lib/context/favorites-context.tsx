@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react"
+import { trackAddToWishlist } from "@lib/util/analytics"
 
 export type FavoriteItem = {
   id: string
@@ -13,12 +14,15 @@ type FavoritesContextType = {
   favorites: FavoriteItem[]
   isFavorite: (id: string) => boolean
   toggle: (item: FavoriteItem) => void
+  /** False until localStorage has been read on mount. */
+  loaded: boolean
 }
 
 const FavoritesContext = createContext<FavoritesContextType>({
   favorites: [],
   isFavorite: () => false,
   toggle: () => {},
+  loaded: false,
 })
 
 const STORAGE_KEY = "hunter_favorites"
@@ -45,6 +49,11 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   const isFavorite = (id: string) => favorites.some((f) => f.id === id)
 
   const toggle = (item: FavoriteItem) => {
+    const wasFavorite = favorites.some((f) => f.id === item.id)
+    // Fire GA4 only when adding (consent-gated inside the helper).
+    if (!wasFavorite) {
+      trackAddToWishlist({ id: item.id, name: item.title })
+    }
     setFavorites((prev) =>
       prev.some((f) => f.id === item.id)
         ? prev.filter((f) => f.id !== item.id)
@@ -53,7 +62,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <FavoritesContext.Provider value={{ favorites, isFavorite, toggle }}>
+    <FavoritesContext.Provider value={{ favorites, isFavorite, toggle, loaded }}>
       {children}
     </FavoritesContext.Provider>
   )

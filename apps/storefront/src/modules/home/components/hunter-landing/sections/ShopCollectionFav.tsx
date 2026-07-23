@@ -8,7 +8,7 @@ export default function ShopCollectionFav() {
   return (
     <button
       type="button"
-      aria-label="Adaugă la favorite"
+      aria-label="Adaugă în wishlist"
       aria-pressed={on}
       onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOn((v) => !v) }}
       style={{ flexShrink: 0, marginTop: "2px" }}

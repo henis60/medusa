@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { useFavorites } from "@lib/context/favorites-context"
 
 type Props = {
@@ -11,7 +12,13 @@ type Props = {
 
 export default function ProductFavoriteButton({ productId, productHandle, productTitle, productThumbnail }: Props) {
   const { isFavorite, toggle } = useFavorites()
-  const on = isFavorite(productId)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => setMounted(true), [])
+
+  // Avoid hydration mismatch: favorites come from localStorage, which isn't
+  // available on the server. Render the default (unfavorited) state until mounted.
+  const on = mounted && isFavorite(productId)
 
   return (
     <button

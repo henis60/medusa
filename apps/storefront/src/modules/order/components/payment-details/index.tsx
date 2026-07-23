@@ -12,7 +12,7 @@ const PaymentDetails = ({ order }: PaymentDetailsProps) => {
   if (!payment) return null
 
   return (
-    <div className="px-4 small:px-8">
+    <div className="small:px-8">
       <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-5">
         Plată
       </p>
@@ -21,7 +21,10 @@ const PaymentDetails = ({ order }: PaymentDetailsProps) => {
           <p className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-2">
             Metodă de plată
           </p>
-          <p className="font-sans text-[12px] text-[var(--theme-text)]" data-testid="payment-method">
+          <p
+            className="font-sans text-[12px] text-[var(--theme-text)]"
+            data-testid="payment-method"
+          >
             {paymentInfoMap[payment.provider_id]?.title ?? payment.provider_id}
           </p>
         </div>
@@ -29,10 +32,16 @@ const PaymentDetails = ({ order }: PaymentDetailsProps) => {
           <p className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-2">
             Detalii
           </p>
-          <p className="font-sans text-[12px] text-[var(--theme-text)]" data-testid="payment-amount">
+          <p
+            className="font-sans text-[12px] text-[var(--theme-text)]"
+            data-testid="payment-amount"
+          >
             {isStripeLike(payment.provider_id) && payment.data?.card_last4
               ? `**** **** **** ${payment.data.card_last4}`
-              : convertToLocale({ amount: payment.amount, currency_code: order.currency_code })}
+              : convertToLocale({
+                  amount: payment.amount,
+                  currency_code: order.currency_code,
+                })}
           </p>
         </div>
       </div>

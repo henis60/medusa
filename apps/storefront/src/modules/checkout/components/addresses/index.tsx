@@ -116,7 +116,7 @@ const Addresses = ({
                 <div className="flex flex-col w-1/3 gap-1" data-testid="billing-address-summary">
                   <span className="font-sans text-[8px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-1">Facturare</span>
                   {sameAsBilling ? (
-                    <span className="font-serif italic text-[13px] text-[var(--theme-text-muted)]">Identică cu livrarea</span>
+                    <span className="font-serif italic text-[15px] text-[var(--theme-text-muted)]">Identică cu livrarea</span>
                   ) : (
                     <>
                       <span className="font-serif italic text-[13px] text-[var(--theme-text-muted)]">

@@ -2,6 +2,7 @@
 
 import { sdk } from "@lib/config"
 import medusaError from "@lib/util/medusa-error"
+import { isRateLimitError } from "@lib/util/is-rate-limit-error"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
@@ -19,7 +20,8 @@ export const retrieveCustomer =
   async (): Promise<HttpTypes.StoreCustomer | null> => {
     const authHeaders = await getAuthHeaders()
 
-    if (!authHeaders) return null
+    // Anonymous visitor (no JWT cookie) — skip the API round-trip entirely.
+    if (!("authorization" in authHeaders)) return null
 
     const headers = {
       ...authHeaders,
@@ -59,7 +61,26 @@ export const updateCustomer = async (body: HttpTypes.StoreUpdateCustomer) => {
   return updateRes
 }
 
+async function verifyRecaptcha(token: string | null): Promise<boolean> {
+  const secret = process.env.RECAPTCHA_SECRET_KEY
+  if (!secret || !token) return false
+  try {
+    const res = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ secret, response: token }).toString(),
+    })
+    const data = await res.json()
+    return data.success === true && (data.score ?? 1) >= 0.5
+  } catch {
+    return false
+  }
+}
+
 export async function signup(_currentState: unknown, formData: FormData) {
+  const recaptchaOk = await verifyRecaptcha(formData.get("recaptchaToken") as string | null)
+  if (!recaptchaOk) return "Verificare anti-spam eșuată. Încearcă din nou."
+
   const password = formData.get("password") as string
   const customerForm = {
     email: formData.get("email") as string,
@@ -100,11 +121,17 @@ export async function signup(_currentState: unknown, formData: FormData) {
 
     return createdCustomer
   } catch (error) {
+    if (isRateLimitError(error)) {
+      return "Prea multe încercări. Te rugăm să revii peste câteva minute."
+    }
     return String(error)
   }
 }
 
 export async function login(_currentState: unknown, formData: FormData) {
+  const recaptchaOk = await verifyRecaptcha(formData.get("recaptchaToken") as string | null)
+  if (!recaptchaOk) return "Verificare anti-spam eșuată. Încearcă din nou."
+
   const email = formData.get("email") as string
   const password = formData.get("password") as string
 
@@ -117,17 +144,23 @@ export async function login(_currentState: unknown, formData: FormData) {
         revalidateTag(customerCacheTag)
       })
   } catch (error) {
+    if (isRateLimitError(error)) {
+      return "Prea multe încercări. Te rugăm să revii peste câteva minute."
+    }
     return String(error)
   }
 
-  try {
-    await transferCart()
-  } catch (error) {
-    return String(error)
+  // Cart transfer is best-effort: the cart-mismatch handler retries it silently
+  // after login, so a failure here must never block sign-in.
+  await transferCart().catch(() => {})
+
+  const redirectTo = formData.get("redirectTo") as string | null
+  if (redirectTo) {
+    redirect(redirectTo)
   }
 }
 
-export async function signout(countryCode: string) {
+export async function signout() {
   await sdk.auth.logout()
 
   await removeAuthToken()
@@ -140,7 +173,61 @@ export async function signout(countryCode: string) {
   const cartCacheTag = await getCacheTag("carts")
   revalidateTag(cartCacheTag)
 
-  redirect(`/${countryCode}/account`)
+  redirect("/profil")
+}
+
+export async function resetPassword(
+  token: string,
+  _currentState: unknown,
+  formData: FormData
+) {
+  const password = formData.get("password") as string
+  const passwordConfirm = formData.get("password_confirm") as string
+
+  if (password !== passwordConfirm) {
+    return "Parolele nu coincid."
+  }
+
+  if (password.length < 8) {
+    return "Parola trebuie să aibă cel puțin 8 caractere."
+  }
+
+  try {
+    await sdk.auth.updateProvider(
+      "customer",
+      "emailpass",
+      { password },
+      token
+    )
+    return "success"
+  } catch (error) {
+    if (isRateLimitError(error)) {
+      return "Prea multe încercări. Te rugăm să revii peste câteva minute."
+    }
+    return "Link-ul de resetare este invalid sau a expirat."
+  }
+}
+
+export async function requestPasswordReset(
+  _currentState: unknown,
+  formData: FormData
+) {
+  const recaptchaOk = await verifyRecaptcha(formData.get("recaptchaToken") as string | null)
+  if (!recaptchaOk) return "Verificare anti-spam eșuată. Încearcă din nou."
+
+  const email = formData.get("email") as string
+
+  try {
+    await sdk.auth.resetPassword("customer", "emailpass", {
+      identifier: email,
+    })
+    return "success"
+  } catch (error) {
+    if (isRateLimitError(error)) {
+      return "Prea multe încercări. Te rugăm să revii peste câteva minute."
+    }
+    return "A apărut o eroare. Te rugăm să încerci din nou."
+  }
 }
 
 export async function transferCart() {
@@ -158,11 +245,55 @@ export async function transferCart() {
   revalidateTag(cartCacheTag)
 }
 
+// A 401 on a write means the JWT expired while the cookie (and the
+// force-cached account pages) were still alive. Drop the stale token and
+// bust the customer cache so the next render lands on the login screen.
+const handleUnauthorized = async (
+  err: unknown
+): Promise<{ success: boolean; error: string } | null> => {
+  if (!/unauthorized/i.test(String(err))) {
+    return null
+  }
+  await removeAuthToken()
+  const customerCacheTag = await getCacheTag("customers")
+  revalidateTag(customerCacheTag)
+  return {
+    success: false,
+    error: "Sesiunea a expirat. Te rugăm să te autentifici din nou.",
+  }
+}
+
+export const updateCustomerProfile = async (
+  _currentState: Record<string, unknown>,
+  formData: FormData
+): Promise<{ success: boolean; error: string | null }> => {
+  const update: HttpTypes.StoreUpdateCustomer = {
+    first_name: formData.get("first_name") as string,
+    last_name: formData.get("last_name") as string,
+    phone: (formData.get("phone") as string) ?? "",
+  }
+
+  try {
+    await updateCustomer(update)
+    return { success: true, error: null }
+  } catch (err) {
+    return (
+      (await handleUnauthorized(err)) ?? {
+        success: false,
+        error: String(err),
+      }
+    )
+  }
+}
+
 export const addCustomerAddress = async (
   currentState: Record<string, unknown>,
   formData: FormData
 ): Promise<{ success: boolean; error: string | null }> => {
-  const isDefaultBilling = (currentState.isDefaultBilling as boolean) || false
+  const isDefaultBilling =
+    formData.get("is_default_billing") === "on" ||
+    (currentState.isDefaultBilling as boolean) ||
+    false
   const isDefaultShipping = (currentState.isDefaultShipping as boolean) || false
 
   const address = {
@@ -191,27 +322,37 @@ export const addCustomerAddress = async (
       revalidateTag(customerCacheTag)
       return { success: true, error: null }
     })
-    .catch((err) => {
-      return { success: false, error: err.toString() }
+    .catch(async (err) => {
+      return (
+        (await handleUnauthorized(err)) ?? {
+          success: false,
+          error: err.toString(),
+        }
+      )
     })
 }
 
 export const deleteCustomerAddress = async (
   addressId: string
-): Promise<void> => {
+): Promise<{ success: boolean; error: string | null }> => {
   const headers = {
     ...(await getAuthHeaders()),
   }
 
-  await sdk.store.customer
+  return sdk.store.customer
     .deleteAddress(addressId, headers)
     .then(async () => {
       const customerCacheTag = await getCacheTag("customers")
       revalidateTag(customerCacheTag)
       return { success: true, error: null }
     })
-    .catch((err) => {
-      return { success: false, error: err.toString() }
+    .catch(async (err) => {
+      return (
+        (await handleUnauthorized(err)) ?? {
+          success: false,
+          error: err.toString(),
+        }
+      )
     })
 }
 
@@ -236,6 +377,7 @@ export const updateCustomerAddress = async (
     postal_code: formData.get("postal_code") as string,
     province: formData.get("province") as string,
     country_code: formData.get("country_code") as string,
+    is_default_billing: formData.get("is_default_billing") === "on",
   } as HttpTypes.StoreUpdateCustomerAddress
 
   const phone = formData.get("phone") as string
@@ -255,7 +397,12 @@ export const updateCustomerAddress = async (
       revalidateTag(customerCacheTag)
       return { success: true, error: null }
     })
-    .catch((err) => {
-      return { success: false, error: err.toString() }
+    .catch(async (err) => {
+      return (
+        (await handleUnauthorized(err)) ?? {
+          success: false,
+          error: err.toString(),
+        }
+      )
     })
 }

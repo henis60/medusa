@@ -20,6 +20,10 @@ export const listCartShippingMethods = async (cartId: string) => {
         method: "GET",
         query: {
           cart_id: cartId,
+          // +data exposes the provider option payload (eAWB carrier_id /
+          // service_id) — the checkout uses service_id to detect locker
+          // delivery structurally instead of parsing the option name.
+          fields: "+data",
         },
         headers,
         next,
@@ -30,6 +34,54 @@ export const listCartShippingMethods = async (cartId: string) => {
     .catch(() => {
       return null
     })
+}
+
+// Fetches live courier prices for ALL eAWB calculated options in one request
+// (the backend queries Europarcel once), keyed by shipping_option id.
+export const listEawbShippingPrices = async (
+  cartId: string
+): Promise<Record<string, number>> => {
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  // Deliberately no .catch(() => ({})) here — an empty object is
+  // indistinguishable from "no courier serves this address", and the caller
+  // caches that result per cart+address. Swallowing a transient error into
+  // {} used to get permanently cached as "no coverage" until the cart id
+  // changed (e.g. after clearing cookies). Let it throw; the caller decides
+  // whether to show an error and must NOT cache a thrown/failed attempt.
+  return sdk.client
+    .fetch<{ prices: Record<string, number> }>(`/store/eawb/shipping-prices`, {
+      method: "GET",
+      query: { cart_id: cartId },
+      headers,
+      cache: "no-store",
+    })
+    .then(({ prices }) => prices ?? {})
+}
+
+export type EawbLocker = { id: number; name: string; address: string }
+
+// Lists lockers available for a given eAWB shipping option near the cart's
+// delivery locality (used by the checkout locker picker).
+export const listEawbLockers = async (
+  optionId: string,
+  cartId: string
+): Promise<EawbLocker[]> => {
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  return sdk.client
+    .fetch<{ lockers: EawbLocker[] }>(`/store/eawb/lockers`, {
+      method: "GET",
+      query: { option_id: optionId, cart_id: cartId },
+      headers,
+      cache: "no-store",
+    })
+    .then(({ lockers }) => lockers ?? [])
+    .catch(() => [])
 }
 
 export const calculatePriceForShippingOption = async (

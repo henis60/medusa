@@ -1,67 +1,17 @@
 "use client"
 
 import { updateLineItem, deleteLineItem } from "@lib/data/cart"
+import { emitCartUpdated } from "@lib/util/cart-events"
+import {
+  isStaleDeploymentError,
+  reloadForNewDeployment,
+} from "@lib/util/stale-deployment"
 import { convertToLocale } from "@lib/util/money"
-import { resolveImageUrl } from "@lib/util/image-url"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Image from "next/image"
 import { useState } from "react"
-
-const COLOR_OPTION_NAMES = ["color", "colour", "culoare"]
-
-function getVariantImageUrl(item: HttpTypes.StoreCartLineItem): string | null {
-  const variant = item.variant as any
-  const product = variant?.product
-  if (!variant || !product) return null
-
-  // 1. Variant-specific thumbnail (set in Medusa admin per variant)
-  if (variant.thumbnail) return variant.thumbnail
-
-  // 2. Variant-specific images array
-  if (variant.images?.length) return variant.images[0].url ?? null
-
-  // 3. Map by color option index → product images
-  const allImages: { url?: string }[] = product.images ?? []
-  if (!allImages.length) return null
-
-  const options: {
-    id?: string
-    title?: string
-    values?: { value?: string }[]
-  }[] = product.options ?? []
-  const colorOption = options.find((o) =>
-    COLOR_OPTION_NAMES.includes(o.title?.toLowerCase() ?? "")
-  )
-  if (!colorOption) return null
-
-  // Use options.values array (creation order matches image upload order)
-  const colorValues: string[] = (colorOption.values ?? [])
-    .map((v) => v.value)
-    .filter((v): v is string => !!v)
-
-  // Fallback: derive from product variants if options.values is empty
-  if (!colorValues.length) {
-    const allVariants: any[] = product.variants ?? []
-    const fromVariants = Array.from(
-      new Set(
-        allVariants
-          .map(
-            (v: any) =>
-              v.options?.find((o: any) => o.option_id === colorOption.id)?.value
-          )
-          .filter(Boolean) as string[]
-      )
-    )
-    colorValues.push(...fromVariants)
-  }
-
-  const variantColor = variant.options?.find(
-    (o: { option_id?: string }) => o.option_id === colorOption.id
-  )?.value
-  const idx = variantColor ? colorValues.indexOf(variantColor) : -1
-  return idx >= 0 && idx < allImages.length ? allImages[idx].url ?? null : null
-}
+import { getCartItemImageUrl } from "@lib/util/variant-image"
 
 type ItemProps = {
   item: HttpTypes.StoreCartLineItem
@@ -70,20 +20,51 @@ type ItemProps = {
 }
 
 const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
+  const imgSrc = getCartItemImageUrl(item)
   const [updating, setUpdating] = useState(false)
+  // Discovered ceiling from a rejected request (server said "not enough
+  // inventory") — the `inventory_quantity` field isn't reliably present on
+  // cart line items, so this is the fallback source of truth once we hit it.
+  const [maxQty, setMaxQty] = useState<number | null>(null)
 
-  const imgSrc = resolveImageUrl(
-    getVariantImageUrl(item) ||
-      item.thumbnail ||
-      (item.variant?.product as any)?.images?.[0]?.url
-  )
+  const inventoryCap =
+    item.variant?.manage_inventory &&
+    !item.variant?.allow_backorder &&
+    typeof item.variant?.inventory_quantity === "number"
+      ? item.variant.inventory_quantity
+      : Infinity
+  const effectiveCap = Math.min(inventoryCap, maxQty ?? Infinity)
 
-  const changeQuantity = async (qty: number) => {
-    if (qty < 1 || updating) return
+  // No optimistic update — the displayed quantity only ever comes from
+  // `item.quantity` (server-confirmed). Buttons are disabled while a request
+  // is in flight so nothing can race.
+  const changeQuantity = (nextQty: number) => {
+    if (updating || nextQty > effectiveCap) return
+
+    if (nextQty < 1) {
+      setUpdating(true)
+      deleteLineItem(item.id)
+        .then((fresh) => emitCartUpdated(fresh))
+        .catch((err) => {
+          if (isStaleDeploymentError(err)) reloadForNewDeployment()
+        })
+        .finally(() => setUpdating(false))
+      return
+    }
+
     setUpdating(true)
-    await updateLineItem({ lineId: item.id, quantity: qty }).finally(() =>
-      setUpdating(false)
-    )
+    updateLineItem({ lineId: item.id, quantity: nextQty })
+      .then((fresh) => emitCartUpdated(fresh))
+      .catch((err) => {
+        if (isStaleDeploymentError(err)) {
+          reloadForNewDeployment()
+          return
+        }
+        if (/inventory/i.test(err instanceof Error ? err.message : "")) {
+          setMaxQty(item.quantity)
+        }
+      })
+      .finally(() => setUpdating(false))
   }
 
   const hasDiscount = (item.total ?? 0) < (item.original_total ?? 0)
@@ -91,13 +72,13 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
   if (type === "preview") {
     return (
       <div className="flex gap-3 py-3">
-        <div className="relative w-12 aspect-[3/4] shrink-0 overflow-hidden bg-[#F5F4F2] dark:bg-[#1e2a22]">
+        <div className="relative w-12 aspect-[3/4] shrink-0 overflow-hidden bg-white">
           {imgSrc && (
             <Image
               src={imgSrc}
               alt={item.product_title ?? ""}
               fill
-              className="object-cover object-center"
+              className="object-contain object-center"
               sizes="48px"
             />
           )}
@@ -140,13 +121,13 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
         href={`/products/${item.product_handle}`}
         className="shrink-0"
       >
-        <div className="relative w-[90px] small:w-[110px] aspect-[3/4] overflow-hidden bg-[#F5F4F2] dark:bg-[#1e2a22]">
+        <div className="relative w-[90px] small:w-[110px] aspect-[3/4] overflow-hidden bg-white">
           {imgSrc && (
             <Image
               src={imgSrc}
               alt={item.product_title ?? ""}
               fill
-              className="object-cover object-center"
+              className="object-contain object-center"
               sizes="(max-width: 640px) 90px, 110px"
             />
           )}
@@ -168,7 +149,9 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
               </span>
             </LocalizedClientLink>
             <button
-              onClick={() => deleteLineItem(item.id)}
+              onClick={() =>
+                deleteLineItem(item.id).then((fresh) => emitCartUpdated(fresh))
+              }
               aria-label="Șterge"
               data-testid="product-delete-button"
               className="shrink-0 text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors mt-[2px]"
@@ -210,12 +193,16 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
         {/* Bottom row: qty stepper left, price stack right */}
         <div className="flex items-end justify-between mt-5">
           {/* Qty stepper */}
-          <div className="flex items-center gap-3 border border-[var(--theme-border)]">
+          <div
+            className={`flex items-center gap-3 border border-[var(--theme-border)] transition-opacity ${
+              updating ? "opacity-60" : ""
+            }`}
+          >
             <button
               onClick={() => changeQuantity(item.quantity - 1)}
-              disabled={updating || item.quantity <= 1}
+              disabled={updating}
+              aria-label={item.quantity <= 1 ? "Șterge" : "Scade cantitate"}
               className="w-7 h-7 flex items-center justify-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] disabled:opacity-30 transition-colors"
-              aria-label="Scade cantitate"
             >
               <svg
                 width="9"
@@ -238,7 +225,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
             </span>
             <button
               onClick={() => changeQuantity(item.quantity + 1)}
-              disabled={updating}
+              disabled={updating || item.quantity >= effectiveCap}
               className="w-7 h-7 flex items-center justify-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] disabled:opacity-30 transition-colors"
               aria-label="Crește cantitate"
             >

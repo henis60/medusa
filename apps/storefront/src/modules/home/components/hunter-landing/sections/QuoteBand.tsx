@@ -1,12 +1,24 @@
+"use client"
+
+import { useRef } from "react"
+import { motion, useScroll, useTransform } from "framer-motion"
+
 const QuoteBand = () => {
+  const ref = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  })
+  const bgY = useTransform(scrollYProgress, [0, 1], ["-12%", "12%"])
+
   return (
-    <div className="band" id="quote">
-      <div
+    <div ref={ref} className="band" id="quote">
+      <motion.div
         className="band-bg"
         id="band1"
         style={{
           backgroundImage: "url('/landing/images/quote.webp')",
-          backgroundPosition: "center -5%",
+          y: bgY,
         }}
       />
       <div className="band-body">

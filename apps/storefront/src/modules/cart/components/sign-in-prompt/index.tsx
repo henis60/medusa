@@ -2,19 +2,19 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 
 const SignInPrompt = () => {
   return (
-    <div className="flex items-center justify-between py-4 border border-[var(--theme-border)] px-5">
-      <div>
+    <div className="flex flex-col gap-4 small:flex-row small:items-center small:justify-between small:gap-6 py-4 px-4 small:px-5 border border-[var(--theme-border)]">
+      <div className="min-w-0">
         <p className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text)]">
           Ai deja un cont?
         </p>
-        <p className="font-sans text-[9px] uppercase tracking-[2px] text-[var(--theme-text-muted)] mt-0.5">
+        <p className="font-sans text-[9px] uppercase tracking-[2px] text-[var(--theme-text-muted)] mt-1 leading-relaxed">
           Conectează-te pentru o experiență mai bună.
         </p>
       </div>
       <LocalizedClientLink
-        href="/account"
+        href="/profil?redirectTo=/cart"
         data-testid="sign-in-button"
-        className="font-sans text-[9px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-hunter-gold hover:text-hunter-gold transition-colors px-5 py-2.5"
+        className="shrink-0 text-center font-sans text-[9px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-hunter-gold hover:text-hunter-gold transition-colors px-5 py-3 small:py-2.5 w-full small:w-auto"
       >
         Intră în cont
       </LocalizedClientLink>

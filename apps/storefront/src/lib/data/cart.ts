@@ -2,6 +2,7 @@
 
 import { sdk } from "@lib/config"
 import medusaError from "@lib/util/medusa-error"
+import { orderIdToSlug } from "@lib/util/order-slug"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
@@ -24,7 +25,7 @@ import { getLocale } from "./locale-actions"
 export async function retrieveCart(cartId?: string, fields?: string) {
   const id = cartId || (await getCartId())
   fields ??=
-    "*items, *region, *items.variant, +items.variant.thumbnail, +items.variant.images, +items.variant.options, +items.variant.options.option, *items.variant.product, +items.variant.product.thumbnail, +items.variant.product.images, +items.variant.product.options, +items.variant.product.options.values, +items.variant.product.variants, +items.variant.product.variants.options, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
+    "*items, *region, *items.variant, +items.variant.thumbnail, +items.variant.inventory_quantity, +items.variant.manage_inventory, +items.variant.allow_backorder, *items.variant.images, +items.variant.options, +items.variant.options.option, *items.variant.product, +items.variant.product.thumbnail, *items.variant.product.images, +items.variant.product.options, +items.variant.product.options.values, *items.variant.product.variants, *items.variant.product.variants.options, *items.variant.product.variants.images, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, *payment_collection, +payment_collection.payment_sessions"
 
   if (!id) {
     return null
@@ -52,8 +53,8 @@ export async function retrieveCart(cartId?: string, fields?: string) {
     .catch(() => null)
 }
 
-export async function getOrSetCart(countryCode: string) {
-  const region = await getRegion(countryCode)
+export async function getOrSetCart(countryCode?: string) {
+  const region = await getRegion(countryCode || "ro")
 
   if (!region) {
     throw new Error(`Region not found for country code: ${countryCode}`)
@@ -155,6 +156,10 @@ export async function addToCart({
       revalidateTag(fulfillmentCacheTag)
     })
     .catch(medusaError)
+
+  // Return the fresh cart so the client can update the badge/drawer without
+  // a second server-action round-trip.
+  return await retrieveCart(cart.id)
 }
 
 export async function updateLineItem({
@@ -188,6 +193,9 @@ export async function updateLineItem({
       revalidateTag(fulfillmentCacheTag)
     })
     .catch(medusaError)
+
+  // Fresh cart for instant client-side reconciliation (single round-trip).
+  return await retrieveCart(cartId)
 }
 
 export async function deleteLineItem(lineId: string) {
@@ -215,21 +223,31 @@ export async function deleteLineItem(lineId: string) {
       revalidateTag(fulfillmentCacheTag)
     })
     .catch(medusaError)
+
+  // Fresh cart for instant client-side reconciliation (single round-trip).
+  return await retrieveCart(cartId)
 }
 
 export async function setShippingMethod({
   cartId,
   shippingMethodId,
+  data,
 }: {
   cartId: string
   shippingMethodId: string
+  data?: Record<string, unknown>
 }) {
   const headers = {
     ...(await getAuthHeaders()),
   }
 
   return sdk.store.cart
-    .addShippingMethod(cartId, { option_id: shippingMethodId }, {}, headers)
+    .addShippingMethod(
+      cartId,
+      { option_id: shippingMethodId, ...(data ? { data } : {}) },
+      {},
+      headers
+    )
     .then(async () => {
       const cartCacheTag = await getCacheTag("carts")
       revalidateTag(cartCacheTag)
@@ -239,7 +257,14 @@ export async function setShippingMethod({
 
 export async function initiatePaymentSession(
   cart: HttpTypes.StoreCart,
-  data: HttpTypes.StoreInitializePaymentSession
+  data: HttpTypes.StoreInitializePaymentSession,
+  // Când plata implică un redirect extern (Netopia), utilizatorul părăsește
+  // imediat aplicația. `revalidateTag` ar declanșa un refresh al rutei
+  // `/checkout` (force-dynamic) care se suprapune cu `window.location` — pe
+  // mobil navigarea externă e amânată, refresh-ul chiar rulează, iar dacă
+  // fetch-ul RSC eșuează pe o conexiune instabilă => "client-side exception".
+  // Sărim revalidarea în acel caz ca să eliminăm cursa.
+  { revalidate = true }: { revalidate?: boolean } = {}
 ) {
   const headers = {
     ...(await getAuthHeaders()),
@@ -248,11 +273,114 @@ export async function initiatePaymentSession(
   return sdk.store.payment
     .initiatePaymentSession(cart, data, {}, headers)
     .then(async (resp) => {
-      const cartCacheTag = await getCacheTag("carts")
-      revalidateTag(cartCacheTag)
+      if (revalidate) {
+        const cartCacheTag = await getCacheTag("carts")
+        revalidateTag(cartCacheTag)
+      }
       return resp
     })
     .catch(medusaError)
+}
+
+export type NetopiaBrowserInfo = Record<string, string>
+
+export async function initiateNetopiaPayment(
+  cartId: string,
+  providerId: string,
+  browserInfo?: NetopiaBrowserInfo
+): Promise<string | undefined> {
+  // Trimitem doar id-urile de care are nevoie SDK-ul — coșul complet (cu toate
+  // variantele/imaginile/opțiunile) ar fi serializat integral peste rețea la
+  // fiecare apel al acestui Server Action, ceea ce pe conexiuni mobile poate
+  // eșua cu "TypeError: Load failed" (Safari) / "Failed to fetch" (Chrome).
+  const cart = { id: cartId } as HttpTypes.StoreCart
+
+  // PaymentProviderContext (Medusa) nu include billing_address — doar
+  // customer/account_holder/idempotency_key. Ca provider-ul Netopia să
+  // primească telefonul/adresa reale completate la checkout, le trimitem
+  // explicit prin `data`, populate server-side din coșul curent.
+  const fullCart = await retrieveCart(cartId)
+  const addr = fullCart?.shipping_address
+
+  const resp = (await initiatePaymentSession(cart, {
+    provider_id: providerId,
+    data: {
+      billing_address: addr
+        ? {
+            email: fullCart?.email ?? undefined,
+            phone: addr.phone ?? undefined,
+            first_name: addr.first_name ?? undefined,
+            last_name: addr.last_name ?? undefined,
+            city: addr.city ?? undefined,
+            postal_code: addr.postal_code ?? undefined,
+            province: addr.province ?? undefined,
+          }
+        : undefined,
+      browser_info: browserInfo,
+    },
+  }, { revalidate: false })) as { payment_collection?: HttpTypes.StorePaymentCollection }
+
+  const session = resp?.payment_collection?.payment_sessions?.find(
+    (s) => s.provider_id === providerId
+  )
+
+  return (session?.data as Record<string, unknown> | undefined)
+    ?.redirect_url as string | undefined
+}
+
+export type NetopiaCompletion = {
+  orderId?: string
+  pending?: boolean
+  failed?: boolean
+}
+
+export async function completeNetopiaCart(cartId: string): Promise<NetopiaCompletion> {
+  const headers = { ...(await getAuthHeaders()) }
+
+  try {
+    const res = await sdk.store.cart.complete(cartId, {}, headers)
+    if (res?.type === "order") {
+      const cartCacheTag = await getCacheTag("carts")
+      revalidateTag(cartCacheTag)
+      const orderCacheTag = await getCacheTag("orders")
+      revalidateTag(orderCacheTag)
+      await removeCartId()
+      return { orderId: res.order.id }
+    }
+    return { pending: true }
+  } catch {
+    return { pending: true }
+  }
+}
+
+export async function completeNetopiaBySession(sessionId: string): Promise<NetopiaCompletion> {
+  const headers = { ...(await getAuthHeaders()) }
+
+  let cartId: string | null = null
+  let status: string | null = null
+  try {
+    const resolved = await sdk.client.fetch<{
+      cart_id: string | null
+      status: string | null
+    }>("/store/netopia/session-cart", {
+      query: { session_id: sessionId },
+      headers,
+    })
+    cartId = resolved?.cart_id ?? null
+    status = resolved?.status ?? null
+  } catch {
+    return { pending: true }
+  }
+
+  if (status === "error" || status === "canceled") {
+    return { failed: true }
+  }
+
+  if (!cartId) {
+    return { pending: true }
+  }
+
+  return completeNetopiaCart(cartId)
 }
 
 export async function applyPromotions(codes: string[]) {
@@ -383,9 +511,7 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
     return e.message
   }
 
-  redirect(
-    `/${formData.get("shipping_address.country_code")}/checkout?step=delivery`
-  )
+  redirect("/checkout?step=delivery")
 }
 
 /**
@@ -414,45 +540,14 @@ export async function placeOrder(cartId?: string) {
     .catch(medusaError)
 
   if (cartRes?.type === "order") {
-    const countryCode =
-      cartRes.order.shipping_address?.country_code?.toLowerCase()
-
     const orderCacheTag = await getCacheTag("orders")
     revalidateTag(orderCacheTag)
 
     removeCartId()
-    redirect(`/${countryCode}/order/${cartRes?.order.id}/confirmed`)
+    redirect(`/comanda/${orderIdToSlug(cartRes.order.id)}`)
   }
 
   return cartRes.cart
-}
-
-/**
- * Updates the countrycode param and revalidates the regions cache
- * @param regionId
- * @param countryCode
- */
-export async function updateRegion(countryCode: string, currentPath: string) {
-  const cartId = await getCartId()
-  const region = await getRegion(countryCode)
-
-  if (!region) {
-    throw new Error(`Region not found for country code: ${countryCode}`)
-  }
-
-  if (cartId) {
-    await updateCart({ region_id: region.id })
-    const cartCacheTag = await getCacheTag("carts")
-    revalidateTag(cartCacheTag)
-  }
-
-  const regionCacheTag = await getCacheTag("regions")
-  revalidateTag(regionCacheTag)
-
-  const productsCacheTag = await getCacheTag("products")
-  revalidateTag(productsCacheTag)
-
-  redirect(`/${countryCode}${currentPath}`)
 }
 
 export async function listCartOptions() {

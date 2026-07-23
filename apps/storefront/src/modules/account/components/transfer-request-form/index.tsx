@@ -24,13 +24,13 @@ export default function TransferRequestForm() {
     <div className="flex flex-col gap-y-6 w-full">
       <div>
         <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-2">
-          Order Transfer
+          Revendicare comandă
         </p>
         <h2 className="font-display text-[22px] leading-[1.1] text-[var(--theme-text)] mb-1">
-          Connect an order
+          Asociază o comandă la cont
         </h2>
         <p className="font-sans text-[11px] text-[var(--theme-text-muted)]">
-          Can&apos;t find an order? Link it to your account using its Order ID.
+          Ai plasat o comandă fără cont? Introdu ID-ul comenzii din emailul de confirmare pentru a o asocia contului tău.
         </p>
       </div>
 
@@ -39,15 +39,15 @@ export default function TransferRequestForm() {
           <Input
             className="w-full"
             name="order_id"
-            placeholder="Order ID"
-            label="Order ID"
+            placeholder="order_01ABC..."
+            label="ID comandă"
           />
         </div>
         <button
           type="submit"
           className="h-10 px-6 font-sans text-[10px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-hunter-gold hover:text-hunter-gold transition-colors whitespace-nowrap self-end small:self-auto"
         >
-          Request Transfer
+          Trimite cerere
         </button>
       </form>
 
@@ -63,10 +63,10 @@ export default function TransferRequestForm() {
             <CheckCircleMiniSolid className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
             <div>
               <p className="font-sans text-[11px] text-[var(--theme-text)] mb-0.5">
-                Transfer requested for order {state.order?.id}
+                Cerere trimisă pentru comanda {state.order?.id}
               </p>
               <p className="font-sans text-[10px] text-[var(--theme-text-muted)]">
-                Confirmation email sent to {state.order?.email}
+                Email de confirmare trimis la {state.order?.email}
               </p>
             </div>
           </div>

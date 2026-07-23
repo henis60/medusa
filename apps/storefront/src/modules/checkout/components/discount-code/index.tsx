@@ -61,20 +61,19 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
       </button>
 
       {isOpen && (
-        <form action={addPromotionCode} className="flex gap-2">
+        <form action={addPromotionCode} className="flex gap-2 w-full">
           <input
             id="promotion-input"
             name="code"
             type="text"
             autoFocus={false}
             data-testid="discount-input"
-            placeholder="CODUL TĂU"
-            className="flex-1 bg-transparent border border-[var(--theme-border)] px-3 py-2 font-sans text-base text-[var(--theme-text)] placeholder:text-[var(--theme-text-muted)] focus:outline-none focus:border-hunter-gold/50 transition-colors"
+            className="flex-1 min-w-0 h-9 bg-transparent border border-[var(--theme-border)] px-3 font-sans text-[11px] uppercase tracking-[2px] text-[var(--theme-text)] placeholder:text-[var(--theme-text-muted)] focus:outline-none focus:border-hunter-gold/50 transition-colors"
           />
           <button
             type="submit"
             data-testid="discount-apply-button"
-            className="font-sans text-[9px] uppercase tracking-[3px] px-4 py-2 border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-hunter-gold/50 hover:text-hunter-gold transition-colors whitespace-nowrap"
+            className="shrink-0 h-9 font-sans text-[9px] uppercase tracking-[3px] px-4 border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-hunter-gold/50 hover:text-hunter-gold transition-colors whitespace-nowrap"
           >
             Aplică
           </button>

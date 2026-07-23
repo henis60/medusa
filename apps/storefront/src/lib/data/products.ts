@@ -4,7 +4,7 @@ import { sdk } from "@lib/config"
 import { sortProducts } from "@lib/util/sort-products"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
-import { getAuthHeaders, getCacheOptions } from "./cookies"
+import { getGlobalCacheOptions } from "./cookies"
 import { getRegion, retrieveRegion } from "./regions"
 
 export const listProducts = async ({
@@ -12,11 +12,13 @@ export const listProducts = async ({
   queryParams,
   countryCode,
   regionId,
+  includeProposed = false,
 }: {
   pageParam?: number
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductListParams
   countryCode?: string
   regionId?: string
+  includeProposed?: boolean
 }): Promise<{
   response: { products: HttpTypes.StoreProduct[]; count: number }
   nextPage: number | null
@@ -45,13 +47,10 @@ export const listProducts = async ({
     }
   }
 
-  const headers = {
-    ...(await getAuthHeaders()),
-  }
-
-  const next = {
-    ...(await getCacheOptions("products")),
-  }
+  // No auth headers here: public catalog listing depends only on the
+  // publishable key + region (no customer-group pricing). Reading the JWT
+  // cookie would force every caller (homepage, store) to render dynamically.
+  const next = getGlobalCacheOptions("products")
 
   return sdk.client
     .fetch<{ products: HttpTypes.StoreProduct[]; count: number }>(
@@ -63,22 +62,27 @@ export const listProducts = async ({
           offset,
           region_id: region?.id,
           fields:
-            "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags,",
+            "*variants.calculated_price,+variants.inventory_quantity,*variants.images,*variants.options,+variants.metadata,*options,*options.values,+metadata,+tags,",
           ...queryParams,
         },
-        headers,
         next,
         cache: "force-cache",
       }
     )
     .then(({ products, count }) => {
       const nextPage = count > offset + limit ? pageParam + 1 : null
-      const published = products.filter((p) => (p as any).status !== "draft")
+      const published = products.filter((p) => {
+        const status = (p as any).status
+        if (includeProposed) return !["draft"].includes(status)
+        return !["draft", "proposed"].includes(status)
+      })
 
       return {
         response: {
           products: published,
-          count: published.length,
+          // API total, not the filtered page length — pagination needs the
+          // full count. Slightly overcounts if drafts exist, acceptable.
+          count,
         },
         nextPage: nextPage,
         queryParams,
@@ -87,8 +91,36 @@ export const listProducts = async ({
 }
 
 /**
- * This will fetch 100 products to the Next.js cache and sort them based on the sortBy parameter.
- * It will then return the paginated products based on the page and limit parameters.
+ * Fetches full product data (with calculated prices + inventory) for a set
+ * of product ids — used by the wishlist page, which only keeps id/handle/
+ * title/thumbnail in localStorage and needs the rest fetched on demand.
+ */
+export const getProductsByIds = async ({
+  ids,
+  countryCode,
+}: {
+  ids: string[]
+  countryCode: string
+}): Promise<HttpTypes.StoreProduct[]> => {
+  if (!ids.length) return []
+
+  const {
+    response: { products },
+  } = await listProducts({
+    queryParams: { id: ids, limit: ids.length },
+    countryCode,
+  })
+
+  return products
+}
+
+/**
+ * Paginated + sorted product listing.
+ *
+ * For the default created_at sort the API sorts and paginates for us, so we
+ * fetch only the requested page. Price sorts still fetch 100 products and
+ * sort in memory, because API-side ordering by cheapest variant price is
+ * unreliable (medusajs/medusa#11029, #12900).
  */
 export const listProductsWithSort = async ({
   page = 0,
@@ -106,6 +138,18 @@ export const listProductsWithSort = async ({
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductParams
 }> => {
   const limit = queryParams?.limit || 12
+
+  if (sortBy !== "price_asc" && sortBy !== "price_desc") {
+    return listProducts({
+      pageParam: Math.max(page, 1),
+      queryParams: {
+        ...queryParams,
+        limit,
+        order: "-created_at",
+      },
+      countryCode,
+    })
+  }
 
   const {
     response: { products, count },
@@ -134,4 +178,48 @@ export const listProductsWithSort = async ({
     nextPage,
     queryParams,
   }
+}
+
+/**
+ * Cookie-free single-product fetch for the (statically/ISR-rendered) product
+ * detail page. No cookies → no DYNAMIC_SERVER_USAGE, so a product added after
+ * the last build renders on-demand without a rebuild. Static tag + ISR.
+ */
+export const getProductByHandle = async (
+  handle: string,
+  regionId: string
+): Promise<HttpTypes.StoreProduct | undefined> => {
+  return sdk.client
+    .fetch<{ products: HttpTypes.StoreProduct[] }>(`/store/products`, {
+      method: "GET",
+      query: {
+        handle,
+        region_id: regionId,
+        fields:
+          "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags,",
+      },
+      next: { tags: ["products"], revalidate: 3600 },
+      cache: "force-cache",
+    })
+    .then(({ products }) => products[0])
+}
+
+/**
+ * Cookie-free list of product handles for generateStaticParams (build-time
+ * prerender), so the build reliably gets handles without reading cookies.
+ */
+export const listProductHandles = async (
+  regionId: string
+): Promise<string[]> => {
+  return sdk.client
+    .fetch<{ products: HttpTypes.StoreProduct[] }>(`/store/products`, {
+      method: "GET",
+      query: { limit: 100, fields: "handle", region_id: regionId },
+      next: { tags: ["products"], revalidate: 3600 },
+      cache: "force-cache",
+    })
+    .then(({ products }) =>
+      products.map((p) => p.handle).filter((h): h is string => Boolean(h))
+    )
+    .catch(() => [])
 }

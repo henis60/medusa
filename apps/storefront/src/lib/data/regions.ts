@@ -2,12 +2,10 @@
 
 import { sdk } from "@lib/config"
 import { HttpTypes } from "@medusajs/types"
-import { getCacheOptions } from "./cookies"
+import { getGlobalCacheOptions } from "./cookies"
 
 export const listRegions = async () => {
-  const next = {
-    ...(await getCacheOptions("regions")),
-  }
+  const next = getGlobalCacheOptions("regions")
 
   return await sdk.client
     .fetch<{ regions: HttpTypes.StoreRegion[] }>(`/store/regions`, {
@@ -19,9 +17,7 @@ export const listRegions = async () => {
 }
 
 export const retrieveRegion = async (id: string) => {
-  const next = {
-    ...(await getCacheOptions(["regions", id].join("-"))),
-  }
+  const next = getGlobalCacheOptions("regions")
 
   return await sdk.client
     .fetch<{ region: HttpTypes.StoreRegion }>(`/store/regions/${id}`, {
@@ -30,6 +26,31 @@ export const retrieveRegion = async (id: string) => {
       cache: "force-cache",
     })
     .then(({ region }) => region)
+}
+
+/**
+ * Cookie-free region lookup for statically/ISR-rendered pages (product detail).
+ * Avoids reading cookies so those pages can be prerendered and generated
+ * on-demand without DYNAMIC_SERVER_USAGE. Cached with a static tag + ISR.
+ */
+export const getRegionStatic = async (countryCode: string) => {
+  const regions = await sdk.client
+    .fetch<{ regions: HttpTypes.StoreRegion[] }>(`/store/regions`, {
+      method: "GET",
+      next: { tags: ["regions"], revalidate: 3600 },
+      cache: "force-cache",
+    })
+    .then(({ regions }) => regions)
+    .catch(() => null)
+
+  if (!regions?.length) return null
+
+  for (const region of regions) {
+    for (const c of region.countries ?? []) {
+      if (c?.iso_2 === countryCode) return region
+    }
+  }
+  return null
 }
 
 const regionMap = new Map<string, HttpTypes.StoreRegion>()
@@ -51,9 +72,7 @@ export const getRegion = async (countryCode: string) => {
     })
   })
 
-  const region = countryCode
-    ? regionMap.get(countryCode)
-    : regionMap.get("us")
+  const region = countryCode ? regionMap.get(countryCode) : regionMap.get("us")
 
   return region
 }

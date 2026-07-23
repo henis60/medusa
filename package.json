@@ -27,7 +27,8 @@
   },
   "workspaces": [
     "apps/**",
-    "!apps/backend/.medusa/**"
+    "!apps/backend/.medusa/**",
+    "!apps/storefront/.next/**"
   ],
   "overrides": {
     "ajv": "^8.0.0"

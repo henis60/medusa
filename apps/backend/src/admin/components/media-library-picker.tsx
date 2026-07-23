@@ -1,0 +1,211 @@
+import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Button,
+  Checkbox,
+  Heading,
+  IconButton,
+  Input,
+  Label,
+  Text,
+  toast,
+} from "@medusajs/ui";
+import { Folder, XMark } from "@medusajs/icons";
+import { uploadFiles } from "../lib/image-upload";
+import { fetchMediaAssets } from "../lib/media-library-api";
+
+export default function MediaLibraryPicker({
+  onSelect,
+  onClose,
+}: {
+  onSelect: (url: string) => void;
+  onClose: () => void;
+}) {
+  const [q, setQ] = useState("");
+  const [prefix, setPrefix] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [convert, setConvert] = useState(true);
+  const [newFolderName, setNewFolderName] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["media-library-picker", q, prefix],
+    queryFn: () => fetchMediaAssets({ limit: 60, q: q || undefined, prefix }),
+  });
+
+  const handleUpload = async (files: File[]) => {
+    if (!files.length) return;
+    setUploading(true);
+    try {
+      await uploadFiles(files, convert, "/admin/media-library", {
+        folder: prefix.replace(/\/$/, ""),
+      });
+      await queryClient.invalidateQueries({ queryKey: ["media-library-picker"] });
+      toast.success(`${files.length} imagini încărcate`);
+    } catch (err: any) {
+      toast.error(err.message || "Upload eșuat");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const enterFolder = (folder: string) => {
+    setPrefix(folder);
+    setQ("");
+  };
+
+  // Folders are created implicitly by uploading into them — this just
+  // navigates into a not-yet-existing path so the next upload lands there.
+  const createFolder = () => {
+    const name = newFolderName.trim().replace(/[/\\]+/g, "-");
+    if (!name) return;
+    enterFolder(`${prefix}${name}/`);
+    setNewFolderName("");
+  };
+
+  const breadcrumbs = prefix
+    ? prefix
+        .split("/")
+        .filter(Boolean)
+        .map((segment, i, arr) => ({
+          label: segment,
+          path: arr.slice(0, i + 1).join("/") + "/",
+        }))
+    : [];
+
+  return createPortal(
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]"
+      onClick={onClose}
+    >
+      <div
+        className="bg-ui-bg-base rounded-lg shadow-elevation-modal w-[90vw] max-w-4xl h-[80vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b border-ui-border-base">
+          <Heading level="h2">Alege din bibliotecă</Heading>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <Checkbox
+                id="picker-convert"
+                checked={convert}
+                onCheckedChange={(v) => setConvert(!!v)}
+              />
+              <Label htmlFor="picker-convert" className="text-xs">
+                Conversie webp
+              </Label>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                const files = Array.from(e.target.files ?? []);
+                if (files.length) handleUpload(files);
+                e.target.value = "";
+              }}
+            />
+            <Button
+              size="small"
+              variant="secondary"
+              onClick={() => fileInputRef.current?.click()}
+              isLoading={uploading}
+            >
+              Încarcă imagini
+            </Button>
+            <IconButton variant="transparent" onClick={onClose}>
+              <XMark />
+            </IconButton>
+          </div>
+        </div>
+        <div className="px-4 py-2 border-b border-ui-border-base flex flex-col gap-2">
+          <Input
+            placeholder="Caută după nume fișier..."
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+          {!q && (
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-1 text-sm flex-wrap">
+                <button
+                  className="text-ui-fg-interactive hover:underline"
+                  onClick={() => enterFolder("")}
+                >
+                  Root
+                </button>
+                {breadcrumbs.map((b) => (
+                  <span key={b.path} className="flex items-center gap-1">
+                    <Text size="small" className="text-ui-fg-muted">
+                      /
+                    </Text>
+                    <button
+                      className="text-ui-fg-interactive hover:underline"
+                      onClick={() => enterFolder(b.path)}
+                    >
+                      {b.label}
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  size="small"
+                  placeholder="Folder nou..."
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && createFolder()}
+                  className="w-40"
+                />
+                <Button size="small" variant="secondary" onClick={createFolder}>
+                  Creează folder
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="flex-1 overflow-y-auto p-4">
+          {isLoading && <Text className="text-ui-fg-muted">Se încarcă...</Text>}
+          {!isLoading &&
+            (data?.assets.length ?? 0) === 0 &&
+            (data?.folders.length ?? 0) === 0 && (
+              <Text className="text-ui-fg-muted">Nicio imagine găsită.</Text>
+            )}
+          <div className="grid grid-cols-6 gap-3">
+            {!q &&
+              (data?.folders ?? []).map((folder) => (
+                <button
+                  key={folder}
+                  onClick={() => enterFolder(folder)}
+                  className="flex flex-col items-center justify-center gap-1.5 aspect-square rounded border border-ui-border-base hover:bg-ui-bg-subtle transition-colors"
+                >
+                  <Folder className="w-7 h-7 text-ui-fg-subtle" />
+                  <Text size="xsmall" className="truncate max-w-[90%] text-ui-fg-subtle">
+                    {folder.split("/").filter(Boolean).pop()}
+                  </Text>
+                </button>
+              ))}
+            {(data?.assets ?? []).map((asset) => (
+              <button
+                key={asset.key}
+                onClick={() => onSelect(asset.url)}
+                title={asset.alt_text ?? asset.key}
+                className="aspect-square rounded border border-ui-border-base overflow-hidden hover:ring-2 hover:ring-ui-border-interactive transition-shadow"
+              >
+                <img
+                  src={asset.url}
+                  alt={asset.alt_text ?? ""}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}

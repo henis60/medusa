@@ -1,56 +1,38 @@
 "use client"
 
 import { transferCart } from "@lib/data/customer"
-import { ExclamationCircleSolid } from "@medusajs/icons"
 import { StoreCart, StoreCustomer } from "@medusajs/types"
-import { Button } from "@modules/common/components/ui"
-import { useState } from "react"
+import { useEffect, useRef } from "react"
+
+/**
+ * When a logged-in customer ends up with a cart that isn't associated to their
+ * account (e.g. a guest cart created before login), it needs to be transferred.
+ * Rather than surfacing this as an error banner the user has to act on, we run
+ * the transfer silently. It retries once per mount (i.e. per navigation) if it
+ * fails, and never renders any UI.
+ */
 function CartMismatchBanner(props: {
   customer: StoreCustomer
   cart: StoreCart
 }) {
   const { customer, cart } = props
-  const [isPending, setIsPending] = useState(false)
-  const [actionText, setActionText] = useState("Run transfer again")
+  const attempted = useRef(false)
 
-  if (!customer || !!cart.customer_id) {
-    return
-  }
+  const needsTransfer = !!customer && !cart.customer_id
 
-  const handleSubmit = async () => {
-    try {
-      setIsPending(true)
-      setActionText("Transferring..")
-
-      await transferCart()
-    } catch {
-      setActionText("Run transfer again")
-      setIsPending(false)
+  useEffect(() => {
+    if (!needsTransfer || attempted.current) {
+      return
     }
-  }
+    attempted.current = true
 
-  return (
-    <div className="flex items-center justify-center small:p-4 p-2 text-center bg-orange-300 small:gap-2 gap-1 text-sm mt-2 text-orange-800">
-      <div className="flex flex-col small:flex-row small:gap-2 gap-1 items-center">
-        <span className="flex items-center gap-1">
-          <ExclamationCircleSolid className="inline" />
-          Something went wrong when we tried to transfer your cart
-        </span>
+    transferCart().catch(() => {
+      // Silent: the cart still functions for checkout, and the transfer is
+      // retried on the next navigation. Never block or alarm the user.
+    })
+  }, [needsTransfer])
 
-        <span>·</span>
-
-        <Button
-          variant="transparent"
-          className="hover:bg-transparent active:bg-transparent focus:bg-transparent disabled:text-orange-500 text-orange-950 p-0 bg-transparent"
-          size="medium"
-          disabled={isPending}
-          onClick={handleSubmit}
-        >
-          {actionText}
-        </Button>
-      </div>
-    </div>
-  )
+  return null
 }
 
 export default CartMismatchBanner

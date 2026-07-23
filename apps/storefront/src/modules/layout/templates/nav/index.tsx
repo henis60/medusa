@@ -1,27 +1,35 @@
-import { Suspense } from "react"
-
-import { listCollections } from "@lib/data/collections"
+import {
+  listCollections,
+  getCollectionWithProductCategories,
+} from "@lib/data/collections"
+import { listCategories } from "@lib/data/categories"
 import { listLocales } from "@lib/data/locales"
-import { getLocale } from "@lib/data/locale-actions"
 import { listRegions } from "@lib/data/regions"
 import { HttpTypes, StoreRegion } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
 import SideMenu from "@modules/layout/components/side-menu"
 import NavShell from "@modules/layout/components/nav-shell"
-import {
-  BagIcon,
-  ShopIcon,
-  UserIcon,
-} from "@modules/layout/components/nav-icons"
 
 export default async function Nav() {
-  const [regions, locales, currentLocale, { collections }] = await Promise.all([
+  // No cookie reads here — the nav is part of the static/ISR shell.
+  // SideMenu resolves the current locale client-side from the cookie.
+  const [regions, locales, { collections }, categories] = await Promise.all([
     listRegions().then((regions: StoreRegion[]) => regions),
     listLocales(),
-    getLocale(),
     listCollections(),
+    listCategories(),
   ])
+
+  const sortedCollections = [...collections].sort(
+    (a, b) =>
+      new Date(b.created_at ?? 0).getTime() -
+      new Date(a.created_at ?? 0).getTime()
+  )
+
+  const featuredCollection = sortedCollections[0]
+    ? await getCollectionWithProductCategories(sortedCollections[0].id)
+    : null
 
   return (
     <NavShell>
@@ -30,8 +38,10 @@ export default async function Nav() {
           <SideMenu
             regions={regions}
             locales={locales}
-            currentLocale={currentLocale}
-            collections={collections}
+            currentLocale={null}
+            collections={sortedCollections}
+            categories={categories}
+            featuredCollection={featuredCollection}
           />
         </div>
       </div>
@@ -47,28 +57,7 @@ export default async function Nav() {
       </div>
 
       <div className="flex items-center gap-x-6 h-full flex-1 basis-0 justify-end opacity-80">
-        <LocalizedClientLink
-          className="hidden small:flex items-center hover:opacity-60 transition-opacity"
-          href="/account"
-          data-testid="nav-account-link"
-          aria-label="Account"
-        >
-          <UserIcon size={26} />
-        </LocalizedClientLink>
-        <Suspense
-          fallback={
-            <LocalizedClientLink
-              className="flex items-center hover:opacity-60 transition-opacity"
-              href="/cart"
-              data-testid="nav-cart-link"
-              aria-label="Cart"
-            >
-              <BagIcon size={22} />
-            </LocalizedClientLink>
-          }
-        >
-          <CartButton />
-        </Suspense>
+        <CartButton />
       </div>
     </NavShell>
   )

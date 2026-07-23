@@ -2,6 +2,7 @@ import ItemsTemplate from "./items"
 import Summary from "./summary"
 import EmptyCartMessage from "../components/empty-cart-message"
 import SignInPrompt from "../components/sign-in-prompt"
+import CartViewTracker from "@modules/common/components/analytics/cart-view-tracker"
 import { HttpTypes } from "@medusajs/types"
 
 const CartTemplate = ({
@@ -12,18 +13,19 @@ const CartTemplate = ({
   customer: HttpTypes.StoreCustomer | null
 }) => {
   return (
-    <div className="min-h-[60dvh] pt-3 pb-6 small:pt-12 small:pb-12">
-      <div className="content-container" data-testid="cart-container">
+    <div className="min-h-[60dvh] pt-3 pb-6 small:pt-10 small:pb-10">
+      <div className="page-container" data-testid="cart-container">
         {cart?.items?.length ? (
           <>
-            <div className="mb-5 small:mb-10 border-b border-[var(--theme-border)] pb-4 small:pb-6">
+            <CartViewTracker cart={cart} event="view_cart" />
+            {/* <div className="mb-5 small:mb-10 border-b border-[var(--theme-border)] pb-4 small:pb-6">
               <h1 className="font-sans text-[11px] small:text-[13px] uppercase tracking-[5px] text-[var(--theme-text)]">
                 Coș
                 <span className="ml-3 text-[var(--theme-text-muted)]">
                   ({cart.items.reduce((s, i) => s + i.quantity, 0)})
                 </span>
               </h1>
-            </div>
+            </div> */}
 
             <div className="grid grid-cols-1 small:grid-cols-[1fr_320px] gap-x-16 medium:gap-x-24 items-start">
               <div className="flex flex-col gap-y-8">

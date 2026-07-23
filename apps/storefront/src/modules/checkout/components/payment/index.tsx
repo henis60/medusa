@@ -2,6 +2,10 @@
 import { RadioGroup } from "@headlessui/react"
 import { isStripeLike, paymentInfoMap } from "@lib/constants"
 import { initiatePaymentSession } from "@lib/data/cart"
+import {
+  lineItemsToTrackItems,
+  trackAddPaymentInfo,
+} from "@lib/util/analytics"
 import { CreditCard } from "@medusajs/icons"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import PaymentContainer, { StripeCardContainer } from "@modules/checkout/components/payment-container"
@@ -64,6 +68,12 @@ const Payment = ({
 
   const handleSubmit = async () => {
     setIsLoading(true)
+    trackAddPaymentInfo(
+      lineItemsToTrackItems(cart.items),
+      cart.currency_code?.toUpperCase() || "RON",
+      cart.total ?? undefined,
+      paymentInfoMap[selectedPaymentMethod]?.title ?? selectedPaymentMethod
+    )
     try {
       const shouldInputCard = isStripeLike(selectedPaymentMethod) && !activeSession
       if (activeSession?.provider_id !== selectedPaymentMethod) {
@@ -158,7 +168,7 @@ const Payment = ({
           {isLoading ? "Se procesează…" :
             !activeSession && isStripeLike(selectedPaymentMethod)
               ? "Introdu datele cardului"
-              : "Continuă cu recenzia"}
+              : "Continuă cu confirmarea"}
         </button>
       </div>
 

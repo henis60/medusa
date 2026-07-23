@@ -2,44 +2,63 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
 
+const STATUS_LABEL: Record<string, string> = {
+  pending: "În așteptare",
+  not_fulfilled: "În procesare",
+  partially_fulfilled: "Parțial livrată",
+  fulfilled: "Livrată",
+  canceled: "Anulată",
+  returned: "Returnată",
+  partially_returned: "Parțial returnată",
+  requires_action: "Necesită acțiune",
+}
+
 type OrderCardProps = {
   order: HttpTypes.StoreOrder
 }
 
 const OrderCard = ({ order }: OrderCardProps) => {
-  const itemCount = order.items?.reduce((acc, item) => acc + item.quantity, 0) ?? 0
+  const status = order.fulfillment_status
+    ? STATUS_LABEL[order.fulfillment_status] ?? order.fulfillment_status
+    : null
 
   return (
     <LocalizedClientLink
-      href={`/account/orders/details/${order.id}`}
+      href={`/profil/comenzi/${order.display_id}`}
       data-testid="order-card"
-      className="group flex items-center justify-between py-5 border-b border-[var(--theme-border)] last:border-none hover:bg-[var(--theme-surface)] px-2 -mx-2 transition-colors"
+      className="group flex items-center justify-between gap-4 py-5 px-3 -mx-3 hover:bg-[var(--theme-surface)] active:bg-[var(--theme-surface)] transition-colors"
     >
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <span
-          className="font-sans text-[11px] uppercase tracking-[2px] text-[var(--theme-text)]"
+          className="font-display text-[22px] leading-none text-[var(--theme-text)]"
           data-testid="order-display-id"
         >
           #{order.display_id}
         </span>
         <span
-          className="font-serif italic text-[13px] text-[var(--theme-text-muted)]"
-          data-testid="order-created-at"
+          className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text-muted)]"
+          data-testid="order-status"
         >
-          {new Date(order.created_at).toDateString()} · {itemCount} {itemCount === 1 ? "item" : "items"}
+          {status && `${status}`}
         </span>
       </div>
 
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-4 shrink-0">
         <span
-          className="font-display text-[18px] leading-none text-[var(--theme-gold)]"
+          className="font-sans text-[13px] tracking-[1px] text-hunter-gold"
           data-testid="order-amount"
         >
-          {convertToLocale({ amount: order.total, currency_code: order.currency_code })}
+          {convertToLocale({
+            amount: order.total,
+            currency_code: order.currency_code,
+          })}
         </span>
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-[var(--theme-text-muted)] group-hover:text-[var(--theme-text)] transition-colors">
-          <path d="M5 2l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <span
+          aria-hidden
+          className="font-serif text-[18px] text-hunter-gold/40 group-hover:text-hunter-gold group-active:text-hunter-gold group-active:translate-x-0.5 transition-all"
+        >
+          ›
+        </span>
       </div>
     </LocalizedClientLink>
   )

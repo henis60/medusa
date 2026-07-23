@@ -49,12 +49,26 @@ export const getCacheOptions = async (
   return { tags: [`${cacheTag}`] }
 }
 
+/**
+ * Cache options for GLOBAL, non-personalized content (products, collections,
+ * categories, regions). Unlike getCacheOptions, it uses a stable, shared tag
+ * (no per-visitor cache id) and reads no cookies, so:
+ *  - on-demand revalidation via revalidateTag("products") actually matches,
+ *  - every visitor shares one cache entry (fewer backend hits),
+ *  - callers stay cookie-free and can be statically / ISR rendered.
+ */
+export const getGlobalCacheOptions = (
+  tag: string
+): { tags: string[]; revalidate: number } => {
+  return { tags: [tag], revalidate: 3600 }
+}
+
 export const setAuthToken = async (token: string) => {
   const cookies = await nextCookies()
   cookies.set("_medusa_jwt", token, {
     maxAge: 60 * 60 * 24 * 7,
     httpOnly: true,
-    sameSite: "strict",
+    sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
   })
 }
@@ -76,7 +90,7 @@ export const setCartId = async (cartId: string) => {
   cookies.set("_medusa_cart_id", cartId, {
     maxAge: 60 * 60 * 24 * 7,
     httpOnly: true,
-    sameSite: "strict",
+    sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
   })
 }

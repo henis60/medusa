@@ -9,6 +9,10 @@ type ProductTabsProps = {
 
 const ProductTabs = ({ product }: ProductTabsProps) => {
   const tabs = [
+    ...(product.description ? [{
+      label: "Descriere",
+      component: <ProductDescriptionTab product={product} />,
+    }] : []),
     {
       label: "Detalii produs",
       component: <ProductInfoTab product={product} />,
@@ -37,9 +41,18 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
   )
 }
 
+const ProductDescriptionTab = ({ product }: ProductTabsProps) => {
+  return (
+    <div className="py-4">
+      <p className="font-serif text-base leading-relaxed text-[var(--theme-text-muted)] whitespace-pre-line">
+        {product.description}
+      </p>
+    </div>
+  )
+}
+
 const ProductInfoTab = ({ product }: ProductTabsProps) => {
   const rows = [
-    { label: "Material", value: product.material },
     { label: "Țară de origine", value: product.origin_country },
     { label: "Greutate", value: product.weight ? `${product.weight} g` : null },
     {

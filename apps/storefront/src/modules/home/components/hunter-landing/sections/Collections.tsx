@@ -123,10 +123,7 @@ export default function Collections() {
         </div>
 
         {/* MtM Process */}
-        <div
-          className="mtm-inline rv-group"
-          style={{ transitionDelay: "0.15s" }}
-        >
+        <div className="mtm-inline rv-group">
           <div className="mtm-inline-header rv">
             <div className="mtm-tag">Made to measure</div>
             <h3 className="mtm-inline-title">

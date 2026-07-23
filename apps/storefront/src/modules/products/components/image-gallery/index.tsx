@@ -25,7 +25,7 @@ export const ImageGallery = ({ images }: ImageGalleryProps) => {
                   src={img.url}
                   alt={`Product image ${i + 1}`}
                   fill
-                  className="object-cover object-center"
+                  className="object-contain object-center"
                   sizes="64px"
                 />
               )}
@@ -41,7 +41,7 @@ export const ImageGallery = ({ images }: ImageGalleryProps) => {
             alt="Product image"
             fill
             priority
-            className="object-cover object-center"
+            className="object-contain object-center"
             sizes="(max-width: 1024px) 100vw, 55vw"
           />
         )}

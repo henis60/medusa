@@ -21,7 +21,7 @@ const AddressSelect = ({ addresses, addressInput, onSelect }: AddressSelectProps
   )
 
   return (
-    <Listbox onChange={handleSelect} value={selectedAddress?.id}>
+    <Listbox onChange={handleSelect} value={selectedAddress?.id ?? ""}>
       <div className="relative">
         <Listbox.Button
           className="relative w-full flex justify-between items-center px-3 h-10 text-left bg-transparent border border-[var(--theme-border)] focus:outline-none focus:border-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)] transition-colors cursor-default"

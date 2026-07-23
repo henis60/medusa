@@ -2,134 +2,142 @@
 
 import { ArrowRightOnRectangle } from "@medusajs/icons"
 import { clx } from "@modules/common/components/ui"
-import { useParams, usePathname } from "next/navigation"
-
+import { usePathname } from "next/navigation"
 import { signout } from "@lib/data/customer"
-import { HttpTypes } from "@medusajs/types"
+import { emitCartUpdated } from "@lib/util/cart-events"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import ChevronDown from "@modules/common/icons/chevron-down"
 
 const NAV_ITEMS = [
-  { label: "Overview", href: "/account" },
-  { label: "Profile", href: "/account/profile" },
-  { label: "Addresses", href: "/account/addresses" },
-  { label: "Orders", href: "/account/orders" },
-  { label: "Salvate", href: "/account/favorites" },
+  { label: "Acasă", href: "/profil" },
+  { label: "Detalii cont", href: "/profil/detalii-cont" },
+  { label: "Adrese salvate", href: "/profil/adrese" },
+  { label: "Comenzi", href: "/profil/comenzi" },
 ]
 
-const MOBILE_NAV_ITEMS = NAV_ITEMS.filter(({ href }) => href !== "/account")
+// The overview route doubles as the menu on mobile, so it isn't listed there.
+const MOBILE_NAV_ITEMS = NAV_ITEMS.filter(({ href }) => href !== "/profil")
 
-const AccountNav = ({
-  customer,
-}: {
-  customer: HttpTypes.StoreCustomer | null
-}) => {
-  const route = usePathname()
-  const { countryCode } = useParams() as { countryCode: string }
+const isActive = (route: string, href: string) =>
+  route === href || (href !== "/profil" && route.startsWith(href))
 
-  const handleLogout = async () => {
-    await signout(countryCode)
-  }
+// Where "back" leads from a sub-page: order details step back to the orders
+// list; everything else returns to the account overview.
+const backTarget = (route: string) =>
+  route.startsWith("/profil/comenzi/") ? "/profil/comenzi" : "/profil"
+
+const handleLogout = async () => {
+  // Logout drops the cart cookie server-side; clear the client-held cart
+  // (badge + drawer) too. Before signout — its redirect ends execution.
+  emitCartUpdated(null)
+  await signout()
+}
+
+const AccountNav = () => {
+  const route = usePathname() ?? "/profil"
 
   return (
     <div>
-      {/* Mobile nav */}
-      <div className="small:hidden" data-testid="mobile-account-nav">
-        {route !== `/${countryCode}/account` ? (
-          <LocalizedClientLink
-            href="/account"
-            className="inline-flex items-center gap-2 py-4 font-sans text-[11px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-[var(--theme-gold)] transition-colors"
-            data-testid="account-main-link"
-          >
-            <span>←</span>
-            <span>Înapoi la cont</span>
-          </LocalizedClientLink>
-        ) : (
-          <>
-            <ul>
-              {MOBILE_NAV_ITEMS.map(({ label, href }) => (
-                <li key={href}>
-                  <LocalizedClientLink
-                    href={href}
-                    className="flex items-center justify-between py-4 border-b border-[var(--theme-border)] font-sans text-[11px] uppercase tracking-[2px] text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
-                    data-testid={`${label.toLowerCase()}-link`}
-                  >
-                    <span>{label}</span>
-                    <ChevronDown className="transform -rotate-90 w-3 h-3" />
-                  </LocalizedClientLink>
-                </li>
-              ))}
-              <li>
-                <button
-                  type="button"
-                  className="flex items-center justify-between py-4 w-full font-sans text-[11px] uppercase tracking-[2px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
-                  onClick={handleLogout}
-                  data-testid="logout-button"
-                >
-                  <span>Log out</span>
-                  <ArrowRightOnRectangle className="w-4 h-4" />
-                </button>
-              </li>
-            </ul>
-          </>
-        )}
-      </div>
-
-      {/* Desktop nav */}
-      <div className="hidden small:flex flex-col py-8 px-6 gap-0" data-testid="account-nav">
-        <ul className="flex flex-col">
-          {NAV_ITEMS.map(({ label, href }) => (
-            <li key={href}>
-              <AccountNavLink href={href} route={route!} data-testid={`${label.toLowerCase()}-link`}>
-                {label}
-              </AccountNavLink>
-            </li>
-          ))}
-        </ul>
-        <button
-          type="button"
-          onClick={handleLogout}
-          data-testid="logout-button"
-          className="mt-8 w-fit font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors flex items-center gap-2"
-        >
-          <ArrowRightOnRectangle className="w-3.5 h-3.5" />
-          Log out
-        </button>
-      </div>
+      <MobileNav route={route} />
+      <DesktopNav route={route} />
     </div>
   )
 }
 
-type AccountNavLinkProps = {
-  href: string
-  route: string
-  children: React.ReactNode
-  "data-testid"?: string
-}
+/**
+ * Mobile: the overview page IS the menu (tap-friendly full-bleed rows).
+ * Sub-pages collapse the menu into a back link + section title.
+ */
+const MobileNav = ({ route }: { route: string }) => {
+  const isOverview = route === "/profil"
+  const activeItem = MOBILE_NAV_ITEMS.find(({ href }) => isActive(route, href))
 
-const AccountNavLink = ({
-  href,
-  route,
-  children,
-  "data-testid": dataTestId,
-}: AccountNavLinkProps) => {
-  const { countryCode }: { countryCode: string } = useParams()
-
-  const active = route === `/${countryCode}${href}`
   return (
-    <LocalizedClientLink
-      href={href}
-      className={clx(
-        "block py-3.5 font-sans text-[11px] uppercase tracking-[2px] transition-colors duration-150",
-        active
-          ? "text-[var(--theme-gold)]"
-          : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
-      )}
-      data-testid={dataTestId}
+    <nav
+      aria-label="Meniu cont"
+      className="small:hidden"
+      data-testid="mobile-account-nav"
     >
-      {children}
-    </LocalizedClientLink>
+      {isOverview ? (
+        <div className="pt-5">
+          <ul className="flex flex-col divide-y divide-[var(--theme-border)] border border-[var(--theme-border)]">
+            {MOBILE_NAV_ITEMS.map(({ label, href }) => (
+              <li key={href}>
+                <LocalizedClientLink
+                  href={href}
+                  className="group flex items-center justify-between gap-4 min-h-[56px] p-4 font-serif text-[18px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] active:bg-[var(--theme-surface)] active:text-hunter-gold transition-colors"
+                  data-testid={`${label.toLowerCase()}-link`}
+                >
+                  {label}
+                  <span
+                    aria-hidden
+                    className="font-serif text-[18px] text-hunter-gold/40 group-active:text-hunter-gold group-active:translate-x-0.5 transition-all"
+                  >
+                    ›
+                  </span>
+                </LocalizedClientLink>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : activeItem ? (
+        <div>
+          <LocalizedClientLink
+            href={backTarget(route)}
+            className="inline-flex items-center gap-2 py-3 -my-3 px-3 -mx-3 font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-[var(--theme-gold)] active:text-[var(--theme-gold)] transition-colors"
+            data-testid="account-back-link"
+          >
+            <span aria-hidden>←</span>
+            <span>Înapoi</span>
+          </LocalizedClientLink>
+          <div className="py-4">
+            <h1 className="font-serif text-[22px] leading-[1] tracking-[0.02em] text-hunter-gold">
+              {route.startsWith("/profil/comenzi/")
+                ? `Comanda #${route.split("/").pop()}`
+                : activeItem.label}
+            </h1>
+          </div>
+        </div>
+      ) : null}
+    </nav>
   )
 }
+
+/** Desktop: persistent sidebar with active-state rail and logout. */
+const DesktopNav = ({ route }: { route: string }) => (
+  <nav
+    aria-label="Meniu cont"
+    className="hidden small:flex flex-col py-8 pr-8 gap-24 border-r border-[var(--theme-border)]"
+    data-testid="account-nav"
+  >
+    <ul className="flex flex-col">
+      {NAV_ITEMS.map(({ label, href }) => (
+        <li key={href}>
+          <LocalizedClientLink
+            href={href}
+            className={clx(
+              "block py-4 pl-3 border-l-2 font-serif text-[22px] leading-[1] tracking-[0.02em] transition-colors duration-150",
+              isActive(route, href)
+                ? "border-hunter-gold text-[var(--theme-gold)]"
+                : "border-transparent text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] hover:border-[var(--theme-border)]"
+            )}
+            data-testid={`${label.toLowerCase()}-link`}
+          >
+            {label}
+          </LocalizedClientLink>
+        </li>
+      ))}
+    </ul>
+
+    <button
+      type="button"
+      onClick={handleLogout}
+      data-testid="logout-button"
+      className="mt-10 w-full h-11 px-6 inline-flex items-center justify-center gap-2 border border-[var(--theme-border)] font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text)] hover:border-hunter-gold hover:text-hunter-gold transition-colors"
+    >
+      <ArrowRightOnRectangle className="w-3.5 h-3.5" />
+      Deconectare
+    </button>
+  </nav>
+)
 
 export default AccountNav

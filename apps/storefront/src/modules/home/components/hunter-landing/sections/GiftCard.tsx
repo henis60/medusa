@@ -1,21 +1,67 @@
 "use client"
 
+import { useRef, useState } from "react"
+import { animate } from "framer-motion"
+
 export default function GiftCard() {
   const amounts = ["300 lei", "500 lei", "1.000 lei", "2.000 lei"]
+  const [selected, setSelected] = useState(0)
+  const amountRef = useRef<HTMLDivElement>(null)
+  const shineRef = useRef<HTMLDivElement>(null)
+  const busy = useRef(false)
+
+  async function selectAmount(idx: number) {
+    if (idx === selected || busy.current) return
+    busy.current = true
+    await animate(
+      amountRef.current!,
+      { scale: 0.8, opacity: 0, y: 4 },
+      { duration: 0.2, ease: [0.23, 1, 0.32, 1] }
+    )
+    setSelected(idx)
+    await animate(
+      amountRef.current!,
+      { scale: 1, opacity: 1, y: 0 },
+      { duration: 0.2, ease: [0.23, 1, 0.32, 1] }
+    )
+    triggerShine()
+    busy.current = false
+  }
+
+  function triggerShine() {
+    if (!shineRef.current) return
+    animate(shineRef.current, { x: "0%" }, { duration: 0 }).then(() =>
+      animate(
+        shineRef.current!,
+        { x: "380%" },
+        {
+          duration: 0.7,
+          ease: [0.23, 1, 0.32, 1],
+        }
+      )
+    )
+  }
 
   return (
     <section className="section gc-sec" id="giftcard">
       <div className="section-inner">
         <div className="gc-wrap">
           <div className="relative flex items-center justify-center rv from-l">
-            <div className="gc-card" id="gcCard">
+            <div
+              className="gc-card elevated"
+              id="gcCard"
+              onMouseEnter={triggerShine}
+            >
+              <div ref={shineRef} className="gc-shine-wrap">
+                <div className="gc-shine-sweep" />
+              </div>
               <div className="gc-card-logo">
                 <div className="gc-logo-1">The Hunter</div>
                 <div className="gc-logo-divider"></div>
                 <div className="gc-logo-2">House</div>
               </div>
-              <div className="gc-card-amount" id="gcCardAmount">
-                300 lei
+              <div ref={amountRef} className="gc-card-amount" id="gcCardAmount">
+                {amounts[selected]}
               </div>
             </div>
           </div>
@@ -37,15 +83,8 @@ export default function GiftCard() {
               {amounts.map((amount, idx) => (
                 <div
                   key={amount}
-                  className={`gc-amt ${idx === 0 ? "on" : ""}`}
-                  onClick={(e) => {
-                    if (
-                      typeof window !== "undefined" &&
-                      (window as any).selGc
-                    ) {
-                      ;(window as any).selGc(e.currentTarget)
-                    }
-                  }}
+                  className={`gc-amt${selected === idx ? " on" : ""}`}
+                  onClick={() => selectAmount(idx)}
                 >
                   <span>{amount}</span>
                 </div>

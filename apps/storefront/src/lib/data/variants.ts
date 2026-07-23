@@ -3,22 +3,17 @@
 import { sdk } from "@lib/config"
 import { HttpTypes } from "@medusajs/types"
 
-import { getAuthHeaders, getCacheOptions } from "./cookies"
+import { getAuthHeaders, getGlobalCacheOptions } from "./cookies"
 
 export const retrieveVariant = async (
   variant_id: string
 ): Promise<HttpTypes.StoreProductVariant | null> => {
-  const authHeaders = await getAuthHeaders()
-
-  if (!authHeaders) return null
-
   const headers = {
-    ...authHeaders,
+    ...(await getAuthHeaders()),
   }
 
-  const next = {
-    ...(await getCacheOptions("variants")),
-  }
+  // Variant data is not personalized — share one cache entry across visitors.
+  const next = getGlobalCacheOptions("products")
 
   return await sdk.client
     .fetch<{ variant: HttpTypes.StoreProductVariant }>(

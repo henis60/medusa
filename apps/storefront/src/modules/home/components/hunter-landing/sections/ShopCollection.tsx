@@ -43,13 +43,13 @@ export default async function ShopCollection({
           </p>
         </div>
 
-        <div className="shop-grid rv" style={{ transitionDelay: "0.15s" }}>
+        <div className="shop-grid rv" data-rv-delay="0.15">
           {products.slice(0, 4).map((product) => (
             <ProductPreview key={product.id} product={product} region={region} forceDark />
           ))}
         </div>
 
-        <div className="rv hero-cta-wrap" style={{ transitionDelay: "0.2s", marginTop: "2.5rem" }}>
+        <div className="rv hero-cta-wrap" data-rv-delay="0.2" style={{ marginTop: "2.5rem" }}>
           <LocalizedClientLink href={`/collections/${collection.handle}`} className="hero-cta hero-cta--wide">
             <span className="hero-cta-text">Vezi colecția</span>
             <span className="hero-cta-arrow">→</span>

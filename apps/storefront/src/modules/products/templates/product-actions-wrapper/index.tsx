@@ -8,14 +8,16 @@ import ProductActions from "@modules/products/components/product-actions"
 export default async function ProductActionsWrapper({
   id,
   region,
+  fallbackProduct,
 }: {
   id: string
   region: HttpTypes.StoreRegion
+  fallbackProduct?: HttpTypes.StoreProduct
 }) {
   const product = await listProducts({
     queryParams: { id: [id] },
     regionId: region.id,
-  }).then(({ response }) => response.products[0])
+  }).then(({ response }) => response.products[0]) ?? fallbackProduct
 
   if (!product) {
     return null

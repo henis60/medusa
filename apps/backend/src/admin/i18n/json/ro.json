@@ -1,0 +1,12 @@
+{
+  "products": {
+    "organization": {
+      "header": "Organizează"
+    }
+  },
+  "actions": {
+    "save": "Salvează",
+    "cancel": "Anulează",
+    "continue": "Continuă"
+  }
+}
