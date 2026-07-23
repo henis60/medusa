@@ -3,19 +3,10 @@
 import { useConsent } from "@lib/context/consent-context"
 
 export default function CookieSettings() {
-  const { consent, loaded, accept, reject } = useConsent()
-
-  const hasChoice = loaded && consent !== null
-  const status = consent === "granted" ? "acceptate" : "doar necesare"
+  const { accept, reject } = useConsent()
 
   return (
     <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-      {hasChoice && (
-        <span className="text-sm text-[var(--theme-text-muted)]">
-          Preferința ta actuală:{" "}
-          <span className="text-[var(--theme-text)]">{status}</span>
-        </span>
-      )}
       <div className="flex gap-3">
         <button
           type="button"
