@@ -118,6 +118,13 @@ const MobileActions: React.FC<MobileActionsProps> = ({
 
   const isSimple = isSimpleProduct(product)
   const inStoreOnly = isInStoreOnly(product)
+  // No option on this product actually offers a choice (mirrors the
+  // desktop options list, which hides these too) — there's nothing to pick,
+  // so the sticky button should add to cart directly instead of opening a
+  // sheet with nothing meaningful in it.
+  const hasPickableOptions = (product.options ?? []).some(
+    (o) => (o.values?.length ?? 0) > 1
+  )
 
   return (
     <>
@@ -143,11 +150,18 @@ const MobileActions: React.FC<MobileActionsProps> = ({
           ) : (
             <div className="bg-[var(--theme-bg)] border-t border-[var(--theme-border)] px-6 py-3">
               <Button
-                onClick={() => setOpen(true)}
+                onClick={() =>
+                  hasPickableOptions ? setOpen(true) : handleAddToCart()
+                }
+                disabled={hasPickableOptions ? false : !inStock || isAdding}
                 variant="primary"
                 className="w-full h-12 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent hover:!bg-hunter-gold-b font-sans uppercase tracking-[3px] text-[11px] transition-colors"
               >
-                {t("Adaugă în coș")}
+                {!hasPickableOptions && isAdding
+                  ? t("Se adaugă…")
+                  : !hasPickableOptions && !inStock
+                  ? t("Stoc epuizat")
+                  : t("Adaugă în coș")}
               </Button>
             </div>
           )}
