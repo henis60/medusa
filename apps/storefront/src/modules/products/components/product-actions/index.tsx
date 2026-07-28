@@ -28,10 +28,18 @@ type ProductActionsProps = {
 const optionsAsKeymap = (
   variantOptions: HttpTypes.StoreProductVariant["options"]
 ) => {
-  return variantOptions?.reduce((acc: Record<string, string>, varopt) => {
-    if (varopt.option_id) acc[varopt.option_id] = varopt.value
-    return acc
-  }, {})
+  // Always returns {} rather than undefined for a variant with no option
+  // values (Medusa's single-SKU "Default variant" pattern) — callers
+  // compare this against the initial `options` state, which also defaults
+  // to {}; returning undefined here made that comparison always fail,
+  // leaving the single variant permanently unresolved ("Alege varianta"
+  // shown forever instead of "Adaugă în coș", with nothing to actually pick).
+  return (
+    variantOptions?.reduce((acc: Record<string, string>, varopt) => {
+      if (varopt.option_id) acc[varopt.option_id] = varopt.value
+      return acc
+    }, {}) ?? {}
+  )
 }
 
 export default function ProductActions({
@@ -314,7 +322,11 @@ export default function ProductActions({
                   </div>
                 </div>
               )}
-              {(product.options || []).map((option) => {
+              {/* Options with only one value have nothing to actually
+                  choose — don't render a picker row for them at all. */}
+              {(product.options || [])
+                .filter((option) => (option.values?.length ?? 0) > 1)
+                .map((option) => {
                 return (
                   <div key={option.id}>
                     <OptionSelect

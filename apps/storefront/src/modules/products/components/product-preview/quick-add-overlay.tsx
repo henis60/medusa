@@ -272,6 +272,14 @@ export default function QuickAddOverlay({
     return isColor ? t("Selectează culoarea") : t("Selectează mărimea")
   }, [options, selected])
 
+  // Options with only one value have nothing to actually choose (mirrors
+  // the product page, which hides the whole options block when there's
+  // only one variant) — don't render a picker row for them at all.
+  const pickableOptions = useMemo(
+    () => options.filter((o) => (o.values?.length ?? 0) > 1),
+    [options]
+  )
+
   const mobileTriggerLabel = useMemo(() => {
     // Prefer the first option that actually offers more than one value.
     const meaningful =
@@ -393,7 +401,7 @@ export default function QuickAddOverlay({
             e.stopPropagation()
           }}
         >
-          {options.map((option) => {
+          {pickableOptions.map((option) => {
             const sortedValues = sortOptionValues(option.values ?? [], false)
             return (
               <div
@@ -494,7 +502,7 @@ export default function QuickAddOverlay({
 
                   {/* Options */}
                   <div className="px-6 py-5 flex flex-col gap-6 overflow-y-auto max-h-[50dvh]">
-                    {options.map((option) => {
+                    {pickableOptions.map((option) => {
                       const sortedValues = sortOptionValues(
                         option.values ?? [],
                         false
