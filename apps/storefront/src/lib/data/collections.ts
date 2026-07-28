@@ -1,6 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { getMedusaLocaleHeaders } from "@lib/util/request-locale"
 import { HttpTypes } from "@medusajs/types"
 import { getGlobalCacheOptions } from "./cookies"
 
@@ -11,6 +12,7 @@ export const retrieveCollection = async (id: string) => {
     .fetch<{ collection: HttpTypes.StoreCollection }>(
       `/store/collections/${id}`,
       {
+        headers: getMedusaLocaleHeaders(),
         next,
         cache: "force-cache",
       }
@@ -30,6 +32,7 @@ export const listCollections = async (
     .fetch<{ collections: HttpTypes.StoreCollection[]; count: number }>(
       "/store/collections",
       {
+        headers: getMedusaLocaleHeaders(),
         query: queryParams,
         next,
         cache: "force-cache",
@@ -47,6 +50,7 @@ export const getCollectionWithProductCategories = async (
     .fetch<{ collection: HttpTypes.StoreCollection }>(
       `/store/collections/${id}`,
       {
+        headers: getMedusaLocaleHeaders(),
         query: { fields: "*products,*products.categories" },
         next,
         cache: "force-cache",
@@ -63,9 +67,10 @@ export const getCollectionByHandle = async (
 
   return await sdk.client
     .fetch<HttpTypes.StoreCollectionListResponse>(`/store/collections`, {
+      headers: getMedusaLocaleHeaders(),
       query: { handle, fields: "*products" },
       next,
       cache: "force-cache",
     })
-    .then(({ collections }) => collections[0] || null)
+    .then(({ collections }) => collections[0] ?? null)
 }

@@ -1,11 +1,13 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import { useRecaptcha } from "@lib/hooks/use-recaptcha"
 
 type Status = "idle" | "loading" | "success" | "error"
 
 const Newsletter = () => {
+  const t = useTranslations("home")
   const [status, setStatus] = useState<Status>("idle")
   const [errorMsg, setErrorMsg] = useState("")
   const { preload, getToken } = useRecaptcha()
@@ -18,12 +20,12 @@ const Newsletter = () => {
     const email = (new FormData(e.currentTarget).get("EMAIL") as string)?.trim()
 
     if (!email) {
-      setErrorMsg("Te rugăm să introduci adresa de email.")
+      setErrorMsg(t("Te rugăm să introduci adresa de email"))
       setStatus("error")
       return
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setErrorMsg("Adresa de email nu este validă.")
+      setErrorMsg(t("Adresa de email nu este validă"))
       setStatus("error")
       return
     }
@@ -48,7 +50,7 @@ const Newsletter = () => {
       )
 
       if (res.status === 429) {
-        setErrorMsg("Prea multe încercări. Te rugăm să revii peste câteva minute.")
+        setErrorMsg(t("Prea multe încercări Te rugăm să revii peste câteva minute"))
         setStatus("error")
         return
       }
@@ -56,16 +58,14 @@ const Newsletter = () => {
       const json = await res.json()
 
       if (!res.ok) {
-        setErrorMsg(
-          json.error || "Înscrierea nu a putut fi finalizată. Încearcă din nou."
-        )
+        setErrorMsg(json.error || t("Înscrierea nu a putut fi finalizată Încearcă din nou"))
         setStatus("error")
         return
       }
 
       setStatus("success")
     } catch {
-      setErrorMsg("Înscrierea nu a putut fi finalizată. Încearcă din nou.")
+      setErrorMsg(t("Înscrierea nu a putut fi finalizată Încearcă din nou"))
       setStatus("error")
     }
   }
@@ -75,9 +75,9 @@ const Newsletter = () => {
       <div className="subscribe-layout subscribe-layout--inline" id="subscribe">
         <div className="subscribe-form-wrap rv">
           <div className="subscribe-panel">
-                <p className="subscribe-panel-label">Abonare rapidă</p>
+                <p className="subscribe-panel-label">{t("Abonare rapidă")}</p>
                 <p className="subscribe-panel-copy">
-                  Primești lansări, evenimente și colecții noi înaintea tuturor.
+                  {t("Primești lansări, evenimente și colecții noi înaintea tuturor")}
                 </p>
 
                 <p
@@ -90,7 +90,7 @@ const Newsletter = () => {
                     margin: "0 0 22px",
                   }}
                 >
-                  Niciun spam. Te poți dezabona oricând.
+                  {t("Niciun spam Te poți dezabona oricând")}
                 </p>
 
                 {status === "success" ? (
@@ -112,7 +112,7 @@ const Newsletter = () => {
                         textAlign: "center",
                       }}
                     >
-                      Mulțumim! Te-ai înscris cu succes.
+                      {t("Mulțumim! Te-ai înscris cu succes")}
                     </p>
                   </div>
                 ) : (
@@ -127,7 +127,7 @@ const Newsletter = () => {
                         id="EMAIL"
                         name="EMAIL"
                         autoComplete="email"
-                        placeholder="adresa@email.com"
+                        placeholder={t("adresa@emailcom")}
                         className="newsletter-email-input"
                         style={{
                           flex: 1,
@@ -161,7 +161,7 @@ const Newsletter = () => {
                           opacity: status === "loading" ? 0.55 : 1,
                         }}
                       >
-                        {status === "loading" ? "..." : "Înscrie-mă"}
+                        {status === "loading" ? t("") : t("Înscrie-mă")}
                       </button>
                     </div>
 
@@ -174,7 +174,7 @@ const Newsletter = () => {
                         letterSpacing: "0.5px",
                       }}
                     >
-                      Protejat de reCAPTCHA —{" "}
+                      {t("Protejat de reCAPTCHA —")}{" "}
                       <a
                         href="https://policies.google.com/privacy"
                         target="_blank"
@@ -184,7 +184,7 @@ const Newsletter = () => {
                           textDecoration: "underline",
                         }}
                       >
-                        Confidențialitate
+                        {t("Confidențialitate")}
                       </a>{" "}
                       &amp;{" "}
                       <a
@@ -196,7 +196,7 @@ const Newsletter = () => {
                           textDecoration: "underline",
                         }}
                       >
-                        Termeni
+                        {t("Termeni")}
                       </a>
                     </p>
 

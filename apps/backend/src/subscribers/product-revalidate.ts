@@ -42,6 +42,13 @@ export const config: SubscriberConfig = {
     "product-collection.created",
     "product-collection.updated",
     "product-collection.deleted",
+    // Saving a translation (via the official /admin/translations/batch route)
+    // doesn't touch the product/category/collection entity itself, so the
+    // events above never fire for a translation-only change — these close
+    // that gap.
+    "translation.created",
+    "translation.updated",
+    "translation.deleted",
   ],
 }
 

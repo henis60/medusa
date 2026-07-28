@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { convertToLocale } from "@lib/util/money"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import DiscountCode from "@modules/checkout/components/discount-code"
@@ -16,6 +17,7 @@ function getCheckoutStep(cart: HttpTypes.StoreCart) {
 }
 
 const Summary = ({ cart }: SummaryProps) => {
+  const t = useTranslations("cart")
   const step = getCheckoutStep(cart)
   const {
     currency_code,
@@ -28,21 +30,21 @@ const Summary = ({ cart }: SummaryProps) => {
   return (
     <div className="flex flex-col gap-6 border border-[var(--theme-border)] p-6 small:p-8">
       <h2 className="font-sans text-[12px] small:text-[13px] uppercase tracking-[4px] text-[var(--theme-text)]">
-        Sumar
+        {t("Sumar")}
       </h2>
 
       <DiscountCode cart={cart} />
 
       <div className="flex flex-col gap-3 font-sans text-[12px] small:text-[13px] uppercase tracking-[2px]">
         <div className="flex justify-between text-[var(--theme-text-muted)]">
-          <span>Produse</span>
+          <span>{t("Produse")}</span>
           <span data-testid="cart-subtotal" data-value={item_subtotal ?? 0}>
             {convertToLocale({ amount: item_subtotal ?? 0, currency_code })}
           </span>
         </div>
 
         <div className="flex justify-between text-[var(--theme-text-muted)]">
-          <span>Livrare</span>
+          <span>{t("Livrare")}</span>
           <span data-testid="cart-shipping" data-value={shipping_subtotal ?? 0}>
             {shipping_subtotal
               ? convertToLocale({ amount: shipping_subtotal, currency_code })
@@ -52,7 +54,7 @@ const Summary = ({ cart }: SummaryProps) => {
 
         {!!discount_subtotal && (
           <div className="flex justify-between text-hunter-gold">
-            <span>Reducere</span>
+            <span>{t("Reducere")}</span>
             <span data-testid="cart-discount" data-value={discount_subtotal}>
               − {convertToLocale({ amount: discount_subtotal, currency_code })}
             </span>
@@ -62,7 +64,7 @@ const Summary = ({ cart }: SummaryProps) => {
 
       <div className="border-t border-[var(--theme-border)] pt-4 flex justify-between items-baseline">
         <span className="font-sans text-[12px] small:text-[13px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
-          Total
+          {t("Total")}
         </span>
         <span
           className="font-display text-[22px] small:text-[26px] leading-none text-hunter-gold"
@@ -78,7 +80,7 @@ const Summary = ({ cart }: SummaryProps) => {
           data-testid="checkout-button"
         >
           <button className="w-full py-3.5 font-sans text-[12px] small:text-[13px] uppercase tracking-[4px] bg-hunter-gold text-hunter-dark hover:opacity-90 transition-opacity">
-            Finalizează comanda
+            {t("Finalizează comanda")}
           </button>
         </LocalizedClientLink>
 
@@ -86,7 +88,7 @@ const Summary = ({ cart }: SummaryProps) => {
           href="/ready-to-wear"
           className="flex items-center justify-center w-full mt-3 h-12 font-sans uppercase tracking-[3px] text-[11px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-hunter-gold hover:text-hunter-gold transition-colors"
         >
-          Continuă cumpărăturile
+          {t("Continuă cumpărăturile")}
         </LocalizedClientLink>
       </div>
     </div>

@@ -8,6 +8,7 @@ import {
   ComboboxOptions,
 } from "@headlessui/react"
 import { ChevronUpDown } from "@medusajs/icons"
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 type County = { id: number; name: string; code: string }
@@ -67,6 +68,9 @@ function ComboField<T extends { id: number; name: string }>({
   disabled,
   placeholder,
   testId,
+  requiredMessage,
+  noResultsLabel,
+  typeToSearchLabel,
 }: {
   label: string
   required?: boolean
@@ -76,6 +80,9 @@ function ComboField<T extends { id: number; name: string }>({
   disabled?: boolean
   placeholder?: string
   testId?: string
+  requiredMessage: string
+  noResultsLabel: string
+  typeToSearchLabel: string
 }) {
   const [query, setQuery] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -124,7 +131,7 @@ function ComboField<T extends { id: number; name: string }>({
             aria-invalid={error ? true : undefined}
             onInvalid={(e) => {
               e.preventDefault()
-              setError("Acest câmp este obligatoriu")
+              setError(requiredMessage)
             }}
           />
           <ComboboxButton className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--theme-text-muted)]">
@@ -137,7 +144,7 @@ function ComboField<T extends { id: number; name: string }>({
           >
             {filtered.length === 0 ? (
               <div className="px-3 py-2 font-sans text-[12px] text-[var(--theme-text-muted)]">
-                Niciun rezultat
+                {noResultsLabel}
               </div>
             ) : (
               <div>
@@ -148,7 +155,7 @@ function ComboField<T extends { id: number; name: string }>({
                 ))}
                 {truncated && (
                   <div className="px-3 py-2 font-sans text-[11px] text-[var(--theme-text-muted)]">
-                    Scrie pentru a căuta…
+                    {typeToSearchLabel}
                   </div>
                 )}
               </div>
@@ -188,6 +195,7 @@ const LocalitySelect = ({
   onChange,
   required,
 }: LocalitySelectProps) => {
+  const t = useTranslations("common")
   const [counties, setCounties] = useState<County[]>([])
   const [localities, setLocalities] = useState<Locality[]>([])
   const [county, setCounty] = useState<County | null>(null)
@@ -246,24 +254,30 @@ const LocalitySelect = ({
       <input type="hidden" name={countyFieldName} value={county?.name ?? ""} />
       <input type="hidden" name={cityFieldName} value={city?.name ?? ""} />
       <ComboField
-        label="Județ"
+        label={t("Județ")}
         required={required}
         value={county}
         options={counties}
         onSelect={handleCounty}
-        placeholder="Caută județ"
+        placeholder={t("Caută județ")}
         testId="province-select"
+        requiredMessage={t("Acest câmp este obligatoriu")}
+        noResultsLabel={t("Niciun rezultat")}
+        typeToSearchLabel={t("Scrie pentru a căuta…")}
       />
       <ComboField
         key={county?.id ?? "no-county"}
-        label="Localitate"
+        label={t("Localitate")}
         required={required}
         value={city}
         options={localities}
         onSelect={handleCity}
         disabled={!county}
-        placeholder={county ? "Caută localitate" : "Alege întâi județul"}
+        placeholder={county ? t("Caută localitate") : t("Alege întâi județul")}
         testId="city-select"
+        requiredMessage={t("Acest câmp este obligatoriu")}
+        noResultsLabel={t("Niciun rezultat")}
+        typeToSearchLabel={t("Scrie pentru a căuta…")}
       />
     </>
   )

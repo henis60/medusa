@@ -1,5 +1,6 @@
 ﻿"use client"
 
+import { useTranslations } from "next-intl"
 import { Button } from "@modules/common/components/ui"
 
 import OrderCard from "../order-card"
@@ -7,6 +8,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import { HttpTypes } from "@medusajs/types"
 
 const OrderOverview = ({ orders }: { orders: HttpTypes.StoreOrder[] }) => {
+  const t = useTranslations("account")
   if (orders?.length) {
     return (
       <div className="w-full small:px-8 pt-2 small:pt-4 pb-4">
@@ -26,13 +28,13 @@ const OrderOverview = ({ orders }: { orders: HttpTypes.StoreOrder[] }) => {
     >
       <div>
         <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-3">
-          Istoric comenzi
+          {t("Istoric comenzi")}
         </p>
         <h2 className="font-display text-[28px] leading-[1.1] text-[var(--theme-text)] mb-3">
-          Nicio comandă încă
+          {t("Nicio comandă încă")}
         </h2>
         <p className="font-serif italic text-[14px] text-[var(--theme-text-muted)] max-w-[240px] mx-auto">
-          Descoperă colecția noastră și plasează prima ta comandă.
+          {t("Descoperă colecția noastră și plasează prima ta comandă")}
         </p>
       </div>
       <LocalizedClientLink href="/ready-to-wear" passHref>
@@ -40,7 +42,7 @@ const OrderOverview = ({ orders }: { orders: HttpTypes.StoreOrder[] }) => {
           data-testid="continue-shopping-button"
           className="h-12 small:px-8 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent font-sans uppercase tracking-[3px] text-[11px]"
         >
-          Vezi colecția
+          {t("Vezi colecția")}
         </Button>
       </LocalizedClientLink>
     </div>

@@ -1,7 +1,10 @@
+import { getTranslations } from "next-intl/server"
+
 import ContactForm from "@modules/contact/components/contact-form"
 import AccountFaqStrip from "@modules/account/components/account-faq-strip"
 
-const ContactTemplate = () => {
+const ContactTemplate = async () => {
+  const t = await getTranslations("contact")
   return (
     <div className="bg-[var(--theme-bg)] w-full min-h-screen">
       {/* Header */}
@@ -9,15 +12,14 @@ const ContactTemplate = () => {
         <div className="flex items-center gap-3 mb-3">
           <span className="h-px w-8 bg-hunter-gold" />
           <span className="font-sans text-[10px] uppercase tracking-[5px] text-[var(--theme-text-muted)]">
-            Contact
+            {t("Contact")}
           </span>
         </div>
         <h1 className="font-display text-4xl small:text-6xl text-[var(--theme-text)] leading-[0.95] mb-3">
-          Contactează-ne
+          {t("Contactează-ne")}
         </h1>
         <p className="max-w-md font-serif text-lg text-[var(--theme-text-muted)] leading-relaxed">
-          Ai o întrebare despre o comandă, un produs sau o colaborare? Scrie-ne
-          și revenim cât mai curând.
+          {t("Ai o întrebare despre o comandă, un produs sau o colaborare? Scrie-ne și revenim cât mai curând")}
         </p>
       </div>
 
@@ -34,7 +36,7 @@ const ContactTemplate = () => {
           <div className="grid grid-cols-2 gap-x-4 gap-y-4 small:gap-x-8 small:gap-y-6 self-center">
             <div>
               <p className="font-sans text-[8px] small:text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-1 small:mb-2">
-                Email
+                {t("Email")}
               </p>
               <a
                 href="mailto:contact@thehunter.ro"
@@ -45,7 +47,7 @@ const ContactTemplate = () => {
             </div>
             <div>
               <p className="font-sans text-[8px] small:text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-1 small:mb-2">
-                Telefon
+                {t("Telefon")}
               </p>
               <a
                 href="tel:+40765080667"
@@ -56,7 +58,7 @@ const ContactTemplate = () => {
             </div>
             <div>
               <p className="font-sans text-[8px] small:text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-1 small:mb-2">
-                Locație
+                {t("Locație")}
               </p>
               <a
                 href="https://maps.app.goo.gl/zdCeRp3LB2uJeLX49"
@@ -64,17 +66,17 @@ const ContactTemplate = () => {
                 rel="noopener noreferrer"
                 className="font-serif text-sm small:text-lg text-[var(--theme-text)] hover:text-hunter-gold transition-colors"
               >
-                Bulevardul Unirii 7, Baia Mare
+                {t("Bulevardul Unirii 7, Baia Mare")}
               </a>
             </div>
             <div>
               <p className="font-sans text-[8px] small:text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-1 small:mb-2">
-                Program
+                {t("Program")}
               </p>
               <p className="font-serif text-sm small:text-lg text-[var(--theme-text)] leading-snug">
-                Luni – Vineri · 07:00 – 18:00
+                {t("Luni – Vineri · 07:00 – 18:00")}
                 <br />
-                Sâmbătă · 09:00 – 14:30
+                {t("Sâmbătă · 09:00 – 14:30")}
               </p>
             </div>
           </div>
@@ -87,7 +89,7 @@ const ContactTemplate = () => {
             className="block border border-[var(--theme-border)] min-h-[200px]"
           >
             <iframe
-              title="Hartă — Bulevardul Unirii 7, Baia Mare"
+              title={t("Hartă — Bulevardul Unirii 7, Baia Mare")}
               src="https://www.google.com/maps?q=Bulevardul+Unirii+7,+Baia+Mare&output=embed"
               width="100%"
               height="100%"

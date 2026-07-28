@@ -1,72 +1,56 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 export default function Collections() {
+  const t = useTranslations("home")
+
   const collections = [
     {
       id: "mtm",
-      tag: "Serviciu principal",
-      name: "Made to Measure",
+      tag: t("Serviciu principal"),
+      name: t("Made to Measure"),
       highlighted: "Measure",
-      sub: "Costumul care se construiește pe tine – nu invers.",
+      sub: t("Costumul care se construiește pe tine – nu invers"),
       image: "/landing/images/mtm.webp",
       tall: true,
     },
     {
       id: "hunting",
-      tag: "Colecție exclusivă · Toamnă 2026",
-      name: "Vânătoare & Ecvestru",
-      highlighted: "Ecvestru",
-      sub: "Harris Tweed, lână tradițională britanică. Pentru bărbatul care știe că o dimineață bună de toamnă merită haine pe măsura ei.",
+      tag: t("Colecție exclusivă · Toamnă 2026"),
+      name: t("Vânătoare & Ecvestru"),
+      highlighted: t("Vânătoare & Ecvestru").split(" ").slice(-1)[0],
+      sub: t("Harris Tweed, lână tradițională britanică Pentru bărbatul care știe că o dimineață bună de toamnă merită haine pe măsura ei"),
       image: "/landing/images/vanatoare.webp",
     },
     {
       id: "rtw",
-      tag: "Colecție permanentă",
-      name: "Ready to Wear",
+      tag: t("Colecție permanentă"),
+      name: t("Ready to Wear"),
       highlighted: "Wear",
-      sub: "Piese selectate cu exigența unui tailor. Disponibile imediat.",
+      sub: t("Piese selectate cu exigența unui tailor Disponibile imediat"),
       image: "/landing/images/ready-to-wear.webp",
     },
   ]
 
   const mtmSteps = [
-    {
-      num: "01",
-      name: "Consultație",
-      desc: "Discutăm stilul, ocaziile, preferințele. Primul pas spre costumul care te definește.",
-    },
-    {
-      num: "02",
-      name: "Material",
-      desc: "Alegi din colecția noastră de țesături premium – Super 100 până la Super 180, din cele mai bune manufacture europene.",
-    },
-    {
-      num: "03",
-      name: "Măsuri",
-      desc: "Luăm toate măsurile necesare. Construim tiparul unic pe corpul tău – nu pe o talie standard.",
-    },
-    {
-      num: "04",
-      name: "Fitting",
-      desc: "Fitting intermediar pentru ajustări perfecte înainte de finisare. Fiecare detaliu, perfect.",
-    },
-    {
-      num: "05",
-      name: "Livrare",
-      desc: "Costumul tău gata în 21 de zile. Livrat în sacul de protecție The Hunter House.",
-    },
+    { num: "01", name: t("Consultație"), desc: t("Discutăm stilul, ocaziile, preferințele Primul pas spre costumul care te definește") },
+    { num: "02", name: t("Material"), desc: t("Alegi din colecția noastră de țesături premium – Super 100 până la Super 180, din cele mai bune manufacture europene") },
+    { num: "03", name: t("Măsuri"), desc: t("Luăm toate măsurile necesare Construim tiparul unic pe corpul tău – nu pe o talie standard") },
+    { num: "04", name: t("Fitting"), desc: t("Fitting intermediar pentru ajustări perfecte înainte de finisare Fiecare detaliu, perfect") },
+    { num: "05", name: t("Livrare"), desc: t("Costumul tău gata în 21 de zile Livrat în sacul de protecție The Hunter House") },
   ]
 
   return (
     <section className="section coll-sec" id="collections">
       <div className="section-inner">
         <div className="kicker rv">
-          <span className="kicker-bar"></span>Collections
+          <span className="kicker-bar"></span>{t("Collections")}
         </div>
         <h2 className="sec-title rv">
-          Pentru fiecare
+          {t("Pentru fiecare")}
           <br />
-          versiune a <em>ta</em>
+          {t("versiune a")} <em>{t("ta")}</em>
         </h2>
         <div className="line-draw rv" style={{ maxWidth: "280px" }}></div>
 
@@ -106,7 +90,9 @@ export default function Collections() {
                 <div className="coll-info">
                   <div className="coll-tag">{coll.tag}</div>
                   <div className="coll-name">
-                    {coll.id === "hunting" ? "Vânătoare & " : coll.name.split(" ")[0] + " "}
+                    {coll.id === "hunting"
+                      ? coll.name.split(" ").slice(0, -1).join(" ") + " "
+                      : coll.name.split(" ")[0] + " "}
                     {coll.id !== "hunting" && <em>{coll.highlighted}</em>}
                     {coll.id === "hunting" && (
                       <>
@@ -125,10 +111,11 @@ export default function Collections() {
         {/* MtM Process */}
         <div className="mtm-inline rv-group">
           <div className="mtm-inline-header rv">
-            <div className="mtm-tag">Made to measure</div>
+            <div className="mtm-tag">{t("Made to measure")}</div>
             <h3 className="mtm-inline-title">
-              Costumul tău nu se găsește –<br />
-              <em>se construiește.</em>
+              {t("Costumul tău nu se găsește –")}
+              <br />
+              <em>{t("se construiește")}</em>
             </h3>
           </div>
           <div className="mtm-steps">

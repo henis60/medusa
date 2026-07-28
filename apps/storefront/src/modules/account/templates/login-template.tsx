@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import Register from "@modules/account/components/register"
@@ -17,6 +18,7 @@ type Props = {
 }
 
 const LoginTemplate = ({ redirectTo }: Props) => {
+  const t = useTranslations("account")
   const [currentView, setCurrentView] = useState(LOGIN_VIEW.SIGN_IN)
 
   return (
@@ -28,7 +30,7 @@ const LoginTemplate = ({ redirectTo }: Props) => {
             className="inline-flex items-center gap-2 text-[var(--theme-text-muted)] hover:text-[var(--theme-gold)] transition-colors font-sans text-[11px] uppercase tracking-[3px]"
           >
             <span>←</span>
-            <span>Înapoi</span>
+            <span>{t("Înapoi")}</span>
           </button>
         </div>
       )}

@@ -7,24 +7,12 @@ import {
   useTransform,
 } from "framer-motion"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-
-const MARQUEE_ITEMS = [
-  "Tailoring Premium",
-  "Made to Measure",
-  "The Hunter Bar",
-  "Heritage & Vânătoare",
-  "Friday Social Club",
-  "Ready to Wear",
-  "Atelier Privat",
-  "Vinuri & Cocktailuri",
-  "Events",
-  "Membership",
-  "Est. 2024",
-]
+import { useTranslations } from "next-intl"
 
 const ease = [0.23, 1, 0.32, 1] as const
 
 const Hero = () => {
+  const t = useTranslations("home")
   const heroRef = useRef<HTMLElement>(null)
   const reduced = useReducedMotion()
   const [marqueePaused, setMarqueePaused] = useState(false)
@@ -34,7 +22,8 @@ const Hero = () => {
   })
   const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "35%"])
 
-  const items = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS]
+  const marqueeItems = t.raw("marqueeItems") as string[]
+  const items = [...marqueeItems, ...marqueeItems]
 
   return (
     <section ref={heroRef} className="hero" id="home">
@@ -66,7 +55,7 @@ const Hero = () => {
               transition={{ duration: 1.0, ease, delay: 0.4 }}
             />
             <span className="eyebrow-text">
-              Return of the Elegant Gentleman
+              {t("Return of the Elegant Gentleman")}
             </span>
             <motion.div
               className="eyebrow-line"
@@ -117,7 +106,7 @@ const Hero = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease, delay: 0.82 }}
           >
-            <span className="eyebrow-text">online shop</span>
+            <span className="eyebrow-text">{t("online shop")}</span>
           </motion.div>
         </div>
         {/* end hero-top-group */}
@@ -128,7 +117,7 @@ const Hero = () => {
           transition={{ duration: 0.7, ease, delay: 1.1 }}
         >
           <LocalizedClientLink href="/ready-to-wear" className="hero-cta">
-            <span className="hero-cta-text">Explorează Colecția</span>
+            <span className="hero-cta-text">{t("Explorează Colecția")}</span>
             <span className="hero-cta-arrow">→</span>
           </LocalizedClientLink>
         </motion.div>

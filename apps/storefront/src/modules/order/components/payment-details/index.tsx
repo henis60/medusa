@@ -1,12 +1,14 @@
 import { isStripeLike, paymentInfoMap } from "@lib/constants"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
+import { getTranslations } from "next-intl/server"
 
 type PaymentDetailsProps = {
   order: HttpTypes.StoreOrder
 }
 
-const PaymentDetails = ({ order }: PaymentDetailsProps) => {
+const PaymentDetails = async ({ order }: PaymentDetailsProps) => {
+  const t = await getTranslations("order")
   const payment = order.payment_collections?.[0].payments?.[0]
 
   if (!payment) return null
@@ -14,12 +16,12 @@ const PaymentDetails = ({ order }: PaymentDetailsProps) => {
   return (
     <div className="small:px-8">
       <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-5">
-        Plată
+        {t("Plată")}
       </p>
       <div className="grid grid-cols-1 small:grid-cols-2 gap-6">
         <div>
           <p className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-2">
-            Metodă de plată
+            {t("Metodă de plată")}
           </p>
           <p
             className="font-sans text-[12px] text-[var(--theme-text)]"
@@ -30,7 +32,7 @@ const PaymentDetails = ({ order }: PaymentDetailsProps) => {
         </div>
         <div>
           <p className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-2">
-            Detalii
+            {t("Detalii")}
           </p>
           <p
             className="font-sans text-[12px] text-[var(--theme-text)]"

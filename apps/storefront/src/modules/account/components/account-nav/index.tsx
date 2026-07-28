@@ -1,8 +1,9 @@
 ﻿"use client"
 
+import { useTranslations } from "next-intl"
 import { ArrowRightOnRectangle } from "@medusajs/icons"
 import { clx } from "@modules/common/components/ui"
-import { usePathname } from "next/navigation"
+import { usePathname } from "@i18n/navigation"
 import { signout } from "@lib/data/customer"
 import { emitCartUpdated } from "@lib/util/cart-events"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -12,7 +13,7 @@ const NAV_ITEMS = [
   { label: "Detalii cont", href: "/profil/detalii-cont" },
   { label: "Adrese salvate", href: "/profil/adrese" },
   { label: "Comenzi", href: "/profil/comenzi" },
-]
+] as const
 
 // The overview route doubles as the menu on mobile, so it isn't listed there.
 const MOBILE_NAV_ITEMS = NAV_ITEMS.filter(({ href }) => href !== "/profil")
@@ -33,27 +34,30 @@ const handleLogout = async () => {
 }
 
 const AccountNav = () => {
+  const t = useTranslations("account")
   const route = usePathname() ?? "/profil"
 
   return (
     <div>
-      <MobileNav route={route} />
-      <DesktopNav route={route} />
+      <MobileNav route={route} t={t} />
+      <DesktopNav route={route} t={t} />
     </div>
   )
 }
+
+type NavT = ReturnType<typeof useTranslations>
 
 /**
  * Mobile: the overview page IS the menu (tap-friendly full-bleed rows).
  * Sub-pages collapse the menu into a back link + section title.
  */
-const MobileNav = ({ route }: { route: string }) => {
+const MobileNav = ({ route, t }: { route: string; t: NavT }) => {
   const isOverview = route === "/profil"
   const activeItem = MOBILE_NAV_ITEMS.find(({ href }) => isActive(route, href))
 
   return (
     <nav
-      aria-label="Meniu cont"
+      aria-label={t("Meniu cont")}
       className="small:hidden"
       data-testid="mobile-account-nav"
     >
@@ -67,7 +71,7 @@ const MobileNav = ({ route }: { route: string }) => {
                   className="group flex items-center justify-between gap-4 min-h-[56px] p-4 font-serif text-[18px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] active:bg-[var(--theme-surface)] active:text-hunter-gold transition-colors"
                   data-testid={`${label.toLowerCase()}-link`}
                 >
-                  {label}
+                  {t(label)}
                   <span
                     aria-hidden
                     className="font-serif text-[18px] text-hunter-gold/40 group-active:text-hunter-gold group-active:translate-x-0.5 transition-all"
@@ -83,17 +87,17 @@ const MobileNav = ({ route }: { route: string }) => {
         <div>
           <LocalizedClientLink
             href={backTarget(route)}
-            className="inline-flex items-center gap-2 py-3 -my-3 px-3 -mx-3 font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-[var(--theme-gold)] active:text-[var(--theme-gold)] transition-colors"
+            className="inline-flex items-center gap-2 small:py-3 small:-my-3 small:px-3 small:-mx-3 small:px-3 small:-mx-3 font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-[var(--theme-gold)] active:text-[var(--theme-gold)] transition-colors"
             data-testid="account-back-link"
           >
             <span aria-hidden>←</span>
-            <span>Înapoi</span>
+            <span>{t("Înapoi")}</span>
           </LocalizedClientLink>
           <div className="py-4">
             <h1 className="font-serif text-[22px] leading-[1] tracking-[0.02em] text-hunter-gold">
               {route.startsWith("/profil/comenzi/")
-                ? `Comanda #${route.split("/").pop()}`
-                : activeItem.label}
+                ? t("Comanda #{id}", { id: route.split("/").pop() ?? "" })
+                : t(activeItem.label)}
             </h1>
           </div>
         </div>
@@ -103,9 +107,9 @@ const MobileNav = ({ route }: { route: string }) => {
 }
 
 /** Desktop: persistent sidebar with active-state rail and logout. */
-const DesktopNav = ({ route }: { route: string }) => (
+const DesktopNav = ({ route, t }: { route: string; t: NavT }) => (
   <nav
-    aria-label="Meniu cont"
+    aria-label={t("Meniu cont")}
     className="hidden small:flex flex-col py-8 pr-8 gap-24 border-r border-[var(--theme-border)]"
     data-testid="account-nav"
   >
@@ -122,7 +126,7 @@ const DesktopNav = ({ route }: { route: string }) => (
             )}
             data-testid={`${label.toLowerCase()}-link`}
           >
-            {label}
+            {t(label)}
           </LocalizedClientLink>
         </li>
       ))}
@@ -135,7 +139,7 @@ const DesktopNav = ({ route }: { route: string }) => (
       className="mt-10 w-full h-11 px-6 inline-flex items-center justify-center gap-2 border border-[var(--theme-border)] font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text)] hover:border-hunter-gold hover:text-hunter-gold transition-colors"
     >
       <ArrowRightOnRectangle className="w-3.5 h-3.5" />
-      Deconectare
+      {t("Deconectare")}
     </button>
   </nav>
 )

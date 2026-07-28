@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { useTranslations } from "next-intl"
 import { clx } from "@modules/common/components/ui"
 
 export default function ExpandableDescription({
@@ -10,6 +11,7 @@ export default function ExpandableDescription({
   text: string
   className?: string
 }) {
+  const t = useTranslations("store")
   const [expanded, setExpanded] = useState(false)
   const [clipped, setClipped] = useState(false)
   const ref = useRef<HTMLParagraphElement>(null)
@@ -46,7 +48,7 @@ export default function ExpandableDescription({
           onClick={() => setExpanded(true)}
           className="mt-1 font-sans text-[10px] uppercase tracking-[2px] text-hunter-gold hover:opacity-80 transition-opacity"
         >
-          Citește mai mult
+          {t("Citește mai mult")}
         </button>
       )}
     </div>

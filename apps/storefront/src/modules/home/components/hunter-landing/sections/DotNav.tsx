@@ -1,36 +1,43 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useTranslations } from "next-intl"
 
-const SECTIONS = [
-  { label: "Intro", section: "home" },
-  { label: "Origin", section: "about" },
-  { label: "The Shop", section: "shop" },
-  { label: "Collections", section: "collections" },
-  { label: "The House", section: "space" },
-  { label: "Events", section: "events" },
-  { label: "The Bar", section: "bar" },
-  { label: "Gift Card", section: "giftcard" },
-  { label: "Membership", section: "membership" },
-  { label: "Newsletter", section: "subscribe" },
-  { label: "Contact", section: "contact" },
-]
+const SECTION_IDS = [
+  "home",
+  "about",
+  "shop",
+  "collections",
+  "space",
+  "events",
+  "bar",
+  "giftcard",
+  "membership",
+  "subscribe",
+  "contact",
+] as const
 
 export default function DotNav() {
-  const [active, setActive] = useState("home")
+  const t = useTranslations("home")
+  const [active, setActive] = useState<(typeof SECTION_IDS)[number]>("home")
+
+  const SECTIONS = SECTION_IDS.map((section) => ({
+    label: t(section),
+    section,
+  }))
 
   useEffect(() => {
     function update() {
       const mid = window.innerHeight * 0.5
       const atBottom =
         window.innerHeight + window.scrollY >= document.body.scrollHeight - 8
-      let current = SECTIONS[0].section
-      SECTIONS.forEach(({ section }) => {
+      let current: (typeof SECTION_IDS)[number] = SECTION_IDS[0]
+      SECTION_IDS.forEach((section) => {
         const el = document.getElementById(section)
         if (!el) return
         if (el.getBoundingClientRect().top <= mid) current = section
       })
-      if (atBottom) current = SECTIONS[SECTIONS.length - 1].section
+      if (atBottom) current = SECTION_IDS[SECTION_IDS.length - 1]
       setActive(current)
     }
     window.addEventListener("scroll", update, { passive: true })
@@ -39,7 +46,7 @@ export default function DotNav() {
   }, [])
 
   return (
-    <nav className="dot-nav" id="dotNav" aria-label="Navigare secțiuni">
+    <nav className="dot-nav" id="dotNav" aria-label={t("Navigare secțiuni")}>
       {SECTIONS.map((item) => (
         <a
           key={item.section}

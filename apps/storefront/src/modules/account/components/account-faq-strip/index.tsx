@@ -1,21 +1,23 @@
+import { getTranslations } from "next-intl/server"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
-const AccountFaqStrip = () => {
+const AccountFaqStrip = async () => {
+  const t = await getTranslations("account")
   return (
     <div className="bg-[var(--theme-surface)] border border-[var(--theme-border)] p-5 small:p-8 mt-8 small:mt-16 flex flex-col small:flex-row items-stretch small:items-center justify-between gap-5 small:gap-6">
       <div>
         <p className="font-display text-[20px] leading-[1.1] text-[var(--theme-text)] mb-1.5 small:mb-2">
-          Ai întrebări?
+          {t("Ai întrebări?")}
         </p>
         <p className="font-sans text-[12px] text-[var(--theme-text-muted)]">
-          Găsește răspunsuri pe pagina de întrebări frecvente.
+          {t("Găsește răspunsuri pe pagina de întrebări frecvente")}
         </p>
       </div>
       <LocalizedClientLink
         href="/faq"
         className="shrink-0 h-11 px-6 inline-flex items-center justify-center border border-[var(--theme-border)] font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text)] hover:border-hunter-gold hover:text-hunter-gold active:border-hunter-gold active:text-hunter-gold transition-colors"
       >
-        Întrebări frecvente
+        {t("Întrebări frecvente")}
       </LocalizedClientLink>
     </div>
   )

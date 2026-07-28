@@ -4,13 +4,15 @@ import LineItemPrice from "@modules/common/components/line-item-price"
 import LineItemUnitPrice from "@modules/common/components/line-item-unit-price"
 import Image from "next/image"
 import { getCartItemImageUrl } from "@lib/util/variant-image"
+import { getTranslations } from "next-intl/server"
 
 type ItemProps = {
   item: HttpTypes.StoreCartLineItem | HttpTypes.StoreOrderLineItem
   currencyCode: string
 }
 
-const Item = ({ item, currencyCode }: ItemProps) => {
+const Item = async ({ item, currencyCode }: ItemProps) => {
+  const t = await getTranslations("order")
   const imgSrc = getCartItemImageUrl(item)
 
   return (
@@ -42,7 +44,7 @@ const Item = ({ item, currencyCode }: ItemProps) => {
             className="font-sans text-[10px] text-[var(--theme-text-muted)]"
             data-testid="product-quantity"
           >
-            Cant.: {item.quantity}
+            {t("Cant: {quantity}", { quantity: item.quantity })}
           </span>
         </div>
         <div className="shrink-0 flex flex-col items-end gap-0.5">

@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { Plus } from "@medusajs/icons"
 import { useActionState, useEffect, useState } from "react"
 
@@ -18,6 +19,7 @@ const AddAddress = ({
   region: HttpTypes.StoreRegion
   addresses: HttpTypes.StoreCustomerAddress[]
 }) => {
+  const t = useTranslations("account")
   const [successState, setSuccessState] = useState(false)
   const { state, open, close: closeModal } = useToggleState(false)
 
@@ -49,14 +51,14 @@ const AddAddress = ({
       >
         <Plus className="w-5 h-5 transition-transform group-hover:scale-110" />
         <span className="font-sans text-[9px] uppercase tracking-[3px]">
-          Adaugă adresă nouă
+          {t("Adaugă adresă nouă")}
         </span>
       </button>
 
       <Modal isOpen={state} close={close} data-testid="add-address-modal">
         <Modal.Title>
           <span className="font-display text-[22px] leading-[1]">
-            Adaugă adresă
+            {t("Adaugă adresă")}
           </span>
         </Modal.Title>
         <form action={formAction} className="flex flex-col flex-1 min-h-0">
@@ -64,14 +66,14 @@ const AddAddress = ({
             <div className="flex flex-col gap-y-2 w-full">
               <div className="grid grid-cols-1 gap-y-2">
                 <Input
-                  label="Prenume"
+                  label={t("Prenume")}
                   name="first_name"
                   required
                   autoComplete="given-name"
                   data-testid="first-name-input"
                 />
                 <Input
-                  label="Nume"
+                  label={t("Nume")}
                   name="last_name"
                   required
                   autoComplete="family-name"
@@ -79,26 +81,26 @@ const AddAddress = ({
                 />
               </div>
               <Input
-                label="Companie (opțional)"
+                label={t("Companie (opțional)")}
                 name="company"
                 autoComplete="organization"
                 data-testid="company-input"
               />
               <Input
-                label="Adresă"
+                label={t("Adresă")}
                 name="address_1"
                 required
                 autoComplete="address-line1"
                 data-testid="address-1-input"
               />
               <Input
-                label="Apartament, etaj, etc."
+                label={t("Apartament, etaj, etc")}
                 name="address_2"
                 autoComplete="address-line2"
                 data-testid="address-2-input"
               />
               <Input
-                label="Cod poștal"
+                label={t("Cod poștal")}
                 name="postal_code"
                 autoComplete="postal-code"
                 data-testid="postal-code-input"
@@ -111,7 +113,7 @@ const AddAddress = ({
               {/* Shipping is RO-only — country is fixed, not user-facing */}
               <input type="hidden" name="country_code" value="ro" />
               <Input
-                label="Telefon"
+                label={t("Telefon")}
                 name="phone"
                 autoComplete="phone"
                 data-testid="phone-input"
@@ -124,7 +126,7 @@ const AddAddress = ({
                   data-testid="billing-checkbox"
                 />
                 <span className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text-muted)]">
-                  Folosește pentru facturare
+                  {t("Folosește pentru facturare")}
                 </span>
               </label>
             </div>
@@ -145,13 +147,13 @@ const AddAddress = ({
                 className="h-10 px-6 font-sans text-[10px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)] transition-colors"
                 data-testid="cancel-button"
               >
-                Anulează
+                {t("Anulează")}
               </button>
               <SubmitButton
                 className="h-10 px-6 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent font-sans uppercase tracking-[3px] text-[10px]"
                 data-testid="save-button"
               >
-                Salvează
+                {t("Salvează")}
               </SubmitButton>
             </div>
           </Modal.Footer>

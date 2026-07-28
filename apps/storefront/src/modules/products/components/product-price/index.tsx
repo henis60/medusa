@@ -1,6 +1,9 @@
+"use client"
+
 import { clx } from "@modules/common/components/ui"
 import { getProductPrice } from "@lib/util/get-product-price"
 import { HttpTypes } from "@medusajs/types"
+import { useTranslations } from "next-intl"
 
 export default function ProductPrice({
   product,
@@ -9,6 +12,7 @@ export default function ProductPrice({
   product: HttpTypes.StoreProduct
   variant?: HttpTypes.StoreProductVariant
 }) {
+  const t = useTranslations("products")
   const { cheapestPrice, variantPrice } = getProductPrice({
     product,
     variantId: variant?.id,
@@ -27,7 +31,7 @@ export default function ProductPrice({
           "text-hunter-gold-b": selectedPrice.price_type === "sale",
         })}
       >
-        {!variant && "From "}
+        {!variant && t("De la ")}
         <span
           data-testid="product-price"
           data-value={selectedPrice.calculated_price_number}

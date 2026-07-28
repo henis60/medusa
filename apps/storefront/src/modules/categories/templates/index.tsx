@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
+import { getTranslations } from "next-intl/server"
 
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
 import RefinementList from "@modules/store/components/refinement-list"
@@ -8,13 +9,15 @@ import PaginatedProducts from "@modules/store/templates/paginated-products"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
 
-export default function CategoryTemplate({
+export default async function CategoryTemplate({
   category,
   countryCode,
 }: {
   category: HttpTypes.StoreProductCategory
   countryCode: string
 }) {
+  const t = await getTranslations("categories")
+
   // Static shell renders the default sort; the client grid re-sorts from
   // ?sortBy= after hydration (see InfiniteProducts).
   const sort: SortOptions = "created_at"
@@ -50,7 +53,7 @@ export default function CategoryTemplate({
           </div>
         )}
         <p className="font-sans text-[9px] uppercase tracking-[8px] text-hunter-green dark:text-hunter-green-m mb-5">
-          Hunter House
+          {t("Hunter House")}
         </p>
         <h1
           data-testid="category-page-title"

@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useActionState, useEffect, useState } from "react"
 
 import { updateCustomerProfile } from "@lib/data/customer"
@@ -36,6 +37,7 @@ const Row = ({
 )
 
 const ProfileDetails = ({ customer }: ProfileDetailsProps) => {
+  const t = useTranslations("account")
   const [successState, setSuccessState] = useState(false)
   const { state, open, close: closeModal } = useToggleState(false)
 
@@ -62,7 +64,7 @@ const ProfileDetails = ({ customer }: ProfileDetailsProps) => {
     <div data-testid="profile-details">
       <div className="flex flex-col divide-y divide-[var(--theme-border)]">
         <Row
-          label="Nume"
+          label={t("Nume")}
           value={
             `${customer.first_name ?? ""} ${customer.last_name ?? ""}`.trim() ||
             "—"
@@ -70,12 +72,12 @@ const ProfileDetails = ({ customer }: ProfileDetailsProps) => {
           testId="profile-name"
         />
         <Row
-          label="Adresă de email"
+          label={t("Adresă de email")}
           value={customer.email}
           testId="profile-email"
         />
         <Row
-          label="Număr de telefon"
+          label={t("Număr de telefon")}
           value={customer.phone || "—"}
           testId="profile-phone"
         />
@@ -87,14 +89,14 @@ const ProfileDetails = ({ customer }: ProfileDetailsProps) => {
           onClick={open}
           data-testid="profile-edit-button"
         >
-          Editează
+          {t("Editează")}
         </button>
       </div>
 
       <Modal isOpen={state} close={close} data-testid="edit-profile-modal">
         <Modal.Title>
           <span className="font-display text-[22px] leading-[1]">
-            Editează detaliile
+            {t("Editează detaliile")}
           </span>
         </Modal.Title>
         <form action={formAction} className="flex flex-col flex-1 min-h-0">
@@ -102,7 +104,7 @@ const ProfileDetails = ({ customer }: ProfileDetailsProps) => {
             <div className="flex flex-col gap-y-2 w-full">
               <div className="grid grid-cols-1 gap-y-2">
                 <Input
-                  label="Prenume"
+                  label={t("Prenume")}
                   name="first_name"
                   required
                   autoComplete="given-name"
@@ -110,7 +112,7 @@ const ProfileDetails = ({ customer }: ProfileDetailsProps) => {
                   data-testid="first-name-input"
                 />
                 <Input
-                  label="Nume"
+                  label={t("Nume")}
                   name="last_name"
                   required
                   autoComplete="family-name"
@@ -119,7 +121,7 @@ const ProfileDetails = ({ customer }: ProfileDetailsProps) => {
                 />
               </div>
               <Input
-                label="Telefon"
+                label={t("Telefon")}
                 name="phone"
                 type="tel"
                 autoComplete="tel"
@@ -127,7 +129,7 @@ const ProfileDetails = ({ customer }: ProfileDetailsProps) => {
                 data-testid="phone-input"
               />
               <p className="font-sans text-[10px] text-[var(--theme-text-muted)] mt-1">
-                Adresa de email nu poate fi modificată.
+                {t("Adresa de email nu poate fi modificată")}
               </p>
             </div>
             {formState.error && (
@@ -147,13 +149,13 @@ const ProfileDetails = ({ customer }: ProfileDetailsProps) => {
                 className="h-10 px-6 font-sans text-[10px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)] transition-colors"
                 data-testid="cancel-button"
               >
-                Anulează
+                {t("Anulează")}
               </button>
               <SubmitButton
                 className="h-10 px-6 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent font-sans uppercase tracking-[3px] text-[10px]"
                 data-testid="save-button"
               >
-                Salvează
+                {t("Salvează")}
               </SubmitButton>
             </div>
           </Modal.Footer>

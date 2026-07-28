@@ -34,6 +34,16 @@ type AIProductResult = {
   sizes: string[]
   image_order: number[]
   variant_images: Record<string, number[]>
+  translations?: {
+    en: {
+      title: string
+      subtitle?: string
+      description: string
+      seo_title: string
+      seo_description: string
+      material: string | null
+    }
+  }
 }
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
@@ -141,13 +151,14 @@ ${tagsNote}
 - "sizes": ${sizes?.length ? `${JSON.stringify(sizes)} (furnizate, returnează exact)` : 'mărimile tipice dacă sunt relevante (ex: ["S","M","L","XL"] pentru haine, [] pentru accesorii universale)'}
 ${colorsField}
 ${imageFields}
+- "translations": { "en": { "title": "...", "subtitle": "...", "description": "...", "seo_title": "...", "seo_description": "...", "material": "..." } } — traducerea în engleză a câmpurilor text de mai sus (title, subtitle, description, seo_title, seo_description, material). Păstrează același ton/voce de lux, aceeași formatare a descrierii (paragraf narativ + linie goală + linii bullet cu "• "), aceleași reguli: FĂRĂ culori, FĂRĂ mărimi menționate. "material": traducerea în engleză a materialului sau null.
 
 Răspunde DOAR cu JSON valid, fără text suplimentar, fără markdown, fără backticks.${extraInstructions ? `\n\nInstrucțiuni suplimentare (prioritate maximă): ${extraInstructions}` : ""}`
 
   try {
     const message = await client.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 2048,
+      max_tokens: 4096,
       messages: [{ role: "user", content: [...fetchedImages, { type: "text", text: prompt }] }],
     })
 
@@ -215,6 +226,30 @@ Răspunde DOAR cu JSON valid, fără text suplimentar, fără markdown, fără b
       }
     }
     result.variant_images = cleanVariantImages
+
+    // translations.en: best-effort — validate defensively, drop if malformed
+    const en = result.translations?.en as any
+    if (
+      en &&
+      typeof en === "object" &&
+      typeof en.title === "string" &&
+      typeof en.description === "string" &&
+      typeof en.seo_title === "string" &&
+      typeof en.seo_description === "string"
+    ) {
+      result.translations = {
+        en: {
+          title: en.title,
+          subtitle: typeof en.subtitle === "string" ? en.subtitle : undefined,
+          description: en.description,
+          seo_title: en.seo_title,
+          seo_description: en.seo_description,
+          material: typeof en.material === "string" ? en.material : null,
+        },
+      }
+    } else {
+      result.translations = undefined
+    }
 
     console.log("[AI] result:", JSON.stringify({ colors: result.colors, sizes: result.sizes, price_ron: result.price_ron, images: n }, null, 2))
     return res.json({ result })

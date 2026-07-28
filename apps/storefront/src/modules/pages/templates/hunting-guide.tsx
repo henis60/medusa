@@ -1,44 +1,52 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import Image from "next/image"
 import AppointmentModal from "@modules/layout/components/appointment-modal"
 
-const sections = [
-  {
-    num: "01",
-    title: "Harris Tweed — legenda scoțiană",
-    body: "Există puține țesături cu o poveste atât de autentică. Harris Tweed este țesut manual, în casele localnicilor din insulele Outer Hebrides, Scotland, din lână pură virgilă vopsită și filată local. Fiecare metraj poartă stampila de autenticitate a Harris Tweed Authority. Rezistența lui este legendară — o haină din Harris Tweed durează decenii, capătă caracter cu fiecare purtare și se îmbunătățește cu timpul.",
-  },
-  {
-    num: "02",
-    title: "Haina de vânătoare: structura",
-    body: "O haină de vânătoare bine construită are câteva elemente esențiale: umeri cu suficientă libertate de mișcare pentru a ridica arma, plastron dublu sau căptușit în față pentru protecție, buzunare mari cu capac pentru cartuș și vânat mic, și un spate cu fantă sau cut care permite mișcarea. Lungimea optimă ajunge la mijlocul coapsei. Culoarea tradițională este în tonuri de pământ, olive, brunâ sau heather.",
-  },
-  {
-    num: "03",
-    title: "Layering: arta stratificării",
-    body: "Vânătoarea presupune ore petrecute afară, cu temperaturi variabile. Principiul stratificării este simplu: un strat de bază termic, un strat intermediar de lână sau fleece, și haina exterioară. Nu face greșeala unui singur strat gros — nu poți adapta temperatura. O vestă matlasată sau un gilet de lână între cămașă și haină este soluția britanică clasică, elegantă și eficientă.",
-  },
-  {
-    num: "04",
-    title: "Pantaloni și jambiere",
-    body: "Pantalonii plus-fours — cei care se termină sub genunchi și se închid cu o curea — sunt haina autentică a vânătorii britanice. Asocierea cu jambiere din lână sau woollen socks înalte este estetică și funcțională: protejează piciorul de vegetație, oferă căldură și se usucă rapid. Alternativa modernă sunt pantalonii drepți din tweed sau moleskin, purtați cu bocanci înalți.",
-  },
-  {
-    num: "05",
-    title: "Încălțăminte: alegerea corectă",
-    body: "Bocancii din piele cu talpă de cauciuc sunt standardul — impermeabili, cu gleznă înaltă, cu un gripaj bun pe teren umed. Brandurile clasice britanice ca Dubarry, Hunter sau Le Chameau au construit reputații de decenii în teren. Evită orice cu talpă netedă sau piele fină. Bocancul bun se îngrijește cu ceară de protecție înainte de fiecare ieșire.",
-  },
-  {
-    num: "06",
-    title: "Accesorii cu sens",
-    body: "Căciula de tweed sau cloth cap este piesa de rezistență — completează ansamblul și protejează capul. Mănușile de piele cu căptușeală sunt esențiale în lunile reci. O eșarfă de cachemire sau lână merino adaugă căldură și eleganță. Cartuș-bandoliera din piele sau textil, dacă o porți vizibil, trebuie să fie de calitate — ea spune la fel de mult despre tine ca și haina.",
-  },
-]
-
 const HuntingGuideTemplate = () => {
   const [open, setOpen] = useState(false)
+  const t = useTranslations("pages")
+
+  const sections = [
+    {
+      num: "01",
+      title: t("Harris Tweed — legenda scoțiană"),
+      body: t("Există puține țesături cu o poveste atât de autentică Harris Tweed este țesut manual, în casele localnicilor din insulele Outer Hebrides, Scotland, din lână pură virgilă vopsită și filată local Fiecare metraj poartă stampila de autenticitate a Harris Tweed Authority Rezistența lui este legendară — o haină din Harris Tweed durează decenii, capătă caracter cu fiecare purtare și se îmbunătățește cu timpul"
+      ),
+    },
+    {
+      num: "02",
+      title: t("Haina de vânătoare: structura"),
+      body: t("O haină de vânătoare bine construită are câteva elemente esențiale: umeri cu suficientă libertate de mișcare pentru a ridica arma, plastron dublu sau căptușit în față pentru protecție, buzunare mari cu capac pentru cartuș și vânat mic, și un spate cu fantă sau cut care permite mișcarea Lungimea optimă ajunge la mijlocul coapsei Culoarea tradițională este în tonuri de pământ, olive, brunâ sau heather"
+      ),
+    },
+    {
+      num: "03",
+      title: t("Layering: arta stratificării"),
+      body: t("Vânătoarea presupune ore petrecute afară, cu temperaturi variabile Principiul stratificării este simplu: un strat de bază termic, un strat intermediar de lână sau fleece, și haina exterioară Nu face greșeala unui singur strat gros — nu poți adapta temperatura O vestă matlasată sau un gilet de lână între cămașă și haină este soluția britanică clasică, elegantă și eficientă"
+      ),
+    },
+    {
+      num: "04",
+      title: t("Pantaloni și jambiere"),
+      body: t("Pantalonii plus-fours — cei care se termină sub genunchi și se închid cu o curea — sunt haina autentică a vânătorii britanice Asocierea cu jambiere din lână sau woollen socks înalte este estetică și funcțională: protejează piciorul de vegetație, oferă căldură și se usucă rapid Alternativa modernă sunt pantalonii drepți din tweed sau moleskin, purtați cu bocanci înalți"
+      ),
+    },
+    {
+      num: "05",
+      title: t("Încălțăminte: alegerea corectă"),
+      body: t("Bocancii din piele cu talpă de cauciuc sunt standardul — impermeabili, cu gleznă înaltă, cu un gripaj bun pe teren umed Brandurile clasice britanice ca Dubarry, Hunter sau Le Chameau au construit reputații de decenii în teren Evită orice cu talpă netedă sau piele fină Bocancul bun se îngrijește cu ceară de protecție înainte de fiecare ieșire"
+      ),
+    },
+    {
+      num: "06",
+      title: t("Accesorii cu sens"),
+      body: t("Căciula de tweed sau cloth cap este piesa de rezistență — completează ansamblul și protejează capul Mănușile de piele cu căptușeală sunt esențiale în lunile reci O eșarfă de cachemire sau lână merino adaugă căldură și eleganță Cartuș-bandoliera din piele sau textil, dacă o porți vizibil, trebuie să fie de calitate — ea spune la fel de mult despre tine ca și haina"
+      ),
+    },
+  ]
 
   return (
     <div className="bg-[var(--theme-bg)] w-full min-h-screen">
@@ -56,11 +64,11 @@ const HuntingGuideTemplate = () => {
           <div className="flex items-center gap-3 mb-4">
             <span className="h-px w-8 bg-hunter-gold" />
             <span className="font-sans text-[10px] uppercase tracking-[5px] text-white/60">
-              The Hunter House · Heritage
+              {t("The Hunter House · Heritage")}
             </span>
           </div>
           <h1 className="font-display text-5xl small:text-7xl text-white leading-[0.92]">
-            Shooting <span className="italic text-hunter-gold">Wear</span>
+            {t("Shooting")} <span className="italic text-hunter-gold">{t("Wear")}</span>
           </h1>
         </div>
       </div>
@@ -68,7 +76,7 @@ const HuntingGuideTemplate = () => {
       {/* Intro */}
       <div className="page-container py-12 small:py-16">
         <p className="max-w-xl font-serif text-lg small:text-xl text-[var(--theme-text-muted)] leading-relaxed">
-          Tradiția vânătorii britanice a produs un cod vestimentar rafinat în secole de practică. Fiecare piesă are o funcție. Fiecare alegere spune ceva despre cel care o poartă.
+          {t("Tradiția vânătorii britanice a produs un cod vestimentar rafinat în secole de practică Fiecare piesă are o funcție Fiecare alegere spune ceva despre cel care o poartă")}
         </p>
       </div>
 
@@ -159,10 +167,10 @@ const HuntingGuideTemplate = () => {
         <div className="page-container py-14 flex flex-col small:flex-row items-start small:items-center justify-between gap-8">
           <div>
             <p className="font-display text-3xl small:text-4xl text-[var(--theme-text)] leading-[1.05] mb-2">
-              Explorează colecția Heritage
+              {t("Explorează colecția Heritage")}
             </p>
             <p className="font-sans text-sm text-[var(--theme-text-muted)] max-w-md">
-              Harris Tweed autentic, lână tradițională și accesorii de câmp. Piesele care definesc tradiția britanică, disponibile la Hunter House.
+              {t("Harris Tweed autentic, lână tradițională și accesorii de câmp Piesele care definesc tradiția britanică, disponibile la Hunter House")}
             </p>
           </div>
           <div className="flex flex-col small:flex-row gap-4 shrink-0">
@@ -170,13 +178,13 @@ const HuntingGuideTemplate = () => {
               onClick={() => setOpen(true)}
               className="h-11 px-8 flex items-center font-sans text-[10px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark hover:opacity-90 transition-opacity cursor-pointer"
             >
-              Vezi colecția
+              {t("Vezi colecția")}
             </button>
             <button
               onClick={() => setOpen(true)}
               className="h-11 px-8 flex items-center font-sans text-[10px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:text-hunter-gold hover:border-hunter-gold/40 transition-colors cursor-pointer"
             >
-              Consultație
+              {t("Consultație")}
             </button>
           </div>
         </div>

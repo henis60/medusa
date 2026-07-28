@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { clx } from "@modules/common/components/ui"
 
 export type SortOptions = "price_asc" | "price_desc" | "created_at"
@@ -10,17 +11,17 @@ type SortProductsProps = {
   "data-testid"?: string
 }
 
-const sortOptions: { value: SortOptions; label: string }[] = [
-  { value: "created_at", label: "Latest" },
-  { value: "price_asc", label: "Price ↑" },
-  { value: "price_desc", label: "Price ↓" },
-]
-
 const SortProducts = ({
   "data-testid": dataTestId,
   sortBy,
   setQueryParams,
 }: SortProductsProps) => {
+  const t = useTranslations("store")
+  const sortOptions: { value: SortOptions; label: string }[] = [
+    { value: "created_at", label: t("Cele mai noi") },
+    { value: "price_asc", label: t("Preț crescător") },
+    { value: "price_desc", label: t("Preț descrescător") },
+  ]
   const handleChange = (value: SortOptions) => {
     setQueryParams("sortBy", value)
   }
@@ -28,7 +29,7 @@ const SortProducts = ({
   return (
     <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2" data-testid={dataTestId}>
       <span className="font-sans text-[9px] uppercase tracking-[5px] text-[var(--theme-text-muted)]">
-        Sort
+        {t("Sortare")}
       </span>
       <div className="flex items-center gap-5">
         {sortOptions.map((opt) => (

@@ -9,6 +9,7 @@ import {
   useReducedMotion,
   useTransform,
 } from "framer-motion"
+import { useTranslations } from "next-intl"
 
 function CountUp({ target, suffix = "" }: { target: number; suffix?: string }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -37,30 +38,30 @@ function CountUp({ target, suffix = "" }: { target: number; suffix?: string }) {
 }
 
 export default function Bar() {
+  const t = useTranslations("home")
   return (
     <div className="bar-band" id="bar">
       <div className="bar-band-bg" id="band2"></div>
       <div className="bar-content">
         <div className="kicker rv">
-          <span className="kicker-bar"></span>Wine &amp; cocktails
+          <span className="kicker-bar"></span>{t("Wine & cocktails")}
         </div>
         <h2 className="bar-title rv">
-          The Hunter
+          {t("The Hunter")}
           <br />
-          <em>Bar</em>
+          <em>{t("Bar")}</em>
         </h2>
         <p className="bar-body rv">
-          Selecție atentă de whisky, gin, vinuri și cocktailuri clasice. Fiecare
-          sticlă aleasă cu grijă. Fiecare seară cu un ritm al ei.
+          {t("Selecție atentă de whisky, gin, vinuri și cocktailuri clasice Fiecare sticlă aleasă cu grijă Fiecare seară cu un ritm al ei")}
         </p>
         <div className="flex rv" data-rv-delay="0.12">
           <div className="bs">
             <CountUp target={80} suffix="+" />
-            <div className="bs-lbl">Referințe de vin</div>
+            <div className="bs-lbl">{t("Referințe de vin")}</div>
           </div>
           <div className="bs">
             <CountUp target={6} />
-            <div className="bs-lbl">Cocktailuri signature</div>
+            <div className="bs-lbl">{t("Cocktailuri signature")}</div>
           </div>
         </div>
       </div>

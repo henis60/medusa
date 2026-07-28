@@ -1,29 +1,17 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import RouteCanvas from "./RouteCanvas"
 
 export default function About() {
+  const t = useTranslations("home")
+
   const pillars = [
-    {
-      num: "01",
-      name: "Tailoring",
-      desc: "Made to Measure și Ready to Wear — costume construite pe corpul tău.",
-    },
-    {
-      num: "02",
-      name: "The Hunter Bar",
-      desc: "Selecție de vinuri rare, cocktailuri clasice și spirtoase premium. Un sanctuar al gustului, cu atmosferă unică.",
-    },
-    {
-      num: "03",
-      name: "Comunitate Privată",
-      desc: "Friday Social Club — un cerc select de antreprenori, reuniți pentru degustare de vin, pian live și conversații care contează.",
-    },
-    {
-      num: "04",
-      name: "Heritage & Vânătoare",
-      desc: "Colecție exclusivă în stil britanic — Harris Tweed, lână tradițională, croieli cu caracter. Eleganța unui alt timp.",
-    },
+    { num: "01", name: t("Tailoring"), desc: t("Made to Measure și Ready to Wear — costume construite pe corpul tău") },
+    { num: "02", name: t("The Hunter Bar"), desc: t("Selecție de vinuri rare, cocktailuri clasice și spirtoase premium Un sanctuar al gustului, cu atmosferă unică") },
+    { num: "03", name: t("Comunitate Privată"), desc: t("Friday Social Club — un cerc select de antreprenori, reuniți pentru degustare de vin, pian live și conversații care contează") },
+    { num: "04", name: t("Heritage & Vânătoare"), desc: t("Colecție exclusivă în stil britanic — Harris Tweed, lână tradițională, croieli cu caracter Eleganța unui alt timp") },
   ]
 
   return (
@@ -38,26 +26,24 @@ export default function About() {
           style={{ display: "none" }}
         ></div>
         <div className="absolute bottom-5 right-5 z-[3] text-right">
-          <div className="dviz-caption-title">Inspirație</div>
+          <div className="dviz-caption-title">{t("Inspirație")}</div>
           <div className="dviz-caption-sub">
-            Londra · Milano · Paris · Viena · Zurich
+            {t("Londra · Milano · Paris · Viena · Zurich")}
           </div>
         </div>
       </div>
       <div className="about-text-col">
         <div className="about-bg-glyph">H</div>
         <div className="kicker rv">
-          <span className="kicker-bar"></span>Origin
+          <span className="kicker-bar"></span>{t("Origin")}
         </div>
         <h2 className="sec-title rv">
-          The Hunter
+          {t("The Hunter")}
           <br />
-          <em>House</em>
+          <em>{t("House")}</em>
         </h2>
         <p className="sec-body-text rv">
-          Singurul concept de lifestyle masculin din România care reunește
-          tailoring premium, The Hunter Bar cu cramă proprie de vinuri, și o
-          comunitate privată selectivă.
+          {t("Singurul concept de lifestyle masculin din România care reunește tailoring premium, The Hunter Bar cu cramă proprie de vinuri, și o comunitate privată selectivă")}
         </p>
         <div className="pillars rv-group">
           {pillars.map((pillar) => (

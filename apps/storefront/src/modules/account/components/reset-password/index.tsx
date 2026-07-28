@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useActionState } from "react"
 import Input from "@modules/common/components/input"
 import ErrorMessage from "@modules/checkout/components/error-message"
@@ -12,6 +13,7 @@ type Props = {
 }
 
 const ResetPassword = ({ token }: Props) => {
+  const t = useTranslations("account")
   const resetWithToken = resetPassword.bind(null, token)
   const [message, formAction] = useActionState(resetWithToken, null)
 
@@ -21,38 +23,38 @@ const ResetPassword = ({ token }: Props) => {
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 py-16">
       <div className="w-full max-w-sm flex flex-col items-center">
         <h1 className="font-display text-[42px] leading-[1] text-[var(--theme-text)] mb-2">
-          Parolă Nouă
+          {t("Parolă Nouă")}
         </h1>
         <p className="font-sans text-[14px] text-[var(--theme-text-muted)] mb-10 text-center">
-          Alege o parolă nouă pentru contul tău.
+          {t("Alege o parolă nouă pentru contul tău")}
         </p>
 
         {isSuccess ? (
           <div className="w-full text-center flex flex-col items-center gap-6">
             <div className="border border-[var(--theme-border)] px-6 py-5 w-full">
               <p className="font-sans text-[14px] text-[var(--theme-text)] leading-relaxed">
-                Parola a fost schimbată cu succes. Te poți autentifica acum.
+                {t("Parola a fost schimbată cu succes Te poți autentifica acum")}
               </p>
             </div>
             <LocalizedClientLink
               href="/profil"
               className="font-sans text-[13px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
             >
-              Mergi la autentificare
+              {t("Mergi la autentificare")}
             </LocalizedClientLink>
           </div>
         ) : (
           <form className="w-full" action={formAction}>
             <div className="flex flex-col w-full gap-y-3">
               <Input
-                label="Parolă nouă"
+                label={t("Parolă nouă")}
                 name="password"
                 type="password"
                 autoComplete="new-password"
                 required
               />
               <Input
-                label="Confirmă parola"
+                label={t("Confirmă parola")}
                 name="password_confirm"
                 type="password"
                 autoComplete="new-password"
@@ -61,7 +63,7 @@ const ResetPassword = ({ token }: Props) => {
             </div>
             <ErrorMessage error={message} />
             <SubmitButton className="w-full mt-6 h-12 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent font-sans uppercase tracking-[3px] text-[13px]">
-              Salvează Parola
+              {t("Salvează Parola")}
             </SubmitButton>
           </form>
         )}

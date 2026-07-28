@@ -7,6 +7,7 @@ import { Button } from "@modules/common/components/ui"
 import Divider from "@modules/common/components/divider"
 import OptionSelect from "@modules/products/components/product-actions/option-select"
 import isEqual from "lodash/isEqual"
+import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useMemo, useRef, useState } from "react"
 import ProductPrice from "../product-price"
 import MobileActions from "./mobile-actions"
@@ -37,6 +38,11 @@ export default function ProductActions({
   product,
   disabled,
 }: ProductActionsProps) {
+  const t = useTranslations("products")
+  // addToCart runs as a Server Action here, outside any page render — it
+  // has no route [locale] param to read, so pass the client's current
+  // locale explicitly (see request-locale.ts).
+  const locale = useLocale()
   const [options, setOptions] = useState<Record<string, string | undefined>>(
     () => {
       if (product.variants?.length) {
@@ -255,6 +261,7 @@ export default function ProductActions({
       variantId: selectedVariant.id,
       quantity: 1,
       countryCode,
+      locale,
     })
     emitCartUpdated(freshCart, { action: "add" })
 
@@ -289,7 +296,7 @@ export default function ProductActions({
                   data-testid="product-material"
                 >
                   <span className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
-                    Material
+                    {t("Material")}
                   </span>
                   <div className="flex flex-wrap gap-2">
                     {product.material.split(",").map((m) => {
@@ -333,7 +340,7 @@ export default function ProductActions({
         <div ref={buttonRef}>
           {isInStoreOnly(product) ? (
             <div className="w-full font-sans text-[8px] uppercase tracking-[4px] text-[#cfd8d2] border border-[rgba(207,216,210,0.35)] px-3 py-[10px] text-center cursor-default">
-              Disponibil în magazin
+              {t("Disponibil în magazin")}
             </div>
           ) : (
             <Button
@@ -351,12 +358,12 @@ export default function ProductActions({
               data-testid="add-product-button"
             >
               {productOutOfStock
-                ? "Indisponibil"
+                ? t("Indisponibil")
                 : !selectedVariant && !options
-                ? "Alege varianta"
+                ? t("Alege varianta")
                 : !inStock || !isValidVariant
-                ? "Indisponibil"
-                : "Adaugă în coș"}
+                ? t("Indisponibil")
+                : t("Adaugă în coș")}
             </Button>
           )}
         </div>

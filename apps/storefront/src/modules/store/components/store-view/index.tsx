@@ -1,7 +1,9 @@
 "use client"
 
 import { ReactNode, useCallback, useEffect, useState } from "react"
-import { usePathname, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
+import { usePathname } from "@i18n/navigation"
+import { useTranslations } from "next-intl"
 import { HttpTypes } from "@medusajs/types"
 
 import StoreSidebar from "@modules/store/components/store-sidebar"
@@ -40,6 +42,7 @@ export default function StoreView({
   collectionCategoriesMap,
   children,
 }: Props) {
+  const t = useTranslations("store")
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const sort = (searchParams.get("sortBy") as SortOptions) || "created_at"
@@ -150,7 +153,7 @@ export default function StoreView({
   const activeCollection = collections.find((c) => c.id === collectionId)
   const activeCategory = categories.find((c) => c.id === categoryId)
   const currentLabel =
-    activeCategory?.name || activeCollection?.title || "Ready to Wear"
+    activeCategory?.name || activeCollection?.title || t("Ready to Wear")
 
   return (
     <StoreFacetsProvider value={{ facets, setFacets }}>
@@ -169,7 +172,7 @@ export default function StoreView({
               text={
                 activeCategory?.description ||
                 (activeCollection?.metadata?.description as string) ||
-                "Piese selectate cu grijă — cămăși, accesorii și colecții pentru garderoba ta."
+                t("Piese selectate cu grijă — cămăși, accesorii și colecții pentru garderoba ta")
               }
             />
           </div>

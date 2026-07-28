@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server"
 import { listProductsWithSort } from "@lib/data/products"
 import { getRegionStatic } from "@lib/data/regions"
 import { HttpTypes } from "@medusajs/types"
@@ -43,6 +44,8 @@ export default async function PaginatedProducts({
   categoryWithChildren?: HttpTypes.StoreProductCategory
   collectionWithChildren?: HttpTypes.StoreCollection
 }) {
+  const t = await getTranslations("store")
+
   const queryParams: PaginatedProductsParams = {
     limit: PRODUCT_LIMIT,
   }
@@ -121,18 +124,18 @@ export default async function PaginatedProducts({
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-6 text-center">
         <p className="font-sans text-[10px] uppercase tracking-[5px] text-[var(--theme-text-muted)]">
-          Niciun produs găsit
+          {t("Niciun produs găsit")}
         </p>
         <p className="font-serif text-lg text-[var(--theme-text-muted)] max-w-xs">
           {isFixedContext
-            ? "Nu există produse în această categorie momentan."
-            : "Combinația de filtre selectată nu returnează rezultate."}
+            ? t("Nu există produse în această categorie momentan")
+            : t("Combinația de filtre selectată nu returnează rezultate")}
         </p>
         <a
           href="/ready-to-wear"
           className="mt-2 px-8 py-3 font-sans text-[10px] uppercase tracking-[4px] border border-hunter-gold text-hunter-gold hover:bg-hunter-gold hover:text-hunter-dark transition-colors"
         >
-          {isFixedContext ? "Vezi toate produsele" : "Resetează filtrele"}
+          {isFixedContext ? t("Vezi toate produsele") : t("Resetează filtrele")}
         </a>
       </div>
     )

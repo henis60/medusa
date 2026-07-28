@@ -2,6 +2,7 @@ import { Listbox, Transition } from "@headlessui/react"
 import { Fragment, useMemo } from "react"
 import compareAddresses from "@lib/util/compare-addresses"
 import { HttpTypes } from "@medusajs/types"
+import { useTranslations } from "next-intl"
 
 type AddressSelectProps = {
   addresses: HttpTypes.StoreCustomerAddress[]
@@ -10,6 +11,7 @@ type AddressSelectProps = {
 }
 
 const AddressSelect = ({ addresses, addressInput, onSelect }: AddressSelectProps) => {
+  const t = useTranslations("checkout")
   const handleSelect = (id: string) => {
     const saved = addresses.find((a) => a.id === id)
     if (saved) onSelect(saved as HttpTypes.StoreCartAddress)
@@ -30,7 +32,7 @@ const AddressSelect = ({ addresses, addressInput, onSelect }: AddressSelectProps
           {({ open }) => (
             <>
               <span className="font-sans text-[12px] text-[var(--theme-text)] truncate">
-                {selectedAddress ? selectedAddress.address_1 : "Alege o adresă salvată"}
+                {selectedAddress ? selectedAddress.address_1 : t("Alege o adresă salvată")}
               </span>
               <svg
                 width="14"

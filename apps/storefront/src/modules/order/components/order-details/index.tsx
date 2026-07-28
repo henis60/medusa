@@ -1,4 +1,5 @@
 import { HttpTypes } from "@medusajs/types"
+import { getTranslations } from "next-intl/server"
 
 type OrderDetailsProps = {
   order: HttpTypes.StoreOrder
@@ -22,19 +23,25 @@ const STATUS_RO: Record<string, string> = {
   paid: "Achitată",
 }
 
-const formatStatus = (str: string) =>
-  STATUS_RO[str] ??
-  str
+const formatStatus = (
+  str: string,
+  t: (key: string) => string
+) => {
+  const ro = STATUS_RO[str]
+  if (ro) return t(ro)
+  return str
     .split("_")
     .map((w) => w.slice(0, 1).toUpperCase() + w.slice(1))
     .join(" ")
+}
 
-const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
+const OrderDetails = async ({ order, showStatus }: OrderDetailsProps) => {
+  const t = await getTranslations("order")
   return (
     <div className="small:px-8 py-6 grid grid-cols-2 small:grid-cols-4 gap-6">
       <div>
         <p className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-1.5">
-          Data
+          {t("Data")}
         </p>
         <p
           className="font-sans text-[12px] text-[var(--theme-text)]"
@@ -49,7 +56,7 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
       </div>
       <div>
         <p className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-1.5">
-          Email
+          {t("Email")}
         </p>
         <p
           className="font-sans text-[12px] text-[var(--theme-text)] break-all"
@@ -62,24 +69,24 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
         <>
           <div>
             <p className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-1.5">
-              Livrare
+              {t("Livrare")}
             </p>
             <p
               className="font-sans text-[12px] text-[var(--theme-text)]"
               data-testid="order-status"
             >
-              {formatStatus(order.fulfillment_status)}
+              {formatStatus(order.fulfillment_status, t)}
             </p>
           </div>
           <div>
             <p className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-1.5">
-              Plată
+              {t("Plată")}
             </p>
             <p
               className="font-sans text-[12px] text-[var(--theme-text)]"
               data-testid="order-payment-status"
             >
-              {formatStatus(order.payment_status)}
+              {formatStatus(order.payment_status, t)}
             </p>
           </div>
         </>

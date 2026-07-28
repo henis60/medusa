@@ -1,6 +1,7 @@
 "use client"
 
 import { AnimatePresence, motion } from "framer-motion"
+import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 const DAYS_LABEL = ["Lu", "Ma", "Mi", "Jo", "Vi", "Sâ", "Du"]
@@ -49,6 +50,7 @@ export default function AppointmentDatePicker({
   // in-flow there and push the content instead.
   inline?: boolean
 }) {
+  const t = useTranslations("programare")
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -126,7 +128,7 @@ export default function AppointmentDatePicker({
       {/* ── Data ── */}
       <div ref={calRef} className="relative w-full">
         <label className={labelClass}>
-          Data
+          {t("Data")}
           <span className={`text-sm normal-case tracking-normal ${hasError && !selectedDate ? "text-red-400/80" : "text-hunter-gold/50"}`}>*</span>
         </label>
         <button
@@ -135,7 +137,7 @@ export default function AppointmentDatePicker({
           className={`${inputBase} flex items-center justify-between cursor-pointer ${hasError && !selectedDate ? "border-red-400/60" : "border-[var(--theme-border)] focus:border-hunter-gold/50"}`}
         >
           <span className={dateDisplay ? "text-[var(--theme-text)]" : "text-[var(--theme-text-muted)] text-sm"}>
-            {dateDisplay || "Alege data"}
+            {dateDisplay || t("Alege data")}
           </span>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--theme-text-muted)] shrink-0">
             <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -162,7 +164,7 @@ export default function AppointmentDatePicker({
                   </svg>
                 </button>
                 <span className="font-sans text-[10px] uppercase tracking-[3px] text-gray-800">
-                  {MONTHS_RO[viewMonth]} {viewYear}
+                  {t(MONTHS_RO[viewMonth])} {viewYear}
                 </span>
                 <button type="button" onClick={nextMonth} className="p-1 text-gray-400 hover:text-gray-700 transition-colors">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -175,7 +177,7 @@ export default function AppointmentDatePicker({
               <div className="px-2.5 pt-2.5 pb-2">
                 <div className="grid grid-cols-7 mb-1">
                   {DAYS_LABEL.map((d) => (
-                    <div key={d} className="text-center font-sans text-[9px] uppercase tracking-[1px] text-gray-400 py-1">{d}</div>
+                    <div key={d} className="text-center font-sans text-[9px] uppercase tracking-[1px] text-gray-400 py-1">{t(d)}</div>
                   ))}
                 </div>
                 <div className="grid grid-cols-7 gap-0.5">
@@ -211,9 +213,9 @@ export default function AppointmentDatePicker({
       {/* ── Ora ── */}
       <div ref={timeRef} className="relative w-full">
         <label className={labelClass}>
-          Ora
+          {t("Ora")}
           <span className="normal-case tracking-normal text-[var(--theme-text-muted)]/60">
-            (opțional)
+            {t("(opțional)")}
           </span>
         </label>
         <button

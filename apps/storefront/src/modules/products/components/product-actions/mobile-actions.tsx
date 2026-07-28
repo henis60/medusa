@@ -10,6 +10,7 @@ import {
 import { Button } from "@modules/common/components/ui"
 import OptionSelect from "./option-select"
 import { useMemo, useEffect, useRef, useState } from "react"
+import { useTranslations } from "next-intl"
 import { createPortal } from "react-dom"
 import { AnimatePresence, motion } from "framer-motion"
 import { useScrollLock } from "@lib/hooks/use-scroll-lock"
@@ -37,6 +38,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
   show,
   optionsDisabled,
 }) => {
+  const t = useTranslations("products")
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   useScrollLock(open)
@@ -135,7 +137,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
               )}
             </div>
             <div className="font-sans text-[8px] uppercase tracking-[4px] text-[#cfd8d2] border border-[rgba(207,216,210,0.35)] px-4 py-2.5 text-center">
-              Disponibil în magazin
+              {t("Disponibil în magazin")}
             </div>
           </div>
         ) : (
@@ -145,7 +147,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
               variant="primary"
               className="w-full h-12 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent hover:!bg-hunter-gold-b font-sans uppercase tracking-[3px] text-[11px] transition-colors"
             >
-              Adaugă în coș
+              {t("Adaugă în coș")}
             </Button>
           </div>
         )}
@@ -245,7 +247,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                       onClick={() => setOpen(false)}
                       className="flex-1 py-3 font-sans text-[10px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)] transition-colors"
                     >
-                      Înapoi
+                      {t("Înapoi")}
                     </button>
                     <button
                       onClick={() => {
@@ -256,12 +258,12 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                       className="flex-[2] py-3 font-sans text-[10px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       {isAdding
-                        ? "Se adaugă…"
+                        ? t("Se adaugă…")
                         : !variant
-                        ? "Selectează"
+                        ? t("Selectează")
                         : !inStock
-                        ? "Stoc epuizat"
-                        : "Adaugă în coș"}
+                        ? t("Stoc epuizat")
+                        : t("Adaugă în coș")}
                     </button>
                   </div>
                 </motion.div>
