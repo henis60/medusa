@@ -6,9 +6,8 @@ export type Locale = {
 }
 
 /**
- * Available locales for the language switcher.
- * Hardcoded for now — there is no backend i18n module, so switching only
- * sets the locale cookie/cart locale and does not translate content yet.
+ * Available locales for the language switcher. Keep in sync with
+ * routing.locales in src/i18n/routing.ts.
  */
 const LOCALES: Locale[] = [
   { code: "ro", name: "Română" },

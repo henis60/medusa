@@ -2,8 +2,10 @@
 
 import { useRef } from "react"
 import { motion, useScroll, useTransform } from "framer-motion"
+import { useTranslations } from "next-intl"
 
 const QuoteBand = () => {
+  const t = useTranslations("home")
   const ref = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -23,11 +25,11 @@ const QuoteBand = () => {
       />
       <div className="band-body">
         <p className="band-quote">
-          &ldquo;Eleganța nu înseamnă să fii remarcat.
+          &ldquo;{t("Eleganța nu înseamnă să fii remarcat")}
           <br />
-          Înseamnă să fii <strong>memorat.</strong>&rdquo;
+          {t("Înseamnă să fii")} <strong>{t("memorat")}</strong>&rdquo;
         </p>
-        <div className="band-source">&mdash; The Hunter House &mdash;</div>
+        <div className="band-source">&mdash; {t("The Hunter House")} &mdash;</div>
       </div>
     </div>
   )

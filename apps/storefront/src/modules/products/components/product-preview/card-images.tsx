@@ -2,6 +2,7 @@
 
 import { HttpTypes } from "@medusajs/types"
 import Image from "next/image"
+import { useTranslations } from "next-intl"
 import FavoriteButton from "./favorite-button"
 import QuickAddOverlay from "./quick-add-overlay"
 import { isInStoreOnly } from "@lib/util/product"
@@ -15,6 +16,7 @@ type Props = {
 }
 
 export default function CardImages({ product, isFeatured, noOverlay, activeImage, onVariantSelect }: Props) {
+  const t = useTranslations("products")
   const allImages = product.images ?? []
   const variants = product.variants ?? []
   const options = product.options ?? []
@@ -85,7 +87,7 @@ export default function CardImages({ product, isFeatured, noOverlay, activeImage
 
       {!noOverlay && isInStoreOnly(product) && (
         <div className="sm:hidden py-2 font-sans text-[8px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] bg-[var(--theme-bg)] text-center">
-          Disponibil în magazin
+          {t("Disponibil în magazin")}
         </div>
       )}
     </div>

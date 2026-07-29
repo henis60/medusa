@@ -2,8 +2,10 @@
 
 import { useRef, useState } from "react"
 import { animate } from "framer-motion"
+import { useTranslations } from "next-intl"
 
 export default function GiftCard() {
+  const t = useTranslations("home")
   const amounts = ["300 lei", "500 lei", "1.000 lei", "2.000 lei"]
   const [selected, setSelected] = useState(0)
   const amountRef = useRef<HTMLDivElement>(null)
@@ -56,9 +58,9 @@ export default function GiftCard() {
                 <div className="gc-shine-sweep" />
               </div>
               <div className="gc-card-logo">
-                <div className="gc-logo-1">The Hunter</div>
+                <div className="gc-logo-1">{t("The Hunter")}</div>
                 <div className="gc-logo-divider"></div>
-                <div className="gc-logo-2">House</div>
+                <div className="gc-logo-2">{t("House")}</div>
               </div>
               <div ref={amountRef} className="gc-card-amount" id="gcCardAmount">
                 {amounts[selected]}
@@ -67,17 +69,15 @@ export default function GiftCard() {
           </div>
           <div className="rv">
             <div className="kicker">
-              <span className="kicker-bar"></span>Gift Card
+              <span className="kicker-bar"></span>{t("Gift Card")}
             </div>
             <h2 className="sec-title">
-              Cadoul perfect
+              {t("Cadoul perfect")}
               <br />
-              pentru un <em>gentleman.</em>
+              {t("pentru un")} <em>{t("gentleman")}</em>
             </h2>
             <p className="gc-desc">
-              Un card cadou The Hunter House poate fi folosit pentru orice
-              serviciu – Made to Measure, Ready to Wear, consultație de stil sau
-              o seară la The Hunter Bar.
+              {t("Un card cadou The Hunter House poate fi folosit pentru orice serviciu – Made to Measure, Ready to Wear, consultație de stil sau o seară la The Hunter Bar")}
             </p>
             <div className="gc-amounts" id="gcAmounts">
               {amounts.map((amount, idx) => (
@@ -91,7 +91,7 @@ export default function GiftCard() {
               ))}
             </div>
             <div className="gc-note">
-              Valabil 12 luni · Disponibil fizic sau digital · Personalizabil
+              {t("Valabil 12 luni · Disponibil fizic sau digital · Personalizabil")}
             </div>
           </div>
         </div>

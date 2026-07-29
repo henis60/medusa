@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl"
 import React, { useEffect, useImperativeHandle, useState } from "react"
 
 import Eye from "@modules/common/icons/eye"
@@ -14,22 +15,25 @@ type InputProps = Omit<
   topLabel?: string
 }
 
-// Romanian validation messages derived from the browser's ValidityState, so we
+// Localized validation messages derived from the browser's ValidityState, so we
 // can replace the generic native bubble with a styled inline message.
-function getValidationMessage(el: HTMLInputElement): string {
+function getValidationMessage(
+  el: HTMLInputElement,
+  t: ReturnType<typeof useTranslations>
+): string {
   const v = el.validity
-  if (v.valueMissing) return "Acest câmp este obligatoriu"
+  if (v.valueMissing) return t("Acest câmp este obligatoriu")
   if (v.typeMismatch) {
-    if (el.type === "email") return "Introdu o adresă de email validă"
-    if (el.type === "url") return "Introdu un link valid"
-    return "Valoare invalidă"
+    if (el.type === "email") return t("Introdu o adresă de email validă")
+    if (el.type === "url") return t("Introdu un link valid")
+    return t("Valoare invalidă")
   }
-  if (v.patternMismatch) return "Formatul nu este valid"
-  if (v.tooShort) return `Minim ${el.minLength} caractere`
-  if (v.tooLong) return `Maxim ${el.maxLength} caractere`
+  if (v.patternMismatch) return t("Formatul nu este valid")
+  if (v.tooShort) return t("Minim {min} caractere", { min: el.minLength })
+  if (v.tooLong) return t("Maxim {max} caractere", { max: el.maxLength })
   if (v.rangeUnderflow || v.rangeOverflow || v.stepMismatch)
-    return "Valoare invalidă"
-  return el.validationMessage || "Valoare invalidă"
+    return t("Valoare invalidă")
+  return el.validationMessage || t("Valoare invalidă")
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
@@ -49,6 +53,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     },
     ref
   ) => {
+    const t = useTranslations("common")
     const inputRef = React.useRef<HTMLInputElement>(null)
     const [showPassword, setShowPassword] = useState(false)
     const [inputType, setInputType] = useState(type)
@@ -65,7 +70,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const handleInvalid = (e: React.FormEvent<HTMLInputElement>) => {
       // Suppress the native validation bubble and show our own message instead.
       e.preventDefault()
-      setError(getValidationMessage(e.currentTarget))
+      setError(getValidationMessage(e.currentTarget, t))
       onInvalid?.(e)
     }
 

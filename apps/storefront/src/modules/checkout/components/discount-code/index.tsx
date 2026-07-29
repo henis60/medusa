@@ -4,6 +4,7 @@ import React from "react"
 import { applyPromotions } from "@lib/data/cart"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
+import { useTranslations } from "next-intl"
 import ErrorMessage from "../error-message"
 
 type DiscountCodeProps = {
@@ -11,6 +12,7 @@ type DiscountCodeProps = {
 }
 
 const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
+  const t = useTranslations("checkout")
   const [isOpen, setIsOpen] = React.useState(false)
   const [errorMessage, setErrorMessage] = React.useState("")
 
@@ -37,7 +39,7 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
         (p) => p.code?.toLowerCase() === codeStr.toLowerCase()
       )
       if (!applied) {
-        setErrorMessage("Codul promoțional nu este valid sau a expirat.")
+        setErrorMessage(t("Codul promoțional nu este valid sau a expirat"))
       }
     } catch (e) {
       setErrorMessage(e instanceof Error ? e.message : String(e))
@@ -57,7 +59,7 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
           <line x1="5" y1="1" x2="5" y2="9" />
           <line x1="1" y1="5" x2="9" y2="5" />
         </svg>
-        Cod promoțional
+        {t("Cod promoțional")}
       </button>
 
       {isOpen && (
@@ -75,7 +77,7 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
             data-testid="discount-apply-button"
             className="shrink-0 h-9 font-sans text-[9px] uppercase tracking-[3px] px-4 border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-hunter-gold/50 hover:text-hunter-gold transition-colors whitespace-nowrap"
           >
-            Aplică
+            {t("Aplică")}
           </button>
         </form>
       )}
@@ -114,7 +116,7 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
                 <button
                   onClick={() => promotion.code && removePromotionCode(promotion.code)}
                   data-testid="remove-discount-button"
-                  aria-label="Șterge codul"
+                  aria-label={t("Șterge codul")}
                   className="text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
                 >
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">

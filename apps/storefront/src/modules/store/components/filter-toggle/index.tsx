@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { useTranslations } from "next-intl"
 import FilterBar from "@modules/store/components/filter-bar"
 import { HttpTypes } from "@medusajs/types"
 
@@ -12,6 +13,7 @@ type Props = {
 }
 
 export default function FilterToggle({ collections, categories, selectedCollection, selectedCategory }: Props) {
+  const t = useTranslations("store")
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -34,7 +36,7 @@ export default function FilterToggle({ collections, categories, selectedCollecti
           <line x1="4" y1="12" x2="16" y2="12" />
           <line x1="4" y1="18" x2="12" y2="18" />
         </svg>
-        <span>Filtre</span>
+        <span>{t("Filtre")}</span>
       </button>
 
       {open && (

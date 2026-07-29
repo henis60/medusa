@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import {
   deleteCustomerAddress,
   updateCustomerAddress,
@@ -26,6 +27,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
   address,
   isActive = false,
 }) => {
+  const t = useTranslations("account")
   const [removing, setRemoving] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [successState, setSuccessState] = useState(false)
@@ -102,16 +104,16 @@ const EditAddress: React.FC<EditAddressProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center flex-wrap gap-x-5 gap-y-2 mt-5 pt-4 border-t border-[var(--theme-border)]">
+        <div className="flex flex-col small:flex-row items-stretch small:items-center gap-3 mt-5 pt-4 border-t border-[var(--theme-border)]">
           <button
-            className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5"
+            className="h-11 small:h-9 px-5 rounded-none bg-hunter-gold text-hunter-dark hover:bg-hunter-gold-b transition-colors font-sans uppercase tracking-[3px] text-[10px] small:text-[9px]"
             onClick={open}
             data-testid="address-edit-button"
           >
-            Editează
+            {t("Editează")}
           </button>
           <button
-            className="ml-auto font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-rose-500 transition-colors flex items-center gap-1.5"
+            className="small:ml-auto h-11 small:h-9 px-5 rounded-none border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-rose-500 hover:text-rose-500 transition-colors font-sans uppercase tracking-[3px] text-[10px] small:text-[9px] flex items-center justify-center gap-1.5"
             onClick={removeAddress}
             data-testid="address-delete-button"
           >
@@ -120,7 +122,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
             ) : (
               <Trash className="w-3 h-3" />
             )}
-            Șterge
+            {t("Șterge")}
           </button>
         </div>
         {actionError && (
@@ -136,7 +138,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
       <Modal isOpen={state} close={close} data-testid="edit-address-modal">
         <Modal.Title>
           <span className="font-display text-[22px] leading-[1]">
-            Editează adresa
+            {t("Editează adresa")}
           </span>
         </Modal.Title>
         <form action={formAction} className="flex flex-col flex-1 min-h-0">
@@ -145,7 +147,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
             <div className="grid grid-cols-1 gap-y-2 w-full">
               <div className="grid grid-cols-1 gap-y-2">
                 <Input
-                  label="Prenume"
+                  label={t("Prenume")}
                   name="first_name"
                   required
                   autoComplete="given-name"
@@ -153,7 +155,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
                   data-testid="first-name-input"
                 />
                 <Input
-                  label="Nume"
+                  label={t("Nume")}
                   name="last_name"
                   required
                   autoComplete="family-name"
@@ -162,14 +164,14 @@ const EditAddress: React.FC<EditAddressProps> = ({
                 />
               </div>
               <Input
-                label="Companie (opțional)"
+                label={t("Companie (opțional)")}
                 name="company"
                 autoComplete="organization"
                 defaultValue={address.company || undefined}
                 data-testid="company-input"
               />
               <Input
-                label="Adresă"
+                label={t("Adresă")}
                 name="address_1"
                 required
                 autoComplete="address-line1"
@@ -177,14 +179,14 @@ const EditAddress: React.FC<EditAddressProps> = ({
                 data-testid="address-1-input"
               />
               <Input
-                label="Apartament, etaj, etc."
+                label={t("Apartament, etaj, etc")}
                 name="address_2"
                 autoComplete="address-line2"
                 defaultValue={address.address_2 || undefined}
                 data-testid="address-2-input"
               />
               <Input
-                label="Cod poștal"
+                label={t("Cod poștal")}
                 name="postal_code"
                 autoComplete="postal-code"
                 defaultValue={address.postal_code || undefined}
@@ -204,7 +206,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
                 value={address.country_code || "ro"}
               />
               <Input
-                label="Telefon"
+                label={t("Telefon")}
                 name="phone"
                 autoComplete="phone"
                 defaultValue={address.phone || undefined}
@@ -219,7 +221,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
                   data-testid="billing-checkbox"
                 />
                 <span className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text-muted)]">
-                  Folosește pentru facturare
+                  {t("Folosește pentru facturare")}
                 </span>
               </label>
             </div>
@@ -237,13 +239,13 @@ const EditAddress: React.FC<EditAddressProps> = ({
                 className="h-10 px-6 font-sans text-[10px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)] transition-colors"
                 data-testid="cancel-button"
               >
-                Anulează
+                {t("Anulează")}
               </button>
               <SubmitButton
                 className="h-10 px-6 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent font-sans uppercase tracking-[3px] text-[10px]"
                 data-testid="save-button"
               >
-                Salvează
+                {t("Salvează")}
               </SubmitButton>
             </div>
           </Modal.Footer>

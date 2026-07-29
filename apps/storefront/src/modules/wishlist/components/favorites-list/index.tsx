@@ -1,5 +1,6 @@
 "use client"
 
+import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 import { useFavorites } from "@lib/context/favorites-context"
 import { getProductsByIds } from "@lib/data/products"
@@ -22,6 +23,7 @@ function FavoriteRow({
   product?: HttpTypes.StoreProduct
   onRemove: () => void
 }) {
+  const t = useTranslations("wishlist")
   const [adding, setAdding] = useState(false)
   const [added, setAdded] = useState(false)
 
@@ -81,7 +83,7 @@ function FavoriteRow({
   return (
     <div className="group flex gap-4 py-4 px-3 -mx-3 hover:bg-[var(--theme-surface)] transition-colors">
       <LocalizedClientLink
-        href={`/products/${item.handle}`}
+        href={`/produs/${item.handle}`}
         className="relative w-16 h-20 shrink-0 overflow-hidden bg-white"
       >
         {item.thumbnail ? (
@@ -104,7 +106,7 @@ function FavoriteRow({
       <div className="flex-1 min-w-0 flex flex-col justify-between">
         <div className="flex items-start justify-between gap-4">
           <LocalizedClientLink
-            href={`/products/${item.handle}`}
+            href={`/produs/${item.handle}`}
             className="flex-1 min-w-0"
           >
             <p className="font-serif text-[16px] leading-[1.2] text-[var(--theme-text)] hover:text-hunter-gold transition-colors truncate">
@@ -118,7 +120,7 @@ function FavoriteRow({
           </LocalizedClientLink>
           <button
             onClick={onRemove}
-            aria-label="Elimină din wishlist"
+            aria-label={t("Elimină din wishlist")}
             className="shrink-0 mt-[1px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
           >
             <svg
@@ -168,19 +170,19 @@ function FavoriteRow({
                 }
               >
                 {adding
-                  ? "Se adaugă…"
+                  ? t("Se adaugă…")
                   : added
-                  ? "✓ Adăugat"
+                  ? t("✓ Adăugat")
                   : !inStock
-                  ? "Stoc epuizat"
-                  : "Adaugă în coș"}
+                  ? t("Stoc epuizat")
+                  : t("Adaugă în coș")}
               </button>
             ) : (
               <LocalizedClientLink
-                href={`/products/${item.handle}`}
+                href={`/produs/${item.handle}`}
                 className="shrink-0 h-9 w-[148px] flex items-center justify-center font-sans text-[9px] uppercase tracking-[2.5px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-hunter-gold hover:text-hunter-gold transition-colors"
               >
-                Alege opțiuni
+                {t("Alege opțiuni")}
               </LocalizedClientLink>
             )
           ) : null}
@@ -213,22 +215,29 @@ function FavoritesListSkeleton() {
 }
 
 export default function FavoritesList() {
+  const t = useTranslations("wishlist")
+  // getProductsByIds runs as a Server Action here, outside any page render —
+  // it has no route [locale] param to read, so pass the client's current
+  // locale explicitly (see request-locale.ts).
+  const locale = useLocale()
   const { favorites, toggle, loaded } = useFavorites()
   const [products, setProducts] = useState<Record<string, HttpTypes.StoreProduct>>({})
 
   useEffect(() => {
     if (!favorites.length) return
     let cancelled = false
-    getProductsByIds({ ids: favorites.map((f) => f.id), countryCode }).then(
-      (fetched) => {
-        if (cancelled) return
-        setProducts(Object.fromEntries(fetched.map((p) => [p.id, p])))
-      }
-    )
+    getProductsByIds({
+      ids: favorites.map((f) => f.id),
+      countryCode,
+      locale,
+    }).then((fetched) => {
+      if (cancelled) return
+      setProducts(Object.fromEntries(fetched.map((p) => [p.id, p])))
+    })
     return () => {
       cancelled = true
     }
-  }, [favorites.map((f) => f.id).join(",")])
+  }, [favorites.map((f) => f.id).join(","), locale])
 
   if (!loaded) {
     return <FavoritesListSkeleton />
@@ -238,16 +247,16 @@ export default function FavoritesList() {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-6 text-center">
         <p className="font-sans text-[10px] uppercase tracking-[5px] text-[var(--theme-text-muted)]">
-          Niciun produs salvat
+          {t("Niciun produs salvat")}
         </p>
         <p className="font-sans text-sm text-[var(--theme-text-muted)] max-w-xs">
-          Salvează produse pentru a le găsi mai ușor mai târziu.
+          {t("Salvează produse pentru a le găsi mai ușor mai târziu")}
         </p>
         <LocalizedClientLink
           href="/ready-to-wear"
           className="mt-2 px-6 small:px-8 py-3 font-sans text-[10px] uppercase tracking-[4px] border border-hunter-gold text-hunter-gold hover:bg-hunter-gold hover:text-hunter-dark transition-colors"
         >
-          Descoperă colecția
+          {t("Descoperă colecția")}
         </LocalizedClientLink>
       </div>
     )

@@ -1,6 +1,11 @@
+"use client"
+
+import { useTranslations } from "next-intl"
+
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 export default function HomepageFooter() {
+  const t = useTranslations("home")
   return (
     <footer className="w-full bg-[#0D0D0D] border-t border-[rgba(201,168,76,0.15)]">
       <div
@@ -16,11 +21,11 @@ export default function HomepageFooter() {
         </LocalizedClientLink>
 
         <span className="hidden medium:inline font-serif italic text-xs text-hunter-gold/70">
-          Return of the Elegant Gentleman
+          {t("Return of the Elegant Gentleman")}
         </span>
 
         <span className="font-sans text-[9px] uppercase tracking-[3px] text-[rgba(232,213,163,0.4)]">
-          © {new Date().getFullYear()} Toate drepturile rezervate
+          © {new Date().getFullYear()} {t("Toate drepturile rezervate")}
         </span>
       </div>
     </footer>

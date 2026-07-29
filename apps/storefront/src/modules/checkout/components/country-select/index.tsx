@@ -1,4 +1,5 @@
 import { forwardRef, useImperativeHandle, useMemo, useRef } from "react"
+import { useTranslations } from "next-intl"
 
 import NativeSelect, {
   NativeSelectProps,
@@ -10,8 +11,10 @@ const CountrySelect = forwardRef<
   NativeSelectProps & {
     region?: HttpTypes.StoreRegion
   }
->(({ placeholder = "Țară", region, defaultValue, ...props }, ref) => {
+>(({ placeholder, region, defaultValue, ...props }, ref) => {
+  const t = useTranslations("checkout")
   const innerRef = useRef<HTMLSelectElement>(null)
+  const resolvedPlaceholder = placeholder ?? t("Țară")
 
   useImperativeHandle<HTMLSelectElement | null, HTMLSelectElement | null>(
     ref,
@@ -32,7 +35,7 @@ const CountrySelect = forwardRef<
   return (
     <NativeSelect
       ref={innerRef}
-      placeholder={placeholder}
+      placeholder={resolvedPlaceholder}
       defaultValue={defaultValue}
       {...props}
     >

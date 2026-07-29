@@ -1,6 +1,9 @@
+"use client"
+
 import { HttpTypes } from "@medusajs/types"
 import { clx } from "@modules/common/components/ui"
 import { isColorOption as isColorOptionTitle } from "@lib/util/product"
+import { useTranslations } from "next-intl"
 import React from "react"
 
 type OptionSelectProps = {
@@ -24,6 +27,7 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
   disabledValues,
   variants,
 }) => {
+  const t = useTranslations("products")
   const SIZE_ORDER = [
     "xxs",
     "xs",
@@ -73,7 +77,7 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
   return (
     <div className="flex flex-col gap-y-3">
       <span className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
-        Selecteaza {title}
+        {t("Selectează {title}", { title })}
       </span>
       <div className="flex flex-wrap gap-2" data-testid={dataTestId}>
         {filteredOptions.map((v) => {

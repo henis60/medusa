@@ -4,6 +4,7 @@ import { addToCart } from "@lib/data/cart"
 import { emitCartUpdated } from "@lib/util/cart-events"
 import { HttpTypes } from "@medusajs/types"
 import { useState, useMemo, useEffect, useRef } from "react"
+import { useTranslations } from "next-intl"
 import { createPortal } from "react-dom"
 import { COLOR_OPTION_NAMES as COLOR_TITLES } from "@lib/util/product"
 
@@ -140,6 +141,7 @@ export default function QuickAddOverlay({
   mobileOnly,
   desktopOnly,
 }: Props) {
+  const t = useTranslations("products")
   const countryCode = "ro"
   const [selected, setSelected] = useState<Record<string, string>>({})
   const [adding, setAdding] = useState(false)
@@ -265,18 +267,26 @@ export default function QuickAddOverlay({
     const missing = options.find(
       (o) => !selected[o.id ?? ""] && (o.values?.length ?? 0) > 1
     )
-    if (!missing) return "Selectează"
+    if (!missing) return t("Selectează")
     const isColor = COLOR_TITLES.includes(missing.title?.toLowerCase() ?? "")
-    return isColor ? "Selectează culoarea" : "Selectează mărimea"
+    return isColor ? t("Selectează culoarea") : t("Selectează mărimea")
   }, [options, selected])
+
+  // Options with only one value have nothing to actually choose (mirrors
+  // the product page, which hides the whole options block when there's
+  // only one variant) — don't render a picker row for them at all.
+  const pickableOptions = useMemo(
+    () => options.filter((o) => (o.values?.length ?? 0) > 1),
+    [options]
+  )
 
   const mobileTriggerLabel = useMemo(() => {
     // Prefer the first option that actually offers more than one value.
     const meaningful =
       options.find((o) => (o.values?.length ?? 0) > 1) ?? options[0]
-    if (!meaningful) return "Alege mărimea"
+    if (!meaningful) return t("Alege mărimea")
     const isColor = COLOR_TITLES.includes(meaningful.title?.toLowerCase() ?? "")
-    return isColor ? "Alege culoarea" : "Alege mărimea"
+    return isColor ? t("Alege culoarea") : t("Alege mărimea")
   }, [options])
 
   const selectedVariant = useMemo(() => {
@@ -378,7 +388,7 @@ export default function QuickAddOverlay({
           className="w-full py-2 font-sans text-[8px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] bg-[var(--theme-bg)] transition-colors duration-150 active:border-hunter-gold active:text-hunter-gold"
           aria-label={mobileTriggerLabel}
         >
-          Adaugă în coș
+          {t("Adaugă în coș")}
         </button>
       )}
 
@@ -391,7 +401,7 @@ export default function QuickAddOverlay({
             e.stopPropagation()
           }}
         >
-          {options.map((option) => {
+          {pickableOptions.map((option) => {
             const sortedValues = sortOptionValues(option.values ?? [], false)
             return (
               <div
@@ -439,14 +449,14 @@ export default function QuickAddOverlay({
             }}
           >
             {adding
-              ? "Se adaugă…"
+              ? t("Se adaugă…")
               : added
-              ? "✓ Adăugat"
+              ? t("✓ Adăugat")
               : !effectiveVariant && options.length > 0
               ? selectLabel
               : !inStock
-              ? "Stoc epuizat"
-              : "Adaugă în coș"}
+              ? t("Stoc epuizat")
+              : t("Adaugă în coș")}
           </button>
         </div>
       )}
@@ -492,7 +502,7 @@ export default function QuickAddOverlay({
 
                   {/* Options */}
                   <div className="px-6 py-5 flex flex-col gap-6 overflow-y-auto max-h-[50dvh]">
-                    {options.map((option) => {
+                    {pickableOptions.map((option) => {
                       const sortedValues = sortOptionValues(
                         option.values ?? [],
                         false
@@ -549,7 +559,7 @@ export default function QuickAddOverlay({
                       onClick={closeOverlay}
                       className="flex-1 py-3 font-sans text-[10px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)] transition-colors"
                     >
-                      Înapoi
+                      {t("Înapoi")}
                     </button>
                     <button
                       onClick={handleAdd}
@@ -561,14 +571,14 @@ export default function QuickAddOverlay({
                       className="flex-[2] py-3 font-sans text-[10px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       {adding
-                        ? "Se adaugă…"
+                        ? t("Se adaugă…")
                         : added
-                        ? "Adăugat ✓"
+                        ? t("Adăugat ✓")
                         : !effectiveVariant && options.length > 0
                         ? selectLabel
                         : !inStock
-                        ? "Stoc epuizat"
-                        : "Adaugă în coș"}
+                        ? t("Stoc epuizat")
+                        : t("Adaugă în coș")}
                     </button>
                   </div>
                 </div>

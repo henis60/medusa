@@ -1,6 +1,9 @@
+const createNextIntlPlugin = require("next-intl/plugin")
 const checkEnvVariables = require("./check-env-variables")
 
 checkEnvVariables()
+
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
 
 /**
  * Medusa Cloud-related environment variables
@@ -29,6 +32,20 @@ const nextConfig = {
   // Emit a minimal standalone server for smaller, faster container deploys.
   output: "standalone",
   reactStrictMode: true,
+  experimental: {
+    // Since locale isn't in the URL (localePrefix: "never"), both locale
+    // variants of a page share the same URL — Next's client-side Router
+    // Cache can't tell them apart and may reuse an RSC payload cached under
+    // the other locale for up to 5min (the "static" default) on soft
+    // navigation. Disabling it forces every client-side nav to refetch,
+    // which still hits the server's own static/ISR cache (cheap) rather
+    // than recomputing anything — this only removes client-side reuse
+    // across navigations, not server-side static generation.
+    staleTimes: {
+      dynamic: 0,
+      static: 0,
+    },
+  },
   // Verbose fetch logging helps in dev but is noisy/slower in production.
   ...(process.env.NODE_ENV === "production"
     ? {}
@@ -74,4 +91,4 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+module.exports = withNextIntl(nextConfig)

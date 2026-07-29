@@ -5,8 +5,10 @@ import compareAddresses from "@lib/util/compare-addresses"
 import { HttpTypes } from "@medusajs/types"
 import Divider from "@modules/common/components/divider"
 import Spinner from "@modules/common/icons/spinner"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
+import { usePathname, useRouter } from "@i18n/navigation"
 import { useActionState } from "react"
+import { useTranslations } from "next-intl"
 import BillingAddress from "../billing_address"
 import ErrorMessage from "../error-message"
 import ShippingAddress from "../shipping-address"
@@ -19,6 +21,7 @@ const Addresses = ({
   cart: HttpTypes.StoreCart | null
   customer: HttpTypes.StoreCustomer | null
 }) => {
+  const t = useTranslations("checkout")
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
@@ -42,7 +45,7 @@ const Addresses = ({
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <span className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)]">
-            Adresa de livrare
+            {t("Adresa de livrare")}
           </span>
           {!isOpen && cart?.shipping_address && (
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="text-hunter-gold">
@@ -57,7 +60,7 @@ const Addresses = ({
             className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
             data-testid="edit-address-button"
           >
-            Modifică
+            {t("Modifică")}
           </button>
         )}
       </div>
@@ -75,13 +78,13 @@ const Addresses = ({
             {!sameAsBilling && (
               <div>
                 <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] pb-6 pt-8">
-                  Adresă de facturare
+                  {t("Adresă de facturare")}
                 </p>
                 <BillingAddress cart={cart} />
               </div>
             )}
             <SubmitButton className="mt-6" data-testid="submit-address-button">
-              Continuă cu livrarea
+              {t("Continuă cu livrarea")}
             </SubmitButton>
             <ErrorMessage error={message} data-testid="address-error-message" />
           </div>
@@ -92,7 +95,7 @@ const Addresses = ({
             <div className="flex items-start gap-x-8">
               <div className="flex items-start gap-x-1 w-full">
                 <div className="flex flex-col w-1/3 gap-1" data-testid="shipping-address-summary">
-                  <span className="font-sans text-[8px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-1">Adresă</span>
+                  <span className="font-sans text-[8px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-1">{t("Adresă")}</span>
                   <span className="font-serif italic text-[13px] text-[var(--theme-text)]">
                     {cart.shipping_address.first_name} {cart.shipping_address.last_name}
                   </span>
@@ -108,15 +111,15 @@ const Addresses = ({
                 </div>
 
                 <div className="flex flex-col w-1/3 gap-1" data-testid="shipping-contact-summary">
-                  <span className="font-sans text-[8px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-1">Contact</span>
+                  <span className="font-sans text-[8px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-1">{t("Contact")}</span>
                   <span className="font-serif italic text-[13px] text-[var(--theme-text-muted)]">{cart.shipping_address.phone}</span>
                   <span className="font-serif italic text-[13px] text-[var(--theme-text-muted)]">{cart.email}</span>
                 </div>
 
                 <div className="flex flex-col w-1/3 gap-1" data-testid="billing-address-summary">
-                  <span className="font-sans text-[8px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-1">Facturare</span>
+                  <span className="font-sans text-[8px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-1">{t("Facturare")}</span>
                   {sameAsBilling ? (
-                    <span className="font-serif italic text-[15px] text-[var(--theme-text-muted)]">Identică cu livrarea</span>
+                    <span className="font-serif italic text-[15px] text-[var(--theme-text-muted)]">{t("Identică cu livrarea")}</span>
                   ) : (
                     <>
                       <span className="font-serif italic text-[13px] text-[var(--theme-text-muted)]">

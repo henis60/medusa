@@ -51,9 +51,20 @@ type AIResult = {
   material: string | null;
   colors: string[];
   colors_hex: string[];
+  colors_en: string[];
   sizes: string[];
   image_order: number[];
   variant_images: Record<string, number[]>;
+  translations?: {
+    en: {
+      title: string;
+      subtitle?: string;
+      description: string;
+      seo_title: string;
+      seo_description: string;
+      material: string | null;
+    };
+  };
 };
 
 // ── CSV parser ─────────────────────────────────────────────────────────────
@@ -823,6 +834,87 @@ const AIProductPage = () => {
               continue;
             }
             throw err;
+          }
+        }
+
+        // Save English translation (best-effort — must not abort creation).
+        // Uses Medusa's native translation module: rows are keyed by
+        // (reference, reference_id, locale_code) and `translations` only holds
+        // fields Medusa marks .translatable() on Product — seo_* live in
+        // metadata and aren't translatable, so they're intentionally omitted.
+        if (aiResult.translations?.en) {
+          try {
+            const en = aiResult.translations.en;
+            const enFields: Record<string, string> = {
+              title: en.title,
+              description: en.description,
+            };
+            if (en.subtitle) enFields.subtitle = en.subtitle;
+            if (en.material) enFields.material = en.material;
+
+            await sdk.client.fetch("/admin/translations/batch", {
+              method: "POST",
+              body: {
+                create: [
+                  {
+                    reference: "product",
+                    reference_id: product.id,
+                    locale_code: "en-GB",
+                    translations: enFields,
+                  },
+                ],
+              },
+            });
+          } catch (err: any) {
+            console.warn(
+              "[AI] English translation save failed:",
+              err?.message || err,
+            );
+            toast.warning("Traducerea EN nu a putut fi salvată");
+          }
+        }
+
+        // Save English translations for the "Culoare" option values (e.g.
+        // "Negru" → "Black"). product_option_value.value is natively
+        // .translatable() in Medusa's product module — just not wired up
+        // for color option values until now. Matched by exact RO value
+        // (case-insensitive) since option values already exist on the
+        // product from creation (see buildOptions above).
+        if (colors.length && aiResult.colors_en?.length) {
+          try {
+            const colorOption = (product.options ?? []).find(
+              (o: any) => o.title?.toLowerCase() === "culoare",
+            );
+            const optionValueTranslations = (colorOption?.values ?? [])
+              .map((ov: any) => {
+                const idx = colors.findIndex(
+                  (c) => c.toLowerCase() === ov.value?.toLowerCase(),
+                );
+                if (idx === -1) return null;
+                const en = aiResult.colors_en[idx];
+                if (!en || en.toLowerCase() === ov.value.toLowerCase())
+                  return null;
+                return {
+                  reference: "product_option_value",
+                  reference_id: ov.id,
+                  locale_code: "en-GB",
+                  translations: { value: en },
+                };
+              })
+              .filter(Boolean);
+
+            if (optionValueTranslations.length) {
+              await sdk.client.fetch("/admin/translations/batch", {
+                method: "POST",
+                body: { create: optionValueTranslations },
+              });
+            }
+          } catch (err: any) {
+            console.warn(
+              "[AI] Color translation save failed:",
+              err?.message || err,
+            );
+            toast.warning("Traducerea culorilor nu a putut fi salvată");
           }
         }
 

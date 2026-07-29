@@ -1,7 +1,9 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
+import { usePathname, useRouter } from "@i18n/navigation"
+import { useLocale, useTranslations } from "next-intl"
 import { HttpTypes } from "@medusajs/types"
 
 import { listProductsWithSort } from "@lib/data/products"
@@ -80,6 +82,11 @@ export default function InfiniteProducts({
   // collection navigation, instead of this component's parent (the page,
   // which fully remounts on every dynamic-segment change) re-fetching and
   // re-passing them down.
+  const t = useTranslations("store")
+  // listProductsWithSort runs as a Server Action here, outside any page
+  // render — it has no route [locale] param to read, so the client's
+  // current locale must be passed explicitly (see request-locale.ts).
+  const locale = useLocale()
   const catalog = useStoreCatalog()
   const categories = categoriesProp ?? catalog?.categories ?? []
   const collections = collectionsProp ?? catalog?.collections ?? []
@@ -233,6 +240,7 @@ export default function InfiniteProducts({
       queryParams: buildQueryParams(),
       sortBy,
       countryCode,
+      locale,
     })
       .then(({ response }) => {
         if (cancelled) return
@@ -246,7 +254,7 @@ export default function InfiniteProducts({
     return () => {
       cancelled = true
     }
-  }, [filtersKey, sortBy, buildQueryParams, countryCode])
+  }, [filtersKey, sortBy, buildQueryParams, countryCode, locale])
 
   const loadMore = useCallback(() => {
     if (loading || !hasMore) return
@@ -260,6 +268,7 @@ export default function InfiniteProducts({
       queryParams: buildQueryParams(),
       sortBy,
       countryCode,
+      locale,
     })
       .then(({ response }) => {
         setProducts((prev) => {
@@ -281,6 +290,7 @@ export default function InfiniteProducts({
     sortBy,
     buildQueryParams,
     countryCode,
+    locale,
   ])
 
   useEffect(() => {
@@ -312,6 +322,7 @@ export default function InfiniteProducts({
       queryParams: { ...buildQueryParams(), limit: 200 },
       sortBy: "created_at",
       countryCode,
+      locale,
     }).then(({ response }) => {
       if (!cancelled) setFacetProducts(response.products)
     })
@@ -319,7 +330,7 @@ export default function InfiniteProducts({
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlFiltered, filtersKey, countryCode])
+  }, [urlFiltered, filtersKey, countryCode, locale])
 
   const colorFacets = useMemo(() => {
     if (!urlFiltered) return []
@@ -428,8 +439,8 @@ export default function InfiniteProducts({
         >
           <p className="font-serif text-base text-[var(--theme-text-muted)]">
             {hasFacetFilter
-              ? "Niciun produs nu corespunde filtrelor selectate."
-              : "Momentan nu există produse în această categorie."}
+              ? t("Niciun produs nu corespunde filtrelor selectate")
+              : t("Momentan nu există produse în această categorie")}
           </p>
           {hasFacetFilter && (
             <button
@@ -445,7 +456,7 @@ export default function InfiniteProducts({
               className="h-11 px-6 inline-flex items-center border border-[var(--theme-border)] font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text)] hover:border-hunter-gold hover:text-hunter-gold active:border-hunter-gold active:text-hunter-gold transition-colors"
               data-testid="reset-filters-button"
             >
-              Resetează filtrele
+              {t("Resetează filtrele")}
             </button>
           )}
         </div>

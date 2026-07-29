@@ -1,4 +1,5 @@
 import { ChevronUpDown } from "@medusajs/icons"
+import { useTranslations } from "next-intl"
 import {
   SelectHTMLAttributes,
   forwardRef,
@@ -17,7 +18,7 @@ export type NativeSelectProps = {
 const NativeSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(
   (
     {
-      placeholder = "Select...",
+      placeholder,
       defaultValue,
       value,
       className,
@@ -30,6 +31,8 @@ const NativeSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(
     },
     ref
   ) => {
+    const t = useTranslations("common")
+    const resolvedPlaceholder = placeholder ?? t("Selectează")
     const innerRef = useRef<HTMLSelectElement>(null)
     const [error, setError] = useState<string | null>(null)
 
@@ -40,7 +43,7 @@ const NativeSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(
 
     const handleInvalid = (e: React.FormEvent<HTMLSelectElement>) => {
       e.preventDefault()
-      setError("Acest câmp este obligatoriu")
+      setError(t("Acest câmp este obligatoriu"))
       onInvalid?.(e)
     }
 
@@ -51,9 +54,9 @@ const NativeSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(
 
     return (
       <div className="flex flex-col w-full gap-1">
-        {(label || placeholder) && (
+        {(label || resolvedPlaceholder) && (
           <label className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
-            {label || placeholder}
+            {label || resolvedPlaceholder}
             {required && <span className="text-rose-500 ml-0.5">*</span>}
           </label>
         )}
@@ -75,7 +78,7 @@ const NativeSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(
             } ${className ?? ""}`}
           >
             <option disabled value="">
-              {placeholder}
+              {resolvedPlaceholder}
             </option>
             {children}
           </select>

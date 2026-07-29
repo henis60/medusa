@@ -1,4 +1,5 @@
 "use client"
+import { useTranslations } from "next-intl"
 import { createTransferRequest } from "@lib/data/orders"
 import { CheckCircleMiniSolid, XCircleSolid } from "@medusajs/icons"
 import Input from "@modules/common/components/input"
@@ -6,6 +7,7 @@ import { useActionState } from "react"
 import { useEffect, useState } from "react"
 
 export default function TransferRequestForm() {
+  const t = useTranslations("account")
   const [showSuccess, setShowSuccess] = useState(false)
 
   const [state, formAction] = useActionState(createTransferRequest, {
@@ -24,13 +26,13 @@ export default function TransferRequestForm() {
     <div className="flex flex-col gap-y-6 w-full">
       <div>
         <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-2">
-          Revendicare comandă
+          {t("Revendicare comandă")}
         </p>
         <h2 className="font-display text-[22px] leading-[1.1] text-[var(--theme-text)] mb-1">
-          Asociază o comandă la cont
+          {t("Asociază o comandă la cont")}
         </h2>
         <p className="font-sans text-[11px] text-[var(--theme-text-muted)]">
-          Ai plasat o comandă fără cont? Introdu ID-ul comenzii din emailul de confirmare pentru a o asocia contului tău.
+          {t("Ai plasat o comandă fără cont? Introdu ID-ul comenzii din emailul de confirmare pentru a o asocia contului tău")}
         </p>
       </div>
 
@@ -40,14 +42,14 @@ export default function TransferRequestForm() {
             className="w-full"
             name="order_id"
             placeholder="order_01ABC..."
-            label="ID comandă"
+            label={t("ID comandă")}
           />
         </div>
         <button
           type="submit"
           className="h-10 px-6 font-sans text-[10px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-hunter-gold hover:text-hunter-gold transition-colors whitespace-nowrap self-end small:self-auto"
         >
-          Trimite cerere
+          {t("Trimite cerere")}
         </button>
       </form>
 
@@ -63,10 +65,14 @@ export default function TransferRequestForm() {
             <CheckCircleMiniSolid className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
             <div>
               <p className="font-sans text-[11px] text-[var(--theme-text)] mb-0.5">
-                Cerere trimisă pentru comanda {state.order?.id}
+                {t("Cerere trimisă pentru comanda {id}", {
+                  id: state.order?.id ?? "",
+                })}
               </p>
               <p className="font-sans text-[10px] text-[var(--theme-text-muted)]">
-                Email de confirmare trimis la {state.order?.email}
+                {t("Email de confirmare trimis la {email}", {
+                  email: state.order?.email ?? "",
+                })}
               </p>
             </div>
           </div>

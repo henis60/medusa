@@ -4,6 +4,7 @@ import Checkbox from "@modules/common/components/checkbox"
 import Input from "@modules/common/components/input"
 import mapKeys from "lodash/mapKeys"
 import React, { useEffect, useMemo, useState } from "react"
+import { useTranslations } from "next-intl"
 import AddressSelect from "../address-select"
 import CountrySelect from "../country-select"
 import LocalitySelect from "@modules/common/components/locality-select"
@@ -19,6 +20,7 @@ const ShippingAddress = ({
   checked: boolean
   onChange: () => void
 }) => {
+  const t = useTranslations("checkout")
   const [formData, setFormData] = useState<Record<string, string>>({
     "shipping_address.first_name": cart?.shipping_address?.first_name || "",
     "shipping_address.last_name": cart?.shipping_address?.last_name || "",
@@ -100,7 +102,7 @@ const ShippingAddress = ({
       {customer && (addressesInRegion?.length || 0) > 0 && (
         <Container className="mb-6 flex flex-col gap-y-4 p-5">
           <p className="text-small-regular text-[var(--theme-text-muted)]">
-            {`Salut ${customer.first_name}, vrei să folosești una dintre adresele salvate?`}
+            {t("Salut {name}, vrei să folosești una dintre adresele salvate?", { name: customer.first_name ?? "" })}
           </p>
           <AddressSelect
             addresses={customer.addresses}
@@ -115,7 +117,7 @@ const ShippingAddress = ({
       )}
       <div className="grid grid-cols-2 gap-4">
         <Input
-          label="Prenume"
+          label={t("Prenume")}
           name="shipping_address.first_name"
           autoComplete="given-name"
           value={formData["shipping_address.first_name"]}
@@ -124,7 +126,7 @@ const ShippingAddress = ({
           data-testid="shipping-first-name-input"
         />
         <Input
-          label="Nume de familie"
+          label={t("Nume de familie")}
           name="shipping_address.last_name"
           autoComplete="family-name"
           value={formData["shipping_address.last_name"]}
@@ -133,7 +135,7 @@ const ShippingAddress = ({
           data-testid="shipping-last-name-input"
         />
         <Input
-          label="Adresă"
+          label={t("Adresă")}
           name="shipping_address.address_1"
           autoComplete="address-line1"
           value={formData["shipping_address.address_1"]}
@@ -142,7 +144,7 @@ const ShippingAddress = ({
           data-testid="shipping-address-input"
         />
         <Input
-          label="Cod poștal"
+          label={t("Cod poștal")}
           name="shipping_address.postal_code"
           autoComplete="postal-code"
           value={formData["shipping_address.postal_code"]}
@@ -179,15 +181,15 @@ const ShippingAddress = ({
         </div>
         <input type="checkbox" name="same_as_billing" checked={checked} readOnly className="sr-only" />
         <span className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text-muted)]">
-          Adresa de facturare este aceeași cu cea de livrare
+          {t("Adresa de facturare este aceeași cu cea de livrare")}
         </span>
       </div>
       <div className="grid grid-cols-2 gap-4 mb-4">
         <Input
-          label="Email"
+          label={t("Email")}
           name="email"
           type="email"
-          title="Enter a valid email address."
+          title={t("Enter a valid email address")}
           autoComplete="email"
           value={formData.email}
           onChange={handleChange}
@@ -195,7 +197,7 @@ const ShippingAddress = ({
           data-testid="shipping-email-input"
         />
         <Input
-          label="Telefon"
+          label={t("Telefon")}
           name="shipping_address.phone"
           autoComplete="tel"
           value={formData["shipping_address.phone"]}

@@ -1,4 +1,5 @@
 import { sdk } from "@lib/config"
+import { getMedusaLocaleHeaders } from "@lib/util/request-locale"
 import { HttpTypes } from "@medusajs/types"
 import { getGlobalCacheOptions } from "./cookies"
 
@@ -11,6 +12,7 @@ export const listCategories = async (query?: Record<string, unknown>) => {
     .fetch<{ product_categories: HttpTypes.StoreProductCategory[] }>(
       "/store/product-categories",
       {
+        headers: getMedusaLocaleHeaders(),
         query: {
           fields:
             "*category_children, *products, *parent_category, *parent_category.parent_category",
@@ -33,6 +35,7 @@ export const getCategoryByHandle = async (categoryHandle: string[]) => {
     .fetch<HttpTypes.StoreProductCategoryListResponse>(
       `/store/product-categories`,
       {
+        headers: getMedusaLocaleHeaders(),
         query: {
           fields: "*category_children, *products",
           handle,
@@ -41,5 +44,8 @@ export const getCategoryByHandle = async (categoryHandle: string[]) => {
         cache: "force-cache",
       }
     )
-    .then(({ product_categories }) => product_categories[0])
+    .then(
+      ({ product_categories }) =>
+        product_categories[0] as HttpTypes.StoreProductCategory
+    )
 }

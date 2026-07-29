@@ -1,22 +1,24 @@
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
+import { getTranslations } from "next-intl/server"
 
 type ShippingDetailsProps = {
   order: HttpTypes.StoreOrder
 }
 
-const ShippingDetails = ({ order }: ShippingDetailsProps) => {
+const ShippingDetails = async ({ order }: ShippingDetailsProps) => {
+  const t = await getTranslations("order")
   const addr = order.shipping_address
 
   return (
     <div className="small:px-8 py-6">
       <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-5">
-        Livrare
+        {t("Livrare")}
       </p>
       <div className="grid grid-cols-1 small:grid-cols-3 gap-6">
         <div data-testid="shipping-address-summary">
           <p className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-2">
-            Adresă de livrare
+            {t("Adresă de livrare")}
           </p>
           <div className="flex flex-col gap-0.5 font-sans text-[12px] text-[var(--theme-text)]">
             <span>
@@ -35,7 +37,7 @@ const ShippingDetails = ({ order }: ShippingDetailsProps) => {
 
         <div data-testid="shipping-contact-summary">
           <p className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-2">
-            Contact
+            {t("Contact")}
           </p>
           <div className="flex flex-col gap-0.5 font-sans text-[12px] text-[var(--theme-text)]">
             {addr?.phone && <span>{addr.phone}</span>}
@@ -45,7 +47,7 @@ const ShippingDetails = ({ order }: ShippingDetailsProps) => {
 
         <div data-testid="shipping-method-summary">
           <p className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-2">
-            Metodă de livrare
+            {t("Metodă de livrare")}
           </p>
           <div className="flex flex-col gap-0.5 font-sans text-[12px] text-[var(--theme-text)]">
             <span>

@@ -1,56 +1,64 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-
-const ZONES = [
-  {
-    id: "z1",
-    glyph: "S",
-    name: "Salon",
-    tag: "Zona principală",
-    title: "Salon Principal",
-    highlighted: "Principal",
-    desc: "Pian cu coadă în centru. Canapele din piele cognac. Panouri tartan Royal Stewart. Candelabre de alamă. Covor persan.",
-  },
-  {
-    id: "z2",
-    glyph: "B",
-    name: "Bar",
-    tag: "The Hunter Bar",
-    title: "Sanctuarul gustului",
-    highlighted: "Sanctuarul",
-    desc: "80+ referințe de vin. 6 cocktailuri signature. Whisky, gin și spirtoase alese personal. Blat dark walnut.",
-  },
-  {
-    id: "z3",
-    glyph: "A",
-    name: "Atelier",
-    tag: "Made to Measure",
-    title: "Atelier privat",
-    highlighted: "privat",
-    desc: "200+ eșantioane de țesături Super 100–180. Consultație individuală. Costumul tău în 21 de zile.",
-  },
-  {
-    id: "z4",
-    glyph: "F",
-    name: "Fitting",
-    tag: "Fitting Room",
-    title: "Oglinda adevărului",
-    highlighted: "adevărului",
-    desc: "Oglindă triplu-panou. Iluminat calibrat. Intimitate totală. Ajustări finale pe loc.",
-  },
-  {
-    id: "z5",
-    glyph: "L",
-    name: "Lounge",
-    tag: "Membership Gold · Black",
-    title: "Lounge Privat",
-    highlighted: "Privat",
-    desc: "Rezervat exclusiv membrilor. Întâlniri private, degustări exclusive și momente care nu se publică.",
-  },
-]
+import { useTranslations } from "next-intl"
 
 export default function Space() {
+  const t = useTranslations("home")
+
+  const ZONES = [
+    {
+      id: "z1",
+      glyph: "S",
+      name: t("Salon"),
+      tag: t("Zona principală"),
+      titleMain: t("Salon") as string,
+      titleEm: t("Principal"),
+      titleSuffix: "" as string,
+      desc: t("Pian cu coadă în centru Canapele din piele cognac Panouri tartan Royal Stewart Candelabre de alamă Covor persan"),
+    },
+    {
+      id: "z2",
+      glyph: "B",
+      name: t("Bar"),
+      tag: t("The Hunter Bar"),
+      titleMain: "" as string,
+      titleEm: t("Sanctuarul"),
+      titleSuffix: t("gustului") as string,
+      desc: t("80+ referințe de vin 6 cocktailuri signature Whisky, gin și spirtoase alese personal Blat dark walnut"),
+    },
+    {
+      id: "z3",
+      glyph: "A",
+      name: t("Atelier"),
+      tag: t("Made to Measure"),
+      titleMain: t("Atelier") as string,
+      titleEm: t("privat"),
+      titleSuffix: "" as string,
+      desc: t("200+ eșantioane de țesături Super 100–180 Consultație individuală Costumul tău în 21 de zile"),
+    },
+    {
+      id: "z4",
+      glyph: "F",
+      name: t("Fitting"),
+      tag: t("Fitting Room"),
+      titleMain: t("Oglinda") as string,
+      titleEm: t("adevărului"),
+      titleSuffix: "" as string,
+      desc: t("Oglindă triplu-panou Iluminat calibrat Intimitate totală Ajustări finale pe loc"),
+    },
+    {
+      id: "z5",
+      glyph: "L",
+      name: t("Lounge"),
+      tag: t("Membership Gold · Black"),
+      titleMain: t("Privat") as string,
+      titleEm: t("Lounge"),
+      titleSuffix: "" as string,
+      desc: t("Rezervat exclusiv membrilor Întâlniri private, degustări exclusive și momente care nu se publică"),
+    },
+  ]
+
   const zonesRef = useRef<HTMLDivElement>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
   const tapRef = useRef<{ x: number; y: number } | null>(null)
@@ -130,14 +138,14 @@ export default function Space() {
             <div className="zone-expanded">
               <div className="zone-tag">{zone.tag}</div>
               <div className="zone-title">
-                {zone.id === "z2" && <em>{zone.highlighted}</em>}
+                {zone.id === "z2" && <em>{zone.titleEm}</em>}
                 {zone.id !== "z2" && (
                   <>
-                    {zone.title.replace(zone.highlighted, "")}{" "}
-                    <em>{zone.highlighted}</em>
+                    {zone.titleMain}{" "}
+                    <em>{zone.titleEm}</em>
                   </>
                 )}
-                {zone.id === "z2" && <> gustului</>}
+                {zone.id === "z2" && <> {zone.titleSuffix}</>}
               </div>
               <p className="zone-desc">{zone.desc}</p>
             </div>

@@ -1,98 +1,113 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Accordion from "@modules/products/components/product-tabs/accordion"
 
 type FaqItem = { q: string; a: string }
 type FaqGroup = { title: string; items: FaqItem[] }
 
-const groups: FaqGroup[] = [
-  {
-    title: "Comenzi",
-    items: [
-      {
-        q: "Cum plasez o comandă?",
-        a: "Alege produsul dorit, selectează mărimea și culoarea, apoi adaugă-l în coș. La finalizarea comenzii completezi datele de livrare și de plată, iar imediat după confirmare primești un email cu rezumatul comenzii și detaliile de urmărire.",
-      },
-      {
-        q: "Pot modifica sau anula o comandă?",
-        a: "Da, atâta timp cât comanda nu a fost încă expediată. Contactează-ne cât mai repede posibil, cu numărul comenzii la îndemână, și facem modificarea sau anularea. După expediere, poți folosi politica de retur.",
-      },
-      {
-        q: "Cum urmăresc statusul comenzii?",
-        a: "După expediere primești pe email codul AWB și un link de urmărire. Poți verifica oricând statusul și din contul tău, la secțiunea Comenzile mele.",
-      },
-    ],
-  },
-  {
-    title: "Livrare",
-    items: [
-      {
-        q: "Cât durează livrarea?",
-        a: "Comenzile sunt procesate în 1–2 zile lucrătoare, iar coletul ajunge de regulă în 3–5 zile lucrătoare la adresa ta sau la punctul de ridicare ales.",
-      },
-      {
-        q: "Cât costă transportul?",
-        a: "Costul de livrare se calculează automat la finalizarea comenzii, în funcție de metoda aleasă. Tariful exact îți este afișat înainte de plasarea comenzii.",
-      },
-      {
-        q: "Livrați în toată România?",
-        a: "Da, livrăm în toată țara prin curier rapid, atât la adresă, cât și la punctele de ridicare disponibile.",
-      },
-    ],
-  },
-  {
-    title: "Retururi & Schimburi",
-    items: [
-      {
-        q: "Care este politica de retur?",
-        a: "Poți returna produsele în termen de 14 zile de la primire, fără să fie nevoie să motivezi decizia. Produsele trebuie să fie nepurtate, cu etichetele atașate și în ambalajul original.",
-      },
-      {
-        q: "Cât durează rambursarea banilor?",
-        a: "După ce primim și verificăm produsul returnat, îți rambursăm contravaloarea în maximum 14 zile, folosind aceeași metodă de plată cu care ai achitat comanda.",
-      },
-      {
-        q: "Cum schimb mărimea unui produs?",
-        a: "Contactează-ne și îți spunem pașii pentru schimbul de mărime, în limita stocului disponibil. Dacă mărimea dorită nu mai este disponibilă, îți oferim rambursarea integrală.",
-      },
-    ],
-  },
-  {
-    title: "Plată",
-    items: [
-      {
-        q: "Ce metode de plată acceptați?",
-        a: "Acceptăm plata online securizată cu cardul (Visa, Mastercard). Tranzacțiile sunt procesate printr-un furnizor de plăți autorizat, cu protecție 3D Secure.",
-      },
-      {
-        q: "Plata online este sigură?",
-        a: "Da. Datele cardului sunt criptate și procesate direct de furnizorul de plăți, prin conexiune securizată. Acestea nu sunt stocate pe site-ul nostru și nu avem acces la ele.",
-      },
-      {
-        q: "Primesc factură pentru comandă?",
-        a: "Da, pentru fiecare comandă emitem factură, pe care o primești pe email împreună cu confirmarea comenzii.",
-      },
-    ],
-  },
-]
-
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: groups.flatMap((group) =>
-    group.items.map((item) => ({
-      "@type": "Question",
-      name: item.q,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: item.a,
-      },
-    }))
-  ),
-}
-
 const FAQTemplate = () => {
+  const t = useTranslations("faq")
+
+  const groups: FaqGroup[] = [
+    {
+      title: t("Comenzi"),
+      items: [
+        {
+          q: t("Cum plasez o comandă?"),
+          a: t("Alege produsul dorit, selectează mărimea și culoarea, apoi adaugă-l în coș La finalizarea comenzii completezi datele de livrare și de plată, iar imediat după confirmare primești un email cu rezumatul comenzii și detaliile de urmărire"
+          ),
+        },
+        {
+          q: t("Pot modifica sau anula o comandă?"),
+          a: t("Da, atâta timp cât comanda nu a fost încă expediată Contactează-ne cât mai repede posibil, cu numărul comenzii la îndemână, și facem modificarea sau anularea După expediere, poți folosi politica de retur"
+          ),
+        },
+        {
+          q: t("Cum urmăresc statusul comenzii?"),
+          a: t("După expediere primești pe email codul AWB și un link de urmărire Poți verifica oricând statusul și din contul tău, la secțiunea Comenzile mele"
+          ),
+        },
+      ],
+    },
+    {
+      title: t("Livrare"),
+      items: [
+        {
+          q: t("Cât durează livrarea?"),
+          a: t("Comenzile sunt procesate în 1–2 zile lucrătoare, iar coletul ajunge de regulă în 3–5 zile lucrătoare la adresa ta sau la punctul de ridicare ales"
+          ),
+        },
+        {
+          q: t("Cât costă transportul?"),
+          a: t("Costul de livrare se calculează automat la finalizarea comenzii, în funcție de metoda aleasă Tariful exact îți este afișat înainte de plasarea comenzii"
+          ),
+        },
+        {
+          q: t("Livrați în toată România?"),
+          a: t("Da, livrăm în toată țara prin curier rapid, atât la adresă, cât și la punctele de ridicare disponibile"
+          ),
+        },
+      ],
+    },
+    {
+      title: t("Retururi & Schimburi"),
+      items: [
+        {
+          q: t("Care este politica de retur?"),
+          a: t("Poți returna produsele în termen de 14 zile de la primire, fără să fie nevoie să motivezi decizia Produsele trebuie să fie nepurtate, cu etichetele atașate și în ambalajul original"
+          ),
+        },
+        {
+          q: t("Cât durează rambursarea banilor?"),
+          a: t("După ce primim și verificăm produsul returnat, îți rambursăm contravaloarea în maximum 14 zile, folosind aceeași metodă de plată cu care ai achitat comanda"
+          ),
+        },
+        {
+          q: t("Cum schimb mărimea unui produs?"),
+          a: t("Contactează-ne și îți spunem pașii pentru schimbul de mărime, în limita stocului disponibil Dacă mărimea dorită nu mai este disponibilă, îți oferim rambursarea integrală"
+          ),
+        },
+      ],
+    },
+    {
+      title: t("Plată"),
+      items: [
+        {
+          q: t("Ce metode de plată acceptați?"),
+          a: t("Acceptăm plata online securizată cu cardul (Visa, Mastercard) Tranzacțiile sunt procesate printr-un furnizor de plăți autorizat, cu protecție 3D Secure"
+          ),
+        },
+        {
+          q: t("Plata online este sigură?"),
+          a: t("Da Datele cardului sunt criptate și procesate direct de furnizorul de plăți, prin conexiune securizată Acestea nu sunt stocate pe site-ul nostru și nu avem acces la ele"
+          ),
+        },
+        {
+          q: t("Primesc factură pentru comandă?"),
+          a: t("Da, pentru fiecare comandă emitem factură, pe care o primești pe email împreună cu confirmarea comenzii"
+          ),
+        },
+      ],
+    },
+  ]
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: groups.flatMap((group) =>
+      group.items.map((item) => ({
+        "@type": "Question",
+        name: item.q,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: item.a,
+        },
+      }))
+    ),
+  }
+
   return (
     <div className="bg-[var(--theme-bg)] w-full min-h-screen">
       <script
@@ -104,15 +119,15 @@ const FAQTemplate = () => {
         <div className="flex items-center gap-3 mb-3">
           <span className="h-px w-8 bg-hunter-gold" />
           <span className="font-sans text-[10px] uppercase tracking-[5px] text-[var(--theme-text-muted)]">
-            Ajutor
+            {t("Ajutor")}
           </span>
         </div>
         <h1 className="font-display text-4xl small:text-6xl text-[var(--theme-text)] leading-[0.95]">
-          Întrebări <span className="italic text-hunter-gold">frecvente</span>
+          {t("Întrebări")} <span className="italic text-hunter-gold">{t("frecvente")}</span>
         </h1>
         <p className="mt-4 max-w-md font-serif text-lg text-[var(--theme-text-muted)] leading-relaxed">
-          Răspunsuri la cele mai comune întrebări despre comenzi, livrare,
-          retururi și plată.
+          {t("Răspunsuri la cele mai comune întrebări despre comenzi, livrare, retururi și plată"
+          )}
         </p>
       </div>
 
@@ -139,17 +154,17 @@ const FAQTemplate = () => {
         <div className="flex flex-col small:flex-row items-start small:items-center justify-between border-t border-[var(--theme-border)] pt-10 gap-6">
           <div>
             <p className="font-display text-[20px] leading-[1.1] text-[var(--theme-text)] mb-2">
-              Nu ai găsit răspunsul?
+              {t("Nu ai găsit răspunsul?")}
             </p>
             <p className="font-sans text-[12px] text-[var(--theme-text-muted)]">
-              Scrie-ne și te ajutăm cu plăcere.
+              {t("Scrie-ne și te ajutăm cu plăcere")}
             </p>
           </div>
           <LocalizedClientLink
             href="/contact"
             className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5"
           >
-            Contactează-ne
+            {t("Contactează-ne")}
           </LocalizedClientLink>
         </div>
       </div>

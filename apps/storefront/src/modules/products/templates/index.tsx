@@ -10,6 +10,7 @@ import ProductInfo from "@modules/products/templates/product-info"
 import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-related-products"
 import { notFound } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
+import { getTranslations } from "next-intl/server"
 
 import ProductActionsWrapper from "./product-actions-wrapper"
 import ProductFavoriteButton from "@modules/products/components/product-favorite-button"
@@ -24,16 +25,18 @@ type ProductTemplateProps = {
   previewFallback?: boolean
 }
 
-const ProductTemplate: React.FC<ProductTemplateProps> = ({
+const ProductTemplate = async ({
   product,
   region,
   countryCode,
   images,
   previewFallback = false,
-}) => {
+}: ProductTemplateProps) => {
   if (!product || !product.id) {
     return notFound()
   }
+
+  const t = await getTranslations("products")
 
   return (
     <div className="bg-[var(--theme-bg)] min-h-screen">
@@ -48,7 +51,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
           className="inline-flex items-center gap-2 text-[var(--theme-text-muted)] hover:text-[var(--theme-gold)] transition-colors font-sans text-[11px] uppercase tracking-[3px]"
         >
           <span>←</span>
-          <span>Înapoi</span>
+          <span>{t("Înapoi")}</span>
         </LocalizedClientLink>
       </AnimatedColumn>
 

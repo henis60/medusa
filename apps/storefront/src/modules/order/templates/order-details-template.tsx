@@ -2,12 +2,9 @@
 
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import Items from "@modules/order/components/items"
-import OrderDetails from "@modules/order/components/order-details"
-import OrderSummary from "@modules/order/components/order-summary"
-import ShippingDetails from "@modules/order/components/shipping-details"
 import React, { useEffect, useState } from "react"
 import { lineItemsToTrackItems, trackPurchase } from "@lib/util/analytics"
+import { useTranslations } from "next-intl"
 
 type OrderDetailsTemplateProps = {
   order: HttpTypes.StoreOrder
@@ -20,6 +17,17 @@ type OrderDetailsTemplateProps = {
   // checkout. Hide the button rather than show it and fail on click: the
   // account page never passes this, so it defaults to visible there.
   canDownloadInvoice?: boolean
+  // Items/OrderDetails/ShippingDetails/OrderSummary are all async Server
+  // Components (they call next-intl/server's getTranslations) — this
+  // template is a Client Component (GA4 tracking, invoice-download state),
+  // and a Client Component can't directly import and render an async Server
+  // Component descendant (Next throws "is an async Client Component"). The
+  // caller (a Server Component page) renders each and passes the result
+  // down as a plain slot instead.
+  itemsSlot: React.ReactNode
+  orderDetailsSlot: React.ReactNode
+  shippingDetailsSlot: React.ReactNode
+  orderSummarySlot: React.ReactNode
 }
 
 // On mobile each section reads as a bordered card (the account pages'
@@ -36,7 +44,12 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
   order,
   standalone,
   canDownloadInvoice = true,
+  itemsSlot,
+  orderDetailsSlot,
+  shippingDetailsSlot,
+  orderSummarySlot,
 }) => {
+  const t = useTranslations("order")
   const [downloading, setDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState<string | null>(null)
 
@@ -69,7 +82,7 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
       if (!response.ok) {
         const err = await response.json().catch(() => ({}))
         setDownloadError(
-          err.message ?? err.error ?? "Factura nu este disponibilă încă."
+          err.message ?? err.error ?? t("Factura nu este disponibilă încă")
         )
         return
       }
@@ -81,7 +94,7 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
       a.click()
       URL.revokeObjectURL(url)
     } catch {
-      setDownloadError("Eroare la descărcarea facturii.")
+      setDownloadError(t("Eroare la descărcarea facturii"))
     } finally {
       setDownloading(false)
     }
@@ -90,12 +103,14 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
   return (
     <div className="w-full h-full flex flex-col">
       {/* Header — on the account page, mobile gets its title from
-          AccountNav's mobile bar instead, so it's hidden here below small: */}
+          AccountNav's mobile bar instead, so it's hidden here below small:.
+          Mobile stacks back-link above title; desktop places the title on
+          the left with the back-link aligned to the right of it. */}
       <div
         className={
           standalone
-            ? "flex flex-col items-start gap-3 pb-6 small:px-8 small:pt-8"
-            : "hidden small:flex small:flex-col small:items-start gap-3 small:px-8 small:pt-8 small:pb-6"
+            ? "flex flex-col small:flex-row-reverse small:items-center small:justify-between gap-3 pb-6 small:px-8 small:pt-8"
+            : "hidden small:flex small:flex-row-reverse small:items-center small:justify-between gap-3 small:px-8 small:pt-8 small:pb-6"
         }
       >
         <LocalizedClientLink
@@ -103,10 +118,10 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
           className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5"
           data-testid="back-to-overview-button"
         >
-          {standalone ? "← Acasă" : "← Înapoi"}
+          {standalone ? t("← Acasă") : t("← Înapoi")}
         </LocalizedClientLink>
         <h1 className="font-display text-[28px] small:text-[32px] leading-[1] text-[var(--theme-text)]">
-          Comanda #{order.display_id}
+          {t("Comanda #{displayId}", { displayId: order.display_id ?? "" })}
         </h1>
       </div>
 
@@ -117,16 +132,10 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
         data-testid="order-details-container"
       >
         {/* Products lead the page, flat (no card) */}
-        <Items order={order} />
-        <Section>
-          <OrderDetails order={order} showStatus />
-        </Section>
-        <Section>
-          <ShippingDetails order={order} />
-        </Section>
-        <Section>
-          <OrderSummary order={order} />
-        </Section>
+        {itemsSlot}
+        <Section>{orderDetailsSlot}</Section>
+        <Section>{shippingDetailsSlot}</Section>
+        <Section>{orderSummarySlot}</Section>
 
         {/* Invoice download — primary action */}
         {canDownloadInvoice && (
@@ -136,7 +145,7 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
               disabled={downloading}
               className="w-full small:w-auto h-12 small:px-8 bg-hunter-gold text-hunter-dark hover:bg-hunter-gold/90 transition-colors font-sans uppercase tracking-[3px] text-[11px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {downloading ? "Se descarcă..." : "Descarcă factura"}
+              {downloading ? t("Se descarcă") : t("Descarcă factura")}
             </button>
             {downloadError && (
               <p className="mt-3 text-sm text-red-500">{downloadError}</p>

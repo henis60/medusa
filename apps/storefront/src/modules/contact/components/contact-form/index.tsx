@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import { useRecaptcha } from "@lib/hooks/use-recaptcha"
 
 const inputClass = (err?: boolean) =>
@@ -23,10 +24,11 @@ function validateEmail(v: string) {
 }
 
 export default function ContactForm() {
+  const t = useTranslations("contact")
   const [status, setStatus] = useState<Status>("idle")
   const [errors, setErrors] = useState<Errors>({})
   const [errorMsg, setErrorMsg] = useState(
-    "Nu am putut trimite mesajul. Verifică conexiunea și încearcă din nou."
+    t("Nu am putut trimite mesajul Verifică conexiunea și încearcă din nou")
   )
   const { preload, getToken } = useRecaptcha()
 
@@ -51,7 +53,7 @@ export default function ContactForm() {
 
     setErrors({})
     setStatus("loading")
-    setErrorMsg("Nu am putut trimite mesajul. Verifică conexiunea și încearcă din nou.")
+    setErrorMsg(t("Nu am putut trimite mesajul Verifică conexiunea și încearcă din nou"))
 
     try {
       const recaptchaToken = await getToken("contact")
@@ -79,7 +81,7 @@ export default function ContactForm() {
       )
 
       if (res.status === 429) {
-        setErrorMsg("Prea multe încercări. Te rugăm să revii peste câteva minute.")
+        setErrorMsg(t("Prea multe încercări Te rugăm să revii peste câteva minute"))
         setStatus("error")
         return
       }
@@ -87,7 +89,7 @@ export default function ContactForm() {
       const json = await res.json()
 
       if (!res.ok) {
-        setErrorMsg("Nu am putut trimite mesajul. Verifică conexiunea și încearcă din nou.")
+        setErrorMsg(t("Nu am putut trimite mesajul Verifică conexiunea și încearcă din nou"))
         setStatus("error")
         return
       }
@@ -102,16 +104,16 @@ export default function ContactForm() {
   if (status === "success") {
     return (
       <div className="border border-[var(--theme-border)] min-h-[200px] p-8 text-center flex flex-col gap-3 justify-center">
-        <p className="font-display text-2xl text-[var(--theme-text)]">Îți mulțumim!</p>
+        <p className="font-display text-2xl text-[var(--theme-text)]">{t("Îți mulțumim!")}</p>
         <p className="font-sans text-sm text-[var(--theme-text-muted)]">
-          Mesajul tău a fost trimis. Revenim în maximum 24 de ore în zilele lucrătoare.
+          {t("Mesajul tău a fost trimis Revenim în maximum 24 de ore în zilele lucrătoare")}
         </p>
         <button
           type="button"
           onClick={() => setStatus("idle")}
           className="mt-2 self-center font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5"
         >
-          Trimite alt mesaj
+          {t("Trimite alt mesaj")}
         </button>
       </div>
     )
@@ -127,16 +129,16 @@ export default function ContactForm() {
       >
         <div className="grid grid-cols-1 small:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="name" error={errors.name}>Nume</Label>
+            <Label htmlFor="name" error={errors.name}>{t("Nume")}</Label>
             <input id="name" name="name" type="text" className={inputClass(errors.name)} />
           </div>
           <div>
-            <Label htmlFor="email" error={errors.email}>Email</Label>
+            <Label htmlFor="email" error={errors.email}>{t("Email")}</Label>
             <input id="email" name="email" type="email" className={inputClass(errors.email)} />
           </div>
         </div>
         <div>
-          <Label htmlFor="message" error={errors.message}>Mesaj</Label>
+          <Label htmlFor="message" error={errors.message}>{t("Mesaj")}</Label>
           <textarea
             id="message"
             name="message"
@@ -157,16 +159,16 @@ export default function ContactForm() {
             disabled={status === "loading"}
             className="self-start h-11 px-8 font-sans text-[10px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark hover:opacity-90 transition-opacity disabled:opacity-50"
           >
-            {status === "loading" ? "Se trimite..." : "Trimite mesajul"}
+            {status === "loading" ? t("Se trimite") : t("Trimite mesajul")}
           </button>
           <p className="font-sans text-[9px] text-[var(--theme-text-muted)] leading-relaxed">
-            Protejat de reCAPTCHA —{" "}
+            {t("Protejat de reCAPTCHA —")}{" "}
             <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-hunter-gold transition-colors">
-              Confidențialitate
+              {t("Confidențialitate")}
             </a>{" "}
             &amp;{" "}
             <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-hunter-gold transition-colors">
-              Termeni
+              {t("Termeni")}
             </a>
           </p>
         </div>

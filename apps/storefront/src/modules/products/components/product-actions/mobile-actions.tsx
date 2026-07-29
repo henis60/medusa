@@ -10,6 +10,7 @@ import {
 import { Button } from "@modules/common/components/ui"
 import OptionSelect from "./option-select"
 import { useMemo, useEffect, useRef, useState } from "react"
+import { useTranslations } from "next-intl"
 import { createPortal } from "react-dom"
 import { AnimatePresence, motion } from "framer-motion"
 import { useScrollLock } from "@lib/hooks/use-scroll-lock"
@@ -37,6 +38,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
   show,
   optionsDisabled,
 }) => {
+  const t = useTranslations("products")
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   useScrollLock(open)
@@ -116,39 +118,53 @@ const MobileActions: React.FC<MobileActionsProps> = ({
 
   const isSimple = isSimpleProduct(product)
   const inStoreOnly = isInStoreOnly(product)
+  // No option on this product actually offers a choice (mirrors the
+  // desktop options list, which hides these too) — there's nothing to pick,
+  // so the sticky button should add to cart directly instead of opening a
+  // sheet with nothing meaningful in it.
+  const hasPickableOptions = (product.options ?? []).some(
+    (o) => (o.values?.length ?? 0) > 1
+  )
 
   return (
     <>
       {/* Sticky bar — just appears, no transition. */}
       {show && (
         <div className="lg:hidden inset-x-0 bottom-0 fixed z-50">
-        {inStoreOnly ? (
-          <div className="bg-[var(--theme-bg)] border-t border-[var(--theme-border)] flex items-center gap-3 px-4 py-3">
-            <div className="flex-1 min-w-0">
-              <p className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text)] truncate">
-                {product.title}
-              </p>
-              {selectedPrice && (
-                <p className="font-sans text-[11px] text-hunter-gold mt-0.5">
-                  {selectedPrice.calculated_price}
+          {inStoreOnly ? (
+            <div className="bg-[var(--theme-bg)] border-t border-[var(--theme-border)] flex items-center gap-3 px-4 py-3">
+              <div className="flex-1 min-w-0">
+                <p className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text)] truncate">
+                  {product.title}
                 </p>
-              )}
+                {selectedPrice && (
+                  <p className="font-sans text-[11px] text-hunter-gold mt-0.5">
+                    {selectedPrice.calculated_price}
+                  </p>
+                )}
+              </div>
+              <div className="font-sans text-[8px] uppercase tracking-[4px] text-[#cfd8d2] border border-[rgba(207,216,210,0.35)] px-4 py-2.5 text-center">
+                {t("Disponibil în magazin")}
+              </div>
             </div>
-            <div className="font-sans text-[8px] uppercase tracking-[4px] text-[#cfd8d2] border border-[rgba(207,216,210,0.35)] px-4 py-2.5 text-center">
-              Disponibil în magazin
+          ) : (
+            <div className="bg-[var(--theme-bg)] border-t border-[var(--theme-border)] px-6 py-3">
+              <Button
+                onClick={() =>
+                  hasPickableOptions ? setOpen(true) : handleAddToCart()
+                }
+                disabled={hasPickableOptions ? false : !inStock || isAdding}
+                variant="primary"
+                className="w-full h-12 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent hover:!bg-hunter-gold-b font-sans uppercase tracking-[3px] text-[11px] transition-colors"
+              >
+                {!hasPickableOptions && isAdding
+                  ? t("Se adaugă…")
+                  : !hasPickableOptions && !inStock
+                  ? t("Stoc epuizat")
+                  : t("Adaugă în coș")}
+              </Button>
             </div>
-          </div>
-        ) : (
-          <div className="bg-[var(--theme-bg)] border-t border-[var(--theme-border)] px-6 py-3">
-            <Button
-              onClick={() => setOpen(true)}
-              variant="primary"
-              className="w-full h-12 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent hover:!bg-hunter-gold-b font-sans uppercase tracking-[3px] text-[11px] transition-colors"
-            >
-              Adaugă în coș
-            </Button>
-          </div>
-        )}
+          )}
         </div>
       )}
 
@@ -202,23 +218,6 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                     <div className="w-10 h-1 rounded-full bg-[var(--theme-border)]" />
                   </div>
 
-                  {/* Header */}
-                  <div
-                    className="flex items-center justify-between px-6 py-3 border-b border-[var(--theme-border)] touch-none"
-                    onTouchStart={onTouchStart}
-                    onTouchMove={onTouchMove}
-                    onTouchEnd={onTouchEnd}
-                  >
-                    <span className="font-sans text-[10px] uppercase tracking-[4px] text-[var(--theme-text-muted)]">
-                      {product.title}
-                    </span>
-                    {selectedPrice && (
-                      <span className="font-sans text-[11px] text-hunter-gold">
-                        {selectedPrice.calculated_price}
-                      </span>
-                    )}
-                  </div>
-
                   {/* Options */}
                   <div
                     className="px-6 py-5 flex flex-col gap-6 overflow-y-auto max-h-[60dvh]"
@@ -245,7 +244,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                       onClick={() => setOpen(false)}
                       className="flex-1 py-3 font-sans text-[10px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)] transition-colors"
                     >
-                      Înapoi
+                      {t("Înapoi")}
                     </button>
                     <button
                       onClick={() => {
@@ -256,12 +255,12 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                       className="flex-[2] py-3 font-sans text-[10px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       {isAdding
-                        ? "Se adaugă…"
+                        ? t("Se adaugă…")
                         : !variant
-                        ? "Selectează"
+                        ? t("Selectează")
                         : !inStock
-                        ? "Stoc epuizat"
-                        : "Adaugă în coș"}
+                        ? t("Stoc epuizat")
+                        : t("Adaugă în coș")}
                     </button>
                   </div>
                 </motion.div>

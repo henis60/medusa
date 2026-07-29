@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server"
+
 function Section({
   label,
   title,
@@ -26,7 +28,8 @@ function Section({
   )
 }
 
-const TermsOfUseTemplate = () => {
+const TermsOfUseTemplate = async () => {
+  const t = await getTranslations("legal")
   return (
     <div className="bg-[var(--theme-bg)] w-full min-h-screen">
       {/* Header */}
@@ -34,122 +37,101 @@ const TermsOfUseTemplate = () => {
         <div className="flex items-center gap-3 mb-3">
           <span className="h-px w-8 bg-hunter-gold" />
           <span className="font-sans text-[10px] uppercase tracking-[5px] text-[var(--theme-text-muted)]">
-            Legal
+            {t("Legal")}
           </span>
         </div>
         <h1 className="font-display text-4xl small:text-6xl text-[var(--theme-text)] leading-[0.95]">
-          Termeni și <span className="italic text-hunter-gold">Condiții</span>
+          {t("Termeni și")} <span className="italic text-hunter-gold">{t("Condiții")}</span>
         </h1>
         <p className="mt-4 max-w-md font-serif text-lg text-[var(--theme-text-muted)] leading-relaxed">
-          Vă rugăm să citiți cu atenție înainte de a utiliza platforma noastră.
+          {t("Vă rugăm să citiți cu atenție înainte de a utiliza platforma noastră")}
         </p>
       </div>
 
       {/* Sections */}
       <div className="page-container py-10 flex flex-col gap-12">
-        <Section title="Acceptarea termenilor">
+        <Section title={t("Acceptarea termenilor")}>
           <p>
-            Prin accesarea și utilizarea site-ului{" "}
-            <span className="text-[var(--theme-text)]">thehunterhouse.ro</span>,
-            confirmi că ai citit, înțeles și ești de acord cu acești termeni. Dacă
-            nu ești de acord, te rugăm să nu folosești platforma.
+            {t("Prin accesarea și utilizarea site-ului")}{" "}
+            <span className="text-[var(--theme-text)]">{t("thehunterhousero")}</span>
+            {t(", confirmi că ai citit, înțeles și ești de acord cu acești termeni Dacă nu ești de acord, te rugăm să nu folosești platforma")}
           </p>
           <p>
-            Ne rezervăm dreptul de a modifica acești termeni în orice moment.
-            Continuarea utilizării platformei după publicarea modificărilor
-            constituie acceptarea lor.
+            {t("Ne rezervăm dreptul de a modifica acești termeni în orice moment Continuarea utilizării platformei după publicarea modificărilor constituie acceptarea lor")}
           </p>
         </Section>
 
-        <Section title="Utilizarea platformei">
+        <Section title={t("Utilizarea platformei")}>
           <p>
-            Platforma este destinată utilizatorilor cu vârsta de cel puțin{" "}
-            <span className="text-[var(--theme-text)]">18 ani</span> sau minorilor
-            cu acordul unui tutore legal.
+            {t("Platforma este destinată utilizatorilor cu vârsta de cel puțin")}{" "}
+            <span className="text-[var(--theme-text)]">{t("18 ani")}</span> {t("sau minorilor cu acordul unui tutore legal")}
           </p>
-          <p>Ești responsabil pentru:</p>
+          <p>{t("Ești responsabil pentru:")}</p>
           <ul className="list-disc pl-5 flex flex-col gap-1">
-            <li>Confidențialitatea datelor de autentificare ale contului tău</li>
-            <li>Toate activitățile desfășurate în contul tău</li>
-            <li>Furnizarea de informații corecte și actualizate</li>
+            <li>{t("Confidențialitatea datelor de autentificare ale contului tău")}</li>
+            <li>{t("Toate activitățile desfășurate în contul tău")}</li>
+            <li>{t("Furnizarea de informații corecte și actualizate")}</li>
           </ul>
         </Section>
 
-        <Section title="Produse și prețuri">
+        <Section title={t("Produse și prețuri")}>
           <p>
-            Prețurile sunt afișate în{" "}
-            <span className="text-[var(--theme-text)]">Lei (RON)</span> și includ
-            TVA 19%, cu excepția cazului în care se specifică altfel. Ne rezervăm
-            dreptul de a modifica prețurile fără notificare prealabilă.
+            {t("Prețurile sunt afișate în")}{" "}
+            <span className="text-[var(--theme-text)]">{t("Lei (RON)")}</span> {t("și includ TVA 19%, cu excepția cazului în care se specifică altfel Ne rezervăm dreptul de a modifica prețurile fără notificare prealabilă")}
           </p>
           <p>
-            Ne străduim să afișăm cu acuratețe culorile și detaliile produselor,
-            însă nuanțele pot diferi ușor față de ecranul tău.
+            {t("Ne străduim să afișăm cu acuratețe culorile și detaliile produselor, însă nuanțele pot diferi ușor față de ecranul tău")}
           </p>
         </Section>
 
-        <Section title="Comenzi">
+        <Section title={t("Comenzi")}>
           <p>
-            O comandă plasată reprezintă o ofertă de cumpărare. Contractul de
-            vânzare se consideră încheiat în momentul confirmării de expediere.
+            {t("O comandă plasată reprezintă o ofertă de cumpărare Contractul de vânzare se consideră încheiat în momentul confirmării de expediere")}
           </p>
           <p>
-            Ne rezervăm dreptul de a anula o comandă în caz de stoc epuizat,
-            eroare de preț, plată neverificată sau suspiciune de fraudă.
+            {t("Ne rezervăm dreptul de a anula o comandă în caz de stoc epuizat, eroare de preț, plată neverificată sau suspiciune de fraudă")}
           </p>
         </Section>
 
-        <Section title="Livrare">
+        <Section title={t("Livrare")}>
           <p>
-            Livrăm prin curier în toată România, în{" "}
-            <span className="text-[var(--theme-text)]">3–5 zile lucrătoare</span>.
-            Riscul pierderii sau deteriorării produselor trece la cumpărător în
-            momentul intrării în posesia fizică a acestora.
+            {t("Livrăm prin curier în toată România, în")}{" "}
+            <span className="text-[var(--theme-text)]">{t("3–5 zile lucrătoare")}</span>
+            {t(" Riscul pierderii sau deteriorării produselor trece la cumpărător în momentul intrării în posesia fizică a acestora")}
           </p>
         </Section>
 
-        <Section label="OUG 34/2014" title="Dreptul de retragere">
+        <Section label={t("OUG 34/2014")} title={t("Dreptul de retragere")}>
           <p>
-            Ai dreptul de a te retrage din contract în termen de{" "}
-            <span className="text-[var(--theme-text)]">14 zile calendaristice</span>{" "}
-            de la primirea produselor, fără a fi necesară justificarea deciziei.
+            {t("Ai dreptul de a te retrage din contract în termen de")}{" "}
+            <span className="text-[var(--theme-text)]">{t("14 zile calendaristice")}</span>{" "}
+            {t("de la primirea produselor, fără a fi necesară justificarea deciziei")}
           </p>
           <p>
-            Produsele trebuie returnate în stare originală, nefolosite și cu
-            eticheta atașată. Rambursarea se face în maximum 14 zile de la
-            primirea înștiințării de retragere.
+            {t("Produsele trebuie returnate în stare originală, nefolosite și cu eticheta atașată Rambursarea se face în maximum 14 zile de la primirea înștiințării de retragere")}
           </p>
           <p className="text-[var(--theme-text)]">
-            Produsele personalizate sau confecționate la comandă sunt exceptate de
-            la dreptul de retragere.
+            {t("Produsele personalizate sau confecționate la comandă sunt exceptate de la dreptul de retragere")}
           </p>
         </Section>
 
-        <Section title="Garanție">
+        <Section title={t("Garanție")}>
           <p>
-            Toate produsele beneficiază de garanția legală de conformitate de{" "}
-            <span className="text-[var(--theme-text)]">2 ani</span> de la data
-            livrării. În caz de defect, ne contactezi pe email cu numărul comenzii
-            și ne ocupăm de reparare, înlocuire sau rambursare.
+            {t("Toate produsele beneficiază de garanția legală de conformitate de")}{" "}
+            <span className="text-[var(--theme-text)]">{t("2 ani")}</span> {t("de la data livrării În caz de defect, ne contactezi pe email cu numărul comenzii și ne ocupăm de reparare, înlocuire sau rambursare")}
           </p>
         </Section>
 
-        <Section title="Proprietate intelectuală">
+        <Section title={t("Proprietate intelectuală")}>
           <p>
-            Tot conținutul platformei — texte, imagini, logo-uri, design — este
-            proprietatea exclusivă a{" "}
-            <span className="text-[var(--theme-text)]">The Hunter House</span> sau
-            a partenerilor săi și este protejat de legislația privind drepturile de
-            autor. Orice reproducere în scopuri comerciale fără acord scris este
-            interzisă.
+            {t("Tot conținutul platformei — texte, imagini, logo-uri, design — este proprietatea exclusivă a")}{" "}
+            <span className="text-[var(--theme-text)]">{t("The Hunter House")}</span> {t("sau a partenerilor săi și este protejat de legislația privind drepturile de autor Orice reproducere în scopuri comerciale fără acord scris este interzisă")}
           </p>
         </Section>
 
-        <Section label="Legislație" title="Legea aplicabilă">
+        <Section label={t("Legislație")} title={t("Legea aplicabilă")}>
           <p>
-            Acești termeni sunt guvernați de legislația română. Litigiile vor fi
-            soluționate în primul rând pe cale amiabilă, iar în caz contrar, prin
-            instanțele competente din România.
+            {t("Acești termeni sunt guvernați de legislația română Litigiile vor fi soluționate în primul rând pe cale amiabilă, iar în caz contrar, prin instanțele competente din România")}
           </p>
           <div className="flex flex-col gap-1.5">
             <a
@@ -158,7 +140,7 @@ const TermsOfUseTemplate = () => {
               rel="noopener noreferrer"
               className="text-[var(--theme-text)] border-b border-hunter-gold/40 hover:border-hunter-gold transition-colors w-fit"
             >
-              ANPC — Autoritatea Națională pentru Protecția Consumatorilor
+              {t("ANPC — Autoritatea Națională pentru Protecția Consumatorilor")}
             </a>
             <a
               href="https://ec.europa.eu/consumers/odr"
@@ -166,18 +148,18 @@ const TermsOfUseTemplate = () => {
               rel="noopener noreferrer"
               className="text-[var(--theme-text)] border-b border-hunter-gold/40 hover:border-hunter-gold transition-colors w-fit"
             >
-              Platforma SOL / ODR a Comisiei Europene
+              {t("Platforma SOL / ODR a Comisiei Europene")}
             </a>
           </div>
         </Section>
 
-        <Section title="Contact">
+        <Section title={t("Contact")}>
           <p>
-            Pentru orice întrebări legate de acești termeni, ne poți contacta la:
+            {t("Pentru orice întrebări legate de acești termeni, ne poți contacta la:")}
           </p>
           <ul className="flex flex-col gap-1.5">
             <li>
-              Email:{" "}
+              {t("Email:")}{" "}
               <a
                 href="mailto:contact@thehunter.ro"
                 className="text-[var(--theme-text)] border-b border-hunter-gold/40 hover:border-hunter-gold transition-colors"
@@ -186,7 +168,7 @@ const TermsOfUseTemplate = () => {
               </a>
             </li>
             <li>
-              Telefon:{" "}
+              {t("Telefon:")}{" "}
               <a
                 href="tel:+40765080667"
                 className="text-[var(--theme-text)] border-b border-hunter-gold/40 hover:border-hunter-gold transition-colors"

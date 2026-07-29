@@ -1,11 +1,13 @@
 import { HttpTypes } from "@medusajs/types"
 import Image from "next/image"
+import { getTranslations } from "next-intl/server"
 
 type ImageGalleryProps = {
   images: HttpTypes.StoreProductImage[]
 }
 
-export const ImageGallery = ({ images }: ImageGalleryProps) => {
+export const ImageGallery = async ({ images }: ImageGalleryProps) => {
+  const t = await getTranslations("products")
   const [first, ...rest] = images
 
   return (
@@ -23,7 +25,7 @@ export const ImageGallery = ({ images }: ImageGalleryProps) => {
               {img.url && (
                 <Image
                   src={img.url}
-                  alt={`Product image ${i + 1}`}
+                  alt={t("Imagine produs {index}", { index: i + 1 })}
                   fill
                   className="object-contain object-center"
                   sizes="64px"
@@ -38,7 +40,7 @@ export const ImageGallery = ({ images }: ImageGalleryProps) => {
         {first?.url && (
           <Image
             src={first.url}
-            alt="Product image"
+            alt={t("Imagine produs")}
             fill
             priority
             className="object-contain object-center"

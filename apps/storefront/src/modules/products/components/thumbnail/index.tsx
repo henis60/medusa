@@ -1,5 +1,6 @@
 import { Container, clx } from "@modules/common/components/ui"
 import Image from "next/image"
+import { getTranslations } from "next-intl/server"
 import React from "react"
 
 import PlaceholderImage from "@modules/common/icons/placeholder-image"
@@ -14,7 +15,7 @@ type ThumbnailProps = {
   "data-testid"?: string
 }
 
-const Thumbnail: React.FC<ThumbnailProps> = ({
+const Thumbnail = async ({
   thumbnail,
   images,
   size = "small",
@@ -22,7 +23,8 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
   compact,
   className,
   "data-testid": dataTestid,
-}) => {
+}: ThumbnailProps) => {
+  const t = await getTranslations("products")
   const initialImage = thumbnail || images?.[0]?.url
 
   return (
@@ -43,7 +45,7 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
       )}
       data-testid={dataTestid}
     >
-      <ImageOrPlaceholder image={initialImage} size={size} />
+      <ImageOrPlaceholder image={initialImage} size={size} alt={t("Miniatură")} />
     </Container>
   )
 }
@@ -51,11 +53,12 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
 const ImageOrPlaceholder = ({
   image,
   size,
-}: Pick<ThumbnailProps, "size"> & { image?: string }) => {
+  alt,
+}: Pick<ThumbnailProps, "size"> & { image?: string; alt: string }) => {
   return image ? (
     <Image
       src={image}
-      alt="Thumbnail"
+      alt={alt}
       className="absolute inset-0 object-contain object-center"
       draggable={false}
       quality={50}

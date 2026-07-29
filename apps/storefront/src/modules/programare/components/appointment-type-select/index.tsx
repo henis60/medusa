@@ -1,6 +1,7 @@
 "use client"
 
 import { Listbox, Transition } from "@headlessui/react"
+import { useTranslations } from "next-intl"
 import { Fragment, useState } from "react"
 
 const OPTIONS = [
@@ -12,6 +13,7 @@ const labelClass =
   "font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-2 block"
 
 export default function AppointmentTypeSelect({ hasError, onSelect }: { hasError?: boolean; onSelect?: (v: string) => void }) {
+  const t = useTranslations("programare")
   const [selected, setSelected] = useState("")
 
   const handleChange = (v: string) => {
@@ -22,7 +24,7 @@ export default function AppointmentTypeSelect({ hasError, onSelect }: { hasError
   return (
     <div>
       <label className={`${labelClass} flex items-center gap-1.5`}>
-        Tip programare
+        {t("Tip programare")}
         <span className={`text-base normal-case tracking-normal transition-colors ${hasError && !selected ? "text-red-400/80" : "text-hunter-gold/50"}`}>*</span>
       </label>
       <input type="hidden" name="type" value={selected} />
@@ -34,7 +36,7 @@ export default function AppointmentTypeSelect({ hasError, onSelect }: { hasError
                 !selected ? "text-[var(--theme-text-muted)]" : "text-[var(--theme-text)]"
               }`}
             >
-              {selected || "Alege tipul"}
+              {selected ? t(selected) : t("Alege tipul")}
             </span>
             <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--theme-text-muted)]">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -68,7 +70,7 @@ export default function AppointmentTypeSelect({ hasError, onSelect }: { hasError
                           sel ? "text-hunter-gold" : "text-[var(--theme-text)]"
                         }`}
                       >
-                        {opt}
+                        {t(opt)}
                       </span>
                     </div>
                   )}

@@ -4,6 +4,7 @@ import { HttpTypes } from "@medusajs/types"
 import { useState, useEffect, useRef } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import Image from "next/image"
+import { useTranslations } from "next-intl"
 import { useSelectedVariant } from "@modules/products/context/selected-variant-context"
 
 type Props = {
@@ -18,6 +19,7 @@ export default function VariantAwareGallery({
   allImages,
   variants,
 }: Props) {
+  const t = useTranslations("products")
   // Shared with ProductActions via context (not the URL) — the provider
   // initializes to variants[0].id, matching ProductActions' own default, so
   // the gallery starts on the right image set immediately instead of
@@ -131,7 +133,7 @@ export default function VariantAwareGallery({
                 {img.url && (
                   <Image
                     src={img.url}
-                    alt={`Product image ${i + 1}`}
+                    alt={t("Imagine produs {index}", { index: i + 1 })}
                     fill
                     className="object-contain object-center bg-white"
                     sizes="64px"
@@ -163,7 +165,7 @@ export default function VariantAwareGallery({
               >
                 <Image
                   src={selected.url}
-                  alt="Product image"
+                  alt={t("Imagine produs")}
                   fill
                   priority
                   draggable={false}
@@ -183,7 +185,7 @@ export default function VariantAwareGallery({
             <button
               key={i}
               onClick={() => setSelectedIndex(i)}
-              aria-label={`Image ${i + 1}`}
+              aria-label={t("Imagine {index}", { index: i + 1 })}
               className={[
                 "transition-all duration-200",
                 i === selectedIndex

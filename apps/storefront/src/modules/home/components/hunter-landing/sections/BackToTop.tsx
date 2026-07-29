@@ -1,8 +1,10 @@
 "use client"
 import { useState } from "react"
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "framer-motion"
+import { useTranslations } from "next-intl"
 
 export default function BackToTop() {
+  const t = useTranslations("home")
   const { scrollY } = useScroll()
   const [visible, setVisible] = useState(false)
 
@@ -20,7 +22,7 @@ export default function BackToTop() {
           whileHover={{ scale: 1.12 }}
           transition={{ duration: 0.25, ease: "easeOut" }}
           type="button"
-          aria-label="Înapoi sus"
+          aria-label={t("Înapoi sus")}
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           style={{
             width: 36,

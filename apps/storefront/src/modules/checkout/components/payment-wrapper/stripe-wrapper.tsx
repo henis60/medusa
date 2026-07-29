@@ -4,6 +4,7 @@ import { Stripe, StripeElementsOptions } from "@stripe/stripe-js"
 import { Elements } from "@stripe/react-stripe-js"
 import { HttpTypes } from "@medusajs/types"
 import { createContext } from "react"
+import { useTranslations } from "next-intl"
 
 type StripeWrapperProps = {
   paymentSession: HttpTypes.StorePaymentSession
@@ -20,25 +21,26 @@ const StripeWrapper: React.FC<StripeWrapperProps> = ({
   stripePromise,
   children,
 }) => {
+  const t = useTranslations("checkout")
   const options: StripeElementsOptions = {
     clientSecret: paymentSession!.data?.client_secret as string | undefined,
   }
 
   if (!stripeKey) {
     throw new Error(
-      "Stripe key is missing. Set NEXT_PUBLIC_STRIPE_KEY environment variable."
+      t("Stripe key is missing Set NEXT_PUBLIC_STRIPE_KEY environment variable")
     )
   }
 
   if (!stripePromise) {
     throw new Error(
-      "Stripe promise is missing. Make sure you have provided a valid Stripe key."
+      t("Stripe promise is missing Make sure you have provided a valid Stripe key")
     )
   }
 
   if (!paymentSession?.data?.client_secret) {
     throw new Error(
-      "Stripe client secret is missing. Cannot initialize Stripe."
+      t("Stripe client secret is missing Cannot initialize Stripe")
     )
   }
 

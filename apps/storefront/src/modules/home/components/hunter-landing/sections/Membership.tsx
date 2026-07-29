@@ -1,49 +1,32 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 export default function Membership() {
+  const t = useTranslations("home")
+
   const tiers = [
     {
       id: "silver",
-      name: "Silver",
+      name: t("Silver"),
       price: "500",
-      tag: "",
-      perks: [
-        "Acces Friday Social Club",
-        "1 sesiune de stil / an",
-        "5% discount Ready to Wear",
-        "Early access colecții noi",
-        "Newsletter exclusiv",
-      ],
+      tag: t("tag"),
+      perks: t.raw("silverPerks") as string[],
     },
     {
       id: "gold",
-      name: "Gold",
+      name: t("Gold"),
       price: "900",
-      tag: "Recomandat",
+      tag: t("Recomandat"),
       featured: true,
-      perks: [
-        "Tot ce include Silver",
-        "2 sesiuni de stil / an",
-        "10% discount Made to Measure",
-        "Rezervare privată bar",
-        "Voucher 150 lei / an",
-        "Invitație evenimente speciale",
-      ],
+      perks: t.raw("goldPerks") as string[],
     },
     {
       id: "black",
-      name: "Black",
+      name: t("Black"),
       price: "1.800",
-      tag: "",
-      perks: [
-        "Tot ce include Gold",
-        "Sesiuni de stil nelimitate",
-        "15% discount toate serviciile",
-        "Acces lounge privat",
-        "Voucher 400 lei / an",
-        "First seat Friday Social Club",
-        "Concierge personal",
-      ],
+      tag: t("tag"),
+      perks: t.raw("blackPerks") as string[],
     },
   ]
 
@@ -51,17 +34,15 @@ export default function Membership() {
     <section className="section mem-sec" id="membership">
       <div className="section-inner">
         <div className="kicker rv">
-          <span className="kicker-bar"></span>Membership
+          <span className="kicker-bar"></span>{t("Membership")}
         </div>
         <h2 className="sec-title rv">
-          The Hunter
+          {t("The Hunter")}
           <br />
-          <em>Club</em>
+          <em>{t("Club")}</em>
         </h2>
         <p className="sec-body-text rv" style={{ marginBottom: "0" }}>
-          Membership-ul The Hunter nu este un card de loialitate. Este o
-          invitație să faci parte dintr-o comunitate selectivă cu acces la
-          experiențe unice.
+          {t("Membership-ul The Hunter nu este un card de loialitate Este o invitație să faci parte dintr-o comunitate selectivă cu acces la experiențe unice")}
         </p>
         <div
           className="line-draw rv"
@@ -76,7 +57,7 @@ export default function Membership() {
               <div className="mem-name">{tier.name}</div>
               <div className="flex items-baseline gap-1.5 mb-3">
                 <div className="mem-price">{tier.price}</div>
-                <div className="mem-psub">lei / an</div>
+                <div className="mem-psub">{t("lei / an")}</div>
               </div>
               <div className="mem-div"></div>
               <div className="flex flex-col gap-1.5 pt-2">

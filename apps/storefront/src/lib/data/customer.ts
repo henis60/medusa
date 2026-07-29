@@ -5,7 +5,8 @@ import medusaError from "@lib/util/medusa-error"
 import { isRateLimitError } from "@lib/util/is-rate-limit-error"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
-import { redirect } from "next/navigation"
+import { redirect } from "@i18n/navigation"
+import { getLocale } from "next-intl/server"
 import {
   getAuthHeaders,
   getCacheOptions,
@@ -156,7 +157,7 @@ export async function login(_currentState: unknown, formData: FormData) {
 
   const redirectTo = formData.get("redirectTo") as string | null
   if (redirectTo) {
-    redirect(redirectTo)
+    redirect({ href: redirectTo, locale: await getLocale() })
   }
 }
 
@@ -173,7 +174,7 @@ export async function signout() {
   const cartCacheTag = await getCacheTag("carts")
   revalidateTag(cartCacheTag)
 
-  redirect("/profil")
+  redirect({ href: "/profil", locale: await getLocale() })
 }
 
 export async function resetPassword(

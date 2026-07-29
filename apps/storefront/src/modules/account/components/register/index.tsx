@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { startTransition, useActionState } from "react"
 import Input from "@modules/common/components/input"
 import { LOGIN_VIEW } from "@modules/account/templates/login-template"
@@ -14,6 +15,7 @@ type Props = {
 }
 
 const Register = ({ setCurrentView }: Props) => {
+  const t = useTranslations("account")
   const [message, formAction] = useActionState(
     signup as (state: string | null, formData: FormData) => Promise<string | null>,
     null as string | null
@@ -36,10 +38,10 @@ const Register = ({ setCurrentView }: Props) => {
       data-testid="register-page"
     >
       <h1 className="font-display text-[42px] leading-[1] text-[var(--theme-text)] mb-2">
-        Creează un Cont
+        {t("Creează un Cont")}
       </h1>
       <p className="font-sans text-[14px] text-[var(--theme-text-muted)] mb-10 text-center">
-        Creează-ți profilul și accesează o experiență de cumpărături îmbunătățită.
+        {t("Creează-ți profilul și accesează o experiență de cumpărături îmbunătățită")}
       </p>
 
       <form
@@ -49,21 +51,21 @@ const Register = ({ setCurrentView }: Props) => {
       >
         <div className="flex flex-col w-full gap-y-3">
           <Input
-            label="Prenume"
+            label={t("Prenume")}
             name="first_name"
             required
             autoComplete="given-name"
             data-testid="first-name-input"
           />
           <Input
-            label="Nume"
+            label={t("Nume")}
             name="last_name"
             required
             autoComplete="family-name"
             data-testid="last-name-input"
           />
           <Input
-            label="Email"
+            label={t("Email")}
             name="email"
             required
             type="email"
@@ -71,14 +73,14 @@ const Register = ({ setCurrentView }: Props) => {
             data-testid="email-input"
           />
           <Input
-            label="Telefon"
+            label={t("Telefon")}
             name="phone"
             type="tel"
             autoComplete="tel"
             data-testid="phone-input"
           />
           <Input
-            label="Parolă"
+            label={t("Parolă")}
             name="password"
             required
             type="password"
@@ -88,19 +90,19 @@ const Register = ({ setCurrentView }: Props) => {
         </div>
         <ErrorMessage error={message} data-testid="register-error" />
         <p className="font-sans text-[11px] text-[var(--theme-text-muted)] mt-6 leading-relaxed">
-          Prin crearea unui cont, ești de acord cu{" "}
+          {t("Prin crearea unui cont, ești de acord cu")}{" "}
           <LocalizedClientLink
             href="/privacy-policy"
             className="text-[var(--theme-text)] hover:text-hunter-gold underline underline-offset-2 transition-colors"
           >
-            Politica de Confidențialitate
+            {t("Politica de Confidențialitate")}
           </LocalizedClientLink>{" "}
-          și{" "}
+          {t("și")}{" "}
           <LocalizedClientLink
             href="/terms-of-use"
             className="text-[var(--theme-text)] hover:text-hunter-gold underline underline-offset-2 transition-colors"
           >
-            Termenii de Utilizare
+            {t("Termenii de Utilizare")}
           </LocalizedClientLink>
           .
         </p>
@@ -108,7 +110,7 @@ const Register = ({ setCurrentView }: Props) => {
           className="w-full mt-4 h-12 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent font-sans uppercase tracking-[3px] text-[13px]"
           data-testid="register-button"
         >
-          Creează Cont
+          {t("Creează Cont")}
         </SubmitButton>
 
         <button
@@ -117,14 +119,14 @@ const Register = ({ setCurrentView }: Props) => {
           className="w-full mt-3 h-12 font-sans uppercase tracking-[3px] text-[11px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-hunter-gold hover:text-hunter-gold transition-colors"
           data-testid="switch-to-login-button"
         >
-          Am deja un cont
+          {t("Am deja un cont")}
         </button>
 
         <p className="font-sans text-[11px] text-[var(--theme-text-muted)] mt-4 text-center leading-relaxed">
-          Protejat de reCAPTCHA —{" "}
-          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-hunter-gold transition-colors">Confidențialitate</a>
+          {t("Protejat de reCAPTCHA —")}{" "}
+          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-hunter-gold transition-colors">{t("Confidențialitate")}</a>
           {" "}&amp;{" "}
-          <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-hunter-gold transition-colors">Termeni</a>
+          <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-hunter-gold transition-colors">{t("Termeni")}</a>
         </p>
       </form>
 

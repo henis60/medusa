@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { HttpTypes } from "@medusajs/types"
 
@@ -15,6 +16,7 @@ export default function NewsletterStatus({
   // rest of the page instead of popping in after a client fetch.
   initialSubscribed: boolean
 }) {
+  const t = useTranslations("account")
   const [subscribed, setSubscribed] = useState<boolean>(initialSubscribed)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -35,17 +37,17 @@ export default function NewsletterStatus({
         body: JSON.stringify({ email }),
       })
       if (res.status === 429) {
-        setError("Prea multe încercări. Te rugăm să revii peste câteva minute.")
+        setError(t("Prea multe încercări Te rugăm să revii peste câteva minute"))
         return
       }
       const data = await res.json()
       if (data.success) {
         setSubscribed(true)
       } else {
-        setError(data.error ?? "Eroare necunoscută")
+        setError(data.error ?? t("Eroare necunoscută"))
       }
     } catch {
-      setError("Eroare de rețea")
+      setError(t("Eroare de rețea"))
     } finally {
       setLoading(false)
     }
@@ -87,27 +89,27 @@ export default function NewsletterStatus({
     <div className="border border-[var(--theme-border)] p-6 flex flex-col small:flex-row items-start small:items-center justify-between gap-4">
       <div>
         <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-1.5">
-          Newsletter
+          {t("Newsletter")}
         </p>
         <p className="font-display text-[18px] leading-tight text-[var(--theme-text)]">
           {subscribed ? (
             <>
-              Ești abonat
+              {t("Ești abonat")}
               <span className="text-hunter-gold">.</span>
             </>
           ) : (
-            "Nu ești abonat"
+            t("Nu ești abonat")
           )}
         </p>
         {subscribed && (
           <p className="font-sans text-[11px] text-[var(--theme-text-muted)] mt-1">
-            Primești noutăți exclusive pe{" "}
+            {t("Primești noutăți exclusive pe")}{" "}
             <span className="text-[var(--theme-text)]">{email}</span>
           </p>
         )}
         {!subscribed && (
           <p className="font-sans text-[11px] text-[var(--theme-text-muted)] mt-1">
-            Abonează-te pentru oferte și noutăți exclusive.
+            {t("Abonează-te pentru oferte și noutăți exclusive")}
           </p>
         )}
         {error && (
@@ -146,12 +148,12 @@ export default function NewsletterStatus({
                 d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
               />
             </svg>
-            {subscribed ? "Dezabonare" : "Abonează-te"}
+            {subscribed ? t("Dezabonare") : t("Abonează-te")}
           </span>
         ) : subscribed ? (
-          "Dezabonare"
+          t("Dezabonare")
         ) : (
-          "Abonează-te"
+          t("Abonează-te")
         )}
       </button>
     </div>

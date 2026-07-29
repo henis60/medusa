@@ -4,6 +4,7 @@ import { addToCart } from "@lib/data/cart"
 import { emitCartUpdated } from "@lib/util/cart-events"
 import { HttpTypes } from "@medusajs/types"
 import { useEffect, useState, useMemo } from "react"
+import { useTranslations } from "next-intl"
 import { COLOR_OPTION_NAMES as COLOR_TITLES } from "@lib/util/product"
 
 const SIZE_ORDER = [
@@ -84,6 +85,7 @@ export default function DesktopQuickAdd({
   productHandle: _productHandle,
   onVariantSelect,
 }: Props) {
+  const t = useTranslations("products")
   const countryCode = "ro"
   const [selected, setSelected] = useState<Record<string, string>>({})
   const [adding, setAdding] = useState(false)
@@ -151,10 +153,10 @@ export default function DesktopQuickAdd({
 
   const selectLabel = useMemo(() => {
     const missing = options.find((o) => !selected[o.id ?? ""])
-    if (!missing) return "Selectează"
+    if (!missing) return t("Selectează")
     return COLOR_TITLES.includes(missing.title?.toLowerCase() ?? "")
-      ? "Selectează culoarea"
-      : "Selectează mărimea"
+      ? t("Selectează culoarea")
+      : t("Selectează mărimea")
   }, [options, selected])
 
   const handleOptionClick = (
@@ -272,12 +274,12 @@ export default function DesktopQuickAdd({
           }}
         >
           {adding
-            ? "Se adaugă…"
+            ? t("Se adaugă…")
             : !effectiveVariant && options.length > 0
             ? selectLabel
             : !inStock
-            ? "Stoc epuizat"
-            : "Adaugă în coș"}
+            ? t("Stoc epuizat")
+            : t("Adaugă în coș")}
         </button>
       </div>
     </div>

@@ -1,18 +1,14 @@
 "use client"
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
+import { usePathname, useRouter } from "@i18n/navigation"
 import { useCallback, useEffect, useState } from "react"
+import { useTranslations } from "next-intl"
 import { clx } from "@modules/common/components/ui"
 import PriceRangeSlider from "@modules/store/components/price-range-slider"
 import { useStoreFacets } from "@modules/store/context/store-facets-context"
 import { useScrollLock } from "@lib/hooks/use-scroll-lock"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
-
-const SORT_OPTIONS: { value: SortOptions; label: string }[] = [
-  { value: "created_at", label: "Cele mai noi" },
-  { value: "price_asc", label: "Preț crescător" },
-  { value: "price_desc", label: "Preț descrescător" },
-]
 
 function FilterIcon() {
   return (
@@ -37,12 +33,19 @@ export default function DesktopFilterDrawer({
 }: {
   sortBy: SortOptions
 }) {
+  const t = useTranslations("store")
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { priceBounds, colorFacets, hasProducts } = useStoreFacets()
   const [open, setOpen] = useState(false)
   useScrollLock(open)
+
+  const SORT_OPTIONS: { value: SortOptions; label: string }[] = [
+    { value: "created_at", label: t("Cele mai noi") },
+    { value: "price_asc", label: t("Preț crescător") },
+    { value: "price_desc", label: t("Preț descrescător") },
+  ]
 
   // Applied filters — what the grid actually reflects right now.
   const appliedMinPrice = Number(searchParams.get("minPrice")) || priceBounds[0]
@@ -140,7 +143,7 @@ export default function DesktopFilterDrawer({
         )}
       >
         <FilterIcon />
-        Filtru
+        {t("Filtru")}
       </button>
 
       {/* Backdrop — above the sticky nav (z-[9001]) so the drawer covers it too */}
@@ -161,11 +164,11 @@ export default function DesktopFilterDrawer({
       >
         <div className="flex items-center justify-between px-8 h-16 border-b border-[var(--theme-border)] shrink-0">
           <span className="font-sans text-[10px] uppercase tracking-[4px] text-[var(--theme-text)]">
-            Filtru
+            {t("Filtru")}
           </span>
           <button
             onClick={() => setOpen(false)}
-            aria-label="Închide"
+            aria-label={t("Închide")}
             className="w-7 h-7 flex items-center justify-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -183,7 +186,7 @@ export default function DesktopFilterDrawer({
           {/* Sortare */}
           <div className="py-4 border-b border-[var(--theme-border)]">
             <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-3">
-              Sortare
+              {t("Sortare")}
             </p>
             <div
               className={clx(
@@ -222,7 +225,7 @@ export default function DesktopFilterDrawer({
 
           <div className="py-4">
             <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-3">
-              Preț
+              {t("Preț")}
             </p>
             <PriceRangeSlider
               bounds={priceBounds}
@@ -236,7 +239,7 @@ export default function DesktopFilterDrawer({
 
           <div className="py-4 border-t border-[var(--theme-border)]">
             <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-3">
-              Culoare
+              {t("Culoare")}
             </p>
             {displayedColors.length > 0 ? (
               <div className="flex flex-wrap gap-2">
@@ -260,7 +263,7 @@ export default function DesktopFilterDrawer({
               </div>
             ) : (
               <p className="font-sans text-[11px] text-[var(--theme-text-muted)] opacity-40">
-                Nicio culoare disponibilă
+                {t("Nicio culoare disponibilă")}
               </p>
             )}
           </div>
@@ -272,13 +275,13 @@ export default function DesktopFilterDrawer({
             disabled={draftFilterCount === 0}
             className="flex-1 h-11 font-sans text-[10px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] whitespace-nowrap disabled:opacity-40 hover:border-[var(--theme-text-muted)] transition-colors"
           >
-            Resetează
+            {t("Resetează")}
           </button>
           <button
             onClick={applyDraft}
             className="flex-1 h-11 font-sans text-[10px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark hover:opacity-90 transition-opacity"
           >
-            Aplică filtre
+            {t("Aplică filtre")}
           </button>
         </div>
       </div>

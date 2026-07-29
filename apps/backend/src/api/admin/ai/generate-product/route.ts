@@ -34,6 +34,17 @@ type AIProductResult = {
   sizes: string[]
   image_order: number[]
   variant_images: Record<string, number[]>
+  colors_en: string[]
+  translations?: {
+    en: {
+      title: string
+      subtitle?: string
+      description: string
+      seo_title: string
+      seo_description: string
+      material: string | null
+    }
+  }
 }
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
@@ -100,9 +111,11 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   const colorsField = needColorDetection
     ? `- "colors": culorile PRODUSULUI (ignoră ambalaj/suport/fundal). Butoniere → culoarea pietrei centrale (dacă există), altfel culoarea generală; cravate → culoarea de fundal a modelului; orice alt produs → culoarea dominantă. EXCLUSIV culori de bază simple: Negru, Alb, Gri, Maro, Bej, Crem, Roșu, Albastru, Navy, Verde, Galben, Portocaliu, Mov, Roz, Auriu, Argintiu — fără modificatori. O singură culoare dacă toate imaginile sunt același colorway; mai multe DOAR dacă există colorway-uri cu adevărat diferite. Fiecare culoare o singură dată, fără duplicate.
-- "colors_hex": array paralel cu "colors" — codul hex dominant din imagine per culoare`
+- "colors_hex": array paralel cu "colors" — codul hex dominant din imagine per culoare
+- "colors_en": array paralel cu "colors" — traducerea în engleză a fiecărei culori (ex: "Negru" → "Black", "Maro" → "Brown", "Bej" → "Beige")`
     : `- "colors": ${JSON.stringify(colors)} (furnizate — returnează exact)
-- "colors_hex": array paralel cu "colors" — estimează hex-ul dominant din imagine per culoare`
+- "colors_hex": array paralel cu "colors" — estimează hex-ul dominant din imagine per culoare
+- "colors_en": array paralel cu "colors" — traducerea în engleză a fiecărei culori furnizate (ex: "Negru" → "Black")`
 
   const imageFields = n > 1
     ? `- "image_order": toți ${n} indici (0-${n - 1}) reordonați — 1) grupare pe culoare,${colorOrderHint} 2) față/principal întâi în fiecare grup, apoi spate, detalii. Exact ${n} indici unici.
@@ -141,13 +154,14 @@ ${tagsNote}
 - "sizes": ${sizes?.length ? `${JSON.stringify(sizes)} (furnizate, returnează exact)` : 'mărimile tipice dacă sunt relevante (ex: ["S","M","L","XL"] pentru haine, [] pentru accesorii universale)'}
 ${colorsField}
 ${imageFields}
+- "translations": { "en": { "title": "...", "subtitle": "...", "description": "...", "seo_title": "...", "seo_description": "...", "material": "..." } } — traducerea în engleză a câmpurilor text de mai sus (title, subtitle, description, seo_title, seo_description, material). Păstrează același ton/voce de lux, aceeași formatare a descrierii (paragraf narativ + linie goală + linii bullet cu "• "), aceleași reguli: FĂRĂ culori, FĂRĂ mărimi menționate. "material": traducerea în engleză a materialului sau null.
 
 Răspunde DOAR cu JSON valid, fără text suplimentar, fără markdown, fără backticks.${extraInstructions ? `\n\nInstrucțiuni suplimentare (prioritate maximă): ${extraInstructions}` : ""}`
 
   try {
     const message = await client.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 2048,
+      max_tokens: 4096,
       messages: [{ role: "user", content: [...fetchedImages, { type: "text", text: prompt }] }],
     })
 
@@ -194,6 +208,11 @@ Răspunde DOAR cu JSON valid, fără text suplimentar, fără markdown, fără b
     }
     if (!Array.isArray(result.colors_hex)) result.colors_hex = []
     result.colors_hex = result.colors.map((_: string, i: number) => result.colors_hex[i] ?? "")
+    if (!Array.isArray(result.colors_en)) result.colors_en = []
+    result.colors_en = result.colors.map((c: string, i: number) => {
+      const en = result.colors_en[i]
+      return typeof en === "string" && en.trim() ? en.trim() : c
+    })
 
     // image_order: validate it's a permutation of [0..n-1]
     if (!Array.isArray(result.image_order) || result.image_order.length !== n) {
@@ -215,6 +234,30 @@ Răspunde DOAR cu JSON valid, fără text suplimentar, fără markdown, fără b
       }
     }
     result.variant_images = cleanVariantImages
+
+    // translations.en: best-effort — validate defensively, drop if malformed
+    const en = result.translations?.en as any
+    if (
+      en &&
+      typeof en === "object" &&
+      typeof en.title === "string" &&
+      typeof en.description === "string" &&
+      typeof en.seo_title === "string" &&
+      typeof en.seo_description === "string"
+    ) {
+      result.translations = {
+        en: {
+          title: en.title,
+          subtitle: typeof en.subtitle === "string" ? en.subtitle : undefined,
+          description: en.description,
+          seo_title: en.seo_title,
+          seo_description: en.seo_description,
+          material: typeof en.material === "string" ? en.material : null,
+        },
+      }
+    } else {
+      result.translations = undefined
+    }
 
     console.log("[AI] result:", JSON.stringify({ colors: result.colors, sizes: result.sizes, price_ron: result.price_ron, images: n }, null, 2))
     return res.json({ result })

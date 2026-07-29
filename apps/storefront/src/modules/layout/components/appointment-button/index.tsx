@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
+import { useTranslations } from "next-intl"
 
 type Props = {
   transparent?: boolean
@@ -10,6 +11,7 @@ type Props = {
 }
 
 export default function AppointmentButton({ transparent, hideOnTop, onClick }: Props) {
+  const t = useTranslations("layout")
   const [scrolled, setScrolled] = useState(false)
   const [isScrolling, setIsScrolling] = useState(false)
 
@@ -55,7 +57,7 @@ export default function AppointmentButton({ transparent, hideOnTop, onClick }: P
             ? "bg-transparent border-y border-l border-white/20 text-white/60 hover:text-hunter-gold hover:border-hunter-gold/60"
             : "bg-[var(--theme-bg)] border-y border-l border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:text-hunter-gold hover:border-hunter-gold"
         }`}
-        aria-label="Programare"
+        aria-label={t("Programare")}
       >
         <span
           className={`appt-ping absolute inset-0 pointer-events-none ${
@@ -76,7 +78,7 @@ export default function AppointmentButton({ transparent, hideOnTop, onClick }: P
 
         {/* Desktop: text vertical */}
         <span className="hidden small:flex items-center justify-center font-sans text-[9px] uppercase tracking-[4px] py-5 px-2.5 [writing-mode:vertical-rl] rotate-180">
-          Programare
+          {t("Programare")}
         </span>
       </button>
     </motion.div>

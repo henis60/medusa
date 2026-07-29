@@ -1,16 +1,20 @@
+"use client"
+
+import { useTranslations } from "next-intl"
+
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
 
-const STATUS_LABEL: Record<string, string> = {
-  pending: "În așteptare",
-  not_fulfilled: "În procesare",
-  partially_fulfilled: "Parțial livrată",
-  fulfilled: "Livrată",
-  canceled: "Anulată",
-  returned: "Returnată",
-  partially_returned: "Parțial returnată",
-  requires_action: "Necesită acțiune",
+const STATUS_KEYS: Record<string, string> = {
+  pending: "pending",
+  not_fulfilled: "not_fulfilled",
+  partially_fulfilled: "partially_fulfilled",
+  fulfilled: "fulfilled",
+  canceled: "canceled",
+  returned: "returned",
+  partially_returned: "partially_returned",
+  requires_action: "requires_action",
 }
 
 type OrderCardProps = {
@@ -18,9 +22,11 @@ type OrderCardProps = {
 }
 
 const OrderCard = ({ order }: OrderCardProps) => {
-  const status = order.fulfillment_status
-    ? STATUS_LABEL[order.fulfillment_status] ?? order.fulfillment_status
+  const t = useTranslations("account")
+  const statusKey = order.fulfillment_status
+    ? STATUS_KEYS[order.fulfillment_status]
     : null
+  const status = statusKey ? t(statusKey) : order.fulfillment_status
 
   return (
     <LocalizedClientLink

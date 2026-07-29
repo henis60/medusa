@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useLocale } from "next-intl"
 import { HttpTypes } from "@medusajs/types"
 import { retrieveCart } from "@lib/data/cart"
 import { onCartUpdated } from "@lib/util/cart-events"
@@ -17,12 +18,16 @@ import CartDropdown from "../cart-dropdown"
  */
 export default function CartButton() {
   const [cart, setCart] = useState<HttpTypes.StoreCart | null>(null)
+  // retrieveCart runs as a Server Action here, outside any page render — it
+  // has no route [locale] param to read, so pass the client's current
+  // locale explicitly (see request-locale.ts).
+  const locale = useLocale()
 
   useEffect(() => {
     let cancelled = false
 
     const refetch = () => {
-      retrieveCart()
+      retrieveCart(undefined, undefined, locale)
         .then((data) => !cancelled && setCart(data))
         .catch(() => {})
     }
@@ -40,7 +45,7 @@ export default function CartButton() {
       cancelled = true
       unsubscribe()
     }
-  }, [])
+  }, [locale])
 
   return <CartDropdown cart={cart} />
 }

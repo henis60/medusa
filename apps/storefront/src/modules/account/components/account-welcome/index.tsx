@@ -1,6 +1,7 @@
 "use client"
 
-import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
+import { usePathname } from "@i18n/navigation"
 import { clx } from "@modules/common/components/ui"
 import { HttpTypes } from "@medusajs/types"
 
@@ -12,6 +13,7 @@ const AccountWelcome = ({
 }: {
   customer: HttpTypes.StoreCustomer
 }) => {
+  const t = useTranslations("account")
   const route = usePathname()
   const isOverview = route === "/profil"
 
@@ -23,10 +25,10 @@ const AccountWelcome = ({
       )}
     >
       <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-2">
-        Profil
+        {t("Profil")}
       </p>
       <h1 className="font-display text-3xl small:text-4xl text-[var(--theme-text)] leading-tight">
-        Bun venit înapoi,
+        {t("Bun venit înapoi,")}
         <br />
         <span className="italic text-hunter-gold">{customer.first_name}</span>
       </h1>

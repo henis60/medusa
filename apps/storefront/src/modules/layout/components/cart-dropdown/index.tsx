@@ -1,6 +1,7 @@
 "use client"
 
 import { AnimatePresence, motion } from "framer-motion"
+import { useLocale, useTranslations } from "next-intl"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
 import { XMark } from "@medusajs/icons"
@@ -8,7 +9,7 @@ import { Button } from "@modules/common/components/ui"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { BagIcon } from "@modules/layout/components/nav-icons"
 import CountBadge from "@modules/common/components/count-badge"
-import { usePathname } from "next/navigation"
+import { usePathname } from "@i18n/navigation"
 import Image from "next/image"
 import { deleteLineItem, updateLineItem } from "@lib/data/cart"
 import { emitCartUpdated, onCartUpdated } from "@lib/util/cart-events"
@@ -25,6 +26,11 @@ const CartDropdown = ({
 }: {
   cart?: HttpTypes.StoreCart | null
 }) => {
+  const t = useTranslations("layout")
+  // deleteLineItem/updateLineItem run as Server Actions here, outside any
+  // page render — they have no route [locale] param to read, so pass the
+  // client's current locale explicitly (see request-locale.ts).
+  const locale = useLocale()
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -51,7 +57,7 @@ const CartDropdown = ({
 
   const handleDeleteItem = (lineId: string) => {
     setUpdatingLine(lineId)
-    deleteLineItem(lineId)
+    deleteLineItem(lineId, locale)
       .then((fresh) => emitCartUpdated(fresh))
       .catch((err) => {
         if (isStaleDeploymentError(err)) {
@@ -71,7 +77,7 @@ const CartDropdown = ({
     }
 
     setUpdatingLine(lineId)
-    updateLineItem({ lineId, quantity })
+    updateLineItem({ lineId, quantity, locale })
       .then((fresh) => emitCartUpdated(fresh))
       .catch((err) => {
         if (isStaleDeploymentError(err)) {
@@ -183,7 +189,7 @@ const CartDropdown = ({
         <span
           className="relative flex items-center hover:opacity-60 transition-opacity"
           data-testid="nav-cart-link"
-          aria-label={`Cart (${totalItems})`}
+          aria-label={t("Coș ({count})", { count: totalItems })}
         >
           <BagIcon size={22} />
           <CountBadge count={totalItems} />
@@ -222,7 +228,7 @@ const CartDropdown = ({
                     <div className="flex items-center justify-between px-7 h-16 border-b border-[var(--theme-border)] shrink-0">
                       <div className="flex items-baseline gap-3">
                         <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] text-[var(--theme-text)]">
-                          Coș
+                          {t("Coș")}
                         </h2>
                         {totalItems > 0 && (
                           <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-[var(--theme-text-muted)]">
@@ -233,7 +239,7 @@ const CartDropdown = ({
                       <button
                         data-testid="close-cart-button"
                         onClick={close}
-                        aria-label="Close cart drawer"
+                        aria-label={t("Închide sertarul de coș")}
                         className="inline-flex h-12 w-12 items-center justify-end text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
                       >
                         <XMark />
@@ -264,6 +270,16 @@ const CartDropdown = ({
                               const hasDiscount =
                                 typeof compareAtUnitPrice === "number" &&
                                 compareAtUnitPrice > (item.unit_price ?? 0)
+                              // item.product_title is a denormalized snapshot
+                              // captured at add-to-cart time (survives the
+                              // product being edited/deleted later), so it
+                              // never re-resolves through the translation
+                              // layer — item.variant.product is the live,
+                              // expanded relation and reflects the current
+                              // locale.
+                              const displayTitle =
+                                (item.variant as any)?.product?.title ??
+                                item.product_title
                               return (
                                 <div
                                   key={item.id}
@@ -272,7 +288,7 @@ const CartDropdown = ({
                                 >
                                   {/* Thumbnail */}
                                   <LocalizedClientLink
-                                    href={`/products/${item.product_handle}`}
+                                    href={`/produs/${item.product_handle}`}
                                     className="shrink-0"
                                     onClick={close}
                                   >
@@ -280,7 +296,7 @@ const CartDropdown = ({
                                       {imgSrc && (
                                         <Image
                                           src={imgSrc}
-                                          alt={item.product_title ?? ""}
+                                          alt={displayTitle ?? ""}
                                           fill
                                           className="object-contain object-center"
                                           sizes="72px"
@@ -294,20 +310,20 @@ const CartDropdown = ({
                                     {/* Title + delete */}
                                     <div className="flex items-start justify-between gap-2">
                                       <LocalizedClientLink
-                                        href={`/products/${item.product_handle}`}
+                                        href={`/produs/${item.product_handle}`}
                                         data-testid="product-link"
                                         onClick={close}
                                         className="flex-1 min-w-0"
                                       >
                                         <span className="font-sans text-[10px] uppercase tracking-[2px] leading-[1.4] text-[var(--theme-text)] hover:text-hunter-gold transition-colors line-clamp-2 block">
-                                          {item.product_title}
+                                          {displayTitle}
                                         </span>
                                       </LocalizedClientLink>
                                       <button
                                         onClick={() =>
                                           handleDeleteItem(item.id)
                                         }
-                                        aria-label="Șterge"
+                                        aria-label={t("Șterge")}
                                         data-testid="cart-item-remove-button"
                                         className="shrink-0 mt-[1px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
                                       >
@@ -366,8 +382,8 @@ const CartDropdown = ({
                                           disabled={updatingLine === item.id}
                                           aria-label={
                                             item.quantity <= 1
-                                              ? "Șterge"
-                                              : "Scade cantitate"
+                                              ? t("Șterge")
+                                              : t("Scade cantitate")
                                           }
                                           className="w-7 h-7 flex items-center justify-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] disabled:opacity-30 transition-colors"
                                         >
@@ -416,7 +432,7 @@ const CartDropdown = ({
                                             )
                                             return item.quantity >= cap
                                           })()}
-                                          aria-label="Crește cantitate"
+                                          aria-label={t("Crește cantitate")}
                                           className="w-7 h-7 flex items-center justify-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] disabled:opacity-30 transition-colors"
                                         >
                                           <svg
@@ -441,7 +457,7 @@ const CartDropdown = ({
                                             currency_code:
                                               cartState.currency_code,
                                           })}{" "}
-                                          / buc
+                                          {t("/ buc")}
                                         </span>
                                         {hasDiscount && (
                                           <span className="font-serif italic text-[11px] text-[var(--theme-text-muted)] line-through">
@@ -476,7 +492,7 @@ const CartDropdown = ({
                         <div className="shrink-0 px-7 pb-7 pt-5 border-t border-[var(--theme-border)] flex flex-col gap-4">
                           <div className="flex items-baseline justify-between">
                             <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-[var(--theme-text-muted)]">
-                              Subtotal
+                              {t("Subtotal")}
                             </span>
                             <span
                               className="font-display text-[22px] leading-none text-hunter-gold"
@@ -500,7 +516,7 @@ const CartDropdown = ({
                                 className="w-full h-12 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent hover:!bg-hunter-gold-b font-sans uppercase tracking-[3px] text-[11px]"
                                 data-testid="go-to-cart-button"
                               >
-                                Vezi coșul
+                                {t("Vezi coșul")}
                               </Button>
                             </LocalizedClientLink>
                             <button
@@ -509,7 +525,7 @@ const CartDropdown = ({
                               data-testid="continue-shopping-button"
                               className="w-full h-12 font-sans uppercase tracking-[3px] text-[11px] text-[var(--theme-text)] border border-[var(--theme-border)] hover:border-hunter-gold hover:text-hunter-gold transition-colors"
                             >
-                              Continuă cumpărăturile
+                              {t("Continuă cumpărăturile")}
                             </button>
                           </div>
                         </div>
@@ -517,17 +533,17 @@ const CartDropdown = ({
                     ) : (
                       <div className="flex flex-1 flex-col items-center justify-center gap-6 px-7 pb-6 text-center">
                         <p className="font-sans text-[10px] uppercase tracking-[5px] text-[var(--theme-text-muted)]">
-                          Coșul este gol
+                          {t("Coșul este gol")}
                         </p>
                         <p className="font-sans text-sm text-[var(--theme-text-muted)] max-w-xs">
-                          Nu ai adăugat niciun produs în coș.
+                          {t("Nu ai adăugat niciun produs în coș")}
                         </p>
                         <LocalizedClientLink
                           href="/ready-to-wear"
                           onClick={close}
                         >
                           <button className="mt-2 px-8 py-3 font-sans text-[10px] uppercase tracking-[4px] border border-hunter-gold text-hunter-gold hover:bg-hunter-gold hover:text-hunter-dark transition-colors">
-                            Descoperă colecția
+                            {t("Descoperă colecția")}
                           </button>
                         </LocalizedClientLink>
                       </div>

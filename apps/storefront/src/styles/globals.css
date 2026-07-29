@@ -692,6 +692,7 @@ body.hunter-landing-active::before {
 .hero-cta {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 14px;
   border: 1px solid rgba(201, 168, 76, 0.45);
   padding: 15px 36px;
@@ -699,6 +700,16 @@ body.hunter-landing-active::before {
   transition: background 0.3s, border-color 0.3s;
   position: relative;
   overflow: hidden;
+  white-space: nowrap;
+}
+/* The fixed 36px horizontal padding + 6px letter-spacing text was wide
+   enough to wrap onto two lines on narrow phones, especially combined with
+   .hero-cta--wide's calc(100% - 2rem) width. Scale both down below 480px. */
+@media (max-width: 479px) {
+  .hero-cta {
+    gap: 10px;
+    padding: 14px 20px;
+  }
 }
 .hero-cta::before {
   content: "";
@@ -720,6 +731,11 @@ body.hunter-landing-active::before {
   text-transform: uppercase;
   color: rgba(232, 213, 163, 0.75);
   transition: color 0.3s;
+}
+@media (max-width: 479px) {
+  .hero-cta-text {
+    letter-spacing: 3px;
+  }
 }
 .hero-cta:hover .hero-cta-text {
   color: var(--gold);
