@@ -1,8 +1,9 @@
 "use client"
 
-import Link from "next/link"
+import { Link } from "@i18n/navigation"
 import { HttpTypes } from "@medusajs/types"
 import { useEffect, useRef, useState, forwardRef } from "react"
+import { useTranslations } from "next-intl"
 import { clx } from "@modules/common/components/ui"
 
 type Props = {
@@ -94,6 +95,7 @@ export default function CategoryPills({
   onClearFilters,
   buildHref,
 }: Props) {
+  const t = useTranslations("store")
   // The actual scrollable element (FadeScroller's outer div) — not the inner
   // content wrapper, whose bounds always equal the full unclipped content.
   const scrollerRef = useRef<HTMLDivElement>(null)
@@ -151,7 +153,7 @@ export default function CategoryPills({
             onClick={onClearFilters}
             className={link(!selectedCategory && !selectedCollection)}
           >
-            Toate
+            {t("Toate")}
           </Link>
           {topCategories.map((c) => (
             <Link

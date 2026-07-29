@@ -2,6 +2,7 @@ import ItemsTemplate from "./items"
 import Summary from "./summary"
 import EmptyCartMessage from "../components/empty-cart-message"
 import SignInPrompt from "../components/sign-in-prompt"
+import CartRefreshOnUpdate from "../components/cart-refresh-on-update"
 import CartViewTracker from "@modules/common/components/analytics/cart-view-tracker"
 import { HttpTypes } from "@medusajs/types"
 
@@ -14,6 +15,7 @@ const CartTemplate = ({
 }) => {
   return (
     <div className="min-h-[60dvh] pt-3 pb-6 small:pt-10 small:pb-10">
+      <CartRefreshOnUpdate />
       <div className="page-container" data-testid="cart-container">
         {cart?.items?.length ? (
           <>

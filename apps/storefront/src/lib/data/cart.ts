@@ -5,7 +5,7 @@ import medusaError from "@lib/util/medusa-error"
 import { orderIdToSlug } from "@lib/util/order-slug"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
-import { redirect } from "next/navigation"
+import { redirect } from "@i18n/navigation"
 import {
   getAuthHeaders,
   getCacheOptions,
@@ -16,41 +16,117 @@ import {
 } from "./cookies"
 import { getRegion } from "./regions"
 import { getLocale } from "./locale-actions"
+import { getMedusaLocaleHeaders } from "@lib/util/request-locale"
 
 /**
  * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
  * @param cartId - optional - The ID of the cart to retrieve.
+ * @param fields - optional - Field selection override.
+ * @param locale - optional - Required when called as a Server Action from a
+ *   Client Component (e.g. the nav CartButton, which fetches on mount) —
+ *   there's no route [locale] param there to derive it from, so pass the
+ *   client's current locale (next-intl's useLocale()) explicitly.
  * @returns The cart object if found, or null if not found.
  */
-export async function retrieveCart(cartId?: string, fields?: string) {
+const DEFAULT_CART_FIELDS =
+  "*items, *region, *items.variant, +items.variant.thumbnail, +items.variant.inventory_quantity, +items.variant.manage_inventory, +items.variant.allow_backorder, *items.variant.images, +items.variant.options, +items.variant.options.option, *items.variant.product, +items.variant.product.thumbnail, *items.variant.product.images, +items.variant.product.options, +items.variant.product.options.values, *items.variant.product.variants, *items.variant.product.variants.options, *items.variant.product.variants.images, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, *payment_collection, +payment_collection.payment_sessions"
+
+// A misconfigured promotion (e.g. a campaign budget requiring a customer
+// attribute the cart doesn't have yet) can make Medusa throw while
+// computing *promotions on an otherwise-valid cart — that's a data/config
+// problem, not something that should 500 every page that shows a cart.
+const CART_FIELDS_WITHOUT_PROMOTIONS = DEFAULT_CART_FIELDS.replace(
+  "*promotions, ",
+  ""
+)
+
+export async function retrieveCart(
+  cartId?: string,
+  fields?: string,
+  locale?: string
+) {
   const id = cartId || (await getCartId())
-  fields ??=
-    "*items, *region, *items.variant, +items.variant.thumbnail, +items.variant.inventory_quantity, +items.variant.manage_inventory, +items.variant.allow_backorder, *items.variant.images, +items.variant.options, +items.variant.options.option, *items.variant.product, +items.variant.product.thumbnail, *items.variant.product.images, +items.variant.product.options, +items.variant.product.options.values, *items.variant.product.variants, *items.variant.product.variants.options, *items.variant.product.variants.images, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, *payment_collection, +payment_collection.payment_sessions"
+  const usedDefaultFields = fields === undefined
+  fields ??= DEFAULT_CART_FIELDS
 
   if (!id) {
     return null
   }
 
+  const localeHeaders = getMedusaLocaleHeaders(locale)
   const headers = {
     ...(await getAuthHeaders()),
+    ...localeHeaders,
   }
 
   const next = {
     ...(await getCacheOptions("carts")),
   }
 
-  return await sdk.client
-    .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${id}`, {
-      method: "GET",
-      query: {
-        fields,
-      },
-      headers,
-      next,
-      cache: "force-cache",
+  const fetchCart = (withFields: string) =>
+    sdk.client
+      .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${id}`, {
+        method: "GET",
+        query: { fields: withFields },
+        headers,
+        next,
+        cache: "force-cache",
+      })
+      .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
+
+  const cart = await fetchCart(fields)
+    .catch((error) => {
+      if (!usedDefaultFields) throw error
+      console.error(
+        "retrieveCart failed, retrying without promotions:",
+        error
+      )
+      return fetchCart(CART_FIELDS_WITHOUT_PROMOTIONS)
     })
-    .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
     .catch(() => null)
+
+  // Medusa's translation module only applies to the top-level queried
+  // entity — /store/carts/:id returns the cart itself translated, but NOT
+  // the deeply nested items.variant.product relation (confirmed directly:
+  // the same request with an en-GB locale header still returns the
+  // Romanian product title at that path). /store/products DOES translate
+  // correctly, so overlay real titles from there instead of trusting the
+  // cart response's nested product data.
+  if (cart?.items?.length && Object.keys(localeHeaders).length) {
+    const productIds = Array.from(
+      new Set(cart.items.map((item) => item.product_id).filter(Boolean))
+    ) as string[]
+
+    if (productIds.length) {
+      const titleById = await sdk.client
+        .fetch<{ products: { id: string; title: string }[] }>(
+          `/store/products`,
+          {
+            method: "GET",
+            query: { id: productIds, fields: "id,title", limit: productIds.length },
+            headers: { ...headers, ...localeHeaders },
+          }
+        )
+        .then(({ products }) =>
+          new Map(products.map((p) => [p.id, p.title]))
+        )
+        .catch(() => new Map<string, string>())
+
+      for (const item of cart.items) {
+        const translatedTitle = item.product_id
+          ? titleById.get(item.product_id)
+          : undefined
+        if (translatedTitle) {
+          item.product_title = translatedTitle
+          if (item.variant && (item.variant as any).product) {
+            ;(item.variant as any).product.title = translatedTitle
+          }
+        }
+      }
+    }
+  }
+
+  return cart
 }
 
 export async function getOrSetCart(countryCode?: string) {
@@ -119,10 +195,13 @@ export async function addToCart({
   variantId,
   quantity,
   countryCode,
+  locale,
 }: {
   variantId: string
   quantity: number
   countryCode: string
+  /** See retrieveCart — required when called from a Client Component. */
+  locale?: string
 }) {
   if (!variantId) {
     throw new Error("Missing variant ID when adding to cart")
@@ -159,15 +238,18 @@ export async function addToCart({
 
   // Return the fresh cart so the client can update the badge/drawer without
   // a second server-action round-trip.
-  return await retrieveCart(cart.id)
+  return await retrieveCart(cart.id, undefined, locale)
 }
 
 export async function updateLineItem({
   lineId,
   quantity,
+  locale,
 }: {
   lineId: string
   quantity: number
+  /** See retrieveCart — required when called from a Client Component. */
+  locale?: string
 }) {
   if (!lineId) {
     throw new Error("Missing lineItem ID when updating line item")
@@ -195,10 +277,10 @@ export async function updateLineItem({
     .catch(medusaError)
 
   // Fresh cart for instant client-side reconciliation (single round-trip).
-  return await retrieveCart(cartId)
+  return await retrieveCart(cartId, undefined, locale)
 }
 
-export async function deleteLineItem(lineId: string) {
+export async function deleteLineItem(lineId: string, locale?: string) {
   if (!lineId) {
     throw new Error("Missing lineItem ID when deleting line item")
   }
@@ -225,7 +307,7 @@ export async function deleteLineItem(lineId: string) {
     .catch(medusaError)
 
   // Fresh cart for instant client-side reconciliation (single round-trip).
-  return await retrieveCart(cartId)
+  return await retrieveCart(cartId, undefined, locale)
 }
 
 export async function setShippingMethod({
@@ -511,7 +593,10 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
     return e.message
   }
 
-  redirect("/checkout?step=delivery")
+  redirect({
+    href: "/checkout?step=delivery",
+    locale: (await getLocale()) || "ro",
+  })
 }
 
 /**
@@ -544,7 +629,14 @@ export async function placeOrder(cartId?: string) {
     revalidateTag(orderCacheTag)
 
     removeCartId()
-    redirect(`/comanda/${orderIdToSlug(cartRes.order.id)}`)
+    redirect({
+      href: `/comanda/${orderIdToSlug(cartRes.order.id)}`,
+      locale: (await getLocale()) || "ro",
+    })
+    // redirect() throws — this is unreachable, it's only here so TS can
+    // narrow cartRes to the "cart" variant below without complaining that
+    // "order" doesn't have a .cart property.
+    return undefined as never
   }
 
   return cartRes.cart

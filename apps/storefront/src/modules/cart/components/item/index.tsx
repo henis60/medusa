@@ -1,5 +1,6 @@
 "use client"
 
+import { useLocale, useTranslations } from "next-intl"
 import { updateLineItem, deleteLineItem } from "@lib/data/cart"
 import { emitCartUpdated } from "@lib/util/cart-events"
 import {
@@ -20,7 +21,19 @@ type ItemProps = {
 }
 
 const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
+  const t = useTranslations("cart")
+  // updateLineItem/deleteLineItem run as Server Actions here, outside any
+  // page render — they have no route [locale] param to read, so pass the
+  // client's current locale explicitly (see request-locale.ts).
+  const locale = useLocale()
   const imgSrc = getCartItemImageUrl(item)
+  // item.product_title is a denormalized snapshot captured at add-to-cart
+  // time (so the cart survives the product being edited/deleted later) — it
+  // never re-resolves through Medusa's translation layer. item.variant.product
+  // is the live, expanded relation (see retrieveCart's fields), so it reflects
+  // the current request's locale; fall back to the snapshot if it's missing.
+  const displayTitle =
+    (item.variant as any)?.product?.title ?? item.product_title
   const [updating, setUpdating] = useState(false)
   // Discovered ceiling from a rejected request (server said "not enough
   // inventory") — the `inventory_quantity` field isn't reliably present on
@@ -43,7 +56,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
 
     if (nextQty < 1) {
       setUpdating(true)
-      deleteLineItem(item.id)
+      deleteLineItem(item.id, locale)
         .then((fresh) => emitCartUpdated(fresh))
         .catch((err) => {
           if (isStaleDeploymentError(err)) reloadForNewDeployment()
@@ -53,7 +66,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
     }
 
     setUpdating(true)
-    updateLineItem({ lineId: item.id, quantity: nextQty })
+    updateLineItem({ lineId: item.id, quantity: nextQty, locale })
       .then((fresh) => emitCartUpdated(fresh))
       .catch((err) => {
         if (isStaleDeploymentError(err)) {
@@ -76,7 +89,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
           {imgSrc && (
             <Image
               src={imgSrc}
-              alt={item.product_title ?? ""}
+              alt={displayTitle ?? ""}
               fill
               className="object-contain object-center"
               sizes="48px"
@@ -85,7 +98,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
         </div>
         <div className="flex flex-col flex-1 min-w-0 justify-between py-2">
           <p className="font-sans text-[9px] uppercase tracking-[2px] text-[var(--theme-text)] truncate">
-            {item.product_title}
+            {displayTitle}
           </p>
           {(() => {
             const opts = (item.variant as any)?.options as
@@ -118,14 +131,14 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
     <div className="flex gap-5 py-5 small:py-6" data-testid="product-row">
       {/* Image */}
       <LocalizedClientLink
-        href={`/products/${item.product_handle}`}
+        href={`/produs/${item.product_handle}`}
         className="shrink-0"
       >
         <div className="relative w-[90px] small:w-[110px] aspect-[3/4] overflow-hidden bg-white">
           {imgSrc && (
             <Image
               src={imgSrc}
-              alt={item.product_title ?? ""}
+              alt={displayTitle ?? ""}
               fill
               className="object-contain object-center"
               sizes="(max-width: 640px) 90px, 110px"
@@ -140,21 +153,20 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
         <div>
           <div className="flex items-start justify-between gap-4">
             <LocalizedClientLink
-              href={`/products/${item.product_handle}`}
+              href={`/produs/${item.product_handle}`}
               data-testid="product-link"
               className="flex-1 min-w-0"
             >
               <span className="font-sans text-[11px] small:text-[13px] uppercase tracking-[2.5px] leading-[1.6] text-[var(--theme-text)] hover:text-hunter-gold transition-colors">
-                {item.product_title}
+                {displayTitle}
               </span>
             </LocalizedClientLink>
             <button
-              onClick={() =>
-                deleteLineItem(item.id).then((fresh) => emitCartUpdated(fresh))
-              }
-              aria-label="Șterge"
+              onClick={() => changeQuantity(0)}
+              disabled={updating}
+              aria-label={t("Șterge")}
               data-testid="product-delete-button"
-              className="shrink-0 text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors mt-[2px]"
+              className="shrink-0 text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors mt-[2px] disabled:opacity-30"
             >
               <svg
                 width="12"
@@ -201,7 +213,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
             <button
               onClick={() => changeQuantity(item.quantity - 1)}
               disabled={updating}
-              aria-label={item.quantity <= 1 ? "Șterge" : "Scade cantitate"}
+              aria-label={item.quantity <= 1 ? t("Șterge") : t("Scade cantitate")}
               className="w-7 h-7 flex items-center justify-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] disabled:opacity-30 transition-colors"
             >
               <svg
@@ -227,7 +239,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
               onClick={() => changeQuantity(item.quantity + 1)}
               disabled={updating || item.quantity >= effectiveCap}
               className="w-7 h-7 flex items-center justify-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] disabled:opacity-30 transition-colors"
-              aria-label="Crește cantitate"
+              aria-label={t("Crește cantitate")}
             >
               <svg
                 width="9"
@@ -250,8 +262,8 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
               {convertToLocale({
                 amount: item.unit_price ?? 0,
                 currency_code: currencyCode,
-              })}{" "}
-              / buc
+              })}
+              {t(" / buc")}
             </span>
             <div className="relative flex flex-col items-end">
               {hasDiscount && (

@@ -1,0 +1,49 @@
+name: Daily DB Backup to R2
+
+# Runs independently of Railway on purpose — if Railway ever has an outage,
+# the backup mechanism (GitHub Actions) shouldn't be affected by it.
+on:
+  schedule:
+    # 03:17 UTC daily — an off-the-hour minute to avoid GitHub's top-of-hour
+    # scheduling congestion, which can delay/drop runs.
+    - cron: "17 3 * * *"
+  workflow_dispatch: {} # lets you trigger a run manually from the Actions tab
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_BACKUP_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_BACKUP_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      R2_ENDPOINT: ${{ secrets.R2_BACKUP_ENDPOINT }}
+      R2_BUCKET: ${{ secrets.R2_BACKUP_BUCKET }}
+    steps:
+      - name: Dump database
+        run: |
+          set -euo pipefail
+          # Use a postgres:18 client — must match (or exceed) the server's
+          # major version, or pg_dump refuses with "server version mismatch"
+          # (hit this exact issue earlier restoring staging from prod).
+          docker run --rm -v "${{ github.workspace }}:/backup" postgres:18 \
+            pg_dump "${{ secrets.PROD_DATABASE_PUBLIC_URL }}" \
+            -Fc --no-owner --no-acl -f /backup/backup.dump
+
+      - name: Upload to R2
+        run: |
+          set -euo pipefail
+          FILENAME="backup-$(date -u +%F).dump"
+          aws s3 cp backup.dump "s3://$R2_BUCKET/$FILENAME" --endpoint-url "$R2_ENDPOINT"
+          echo "Uploaded $FILENAME"
+
+      - name: Prune old backups (keep last 30)
+        run: |
+          set -euo pipefail
+          aws s3 ls "s3://$R2_BUCKET/" --endpoint-url "$R2_ENDPOINT" \
+            | awk '{print $4}' \
+            | grep '^backup-' \
+            | sort \
+            | head -n -30 \
+            | while read -r key; do
+                [ -n "$key" ] && aws s3 rm "s3://$R2_BUCKET/$key" --endpoint-url "$R2_ENDPOINT"
+              done

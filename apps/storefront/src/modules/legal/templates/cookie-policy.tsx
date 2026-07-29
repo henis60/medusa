@@ -1,78 +1,73 @@
+import { getTranslations } from "next-intl/server"
 import LegalLayout from "./legal-layout"
 import CookieSettings from "@modules/common/components/cookie-settings"
 
-const CookiePolicyTemplate = () => {
+const CookiePolicyTemplate = async () => {
+  const t = await getTranslations("legal")
   return (
     <LegalLayout
-      kicker="Legal"
-      title="Politica de cookies"
-      intro="Folosim cookies pentru a-ți oferi o experiență cât mai bună pe site. Mai jos îți explicăm ce sunt, ce tipuri folosim și cum le poți controla."
+      kicker={t("Legal")}
+      title={t("Politica de cookies")}
+      intro={t("Folosim cookies pentru a-ți oferi o experiență cât mai bună pe site Mai jos îți explicăm ce sunt, ce tipuri folosim și cum le poți controla"
+      )}
       sections={[
         {
-          title: "Ce sunt cookies",
+          title: t("Ce sunt cookies"),
           body: (
             <p>
-              Cookies sunt fișiere text mici, stocate pe dispozitivul tău atunci
-              când vizitezi un site. Ele ajută site-ul să funcționeze corect, să
-              îți rețină preferințele și să înțeleagă cum este folosit.
+              {t("Cookies sunt fișiere text mici, stocate pe dispozitivul tău atunci când vizitezi un site Ele ajută site-ul să funcționeze corect, să îți rețină preferințele și să înțeleagă cum este folosit"
+              )}
             </p>
           ),
         },
         {
-          title: "Ce tipuri de cookies folosim",
+          title: t("Ce tipuri de cookies folosim"),
           body: (
             <ul className="flex flex-col gap-1.5 list-disc pl-5">
               <li>
-                <span className="text-[var(--theme-text)]">Esențiale:</span>{" "}
-                necesare pentru funcționarea site-ului (coș, sesiune, preferințe
-                de bază).
+                <span className="text-[var(--theme-text)]">{t("Esențiale:")}</span>{" "}
+                {t("necesare pentru funcționarea site-ului (coș, sesiune, preferințe de bază)"
+                )}
               </li>
               <li>
-                <span className="text-[var(--theme-text)]">Funcționale:</span>{" "}
-                rețin opțiuni precum limba, regiunea sau tema.
+                <span className="text-[var(--theme-text)]">{t("Funcționale:")}</span>{" "}
+                {t("rețin opțiuni precum limba, regiunea sau tema")}
               </li>
               <li>
-                <span className="text-[var(--theme-text)]">Analitice:</span>{" "}
-                ne ajută să înțelegem cum este folosit site-ul, pentru a-l
-                îmbunătăți. Folosim Google Analytics (GA4) în acest scop, iar
-                aceste cookies sunt plasate doar după ce îți exprimi acordul.
+                <span className="text-[var(--theme-text)]">{t("Analitice:")}</span>{" "}
+                {t("ne ajută să înțelegem cum este folosit site-ul, pentru a-l îmbunătăți Folosim Google Analytics (GA4) în acest scop, iar aceste cookies sunt plasate doar după ce îți exprimi acordul"
+                )}
               </li>
             </ul>
           ),
         },
         {
-          title: "Cookies de la terți",
+          title: t("Cookies de la terți"),
           body: (
             <p>
-              Unele cookies pot fi plasate de servicii terțe (ex. Google
-              Analytics pentru statistici de utilizare, procesatorul de plăți
-              sau hărți încorporate). Acestea sunt guvernate de politicile
-              proprii ale furnizorilor respectivi. Cookies analitice de la
-              Google sunt activate doar după acordul tău și pot fi dezactivate
-              oricând din secțiunea de mai jos.
+              {t("Unele cookies pot fi plasate de servicii terțe (ex Google Analytics pentru statistici de utilizare, procesatorul de plăți sau hărți încorporate) Acestea sunt guvernate de politicile proprii ale furnizorilor respectivi Cookies analitice de la Google sunt activate doar după acordul tău și pot fi dezactivate oricând din secțiunea de mai jos"
+              )}
             </p>
           ),
         },
         {
-          title: "Cum controlezi cookies",
+          title: t("Cum controlezi cookies"),
           body: (
             <>
               <p>
-                Poți gestiona sau șterge cookies din setările browserului tău.
-                Reține că dezactivarea anumitor cookies poate afecta
-                funcționarea site-ului (ex. coșul de cumpărături). Îți poți
-                schimba oricând preferința pentru cookies analitice de mai jos.
+                {t("Poți gestiona sau șterge cookies din setările browserului tău Reține că dezactivarea anumitor cookies poate afecta funcționarea site-ului (ex coșul de cumpărături) Îți poți schimba oricând preferința pentru cookies analitice de mai jos"
+                )}
               </p>
               <CookieSettings />
             </>
           ),
         },
         {
-          title: "Mai multe informații",
+          title: t("Mai multe informații"),
           body: (
             <p>
-              Pentru detalii despre modul în care prelucrăm datele tale, consultă
-              și politica de confidențialitate.
+              {t("Pentru detalii despre modul în care prelucrăm datele tale, consultă și politica de confidențialitate"
+              )}
             </p>
           ),
         },

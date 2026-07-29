@@ -1,5 +1,6 @@
 ﻿"use client"
 
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { HttpTypes } from "@medusajs/types"
 import NewsletterStatus from "./newsletter-status"
@@ -16,11 +17,11 @@ const FULFILLED_STATUSES = [
   "partially_returned",
 ]
 
-const STATUS_LABEL: Record<string, string> = {
-  pending: "În așteptare",
-  not_fulfilled: "În procesare",
-  partially_fulfilled: "Parțial livrată",
-  requires_action: "Necesită acțiune",
+const STATUS_KEYS: Record<string, string> = {
+  pending: "pending",
+  not_fulfilled: "not_fulfilled",
+  partially_fulfilled: "partially_fulfilled",
+  requires_action: "requires_action",
 }
 
 type OverviewProps = {
@@ -30,6 +31,7 @@ type OverviewProps = {
 }
 
 const Overview = ({ customer, orders, newsletterSubscribed }: OverviewProps) => {
+  const t = useTranslations("account")
   const [expanded, setExpanded] = useState(false)
 
   const handleLogout = async () => {
@@ -57,13 +59,13 @@ const Overview = ({ customer, orders, newsletterSubscribed }: OverviewProps) => 
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-2">
               <p className="font-cinzel text-[11px] tracking-[4px] text-hunter-gold/60 uppercase leading-none">
-                The Hunter House
+                {t("The Hunter House")}
               </p>
               <p className="font-serif text-[22px] small:text-[26px] leading-none text-[var(--theme-text)]">
                 {customer?.first_name} <em>{customer?.last_name}</em>
               </p>
               <p className="font-sans text-[8px] uppercase tracking-[2px] text-[var(--theme-text-muted)]">
-                Membru din{" "}
+                {t("Membru din")}{" "}
                 {customer?.created_at
                   ? new Date(customer.created_at).toLocaleDateString("ro-RO", {
                       month: "long",
@@ -73,7 +75,7 @@ const Overview = ({ customer, orders, newsletterSubscribed }: OverviewProps) => 
               </p>
             </div>
             <span className="font-sans text-[5px] small:text-[8px] uppercase tracking-[3px] text-hunter-gold border border-hunter-gold/40 bg-hunter-gold/5 px-1.5 small:px-3 py-1.5 shrink-0 self-start">
-              Standard
+              {t("Standard")}
             </span>
           </div>
         </div>
@@ -87,7 +89,7 @@ const Overview = ({ customer, orders, newsletterSubscribed }: OverviewProps) => 
         {activeOrders && activeOrders.length > 0 && (
           <div>
             <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-4">
-              Comenzi active
+              {t("Comenzi active")}
             </p>
             <div className="flex flex-col divide-y divide-[var(--theme-border)] border border-[var(--theme-border)]">
               {(expanded ? activeOrders : activeOrders.slice(0, 3)).map(
@@ -102,8 +104,9 @@ const Overview = ({ customer, orders, newsletterSubscribed }: OverviewProps) => 
                         #{order.display_id}
                       </span>
                       <span className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text-muted)]">
-                        {STATUS_LABEL[order.fulfillment_status ?? ""] ??
-                          order.fulfillment_status}
+                        {STATUS_KEYS[order.fulfillment_status ?? ""]
+                          ? t(STATUS_KEYS[order.fulfillment_status ?? ""])
+                          : order.fulfillment_status}
                       </span>
                     </div>
                     <div className="text-right">
@@ -124,10 +127,12 @@ const Overview = ({ customer, orders, newsletterSubscribed }: OverviewProps) => 
                 className="mt-3 font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
               >
                 {expanded
-                  ? "Restrânge"
-                  : `+ ${activeOrders.length - 3} mai mult${
-                      activeOrders.length - 3 === 1 ? "ă" : "e"
-                    }`}
+                  ? t("Restrânge")
+                  : activeOrders.length - 3 === 1
+                  ? t("+ {count} mai mult", { count: activeOrders.length - 3 })
+                  : t("+ {count} mai multe", {
+                      count: activeOrders.length - 3,
+                    })}
               </button>
             )}
           </div>
@@ -143,7 +148,7 @@ const Overview = ({ customer, orders, newsletterSubscribed }: OverviewProps) => 
           data-testid="logout-button"
         >
           <ArrowRightOnRectangle className="w-3.5 h-3.5" />
-          Deconectare
+          {t("Deconectare")}
         </button>
       </div>
     </div>

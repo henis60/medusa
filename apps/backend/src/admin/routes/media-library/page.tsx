@@ -1,5 +1,5 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -163,6 +163,7 @@ function EditAssetDrawer({
 }
 
 const MediaLibraryPage = () => {
+  const [search, setSearch] = useState("");
   const [q, setQ] = useState("");
   const [prefix, setPrefix] = useState(""); // current folder, e.g. "hoodies/"
   const [cursor, setCursor] = useState<string | undefined>(undefined);
@@ -175,6 +176,17 @@ const MediaLibraryPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
+  // Debounce search input — without this, every keystroke fired a fresh R2
+  // ListObjectsV2 call, which was a large chunk of the reported slowness.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setQ(search);
+      setCursor(undefined);
+      setCursorHistory([]);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [search]);
+
   const { data, isLoading } = useQuery({
     queryKey: ["media-library", q, prefix, cursor],
     queryFn: () =>
@@ -183,6 +195,7 @@ const MediaLibraryPage = () => {
 
   const enterFolder = (folder: string) => {
     setPrefix(folder);
+    setSearch("");
     setQ("");
     setCursor(undefined);
     setCursorHistory([]);
@@ -291,12 +304,8 @@ const MediaLibraryPage = () => {
       <Container className="px-4 py-3 flex flex-col gap-3">
         <Input
           placeholder="Caută după nume fișier..."
-          value={q}
-          onChange={(e) => {
-            setQ(e.target.value);
-            setCursor(undefined);
-            setCursorHistory([]);
-          }}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
         />
         {!q && (
           <div className="flex items-center justify-between gap-4">
@@ -372,6 +381,8 @@ const MediaLibraryPage = () => {
                 <img
                   src={asset.url}
                   alt={asset.alt_text ?? ""}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover"
                 />
               </button>

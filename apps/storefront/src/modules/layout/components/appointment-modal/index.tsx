@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
+import { useTranslations } from "next-intl"
 import AppointmentDatePicker from "@modules/programare/components/appointment-date-picker"
 import { useRecaptcha } from "@lib/hooks/use-recaptcha"
 import { useScrollLock } from "@lib/hooks/use-scroll-lock"
@@ -20,15 +21,15 @@ const Label = ({ htmlFor, children, error }: { htmlFor?: string; children: React
   </label>
 )
 
-const STEPS = ["Data & Ora", "Contact"]
-
 type Status = "idle" | "loading" | "success" | "error"
 
 export default function AppointmentModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const t = useTranslations("layout")
+  const STEPS = [t("Data & Ora"), t("Contact")]
   // step 0 = intro, step 1 = Data & Ora, step 2 = Contact
   const [step, setStep] = useState(0)
   const [status, setStatus] = useState<Status>("idle")
-  const [errorMsg, setErrorMsg] = useState("Nu am putut trimite cererea. Încearcă din nou.")
+  const [errorMsg, setErrorMsg] = useState(t("Nu am putut trimite cererea Încearcă din nou"))
   const { preload, getToken } = useRecaptcha()
 
   const [date, setDate] = useState("")
@@ -46,7 +47,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
     setDate(""); setTime(""); setDateError(false)
     setName(""); setEmail(""); setPhone(""); setMessage("")
     setErrors({})
-    setErrorMsg("Nu am putut trimite cererea. Încearcă din nou.")
+    setErrorMsg(t("Nu am putut trimite cererea Încearcă din nou"))
   }
 
   const handleClose = () => { reset(); onClose() }
@@ -70,7 +71,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
     if (message.trim().length < 2) e.message = true
     if (Object.keys(e).length) { setErrors(e); return }
     setErrors({}); setStatus("loading")
-    setErrorMsg("Nu am putut trimite cererea. Încearcă din nou.")
+    setErrorMsg(t("Nu am putut trimite cererea Încearcă din nou"))
 
     try {
       const recaptchaToken = await getToken("appointment")
@@ -85,15 +86,15 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
         body: JSON.stringify({
           name, email, type: "appointment", recaptchaToken,
           message: [
-            `Telefon: ${phone || "—"}`,
-            `Data: ${date || "—"}${time ? ` la ${time}` : ""}`,
+            `${t("Telefon")}: ${phone || "—"}`,
+            `${t("Data")}: ${date || "—"}${time ? ` ${t("la")} ${time}` : ""}`,
             "", message,
           ].join("\n"),
         }),
       })
 
       if (res.status === 429) {
-        setErrorMsg("Prea multe încercări. Te rugăm să revii peste câteva minute.")
+        setErrorMsg(t("Prea multe încercări Te rugăm să revii peste câteva minute"))
         setStatus("error")
         return
       }
@@ -128,13 +129,13 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
             {/* Header */}
             <div className="shrink-0 flex items-center justify-between px-6 pt-5 pb-4 border-b border-[var(--theme-border)]">
               <div>
-                <p className="font-sans text-[9px] uppercase tracking-[3px] text-hunter-gold/70 mb-0.5">The Hunter House</p>
-                <h2 className="font-display text-lg text-[var(--theme-text)]">Consultanță Made to Measure</h2>
+                <p className="font-sans text-[9px] uppercase tracking-[3px] text-hunter-gold/70 mb-0.5">{t("The Hunter House")}</p>
+                <h2 className="font-display text-lg text-[var(--theme-text)]">{t("Consultanță Made to Measure")}</h2>
               </div>
               <button
                 onClick={handleClose}
                 className="w-7 h-7 flex items-center justify-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors cursor-pointer"
-                aria-label="Închide"
+                aria-label={t("Închide")}
               >
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <path d="M1 1L11 11M11 1L1 11" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
@@ -175,29 +176,29 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
                         <path d="M1 6L6 11L15 1" stroke="rgba(201,168,76,0.8)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </div>
-                    <p className="font-display text-xl text-[var(--theme-text)]">Cerere trimisă!</p>
+                    <p className="font-display text-xl text-[var(--theme-text)]">{t("Cerere trimisă!")}</p>
                     <p className="font-sans text-sm text-[var(--theme-text-muted)]">
-                      Te contactăm în maximum 24 de ore pentru a confirma programarea.
+                      {t("Te contactăm în maximum 24 de ore pentru a confirma programarea")}
                     </p>
                     <button
                       onClick={handleClose}
                       className="mt-2 font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5 cursor-pointer"
                     >
-                      Închide
+                      {t("Închide")}
                     </button>
                   </div>
 
                 ) : step === 0 ? (
                   <div key="intro" className="flex flex-col gap-5 py-2">
                     <p className="font-sans text-sm text-[var(--theme-text-muted)] leading-relaxed">
-                      O întâlnire personalizată în care discutăm despre stilul tău, alegem materialele potrivite și definim fiecare detaliu al costumului dorit. Te ghidăm în procesul de creare a unei ținute realizate special pentru tine.
+                      {t("O întâlnire personalizată în care discutăm despre stilul tău, alegem materialele potrivite și definim fiecare detaliu al costumului dorit Te ghidăm în procesul de creare a unei ținute realizate special pentru tine")}
                     </p>
                     <div className="flex flex-col gap-2.5 border-t border-[var(--theme-border)] pt-4">
                       {[
-                        "Alegerea materialelor și a detaliilor potrivite stilului tău",
-                        "Măsurători precise pentru o potrivire impecabilă",
-                        "Recomandări de croială și personalizare",
-                        "Crearea unei ținute unice, realizate special pentru tine",
+                        t("Alegerea materialelor și a detaliilor potrivite stilului tău"),
+                        t("Măsurători precise pentru o potrivire impecabilă"),
+                        t("Recomandări de croială și personalizare"),
+                        t("Crearea unei ținute unice, realizate special pentru tine"),
                       ].map((item) => (
                         <div key={item} className="flex items-start gap-2.5">
                           <span className="mt-[6px] shrink-0 w-1 h-1 rounded-full bg-hunter-gold/50" />
@@ -220,20 +221,20 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
                   <div key="step2" className="flex flex-col gap-3">
                     <div className="flex flex-col gap-3">
                       <div>
-                        <Label htmlFor="m-name" error={errors.name}>Nume</Label>
+                        <Label htmlFor="m-name" error={errors.name}>{t("Nume")}</Label>
                         <input id="m-name" type="text" value={name} onChange={e => setName(e.target.value)} className={inputClass(errors.name)} />
                       </div>
                       <div>
-                        <Label htmlFor="m-email" error={errors.email}>Email</Label>
+                        <Label htmlFor="m-email" error={errors.email}>{t("Email")}</Label>
                         <input id="m-email" type="email" value={email} onChange={e => setEmail(e.target.value)} className={inputClass(errors.email)} />
                       </div>
                     </div>
                     <div>
-                      <Label htmlFor="m-phone" error={errors.phone}>Telefon</Label>
+                      <Label htmlFor="m-phone" error={errors.phone}>{t("Telefon")}</Label>
                       <input id="m-phone" type="tel" value={phone} onChange={e => setPhone(e.target.value)} className={inputClass(errors.phone)} />
                     </div>
                     <div>
-                      <Label htmlFor="m-message" error={errors.message}>Mesaj</Label>
+                      <Label htmlFor="m-message" error={errors.message}>{t("Mesaj")}</Label>
                       <textarea
                         id="m-message" rows={3} value={message}
                         onChange={e => setMessage(e.target.value)}
@@ -255,14 +256,14 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
                     onClick={() => goTo(1)}
                     className="w-full h-9 font-sans text-[9px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark hover:opacity-90 transition-opacity cursor-pointer"
                   >
-                    Începe programarea
+                    {t("Începe programarea")}
                   </button>
                 ) : step === 1 ? (
                   <button
                     onClick={nextStep}
                     className="w-full h-9 font-sans text-[9px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark hover:opacity-90 transition-opacity cursor-pointer"
                   >
-                    Continuă
+                    {t("Continuă")}
                   </button>
                 ) : (
                   <button
@@ -270,7 +271,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
                     disabled={status === "loading"}
                     className="w-full h-9 font-sans text-[9px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
                   >
-                    {status === "loading" ? "Se trimite..." : "Trimite cererea"}
+                    {status === "loading" ? t("Se trimite") : t("Trimite cererea")}
                   </button>
                 )}
               </div>

@@ -1,14 +1,16 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 
 export default function ShopCollectionFav() {
+  const t = useTranslations("home")
   const [on, setOn] = useState(false)
 
   return (
     <button
       type="button"
-      aria-label="Adaugă în wishlist"
+      aria-label={t("Adaugă în wishlist")}
       aria-pressed={on}
       onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOn((v) => !v) }}
       style={{ flexShrink: 0, marginTop: "2px" }}

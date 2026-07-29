@@ -122,12 +122,12 @@ module.exports = defineConfig({
       storeCors: process.env.STORE_CORS!,
       adminCors: process.env.ADMIN_CORS!,
       authCors: process.env.AUTH_CORS!,
-      jwtSecret: process.env.JWT_SECRET || "supersecret",
+      jwtSecret: process.env.JWT_SECRET,
       // Must match the storefront's _medusa_jwt cookie maxAge (7d). The
       // Medusa default is 1d — tokens then expire while the cookie (and the
       // force-cached customer page) live on, so every write 401s.
       jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
-      cookieSecret: process.env.COOKIE_SECRET || "supersecret",
+      cookieSecret: process.env.COOKIE_SECRET,
     },
   },
   modules: [
@@ -169,6 +169,9 @@ module.exports = defineConfig({
     },
     {
       resolve: "./src/modules/media-library",
+    },
+    {
+      resolve: "@medusajs/translation",
     },
   ],
 });

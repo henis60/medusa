@@ -1,6 +1,7 @@
 import { listProducts } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
 import { HttpTypes } from "@medusajs/types"
+import { getTranslations } from "next-intl/server"
 import Product from "../product-preview"
 
 type RelatedProductsProps = {
@@ -12,6 +13,7 @@ export default async function RelatedProducts({
   product,
   countryCode,
 }: RelatedProductsProps) {
+  const t = await getTranslations("products")
   const region = await getRegion(countryCode)
   if (!region) return null
 
@@ -48,10 +50,10 @@ export default async function RelatedProducts({
         <div className="border-t border-[var(--theme-border)] content-container py-16">
           <div className="mb-10">
             <p className="font-sans text-[9px] uppercase tracking-[8px] text-hunter-green dark:text-hunter-green-m mb-3">
-              Complete the look
+              {t("Completează ținuta")}
             </p>
             <h2 className="font-display text-3xl text-[var(--theme-text)]">
-              Se potrivește <span className="italic text-hunter-gold">cu</span>
+              {t("Se potrivește")} <span className="italic text-hunter-gold">{t("cu")}</span>
             </h2>
           </div>
           <ul className="grid grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-x-5 gap-y-10">
@@ -68,10 +70,10 @@ export default async function RelatedProducts({
         <div className="border-t border-[var(--theme-border)] content-container py-16">
           <div className="mb-10">
             <p className="font-sans text-[9px] uppercase tracking-[8px] text-hunter-green dark:text-hunter-green-m mb-3">
-              You may also like
+              {t("S-ar putea să-ți placă")}
             </p>
             <h2 className="font-display text-3xl text-[var(--theme-text)]">
-              Related <span className="italic text-hunter-gold">products</span>
+              {t("Produse")} <span className="italic text-hunter-gold">{t("similare")}</span>
             </h2>
           </div>
           <ul className="grid grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-x-5 gap-y-10">

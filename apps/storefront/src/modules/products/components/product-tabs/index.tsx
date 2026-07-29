@@ -2,23 +2,25 @@
 
 import Accordion from "./accordion"
 import { HttpTypes } from "@medusajs/types"
+import { useTranslations } from "next-intl"
 
 type ProductTabsProps = {
   product: HttpTypes.StoreProduct
 }
 
 const ProductTabs = ({ product }: ProductTabsProps) => {
+  const t = useTranslations("products")
   const tabs = [
     ...(product.description ? [{
-      label: "Descriere",
+      label: t("Descriere"),
       component: <ProductDescriptionTab product={product} />,
     }] : []),
     {
-      label: "Detalii produs",
+      label: t("Detalii produs"),
       component: <ProductInfoTab product={product} />,
     },
     {
-      label: "Livrare & Retururi",
+      label: t("Livrare & Retururi"),
       component: <ShippingInfoTab />,
     },
   ]
@@ -52,14 +54,22 @@ const ProductDescriptionTab = ({ product }: ProductTabsProps) => {
 }
 
 const ProductInfoTab = ({ product }: ProductTabsProps) => {
+  const t = useTranslations("products")
   const rows = [
-    { label: "Țară de origine", value: product.origin_country },
-    { label: "Greutate", value: product.weight ? `${product.weight} g` : null },
+    { label: t("Țară de origine"), value: product.origin_country },
     {
-      label: "Dimensiuni",
+      label: t("Greutate"),
+      value: product.weight ? t("{weight} g", { weight: product.weight }) : null,
+    },
+    {
+      label: t("Dimensiuni"),
       value:
         product.length && product.width && product.height
-          ? `${product.length}L x ${product.width}W x ${product.height}H`
+          ? t("{length}L x {width}W x {height}H", {
+              length: product.length,
+              width: product.width,
+              height: product.height,
+            })
           : null,
     },
   ].filter((r) => !!r.value)
@@ -79,10 +89,11 @@ const ProductInfoTab = ({ product }: ProductTabsProps) => {
 }
 
 const ShippingInfoTab = () => {
+  const t = useTranslations("products")
   const items = [
-    { label: "Livrare rapidă", desc: "Coletul ajunge în 3–5 zile lucrătoare la adresa ta sau la un punct de ridicare." },
-    { label: "Schimburi simple", desc: "Nu se potrivește? Schimbăm produsul fără bătăi de cap." },
-    { label: "Retururi ușoare", desc: "Returnează produsul și îți rambursăm banii — fără întrebări." },
+    { label: t("Livrare rapidă"), desc: t("Coletul ajunge în 3–5 zile lucrătoare la adresa ta sau la un punct de ridicare") },
+    { label: t("Schimburi simple"), desc: t("Nu se potrivește? Schimbăm produsul fără bătăi de cap") },
+    { label: t("Retururi ușoare"), desc: t("Returnează produsul și îți rambursăm banii — fără întrebări") },
   ]
 
   return (

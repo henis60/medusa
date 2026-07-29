@@ -2,7 +2,8 @@
 
 import { addToCart } from "@lib/data/cart"
 import { emitCartUpdated } from "@lib/util/cart-events"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@i18n/navigation"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 type Props = {
@@ -12,6 +13,7 @@ type Props = {
 }
 
 export default function QuickAddButton({ variantId, productHandle, hasMultipleOptions }: Props) {
+  const t = useTranslations("products")
   const [adding, setAdding] = useState(false)
   const countryCode = "ro"
   const router = useRouter()
@@ -34,7 +36,7 @@ export default function QuickAddButton({ variantId, productHandle, hasMultipleOp
       disabled={adding}
       className="absolute bottom-3.5 left-3.5 right-3.5 z-20 py-2.5 font-sans text-[8px] uppercase tracking-[4px] text-hunter-gold bg-hunter-dark/70 backdrop-blur-sm border border-hunter-gold/40 hover:border-hunter-gold hover:bg-hunter-dark/90 transition-all duration-300 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 disabled:opacity-50"
     >
-      {adding ? "Adding…" : "Add to cart"}
+      {adding ? t("Se adaugă…") : t("Adaugă în coș")}
     </button>
   )
 }

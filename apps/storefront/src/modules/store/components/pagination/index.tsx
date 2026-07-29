@@ -1,7 +1,9 @@
 "use client"
 
 import { clx } from "@modules/common/components/ui"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
+import { usePathname, useRouter } from "@i18n/navigation"
+import { useTranslations } from "next-intl"
 
 export function Pagination({
   page,
@@ -12,6 +14,7 @@ export function Pagination({
   totalPages: number
   'data-testid'?: string
 }) {
+  const t = useTranslations("store")
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -107,7 +110,7 @@ export function Pagination({
     <nav
       className="flex items-center justify-between gap-6 w-full mt-16 pt-8 border-t border-[var(--theme-border)]"
       data-testid={dataTestid}
-      aria-label="Paginare"
+      aria-label={t("Paginare")}
     >
       <button
         onClick={() => handlePageChange(page - 1)}
@@ -115,7 +118,7 @@ export function Pagination({
         className={arrowClass(page <= 1)}
       >
         <span aria-hidden>←</span>
-        <span className="hidden small:inline">Anterior</span>
+        <span className="hidden small:inline">{t("Anterior")}</span>
       </button>
 
       <div className="flex items-end gap-5">{renderPageButtons()}</div>
@@ -125,7 +128,7 @@ export function Pagination({
         disabled={page >= totalPages}
         className={arrowClass(page >= totalPages)}
       >
-        <span className="hidden small:inline">Următor</span>
+        <span className="hidden small:inline">{t("Următor")}</span>
         <span aria-hidden>→</span>
       </button>
     </nav>

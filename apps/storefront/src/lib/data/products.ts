@@ -4,6 +4,7 @@ import { sdk } from "@lib/config"
 import { sortProducts } from "@lib/util/sort-products"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import { getMedusaLocaleHeaders } from "@lib/util/request-locale"
 import { getGlobalCacheOptions } from "./cookies"
 import { getRegion, retrieveRegion } from "./regions"
 
@@ -13,12 +14,18 @@ export const listProducts = async ({
   countryCode,
   regionId,
   includeProposed = false,
+  locale,
 }: {
   pageParam?: number
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductListParams
   countryCode?: string
   regionId?: string
   includeProposed?: boolean
+  /** Only needed when called as a Server Action from a Client Component
+   *  (e.g. infinite scroll) — there's no route [locale] param to derive it
+   *  from there, so pass the client's current locale (next-intl's
+   *  useLocale()) explicitly. Server Components can omit it. */
+  locale?: string
 }): Promise<{
   response: { products: HttpTypes.StoreProduct[]; count: number }
   nextPage: number | null
@@ -57,6 +64,7 @@ export const listProducts = async ({
       `/store/products`,
       {
         method: "GET",
+        headers: getMedusaLocaleHeaders(locale),
         query: {
           limit,
           offset,
@@ -98,9 +106,12 @@ export const listProducts = async ({
 export const getProductsByIds = async ({
   ids,
   countryCode,
+  locale,
 }: {
   ids: string[]
   countryCode: string
+  /** See listProducts — required when called from a Client Component. */
+  locale?: string
 }): Promise<HttpTypes.StoreProduct[]> => {
   if (!ids.length) return []
 
@@ -109,6 +120,7 @@ export const getProductsByIds = async ({
   } = await listProducts({
     queryParams: { id: ids, limit: ids.length },
     countryCode,
+    locale,
   })
 
   return products
@@ -127,11 +139,15 @@ export const listProductsWithSort = async ({
   queryParams,
   sortBy = "created_at",
   countryCode,
+  locale,
 }: {
   page?: number
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductParams
   sortBy?: SortOptions
   countryCode: string
+  /** See listProducts — required when called from a Client Component
+   *  (this is invoked directly as a Server Action from infinite scroll). */
+  locale?: string
 }): Promise<{
   response: { products: HttpTypes.StoreProduct[]; count: number }
   nextPage: number | null
@@ -148,6 +164,7 @@ export const listProductsWithSort = async ({
         order: "-created_at",
       },
       countryCode,
+      locale,
     })
   }
 
@@ -160,6 +177,7 @@ export const listProductsWithSort = async ({
       limit: 100,
     },
     countryCode,
+    locale,
   })
 
   const sortedProducts = sortProducts(products, sortBy)
@@ -192,6 +210,7 @@ export const getProductByHandle = async (
   return sdk.client
     .fetch<{ products: HttpTypes.StoreProduct[] }>(`/store/products`, {
       method: "GET",
+      headers: getMedusaLocaleHeaders(),
       query: {
         handle,
         region_id: regionId,
@@ -201,7 +220,7 @@ export const getProductByHandle = async (
       next: { tags: ["products"], revalidate: 3600 },
       cache: "force-cache",
     })
-    .then(({ products }) => products[0])
+    .then(({ products }) => products[0] ?? undefined)
 }
 
 /**

@@ -2,6 +2,7 @@
 
 import { HttpTypes } from "@medusajs/types"
 import { useState, useCallback } from "react"
+import { useTranslations } from "next-intl"
 import CardImages from "./card-images"
 import DesktopQuickAdd from "./desktop-quick-add"
 import { isInStoreOnly, COLOR_OPTION_NAMES } from "@lib/util/product"
@@ -66,6 +67,7 @@ type Props = {
 }
 
 export default function CardWrapper({ product, isFeatured, forceDark }: Props) {
+  const t = useTranslations("products")
   const allImages = product.images ?? []
   const variants = product.variants ?? []
   const options = product.options ?? []
@@ -104,7 +106,7 @@ export default function CardWrapper({ product, isFeatured, forceDark }: Props) {
         />
       )}
       {!forceDark && isInStoreOnly(product) && (
-        <HoverOverlay>Disponibil în magazin</HoverOverlay>
+        <HoverOverlay>{t("Disponibil în magazin")}</HoverOverlay>
       )}
     </div>
   )

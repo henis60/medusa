@@ -2,6 +2,7 @@
 
 import { Popover, PopoverPanel } from "@headlessui/react"
 import { AnimatePresence, motion } from "framer-motion"
+import { useTranslations } from "next-intl"
 import { XMark } from "@medusajs/icons"
 import { MenuIcon } from "@modules/layout/components/nav-icons"
 import { HttpTypes } from "@medusajs/types"
@@ -73,8 +74,6 @@ const subLinkClass =
 
 type SubmenuKey = "rtw" | "accesorii" | "featured" | "hunter"
 
-const STYLE_GUIDES = [{ label: "Wedding Season" }, { label: "Shooting Wear" }]
-
 function MenuTrigger({ label, onOpen }: { label: string; onOpen: () => void }) {
   return (
     <li>
@@ -110,6 +109,7 @@ function SubmenuHeader({
   title: string
   onBack: () => void
 }) {
+  const t = useTranslations("layout")
   return (
     <div className="flex items-center justify-between px-8 h-16 border-b border-[var(--theme-border)] shrink-0">
       <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-[var(--theme-text-muted)]">
@@ -133,7 +133,7 @@ function SubmenuHeader({
         >
           <polyline points="15 6 9 12 15 18" />
         </svg>
-        Înapoi
+        {t("Înapoi")}
       </button>
     </div>
   )
@@ -150,6 +150,7 @@ function FeaturedCollectionSubmenu({
   onBack: () => void
   close: () => void
 }) {
+  const t = useTranslations("layout")
   const categoriesWithChildren = new Set(
     categories
       .filter((c) => (c.category_children?.length ?? 0) > 0)
@@ -178,7 +179,7 @@ function FeaturedCollectionSubmenu({
               className="block py-2.5 font-sans text-[11px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
               onClick={close}
             >
-              Toate produsele
+              {t("Toate produsele")}
             </LocalizedClientLink>
           </li>
           {productCategories.map((c) => (
@@ -209,13 +210,14 @@ function ReadyToWearSubmenu({
   onBack: () => void
   close: () => void
 }) {
+  const t = useTranslations("layout")
   const nonAccesoriiCategories = categories.filter(
     (c) => !c.parent_category && c.name?.toLowerCase() !== "accesorii"
   )
 
   return (
     <div className="flex flex-col h-full">
-      <SubmenuHeader title="Ready to Wear" onBack={onBack} />
+      <SubmenuHeader title={t("Ready to Wear")} onBack={onBack} />
       <nav className="flex-1 px-8 pt-8 pb-6 overflow-y-auto">
         <ul className="flex flex-col">
           <li>
@@ -224,7 +226,7 @@ function ReadyToWearSubmenu({
               className="block py-2.5 font-sans text-[11px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
               onClick={close}
             >
-              Toate produsele
+              {t("Toate produsele")}
             </LocalizedClientLink>
           </li>
           {nonAccesoriiCategories.map((c) => (
@@ -241,7 +243,7 @@ function ReadyToWearSubmenu({
           {collections.length > 0 && (
             <li className="mt-4 mb-1">
               <span className="font-sans text-[10px] uppercase tracking-[2.5px] text-[var(--theme-text-muted)]">
-                Colecții
+                {t("Colecții")}
               </span>
             </li>
           )}
@@ -271,12 +273,13 @@ function AccesoriiSubmenu({
   onBack: () => void
   close: () => void
 }) {
+  const t = useTranslations("layout")
   const parent = categories.find((c) => c.name?.toLowerCase() === "accesorii")
   const subcategories = parent?.category_children ?? []
 
   return (
     <div className="flex flex-col h-full">
-      <SubmenuHeader title="Accesorii" onBack={onBack} />
+      <SubmenuHeader title={t("Accesorii")} onBack={onBack} />
       <nav className="flex-1 px-8 pt-8 pb-6 overflow-y-auto">
         <ul className="flex flex-col">
           {parent && (
@@ -286,7 +289,7 @@ function AccesoriiSubmenu({
                 className="block py-2.5 font-sans text-[11px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
                 onClick={close}
               >
-                Toate accesoriile
+                {t("Toate accesoriile")}
               </LocalizedClientLink>
             </li>
           )}
@@ -314,12 +317,17 @@ function WorldOfTheHunterSubmenu({
   onBack: () => void
   close: () => void
 }) {
+  const t = useTranslations("layout")
+  const STYLE_GUIDES = [
+    { label: t("Wedding Season") },
+    { label: t("Shooting Wear") },
+  ]
   return (
     <div className="flex flex-col h-full">
-      <SubmenuHeader title="World of the Hunter" onBack={onBack} />
+      <SubmenuHeader title={t("World of The Hunter")} onBack={onBack} />
       <nav className="flex-1 px-8 pt-8 pb-6 overflow-y-auto">
         <p className="font-sans text-[11px] uppercase tracking-[2.5px] text-[var(--theme-text-muted)] mb-3">
-          Style Guides
+          {t("Style Guides")}
         </p>
         <ul className="flex flex-col">
           {STYLE_GUIDES.map((g) => (
@@ -343,6 +351,7 @@ const SideMenu = ({
   categories,
   featuredCollection,
 }: SideMenuProps) => {
+  const t = useTranslations("layout")
   const [mounted, setMounted] = useState(false)
   const [activeSubmenu, setActiveSubmenu] = useState<SubmenuKey | null>(null)
   // Locale is resolved client-side from the cookie so the nav can be part of
@@ -378,7 +387,7 @@ const SideMenu = ({
                 <div className="relative flex h-full">
                   <Popover.Button
                     data-testid="nav-menu-button"
-                    aria-label="Menu"
+                    aria-label={t("Meniu")}
                     className="relative h-full flex items-center transition-all ease-out duration-200 focus:outline-none hover:opacity-60"
                   >
                     <MenuIcon size={28} />
@@ -426,12 +435,12 @@ const SideMenu = ({
                                 {/* Header */}
                                 <div className="flex items-center justify-between px-8 h-16 border-b border-[var(--theme-border)] shrink-0">
                                   <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-[var(--theme-text-muted)]">
-                                    Menu
+                                    {t("Meniu")}
                                   </span>
                                   <button
                                     data-testid="close-menu-button"
                                     onClick={handleClose}
-                                    aria-label="Close menu"
+                                    aria-label={t("Închide meniu")}
                                     className="inline-flex h-12 w-12 items-center justify-end text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
                                   >
                                     <XMark />
@@ -448,19 +457,19 @@ const SideMenu = ({
                                         className="flex items-center py-2 small:py-2.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
                                         onClick={handleClose}
                                       >
-                                        Home
+                                        {t("Acasă")}
                                       </LocalizedClientLink>
                                     </li>
 
                                     {/* Ready to Wear â†’ submeniu */}
                                     <MenuTrigger
-                                      label="Ready to Wear"
+                                      label={t("Ready to Wear")}
                                       onOpen={() => setActiveSubmenu("rtw")}
                                     />
 
                                     {/* Accesorii â†’ submeniu */}
                                     <MenuTrigger
-                                      label="Accesorii"
+                                      label={t("Accesorii")}
                                       onOpen={() =>
                                         setActiveSubmenu("accesorii")
                                       }
@@ -478,7 +487,7 @@ const SideMenu = ({
 
                                     {/* World of The Hunter â†’ submeniu */}
                                     <MenuTrigger
-                                      label="World of The Hunter"
+                                      label={t("World of The Hunter")}
                                       onOpen={() => setActiveSubmenu("hunter")}
                                     />
 
@@ -488,7 +497,7 @@ const SideMenu = ({
                                         className="flex items-center py-2 small:py-2.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
                                         onClick={handleClose}
                                       >
-                                        Made to Measure
+                                        {t("Made to Measure")}
                                       </LocalizedClientLink>
                                     </li>
                                   </ul>
@@ -496,11 +505,11 @@ const SideMenu = ({
                                   {/* Secondary links — bottom */}
                                   <ul className="flex flex-col mt-auto pt-10">
                                     {[
-                                      { label: "Profil", href: "/profil" },
-                                      { label: "Contact", href: "/contact" },
-                                      { label: "Wishlist", href: "/wishlist" },
+                                      { label: t("Profil"), href: "/profil" },
+                                      { label: t("Contact"), href: "/contact" },
+                                      { label: t("Wishlist"), href: "/wishlist" },
                                       {
-                                        label: "Relații cu clienții",
+                                        label: t("Relații cu clienții"),
                                         href: "/relatii-clienti",
                                       },
                                     ].map(({ label, href }) => (

@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useParams } from "next/navigation"
-import Link from "next/link"
+import { Link } from "@i18n/navigation"
 import { motion } from "framer-motion"
+import { useTranslations } from "next-intl"
 
 type Product = {
   id: number
@@ -20,6 +21,7 @@ function ShopCard({
   product: Product
   countryCode: string
 }) {
+  const t = useTranslations("home")
   const [current, setCurrent] = useState(0)
   const [fav, setFav] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -49,7 +51,7 @@ function ShopCard({
 
   return (
     <Link
-      href={`/products/${product.handle}`}
+      href={`/produs/${product.handle}`}
       className="sg-card"
       style={{ display: "block", textDecoration: "none" }}
       onMouseEnter={stopTimer}
@@ -76,7 +78,7 @@ function ShopCard({
             key={idx}
             className={`sg-dot${idx === current ? " is-active" : ""}`}
             type="button"
-            aria-label={`${product.label} ${idx + 1}`}
+            aria-label={`${t("Imagine")} ${idx + 1}`}
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
@@ -89,7 +91,7 @@ function ShopCard({
       <button
         className={`sg-fav${fav ? " is-on" : ""}`}
         type="button"
-        aria-label={fav ? "Elimină din wishlist" : "Adaugă în wishlist"}
+        aria-label={fav ? t("Elimină din wishlist") : t("Adaugă în wishlist")}
         aria-pressed={fav}
         onClick={(e) => {
           e.preventDefault()
@@ -106,8 +108,11 @@ function ShopCard({
 }
 
 export default function Shop() {
+  const t = useTranslations("home")
   const params = useParams()
   const countryCode = (params?.countryCode as string) || "ro"
+
+  const imageLabel = t("Imagine")
 
   const products: Product[] = [
     {
@@ -116,7 +121,7 @@ export default function Shop() {
         "/landing/images/products/product-1a.webp",
         "/landing/images/products/product-1b.webp",
       ],
-      label: "Imagine",
+      label: imageLabel,
       hasStore: false,
       handle: "estate-hunting-jacket",
     },
@@ -126,7 +131,7 @@ export default function Shop() {
         "/landing/images/products/product-2a.webp",
         "/landing/images/products/product-2b.webp",
       ],
-      label: "Imagine",
+      label: imageLabel,
       hasStore: false,
       handle: "vanatoare-overcoat",
     },
@@ -136,7 +141,7 @@ export default function Shop() {
         "/landing/images/products/product-3a.webp",
         "/landing/images/products/product-3b.webp",
       ],
-      label: "Imagine",
+      label: imageLabel,
       hasStore: false,
       handle: "highland-tweed-trousers",
     },
@@ -146,32 +151,27 @@ export default function Shop() {
         "/landing/images/products/suit-1.webp",
         "/landing/images/products/suit-2.webp",
       ],
-      label: "Imagine",
+      label: imageLabel,
       hasStore: true,
       handle: "caledonian-suit",
     },
   ]
 
-  const categories = [
-    "Plată securizată cu cardul",
-    "Livrare în toată România",
-    "Retur în termen de 14 zile",
-    "Suport dedicat pentru comenzi",
-  ]
+  const categories = t.raw("categories") as string[]
 
   return (
     <section className="section shop-sec" id="shop">
       <div className="section-inner">
         <div className="shop-header">
           <div className="kicker rv">
-            <span className="kicker-bar"></span>Online Shop
+            <span className="kicker-bar"></span>{t("Online Shop")}
           </div>
           <h2 className="shop-hl rv">
-            Cămăși <br />
-            și <em>accesorii</em>
+            {t("Cămăși")} <br />
+            {t("și")} <em>{t("accesorii")}</em>
           </h2>
           <p className="shop-sub rv">
-            Disponibile online începând cu 1 august 2026.
+            {t("Disponibile online începând cu 1 august 2026")}
           </p>
         </div>
 

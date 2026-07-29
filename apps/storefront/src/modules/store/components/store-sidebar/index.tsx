@@ -1,7 +1,8 @@
 "use client"
 
-import Link from "next/link"
+import { Link } from "@i18n/navigation"
 import { HttpTypes } from "@medusajs/types"
+import { useTranslations } from "next-intl"
 import { clx } from "@modules/common/components/ui"
 import { SortOptions } from "../refinement-list/sort-products"
 
@@ -53,6 +54,7 @@ export default function StoreSidebar({
   onClearFilters,
   buildHref,
 }: Props) {
+  const t = useTranslations("store")
   const hasFilters = !!selectedCollection || !!selectedCategory
 
   // Only top-level categories at the first level
@@ -105,7 +107,7 @@ export default function StoreSidebar({
         {/* Categories */}
         {categories.length > 0 && (
           <div className="pb-8">
-            <SectionLabel>Categorii</SectionLabel>
+            <SectionLabel>{t("Categorii")}</SectionLabel>
             <nav className="flex flex-col">
               {topCategories.map((c) => {
                 const subs = subcategoriesOf(c.id)
@@ -175,7 +177,7 @@ export default function StoreSidebar({
         {/* Collections */}
         {collections.length > 0 && (
           <div className="pb-8">
-            <SectionLabel>Colecții</SectionLabel>
+            <SectionLabel>{t("Colecții")}</SectionLabel>
             <nav className="flex flex-col">
               {collections.map((c) => {
                 const isSelected = selectedCollection === c.id
@@ -240,7 +242,7 @@ export default function StoreSidebar({
               onClick={onClearFilters}
               className="inline-block font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-transparent hover:border-hunter-gold pb-0.5"
             >
-              Resetează filtrele
+              {t("Resetează filtrele")}
             </Link>
           </div>
         )}

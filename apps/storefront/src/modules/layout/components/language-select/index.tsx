@@ -1,7 +1,8 @@
 "use client"
 
 import { useTransition } from "react"
-import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
+import { useRouter } from "@i18n/navigation"
 
 import { clx } from "@modules/common/components/ui"
 import { updateLocale } from "@lib/data/locale-actions"
@@ -13,6 +14,7 @@ type LanguageSelectProps = {
 }
 
 const LanguageSelect = ({ locales, currentLocale }: LanguageSelectProps) => {
+  const t = useTranslations("layout")
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
@@ -28,7 +30,7 @@ const LanguageSelect = ({ locales, currentLocale }: LanguageSelectProps) => {
 
   return (
     <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-[var(--theme-text-muted)]">
-      <span>Limbă</span>
+      <span>{t("Limbă")}</span>
       <div className="flex items-center gap-3">
         {locales.map((l) => (
           <button

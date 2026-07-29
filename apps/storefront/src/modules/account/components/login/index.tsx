@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { startTransition } from "react"
 import { login } from "@lib/data/customer"
 import { LOGIN_VIEW } from "@modules/account/templates/login-template"
@@ -15,6 +16,7 @@ type Props = {
 }
 
 const Login = ({ setCurrentView, redirectTo }: Props) => {
+  const t = useTranslations("account")
   const [message, formAction] = useActionState(login, null)
   const { preload, getToken } = useRecaptcha()
 
@@ -37,25 +39,25 @@ const Login = ({ setCurrentView, redirectTo }: Props) => {
       data-testid="login-page"
     >
       <h1 className="font-display text-[42px] leading-[1] text-[var(--theme-text)] mb-2">
-        Bine ai revenit
+        {t("Bine ai revenit")}
       </h1>
       <p className="font-sans text-[14px] text-[var(--theme-text-muted)] mb-10 text-center">
-        Autentifică-te pentru o experiență de cumpărături îmbunătățită.
+        {t("Autentifică-te pentru o experiență de cumpărături îmbunătățită")}
       </p>
 
       <form className="w-full" onSubmit={handleSubmit} onFocusCapture={preload}>
         <div className="flex flex-col w-full gap-y-3">
           <Input
-            label="Email"
+            label={t("Email")}
             name="email"
             type="email"
-            title="Introdu o adresă de email validă."
+            title={t("Introdu o adresă de email validă")}
             autoComplete="email"
             required
             data-testid="email-input"
           />
           <Input
-            label="Parolă"
+            label={t("Parolă")}
             name="password"
             type="password"
             autoComplete="current-password"
@@ -71,7 +73,7 @@ const Login = ({ setCurrentView, redirectTo }: Props) => {
             onClick={() => setCurrentView(LOGIN_VIEW.FORGOT_PASSWORD)}
             className="font-sans text-[13px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
           >
-            Ai uitat parola?
+            {t("Ai uitat parola?")}
           </button>
         </div>
 
@@ -79,7 +81,7 @@ const Login = ({ setCurrentView, redirectTo }: Props) => {
           data-testid="sign-in-button"
           className="w-full mt-4 h-12 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent font-sans uppercase tracking-[3px] text-[13px]"
         >
-          Autentificare
+          {t("Autentificare")}
         </SubmitButton>
 
         <button
@@ -88,14 +90,14 @@ const Login = ({ setCurrentView, redirectTo }: Props) => {
           className="w-full mt-3 h-12 font-sans uppercase tracking-[3px] text-[11px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-hunter-gold hover:text-hunter-gold transition-colors"
           data-testid="switch-to-register-button"
         >
-          Creează un cont nou
+          {t("Creează un cont nou")}
         </button>
 
         <p className="font-sans text-[11px] text-[var(--theme-text-muted)] mt-4 text-center leading-relaxed">
-          Protejat de reCAPTCHA —{" "}
-          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-hunter-gold transition-colors">Confidențialitate</a>
+          {t("Protejat de reCAPTCHA —")}{" "}
+          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-hunter-gold transition-colors">{t("Confidențialitate")}</a>
           {" "}&amp;{" "}
-          <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-hunter-gold transition-colors">Termeni</a>
+          <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-hunter-gold transition-colors">{t("Termeni")}</a>
         </p>
       </form>
 

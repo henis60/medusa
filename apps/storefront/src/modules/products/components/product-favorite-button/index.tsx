@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useTranslations } from "next-intl"
 import { useFavorites } from "@lib/context/favorites-context"
 
 type Props = {
@@ -11,6 +12,7 @@ type Props = {
 }
 
 export default function ProductFavoriteButton({ productId, productHandle, productTitle, productThumbnail }: Props) {
+  const t = useTranslations("products")
   const { isFavorite, toggle } = useFavorites()
   const [mounted, setMounted] = useState(false)
 
@@ -23,7 +25,7 @@ export default function ProductFavoriteButton({ productId, productHandle, produc
   return (
     <button
       type="button"
-      aria-label={on ? "Elimină din salvate" : "Salvează"}
+      aria-label={on ? t("Elimină din salvate") : t("Salvează")}
       aria-pressed={on}
       onClick={() => toggle({ id: productId, handle: productHandle, title: productTitle, thumbnail: productThumbnail })}
       className="shrink-0 transition-colors duration-150"

@@ -1,6 +1,8 @@
+import { getTranslations } from "next-intl/server"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
-export default function Footer() {
+export default async function Footer() {
+  const t = await getTranslations("layout")
   return (
     <footer className="w-full bg-[var(--theme-chrome)] border-t border-[var(--theme-border)]">
       <div className="content-container flex flex-wrap items-center justify-between gap-x-6 gap-y-1 py-3">
@@ -13,11 +15,11 @@ export default function Footer() {
         </LocalizedClientLink>
 
         <span className="hidden medium:inline font-serif italic text-xs text-hunter-gold/70">
-          Return of the Elegant Gentleman
+          {t("Return of the Elegant Gentleman")}
         </span>
 
         <span className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
-          © {new Date().getFullYear()} Toate drepturile rezervate
+          {t("© {year} Toate drepturile rezervate", { year: new Date().getFullYear() })}
         </span>
       </div>
     </footer>

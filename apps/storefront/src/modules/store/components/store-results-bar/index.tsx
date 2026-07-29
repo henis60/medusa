@@ -1,19 +1,15 @@
 "use client"
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
+import { usePathname, useRouter } from "@i18n/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { useTranslations } from "next-intl"
 import { clx } from "@modules/common/components/ui"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import PriceRangeSlider from "@modules/store/components/price-range-slider"
 import { useScrollLock } from "@lib/hooks/use-scroll-lock"
 
 export type ViewMode = "grid" | "list"
-
-export const sortOptions: { value: SortOptions; label: string }[] = [
-  { value: "created_at", label: "Cele mai noi" },
-  { value: "price_asc", label: "Preț crescător" },
-  { value: "price_desc", label: "Preț descrescător" },
-]
 
 function ViewToggleIcon({ view }: { view: ViewMode }) {
   // Shows the icon for the view you'd switch TO.
@@ -81,6 +77,12 @@ export default function StoreResultsBar({
   priceBounds: [number, number]
   hasProducts?: boolean
 }) {
+  const t = useTranslations("store")
+  const sortOptions: { value: SortOptions; label: string }[] = [
+    { value: "created_at", label: t("Cele mai noi") },
+    { value: "price_asc", label: t("Preț crescător") },
+    { value: "price_desc", label: t("Preț descrescător") },
+  ]
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -200,14 +202,14 @@ export default function StoreResultsBar({
         <span className="h-2.5 w-16 bg-[var(--theme-surface)] animate-pulse" />
       ) : (
         <span className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text-muted)]">
-          {count} {count === 1 ? "produs" : "produse"}
+          {t("{count, plural, one {# produs} other {# produse}}", { count })}
         </span>
       )}
 
       <div className="flex items-center gap-4">
         <button
           aria-label={
-            view === "grid" ? "Vizualizare listă" : "Vizualizare grid"
+            view === "grid" ? t("Vizualizare listă") : t("Vizualizare grid")
           }
           onClick={() => onViewChange(view === "grid" ? "list" : "grid")}
           className="text-[var(--theme-text)]"
@@ -217,7 +219,7 @@ export default function StoreResultsBar({
 
         <button
           onClick={() => setOpen(true)}
-          aria-label="Filtre"
+          aria-label={t("Filtre")}
           className={`relative text-[var(--theme-text)] ${
             filterCount > 0 ? "text-hunter-gold" : ""
           }`}
@@ -259,7 +261,7 @@ export default function StoreResultsBar({
             {/* Same sections + order as the desktop drawer: sort → price → colors */}
             <div className="py-3">
               <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-3">
-                Sortare
+                {t("Sortare")}
               </p>
               <div
                 className={clx(
@@ -298,7 +300,7 @@ export default function StoreResultsBar({
 
             <div className="py-3 border-t border-[var(--theme-border)]">
               <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-3">
-                Preț
+                {t("Preț")}
               </p>
               <PriceRangeSlider
                 bounds={priceBounds}
@@ -312,7 +314,7 @@ export default function StoreResultsBar({
 
             <div className="py-3 border-t border-[var(--theme-border)]">
               <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-3">
-                Culoare
+                {t("Culoare")}
               </p>
               {displayedColors.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
@@ -336,7 +338,7 @@ export default function StoreResultsBar({
                 </div>
               ) : (
                 <p className="font-sans text-[11px] text-[var(--theme-text-muted)] opacity-40">
-                  Nicio culoare disponibilă
+                  {t("Nicio culoare disponibilă")}
                 </p>
               )}
             </div>
@@ -348,13 +350,13 @@ export default function StoreResultsBar({
               disabled={draftFilterCount === 0}
               className="flex-1 h-11 font-sans text-[10px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] whitespace-nowrap disabled:opacity-40"
             >
-              Resetează
+              {t("Resetează")}
             </button>
             <button
               onClick={applyDraft}
               className="flex-1 h-11 font-sans text-[10px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark"
             >
-              Aplică filtre
+              {t("Aplică filtre")}
             </button>
           </div>
         </div>

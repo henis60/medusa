@@ -43,7 +43,7 @@ export default function ProductPreview({
 
   return (
     <ProductCardLink
-      href={`/products/${product.handle}`}
+      href={`/produs/${product.handle}`}
       className="group flex flex-col relative w-full cursor-pointer"
       style={
         {

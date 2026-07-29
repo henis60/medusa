@@ -5,6 +5,7 @@ import { initiateNetopiaPayment, placeOrder } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { useElements, useStripe } from "@stripe/react-stripe-js"
 import React, { useState } from "react"
+import { useTranslations } from "next-intl"
 import ErrorMessage from "../error-message"
 
 type PaymentButtonProps = {
@@ -16,6 +17,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
   cart,
   "data-testid": dataTestId,
 }) => {
+  const t = useTranslations("checkout")
   const notReady =
     !cart ||
     !cart.shipping_address ||
@@ -53,7 +55,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
           disabled
           className="w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] opacity-40 cursor-not-allowed"
         >
-          Selectează o metodă de plată
+          {t("Selectează o metodă de plată")}
         </button>
       )
   }
@@ -68,6 +70,7 @@ const StripePaymentButton = ({
   notReady: boolean
   "data-testid"?: string
 }) => {
+  const t = useTranslations("checkout")
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -155,7 +158,7 @@ const StripePaymentButton = ({
         data-testid={dataTestId}
         className="w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        {submitting ? "Se procesează…" : "Plasează comanda"}
+        {submitting ? t("Se procesează…") : t("Plasează comanda")}
       </button>
       <ErrorMessage
         error={errorMessage}
@@ -166,6 +169,7 @@ const StripePaymentButton = ({
 }
 
 const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
+  const t = useTranslations("checkout")
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -193,7 +197,7 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
         data-testid="submit-order-button"
         className="w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        {submitting ? "Se procesează…" : "Plasează comanda"}
+        {submitting ? t("Se procesează…") : t("Plasează comanda")}
       </button>
       <ErrorMessage
         error={errorMessage}
@@ -240,6 +244,7 @@ const NetopiaPaymentButton = ({
   notReady: boolean
   "data-testid"?: string
 }) => {
+  const t = useTranslations("checkout")
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -249,7 +254,7 @@ const NetopiaPaymentButton = ({
     try {
       const redirectUrl = await initiateNetopiaPayment(cart.id, providerId, collectBrowserInfo())
       if (!redirectUrl) {
-        setErrorMessage("Nu am putut iniția plata. Reîncearcă.")
+        setErrorMessage(t("Nu am putut iniția plata Reîncearcă"))
         setSubmitting(false)
         return
       }
@@ -270,7 +275,7 @@ const NetopiaPaymentButton = ({
         data-testid={dataTestId}
         className="w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        {submitting ? "Se redirecționează…" : "Plătește cu cardul"}
+        {submitting ? t("Se redirecționează…") : t("Plătește cu cardul")}
       </button>
       <ErrorMessage
         error={errorMessage}
