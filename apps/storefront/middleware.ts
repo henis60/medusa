@@ -33,17 +33,27 @@ function generateCacheId(): string {
 // regexes correctly reject these paths in plain Node, yet the running
 // middleware still rewrote requests for them with a /ro prefix. This broke
 // the static /ro-localities/*.json datasets (404, breaking the address
-// form) AND, far more severely, every /_next/static/chunks/*.js request —
-// silently 404ing all client JS site-wide, so React never hydrates and the
-// page is stuck as static, non-interactive HTML. Checking these prefixes
-// explicitly inside the middleware function itself sidesteps whatever
-// Next's matcher compiler is doing; the `config.matcher` is kept only
-// because Next requires *some* matcher to be present, not because it's
-// trusted to actually exclude anything.
+// form), every /_next/static/chunks/*.js request (silently 404ing all
+// client JS site-wide, so React never hydrates), and — the same mechanism,
+// just a different set of paths — every other static asset under
+// public/ (favicon.svg, apple-touch-icon.png, /landing/images/*.jpg|webp,
+// etc.), since none of those were previously covered by an explicit
+// bypass. Checking these paths explicitly inside the middleware function
+// itself sidesteps whatever Next's matcher compiler is doing; the
+// `config.matcher` is kept only because Next requires *some* matcher to be
+// present, not because it's trusted to actually exclude anything.
 const BYPASS_PREFIXES = ["/ro-localities/", "/_next/", "/api/"]
+// Any request for a file with an extension (favicon.svg, hero-suit.jpg,
+// robots.txt, ...) is a static asset, never a page route in this app — so
+// bypass next-intl for all of them instead of hand-listing every prefix.
+const HAS_FILE_EXTENSION = /\.[a-zA-Z0-9]+$/
 
 export default function middleware(request: NextRequest) {
-  if (BYPASS_PREFIXES.some((p) => request.nextUrl.pathname.startsWith(p))) {
+  const { pathname } = request.nextUrl
+  if (
+    BYPASS_PREFIXES.some((p) => pathname.startsWith(p)) ||
+    HAS_FILE_EXTENSION.test(pathname)
+  ) {
     return NextResponse.next()
   }
 
