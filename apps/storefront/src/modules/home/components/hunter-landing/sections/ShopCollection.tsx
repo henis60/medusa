@@ -40,9 +40,9 @@ export default async function ShopCollection({
             {t("Colecție")} <br />
             <em>{t("nouă")}</em>
           </h2>
-          <p className="shop-sub rv">
-            {t("Disponibilă acum în magazinul nostru online")}
-          </p>
+          {typeof collection.metadata?.description === "string" && collection.metadata.description && (
+            <p className="shop-sub rv">{collection.metadata.description}</p>
+          )}
         </div>
 
         <div className="shop-grid rv" data-rv-delay="0.15">

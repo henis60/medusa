@@ -68,7 +68,9 @@ export default function Collections() {
             <div className="coll-info">
               <div className="coll-tag">{collections[0].tag}</div>
               <div className="coll-name">
-                {collections[0].name.split(" ")[0]}{" "}
+                {collections[0].name
+                  .slice(0, collections[0].name.lastIndexOf(collections[0].highlighted))
+                  .trim()}{" "}
                 <em>{collections[0].highlighted}</em>
               </div>
               <p className="coll-sub">{collections[0].sub}</p>
@@ -92,7 +94,7 @@ export default function Collections() {
                   <div className="coll-name">
                     {coll.id === "hunting"
                       ? coll.name.split(" ").slice(0, -1).join(" ") + " "
-                      : coll.name.split(" ")[0] + " "}
+                      : coll.name.slice(0, coll.name.lastIndexOf(coll.highlighted)).trim() + " "}
                     {coll.id !== "hunting" && <em>{coll.highlighted}</em>}
                     {coll.id === "hunting" && (
                       <>
