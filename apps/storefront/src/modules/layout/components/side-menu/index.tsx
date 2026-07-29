@@ -112,14 +112,17 @@ function SubmenuHeader({
   const t = useTranslations("layout")
   return (
     <div className="flex items-center justify-between px-8 h-16 border-b border-[var(--theme-border)] shrink-0">
+      <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-[var(--theme-text-muted)]">
+        {title}
+      </span>
       <button
         type="button"
         onClick={onBack}
-        className="inline-flex items-center gap-2 font-sans text-[10px] uppercase tracking-[0.3em] text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
+        className="inline-flex items-center gap-1.5 font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
       >
         <svg
-          width="16"
-          height="16"
+          width="18"
+          height="18"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -132,9 +135,6 @@ function SubmenuHeader({
         </svg>
         {t("Înapoi")}
       </button>
-      <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-[var(--theme-text-muted)]">
-        {title}
-      </span>
     </div>
   )
 }
@@ -360,7 +360,6 @@ const SideMenu = ({
 
   // Remaining collections (all except the first/featured) for Ready to Wear
   const otherCollections = (collections ?? []).slice(1)
-
 
   useEffect(() => {
     setMounted(true)
