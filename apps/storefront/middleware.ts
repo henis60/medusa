@@ -57,7 +57,17 @@ export default function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  const response = intlMiddleware(request)
+  // Strip Accept-Language so next-intl's middleware can't fall back to
+  // browser-language negotiation for first-time visitors (we always want
+  // routing.defaultLocale = "ro" in that case) — while still leaving
+  // localeDetection enabled in routing.ts so the `_medusa_locale` cookie
+  // (set when a visitor manually switches language) is still honored. See
+  // the comment in src/i18n/routing.ts for why both live behind one flag.
+  const headers = new Headers(request.headers)
+  headers.delete("accept-language")
+  const localeRequest = new NextRequest(request, { headers })
+
+  const response = intlMiddleware(localeRequest)
 
   // Ensure a stable cache id cookie exists. It is used to build per-visitor
   // cache tags (see getCacheTag), which Next.js relies on to revalidate the
