@@ -36,9 +36,11 @@ export default async function Checkout({
   const { locale } = await params
   setRequestLocaleValue(locale)
 
+  // retrieveCart already retries without promotions internally if a
+  // misconfigured promotion makes Medusa throw.
   const [cart, customer, t] = await Promise.all([
     retrieveCart(),
-    retrieveCustomer(),
+    retrieveCustomer().catch(() => null),
     getTranslations("checkout"),
   ])
 

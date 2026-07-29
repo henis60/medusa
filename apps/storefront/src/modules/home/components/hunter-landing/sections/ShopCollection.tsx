@@ -22,7 +22,7 @@ export default async function ShopCollection({
     regionId: region.id,
     queryParams: {
       collection_id: collection.id,
-      limit: "4",
+      limit: 4,
       fields: "*variants.calculated_price,+variants,+options,+images",
     },
   })

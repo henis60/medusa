@@ -28,14 +28,26 @@ import { getMedusaLocaleHeaders } from "@lib/util/request-locale"
  *   client's current locale (next-intl's useLocale()) explicitly.
  * @returns The cart object if found, or null if not found.
  */
+const DEFAULT_CART_FIELDS =
+  "*items, *region, *items.variant, +items.variant.thumbnail, +items.variant.inventory_quantity, +items.variant.manage_inventory, +items.variant.allow_backorder, *items.variant.images, +items.variant.options, +items.variant.options.option, *items.variant.product, +items.variant.product.thumbnail, *items.variant.product.images, +items.variant.product.options, +items.variant.product.options.values, *items.variant.product.variants, *items.variant.product.variants.options, *items.variant.product.variants.images, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, *payment_collection, +payment_collection.payment_sessions"
+
+// A misconfigured promotion (e.g. a campaign budget requiring a customer
+// attribute the cart doesn't have yet) can make Medusa throw while
+// computing *promotions on an otherwise-valid cart — that's a data/config
+// problem, not something that should 500 every page that shows a cart.
+const CART_FIELDS_WITHOUT_PROMOTIONS = DEFAULT_CART_FIELDS.replace(
+  "*promotions, ",
+  ""
+)
+
 export async function retrieveCart(
   cartId?: string,
   fields?: string,
   locale?: string
 ) {
   const id = cartId || (await getCartId())
-  fields ??=
-    "*items, *region, *items.variant, +items.variant.thumbnail, +items.variant.inventory_quantity, +items.variant.manage_inventory, +items.variant.allow_backorder, *items.variant.images, +items.variant.options, +items.variant.options.option, *items.variant.product, +items.variant.product.thumbnail, *items.variant.product.images, +items.variant.product.options, +items.variant.product.options.values, *items.variant.product.variants, *items.variant.product.variants.options, *items.variant.product.variants.images, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, *payment_collection, +payment_collection.payment_sessions"
+  const usedDefaultFields = fields === undefined
+  fields ??= DEFAULT_CART_FIELDS
 
   if (!id) {
     return null
@@ -51,17 +63,26 @@ export async function retrieveCart(
     ...(await getCacheOptions("carts")),
   }
 
-  const cart = await sdk.client
-    .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${id}`, {
-      method: "GET",
-      query: {
-        fields,
-      },
-      headers,
-      next,
-      cache: "force-cache",
+  const fetchCart = (withFields: string) =>
+    sdk.client
+      .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${id}`, {
+        method: "GET",
+        query: { fields: withFields },
+        headers,
+        next,
+        cache: "force-cache",
+      })
+      .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
+
+  const cart = await fetchCart(fields)
+    .catch((error) => {
+      if (!usedDefaultFields) throw error
+      console.error(
+        "retrieveCart failed, retrying without promotions:",
+        error
+      )
+      return fetchCart(CART_FIELDS_WITHOUT_PROMOTIONS)
     })
-    .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
     .catch(() => null)
 
   // Medusa's translation module only applies to the top-level queried
@@ -612,6 +633,10 @@ export async function placeOrder(cartId?: string) {
       href: `/comanda/${orderIdToSlug(cartRes.order.id)}`,
       locale: (await getLocale()) || "ro",
     })
+    // redirect() throws — this is unreachable, it's only here so TS can
+    // narrow cartRes to the "cart" variant below without complaining that
+    // "order" doesn't have a .cart property.
+    return undefined as never
   }
 
   return cartRes.cart

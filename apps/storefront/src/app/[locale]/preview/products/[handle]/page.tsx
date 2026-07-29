@@ -88,7 +88,7 @@ export default async function ProductPreviewPage(props: Props) {
   // Map raw prices to calculated_price format expected by ProductActions
   const product: HttpTypes.StoreProduct = {
     ...rawProduct,
-    variants: rawProduct.variants?.map((v: any) => {
+    variants: (rawProduct.variants ?? []).map((v: any) => {
       const price = v.prices?.find((p: any) => p.currency_code === region.currency_code)
         ?? v.prices?.[0]
       return {

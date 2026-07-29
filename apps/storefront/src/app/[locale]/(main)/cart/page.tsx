@@ -33,12 +33,15 @@ export default async function Cart({
   const { locale } = await params
   setRequestLocaleValue(locale)
 
+  // retrieveCart already retries without promotions internally if a
+  // misconfigured promotion makes Medusa throw — this catch is just the
+  // final fallback if the cart genuinely can't be fetched at all.
   const [cart, customer] = await Promise.all([
     retrieveCart().catch((error) => {
       console.error(error)
       return notFound()
     }),
-    retrieveCustomer(),
+    retrieveCustomer().catch(() => null),
   ])
 
   return <CartTemplate cart={cart} customer={customer} />

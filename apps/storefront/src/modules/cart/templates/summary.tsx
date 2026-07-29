@@ -23,7 +23,7 @@ const Summary = ({ cart }: SummaryProps) => {
     currency_code,
     item_subtotal,
     shipping_subtotal,
-    discount_subtotal,
+    discount_total,
     total,
   } = cart
 
@@ -52,11 +52,11 @@ const Summary = ({ cart }: SummaryProps) => {
           </span>
         </div>
 
-        {!!discount_subtotal && (
+        {!!discount_total && (
           <div className="flex justify-between text-hunter-gold">
             <span>{t("Reducere")}</span>
-            <span data-testid="cart-discount" data-value={discount_subtotal}>
-              − {convertToLocale({ amount: discount_subtotal, currency_code })}
+            <span data-testid="cart-discount" data-value={discount_total}>
+              − {convertToLocale({ amount: discount_total, currency_code })}
             </span>
           </div>
         )}
