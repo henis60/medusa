@@ -1,5 +1,5 @@
 "use client"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   motion,
   useReducedMotion,
@@ -20,7 +20,25 @@ const Hero = () => {
     target: heroRef,
     offset: ["start start", "end start"],
   })
-  const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "35%"])
+  // Scroll-linked parallax transform on a large full-bleed background image
+  // is a common source of scroll jank on mobile browsers (the transform
+  // fights with native scrolling/compositing on less powerful GPUs). The
+  // mobile hero is a fixed 100svh section anyway, so the parallax adds
+  // little visually there — disable it below the tablet breakpoint instead
+  // of fighting for smoothness.
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)")
+    setIsMobile(mq.matches)
+    const listener = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mq.addEventListener("change", listener)
+    return () => mq.removeEventListener("change", listener)
+  }, [])
+  const bgY = useTransform(
+    scrollYProgress,
+    [0, 1],
+    isMobile ? ["0%", "0%"] : ["0%", "35%"]
+  )
 
   const marqueeItems = t.raw("marqueeItems") as string[]
   const items = [...marqueeItems, ...marqueeItems]
