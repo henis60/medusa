@@ -123,6 +123,7 @@ const ShippingAddress = ({
           value={formData["shipping_address.first_name"]}
           onChange={handleChange}
           required
+          enterKeyHint="next"
           data-testid="shipping-first-name-input"
         />
         <Input
@@ -132,6 +133,7 @@ const ShippingAddress = ({
           value={formData["shipping_address.last_name"]}
           onChange={handleChange}
           required
+          enterKeyHint="next"
           data-testid="shipping-last-name-input"
         />
         <Input
@@ -141,6 +143,7 @@ const ShippingAddress = ({
           value={formData["shipping_address.address_1"]}
           onChange={handleChange}
           required
+          enterKeyHint="next"
           data-testid="shipping-address-input"
         />
         <Input
@@ -149,6 +152,7 @@ const ShippingAddress = ({
           autoComplete="postal-code"
           value={formData["shipping_address.postal_code"]}
           onChange={handleChange}
+          enterKeyHint="next"
           data-testid="shipping-postal-code-input"
         />
         <CountrySelect
@@ -194,6 +198,7 @@ const ShippingAddress = ({
           value={formData.email}
           onChange={handleChange}
           required
+          enterKeyHint="next"
           data-testid="shipping-email-input"
         />
         <Input

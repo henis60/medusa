@@ -75,7 +75,15 @@ export async function retrieveCart(
       .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
 
   const cart = await fetchCart(fields)
-    .catch((error) => {
+    .catch(async (error) => {
+      // The cart itself is gone (deleted/expired) — not a promotions
+      // config problem, so retrying without *promotions would just hit
+      // the same 404 again. Clear the stale cookie so every subsequent
+      // page load doesn't keep re-fetching (and re-logging) a dead cart.
+      if (error?.status === 404) {
+        if (!cartId) await removeCartId()
+        return null
+      }
       if (!usedDefaultFields) throw error
       console.error(
         "retrieveCart failed, retrying without promotions:",

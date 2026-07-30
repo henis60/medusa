@@ -130,11 +130,11 @@ export default function ContactForm() {
         <div className="grid grid-cols-1 small:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="name" error={errors.name}>{t("Nume")}</Label>
-            <input id="name" name="name" type="text" className={inputClass(errors.name)} />
+            <input id="name" name="name" type="text" enterKeyHint="next" className={inputClass(errors.name)} />
           </div>
           <div>
             <Label htmlFor="email" error={errors.email}>{t("Email")}</Label>
-            <input id="email" name="email" type="email" className={inputClass(errors.email)} />
+            <input id="email" name="email" type="email" enterKeyHint="next" className={inputClass(errors.email)} />
           </div>
         </div>
         <div>

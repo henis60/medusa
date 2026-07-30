@@ -54,6 +54,7 @@ const Login = ({ setCurrentView, redirectTo }: Props) => {
             title={t("Introdu o adresă de email validă")}
             autoComplete="email"
             required
+            enterKeyHint="next"
             data-testid="email-input"
           />
           <Input

@@ -109,6 +109,7 @@ const ProfileDetails = ({ customer }: ProfileDetailsProps) => {
                   required
                   autoComplete="given-name"
                   defaultValue={customer.first_name ?? ""}
+                  enterKeyHint="next"
                   data-testid="first-name-input"
                 />
                 <Input
@@ -117,6 +118,7 @@ const ProfileDetails = ({ customer }: ProfileDetailsProps) => {
                   required
                   autoComplete="family-name"
                   defaultValue={customer.last_name ?? ""}
+                  enterKeyHint="next"
                   data-testid="last-name-input"
                 />
               </div>

@@ -70,6 +70,7 @@ const AddAddress = ({
                   name="first_name"
                   required
                   autoComplete="given-name"
+                  enterKeyHint="next"
                   data-testid="first-name-input"
                 />
                 <Input
@@ -77,6 +78,7 @@ const AddAddress = ({
                   name="last_name"
                   required
                   autoComplete="family-name"
+                  enterKeyHint="next"
                   data-testid="last-name-input"
                 />
               </div>
@@ -84,6 +86,7 @@ const AddAddress = ({
                 label={t("Companie (opțional)")}
                 name="company"
                 autoComplete="organization"
+                enterKeyHint="next"
                 data-testid="company-input"
               />
               <Input
@@ -91,18 +94,21 @@ const AddAddress = ({
                 name="address_1"
                 required
                 autoComplete="address-line1"
+                enterKeyHint="next"
                 data-testid="address-1-input"
               />
               <Input
                 label={t("Apartament, etaj, etc")}
                 name="address_2"
                 autoComplete="address-line2"
+                enterKeyHint="next"
                 data-testid="address-2-input"
               />
               <Input
                 label={t("Cod poștal")}
                 name="postal_code"
                 autoComplete="postal-code"
+                enterKeyHint="next"
                 data-testid="postal-code-input"
               />
               <LocalitySelect

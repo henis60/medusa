@@ -52,6 +52,7 @@ const ResetPassword = ({ token }: Props) => {
                 type="password"
                 autoComplete="new-password"
                 required
+                enterKeyHint="next"
               />
               <Input
                 label={t("Confirmă parola")}

@@ -152,6 +152,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
                   required
                   autoComplete="given-name"
                   defaultValue={address.first_name || undefined}
+                  enterKeyHint="next"
                   data-testid="first-name-input"
                 />
                 <Input
@@ -160,6 +161,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
                   required
                   autoComplete="family-name"
                   defaultValue={address.last_name || undefined}
+                  enterKeyHint="next"
                   data-testid="last-name-input"
                 />
               </div>
@@ -168,6 +170,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
                 name="company"
                 autoComplete="organization"
                 defaultValue={address.company || undefined}
+                enterKeyHint="next"
                 data-testid="company-input"
               />
               <Input
@@ -176,6 +179,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
                 required
                 autoComplete="address-line1"
                 defaultValue={address.address_1 || undefined}
+                enterKeyHint="next"
                 data-testid="address-1-input"
               />
               <Input
@@ -183,6 +187,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
                 name="address_2"
                 autoComplete="address-line2"
                 defaultValue={address.address_2 || undefined}
+                enterKeyHint="next"
                 data-testid="address-2-input"
               />
               <Input
@@ -190,6 +195,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
                 name="postal_code"
                 autoComplete="postal-code"
                 defaultValue={address.postal_code || undefined}
+                enterKeyHint="next"
                 data-testid="postal-code-input"
               />
               <LocalitySelect

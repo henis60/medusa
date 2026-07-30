@@ -1,15 +1,17 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { MEDIA_LIBRARY_MODULE } from "../../../modules/media-library"
 import MediaLibraryModuleService from "../../../modules/media-library/service"
 import { listR2Objects } from "../../../modules/media-library/lib/r2-client"
 import uploadMediaAssetWorkflow from "../../../workflows/upload-media-asset"
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
-  const { cursor, limit, q, prefix } = req.query as {
+  const { cursor, limit, q, prefix, unlinked } = req.query as {
     cursor?: string
     limit?: string
     q?: string
     prefix?: string
+    unlinked?: string
   }
 
   // Searching (`q`) scans the whole bucket flat (S3 prefix matching only
@@ -32,6 +34,29 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     : []
   const overlayByKey = new Map(overlays.map((o) => [o.key, o]))
 
+  // Cross-reference against products so the library can show whether an R2
+  // file is actually attached to a product's images, not just sitting in the
+  // bucket. Images are a same-module relation of product, so filtering by
+  // `images.url` works directly via query.graph (no cross-module link needed).
+  const urls = objects.map((o) => o.url)
+  const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
+  const { data: matchingProducts } = urls.length
+    ? await query.graph({
+        entity: "product",
+        fields: ["id", "title", "images.url"],
+        filters: { images: { url: urls } },
+      })
+    : { data: [] }
+
+  const productsByUrl = new Map<string, { id: string; title: string }[]>()
+  for (const p of matchingProducts as any[]) {
+    for (const img of p.images ?? []) {
+      const list = productsByUrl.get(img.url) ?? []
+      list.push({ id: p.id, title: p.title })
+      productsByUrl.set(img.url, list)
+    }
+  }
+
   const assets = objects
     .map((obj) => {
       const overlay = overlayByKey.get(obj.key)
@@ -43,9 +68,11 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         alt_text: overlay?.alt_text ?? null,
         tags: overlay?.tags ?? null,
         hidden: overlay?.hidden ?? false,
+        linked_products: productsByUrl.get(obj.url) ?? [],
       }
     })
     .filter((a) => !a.hidden)
+    .filter((a) => (unlinked === "true" ? a.linked_products.length === 0 : true))
 
   res.status(200).json({ assets, folders, nextCursor })
 }

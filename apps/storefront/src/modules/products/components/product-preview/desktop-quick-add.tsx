@@ -151,13 +151,22 @@ export default function DesktopQuickAdd({
       effectiveVariant.allow_backorder
     : false
 
+  // Options with only one value have nothing to actually choose (mirrors
+  // the product page and the mobile quick-add sheet) — don't render a
+  // picker row for them, so a single-variant product only ever shows the
+  // Add to Cart button.
+  const pickableOptions = useMemo(
+    () => options.filter((o) => (o.values?.length ?? 0) > 1),
+    [options]
+  )
+
   const selectLabel = useMemo(() => {
-    const missing = options.find((o) => !selected[o.id ?? ""])
+    const missing = pickableOptions.find((o) => !selected[o.id ?? ""])
     if (!missing) return t("Selectează")
     return COLOR_TITLES.includes(missing.title?.toLowerCase() ?? "")
       ? t("Selectează culoarea")
       : t("Selectează mărimea")
-  }, [options, selected])
+  }, [pickableOptions, selected])
 
   const handleOptionClick = (
     e: React.MouseEvent,
@@ -229,7 +238,7 @@ export default function DesktopQuickAdd({
       }}
     >
       <div className="px-3 pt-3 pb-3 flex flex-col gap-2">
-        {options.map((option) => {
+        {pickableOptions.map((option) => {
           const sortedValues = sortOptionValues(option.values ?? [])
           return (
             <div key={option.id} className="flex items-center gap-1 flex-wrap">
@@ -264,7 +273,7 @@ export default function DesktopQuickAdd({
         <button
           onClick={handleAdd}
           disabled={
-            adding || !inStock || (!effectiveVariant && options.length > 0)
+            adding || !inStock || (!effectiveVariant && pickableOptions.length > 0)
           }
           className="w-full py-2 font-sans text-[8px] uppercase tracking-[4px] border transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
           style={{
@@ -275,7 +284,7 @@ export default function DesktopQuickAdd({
         >
           {adding
             ? t("Se adaugă…")
-            : !effectiveVariant && options.length > 0
+            : !effectiveVariant && pickableOptions.length > 0
             ? selectLabel
             : !inStock
             ? t("Stoc epuizat")

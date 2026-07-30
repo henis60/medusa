@@ -182,7 +182,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
                     </p>
                     <button
                       onClick={handleClose}
-                      className="mt-2 font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5 cursor-pointer"
+                      className="mt-2 h-11 px-8 font-sans text-[11px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-hunter-gold hover:text-hunter-gold transition-colors cursor-pointer"
                     >
                       {t("Închide")}
                     </button>
@@ -222,16 +222,16 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
                     <div className="flex flex-col gap-3">
                       <div>
                         <Label htmlFor="m-name" error={errors.name}>{t("Nume")}</Label>
-                        <input id="m-name" type="text" value={name} onChange={e => setName(e.target.value)} className={inputClass(errors.name)} />
+                        <input id="m-name" type="text" enterKeyHint="next" value={name} onChange={e => setName(e.target.value)} className={inputClass(errors.name)} />
                       </div>
                       <div>
                         <Label htmlFor="m-email" error={errors.email}>{t("Email")}</Label>
-                        <input id="m-email" type="email" value={email} onChange={e => setEmail(e.target.value)} className={inputClass(errors.email)} />
+                        <input id="m-email" type="email" enterKeyHint="next" value={email} onChange={e => setEmail(e.target.value)} className={inputClass(errors.email)} />
                       </div>
                     </div>
                     <div>
                       <Label htmlFor="m-phone" error={errors.phone}>{t("Telefon")}</Label>
-                      <input id="m-phone" type="tel" value={phone} onChange={e => setPhone(e.target.value)} className={inputClass(errors.phone)} />
+                      <input id="m-phone" type="tel" inputMode="tel" enterKeyHint="next" value={phone} onChange={e => setPhone(e.target.value)} className={inputClass(errors.phone)} />
                     </div>
                     <div>
                       <Label htmlFor="m-message" error={errors.message}>{t("Mesaj")}</Label>

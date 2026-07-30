@@ -2,10 +2,132 @@
 
 import { HttpTypes } from "@medusajs/types"
 import { useState, useEffect, useRef } from "react"
+import { createPortal } from "react-dom"
 import { AnimatePresence, motion } from "framer-motion"
 import Image from "next/image"
 import { useTranslations } from "next-intl"
+import {
+  ArrowsPointingOutMini,
+  ChevronLeftMini,
+  ChevronRightMini,
+  XMark,
+} from "@medusajs/icons"
 import { useSelectedVariant } from "@modules/products/context/selected-variant-context"
+
+function ImageLightbox({
+  images,
+  index,
+  onIndexChange,
+  onClose,
+}: {
+  images: HttpTypes.StoreProductImage[]
+  index: number
+  onIndexChange: (i: number) => void
+  onClose: () => void
+}) {
+  const t = useTranslations("products")
+  const count = images.length
+  const prev = () => onIndexChange((index - 1 + count) % count)
+  const next = () => onIndexChange((index + 1) % count)
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+      if (e.key === "ArrowLeft") prev()
+      if (e.key === "ArrowRight") next()
+    }
+    document.addEventListener("keydown", onKeyDown)
+    return () => document.removeEventListener("keydown", onKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index, count])
+
+  // Lock body scroll while open — restore whatever was there before in case
+  // another overlay (e.g. a cart drawer) already set it.
+  useEffect(() => {
+    const previous = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = previous
+    }
+  }, [])
+
+  const touchStartX = useRef<number | null>(null)
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    if (Math.abs(dx) > 40) dx < 0 ? next() : prev()
+    touchStartX.current = null
+  }
+
+  const selected = images[index]
+
+  return createPortal(
+    <div
+      className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center"
+      onClick={onClose}
+    >
+      <button
+        onClick={onClose}
+        aria-label={t("Închide")}
+        className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors"
+      >
+        <XMark className="w-7 h-7" />
+      </button>
+
+      {count > 1 && (
+        <>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              prev()
+            }}
+            aria-label={t("Imaginea precedentă")}
+            className="hidden small:block absolute left-2 small:left-6 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors p-2"
+          >
+            <ChevronLeftMini className="w-8 h-8" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              next()
+            }}
+            aria-label={t("Imaginea următoare")}
+            className="hidden small:block absolute right-2 small:right-6 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors p-2"
+          >
+            <ChevronRightMini className="w-8 h-8" />
+          </button>
+        </>
+      )}
+
+      {/* A plain <img> sized to its own content (not `fill` in a fixed box) —
+          otherwise the letterboxed empty space around a portrait/landscape
+          image would still count as "inside" the clickable area, and
+          clicking beside the image wouldn't close the lightbox. */}
+      {selected?.url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={selected.url}
+          alt={t("Imagine produs")}
+          draggable={false}
+          onClick={(e) => e.stopPropagation()}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          className="max-w-[92vw] max-h-[92vh] w-auto h-auto object-contain select-none"
+        />
+      )}
+
+      {count > 1 && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm font-sans">
+          {index + 1} / {count}
+        </div>
+      )}
+    </div>,
+    document.body
+  )
+}
 
 type Props = {
   defaultImages: HttpTypes.StoreProductImage[]
@@ -38,6 +160,7 @@ export default function VariantAwareGallery({
     : defaultImages
 
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
   const [mainImageHeight, setMainImageHeight] = useState<number | null>(null)
   const touchStartX = useRef<number | null>(null)
   const thumbsRef = useRef<HTMLDivElement>(null)
@@ -175,6 +298,14 @@ export default function VariantAwareGallery({
               </motion.div>
             )}
           </AnimatePresence>
+
+          <button
+            onClick={() => setLightboxOpen(true)}
+            aria-label={t("Vizualizează pe tot ecranul")}
+            className="absolute bottom-3 right-3 flex items-center justify-center w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow-md text-[var(--theme-text)] transition-all duration-200 hover:bg-hunter-gold hover:text-hunter-dark hover:scale-105"
+          >
+            <ArrowsPointingOutMini className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
@@ -195,6 +326,15 @@ export default function VariantAwareGallery({
             />
           ))}
         </div>
+      )}
+
+      {lightboxOpen && (
+        <ImageLightbox
+          images={images}
+          index={selectedIndex}
+          onIndexChange={setSelectedIndex}
+          onClose={() => setLightboxOpen(false)}
+        />
       )}
     </div>
   )
