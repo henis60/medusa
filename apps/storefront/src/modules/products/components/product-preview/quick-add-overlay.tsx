@@ -311,6 +311,20 @@ export default function QuickAddOverlay({
       effectiveVariant.allow_backorder
     : false
 
+  // Whether ANY variant of this product could ever be added — if every
+  // variant is out of stock, no combination the sheet could offer would
+  // help, so it shouldn't open at all; just show "Stoc epuizat".
+  const anyVariantInStock = useMemo(
+    () =>
+      variants.some(
+        (v) =>
+          !v.manage_inventory ||
+          (v.inventory_quantity ?? 0) > 0 ||
+          v.allow_backorder
+      ),
+    [variants]
+  )
+
   const handleAdd = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -377,25 +391,44 @@ export default function QuickAddOverlay({
 
   return (
     <>
-      {/* Mobile trigger — opens portal bottom sheet */}
+      {/* Mobile trigger — opens the portal bottom sheet only when there's
+          actually something to choose AND at least one variant could be
+          added. Out of stock: disabled, shows "Stoc epuizat", no sheet.
+          Single effective variant + in stock: adds directly, no sheet. */}
       {!desktopOnly && (
         <button
           onClick={(e) => {
             e.preventDefault()
             e.stopPropagation()
+            if (!anyVariantInStock) return
+            if (pickableOptions.length === 0) {
+              handleAdd(e)
+              return
+            }
             setMobileOpen(true)
           }}
-          className="w-full py-2 font-sans text-[8px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] bg-[var(--theme-bg)] transition-colors duration-150 active:border-hunter-gold active:text-hunter-gold"
+          disabled={!anyVariantInStock || adding}
+          className="w-full py-2 font-sans text-[8px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] bg-[var(--theme-bg)] transition-colors duration-150 active:border-hunter-gold active:text-hunter-gold disabled:opacity-40 disabled:cursor-not-allowed"
           aria-label={mobileTriggerLabel}
         >
-          {t("Adaugă în coș")}
+          {!anyVariantInStock
+            ? t("Stoc epuizat")
+            : adding
+            ? t("Se adaugă…")
+            : t("Adaugă în coș")}
         </button>
       )}
 
-      {/* Desktop panel — rendered flat, parent handles show/hide */}
+      {/* Desktop panel — rendered flat, parent handles show/hide. When
+          there's nothing to pick (single effective variant), only the Add
+          to Cart button renders — no wrapping bordered/padded panel. */}
       {!mobileOnly && (
         <div
-          className="px-3 pt-3 pb-3 flex flex-col gap-2 bg-[var(--theme-bg)] border border-[var(--theme-border)]"
+          className={
+            pickableOptions.length
+              ? "px-3 pt-3 pb-3 flex flex-col gap-2 bg-[var(--theme-bg)] border border-[var(--theme-border)]"
+              : ""
+          }
           onClick={(e) => {
             e.preventDefault()
             e.stopPropagation()

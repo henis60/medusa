@@ -8,6 +8,7 @@ export type MediaAsset = {
   alt_text: string | null;
   tags: string[] | null;
   hidden: boolean;
+  linked_products: { id: string; title: string }[];
 };
 
 // R2 keys contain slashes, so they can't be a plain route param — encode as
@@ -21,12 +22,14 @@ export async function fetchMediaAssets(params: {
   limit?: number;
   q?: string;
   prefix?: string;
+  unlinked?: boolean;
 }): Promise<{ assets: MediaAsset[]; folders: string[]; nextCursor: string | null }> {
   const search = new URLSearchParams();
   if (params.cursor) search.set("cursor", params.cursor);
   if (params.limit) search.set("limit", String(params.limit));
   if (params.q) search.set("q", params.q);
   if (params.prefix) search.set("prefix", params.prefix);
+  if (params.unlinked) search.set("unlinked", "true");
   return sdk.client.fetch<{
     assets: MediaAsset[];
     folders: string[];
@@ -53,4 +56,14 @@ export async function deleteMediaAsset(
     `/admin/media-library/${encodeKey(key)}?permanent=${permanent}`,
     { method: "DELETE" },
   );
+}
+
+export async function renameMediaAsset(
+  key: string,
+  filename: string,
+): Promise<{ asset: { key: string; url: string } }> {
+  return sdk.client.fetch(`/admin/media-library/${encodeKey(key)}/rename`, {
+    method: "POST",
+    body: { filename },
+  });
 }

@@ -3,6 +3,7 @@ import {
   ListObjectsV2Command,
   DeleteObjectCommand,
   PutObjectCommand,
+  CopyObjectCommand,
   type _Object,
 } from "@aws-sdk/client-s3"
 
@@ -113,6 +114,32 @@ export async function uploadR2Object(opts: {
     key: opts.key,
     url: toPublicUrl(opts.key),
     size: opts.content.byteLength,
+    last_modified: new Date().toISOString(),
+  }
+}
+
+// S3/R2 has no rename — a "rename" is a copy to the new key followed by a
+// delete of the old one. Not atomic: if the delete step fails the object
+// exists at both keys momentarily, which the workflow step below handles by
+// retrying delete-only on compensation rather than re-copying.
+export async function renameR2Object(opts: {
+  oldKey: string
+  newKey: string
+}): Promise<R2Object> {
+  await getClient().send(
+    new CopyObjectCommand({
+      Bucket: process.env.S3_BUCKET,
+      CopySource: `${process.env.S3_BUCKET}/${encodeURIComponent(opts.oldKey)}`,
+      Key: opts.newKey,
+      ACL: "public-read",
+      CacheControl: "public, max-age=31536000",
+    })
+  )
+  await deleteR2Object(opts.oldKey)
+  return {
+    key: opts.newKey,
+    url: toPublicUrl(opts.newKey),
+    size: 0,
     last_modified: new Date().toISOString(),
   }
 }

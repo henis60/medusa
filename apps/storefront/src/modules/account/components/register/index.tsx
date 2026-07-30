@@ -55,6 +55,7 @@ const Register = ({ setCurrentView }: Props) => {
             name="first_name"
             required
             autoComplete="given-name"
+            enterKeyHint="next"
             data-testid="first-name-input"
           />
           <Input
@@ -62,6 +63,7 @@ const Register = ({ setCurrentView }: Props) => {
             name="last_name"
             required
             autoComplete="family-name"
+            enterKeyHint="next"
             data-testid="last-name-input"
           />
           <Input
@@ -70,6 +72,7 @@ const Register = ({ setCurrentView }: Props) => {
             required
             type="email"
             autoComplete="email"
+            enterKeyHint="next"
             data-testid="email-input"
           />
           <Input
@@ -77,6 +80,7 @@ const Register = ({ setCurrentView }: Props) => {
             name="phone"
             type="tel"
             autoComplete="tel"
+            enterKeyHint="next"
             data-testid="phone-input"
           />
           <Input
