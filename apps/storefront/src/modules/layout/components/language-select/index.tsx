@@ -29,19 +29,20 @@ const LanguageSelect = ({ locales, currentLocale }: LanguageSelectProps) => {
   }
 
   return (
-    <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-[var(--theme-text-muted)]">
+    <div className="flex items-center justify-between font-sans text-[11px] uppercase tracking-[0.2em] text-[var(--theme-text-muted)]">
       <span>{t("Limbă")}</span>
-      <div className="flex items-center gap-3">
-        {locales.map((l) => (
+      <div className="flex items-center border border-[var(--theme-border)]">
+        {locales.map((l, i) => (
           <button
             key={l.code}
             onClick={() => handleChange(l.code)}
             disabled={isPending}
             className={clx(
-              "transition-colors disabled:opacity-60",
+              "px-3 py-0.5 font-sans text-[10px] uppercase tracking-[2px] transition-colors duration-150 disabled:opacity-60",
+              i > 0 && "border-l border-[var(--theme-border)]",
               active === l.code.toLowerCase()
-                ? "text-hunter-gold"
-                : "text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]"
+                ? "bg-hunter-gold text-hunter-dark"
+                : "text-[var(--theme-text-muted)] hover:text-hunter-gold"
             )}
           >
             {l.code.toUpperCase()}

@@ -3,10 +3,13 @@ import { Radio, RadioGroup } from "@headlessui/react"
 import { setShippingMethod } from "@lib/data/cart"
 import {
   EawbLocker,
+  EawbLockerOrigin,
+  getEawbOrigin,
   listEawbLockers,
   listEawbShippingPrices,
 } from "@lib/data/fulfillment"
 import { convertToLocale } from "@lib/util/money"
+import { haversineKm } from "@lib/util/geo"
 import {
   lineItemsToTrackItems,
   trackAddShippingInfo,
@@ -70,6 +73,7 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
   const [loadingLockers, setLoadingLockers] = useState(false)
   const [selectedLocker, setSelectedLocker] = useState<EawbLocker | null>(null)
   const [lockerQuery, setLockerQuery] = useState("")
+  const [lockerOrigin, setLockerOrigin] = useState<EawbLockerOrigin>(null)
 
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -178,11 +182,15 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
       setLockerOptionId(option.id)
       setSelectedLocker(null)
       setLockerQuery("")
+      setLockerOrigin(null)
       setLoadingLockers(true)
       listEawbLockers(option.id, cart.id).then((ls) => {
         setLockers(ls)
         setLoadingLockers(false)
       })
+      // Fetched separately so Nominatim's latency never delays the locker
+      // list/map from showing — the map just re-centers once this resolves.
+      getEawbOrigin(cart.id).then(setLockerOrigin)
     } else {
       setLockerOptionId(null)
       setSelectedLocker(null)
@@ -199,6 +207,22 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
     })
   }
 
+  // Once both the locker list and the geocoded address are in, auto-pick the
+  // closest locker — unless one's already selected (e.g. restored from cart).
+  useEffect(() => {
+    if (!lockerOptionId || selectedLocker || !lockerOrigin) return
+    const withCoords = lockers.filter((l) => l.lat != null && l.lng != null)
+    if (withCoords.length === 0) return
+    const nearest = withCoords.reduce((best, l) =>
+      haversineKm(lockerOrigin, { lat: l.lat as number, lng: l.lng as number }) <
+      haversineKm(lockerOrigin, { lat: best.lat as number, lng: best.lng as number })
+        ? l
+        : best
+    )
+    handleSelectLocker(nearest)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lockers, lockerOrigin, lockerOptionId, selectedLocker])
+
   const filteredLockers = lockerQuery
     ? lockers.filter((l) =>
         `${l.name} ${l.address}`
@@ -209,9 +233,12 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
 
   useEffect(() => { setError(null) }, [isOpen])
 
-  // Restore the locker picker when returning to the step with a locker service
-  // already selected on the cart. Skips if a locker is already being handled in
-  // this session, so committing a selection (which updates the cart) doesn't
+  // Reopen the locker picker when returning to the step with a locker service
+  // already selected on the cart. Doesn't restore the previous locker itself
+  // (it has no coordinates to center the map on) — the nearest-locker effect
+  // below re-picks one once the list and geocoded address load, same as a
+  // fresh selection. Skips if a locker is already being handled in this
+  // session, so committing a selection (which updates the cart) doesn't
   // re-trigger a reload.
   useEffect(() => {
     if (lockerOptionId) return
@@ -222,21 +249,12 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
     if (!opt || !isLockerOption(opt)) return
 
     setLockerOptionId(opt.id)
-    const d = (sm?.data ?? {}) as { fixed_location_id?: number; locker_name?: string }
-    if (d.fixed_location_id) {
-      setSelectedLocker({
-        id: Number(d.fixed_location_id),
-        name: d.locker_name ?? t("Locker selectat"),
-        address: "",
-        lat: null,
-        lng: null,
-      })
-    }
     setLoadingLockers(true)
     listEawbLockers(opt.id, cart.id).then((ls) => {
       setLockers(ls)
       setLoadingLockers(false)
     })
+    getEawbOrigin(cart.id).then(setLockerOrigin)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [availableShippingMethods])
 
@@ -378,6 +396,7 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
                   lockers={lockers}
                   filteredLockers={filteredLockers}
                   loadingLockers={loadingLockers}
+                  origin={lockerOrigin}
                   selectedLocker={selectedLocker}
                   onSelectLocker={handleSelectLocker}
                   lockerQuery={lockerQuery}

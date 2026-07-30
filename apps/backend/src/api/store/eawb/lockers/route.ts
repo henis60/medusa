@@ -9,6 +9,10 @@ import { EuroparcelClient } from "../../../../modules/eawb/lib/client"
  *
  * GET /store/eawb/lockers?option_id=...&cart_id=...
  * → { lockers: [{ id, name, address, lat, lng }] }
+ *
+ * The geocoded delivery address (used to center the map precisely) is fetched
+ * separately via GET /store/eawb/geocode — Nominatim's latency shouldn't
+ * block the locker list itself from rendering.
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const optionId = req.query.option_id as string | undefined

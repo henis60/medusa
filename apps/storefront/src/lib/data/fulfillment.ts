@@ -69,6 +69,8 @@ export type EawbLocker = {
   lng: number | null
 }
 
+export type EawbLockerOrigin = { lat: number; lng: number } | null
+
 // Lists lockers available for a given eAWB shipping option near the cart's
 // delivery locality (used by the checkout locker picker).
 export const listEawbLockers = async (
@@ -88,6 +90,26 @@ export const listEawbLockers = async (
     })
     .then(({ lockers }) => lockers ?? [])
     .catch(() => [])
+}
+
+// Geocodes the cart's delivery street address, used to center the locker map
+// precisely instead of just fitting to the returned lockers' bounds. Fetched
+// separately from listEawbLockers so Nominatim's latency never blocks the
+// locker list from rendering.
+export const getEawbOrigin = async (cartId: string): Promise<EawbLockerOrigin> => {
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  return sdk.client
+    .fetch<{ origin: EawbLockerOrigin }>(`/store/eawb/geocode`, {
+      method: "GET",
+      query: { cart_id: cartId },
+      headers,
+      cache: "no-store",
+    })
+    .then(({ origin }) => origin ?? null)
+    .catch(() => null)
 }
 
 export const calculatePriceForShippingOption = async (

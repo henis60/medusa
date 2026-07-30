@@ -6,8 +6,8 @@ import {
   ComboboxOption,
   ComboboxOptions,
 } from "@headlessui/react"
-import { ChevronUpDown, Loader } from "@medusajs/icons"
-import { EawbLocker } from "@lib/data/fulfillment"
+import { ChevronUpDown } from "@medusajs/icons"
+import { EawbLocker, EawbLockerOrigin } from "@lib/data/fulfillment"
 import { useTranslations } from "next-intl"
 import dynamic from "next/dynamic"
 import MapErrorBoundary from "./map-error-boundary"
@@ -27,6 +27,7 @@ type LockerPickerProps = {
   onSelectLocker: (locker: EawbLocker | null) => void
   lockerQuery: string
   onQueryChange: (query: string) => void
+  origin: EawbLockerOrigin
 }
 
 export default function LockerPicker({
@@ -37,14 +38,16 @@ export default function LockerPicker({
   onSelectLocker,
   lockerQuery,
   onQueryChange,
+  origin,
 }: LockerPickerProps) {
   const t = useTranslations("checkout")
 
   if (loadingLockers) {
     return (
-      <span className="flex items-center gap-2 text-[var(--theme-text-muted)] text-[13px]">
-        <Loader /> {t("Se încarcă lockerele…")}
-      </span>
+      <div className="flex flex-col gap-3">
+        <div className="h-10 w-full bg-[var(--theme-border)] animate-pulse" />
+        <div className="h-56 sm:h-72 md:h-80 w-full bg-[var(--theme-border)] animate-pulse" />
+      </div>
     )
   }
 
@@ -78,7 +81,7 @@ export default function LockerPicker({
           </ComboboxButton>
           <ComboboxOptions
             anchor="bottom start"
-            className="z-50 max-h-40 overflow-auto border border-[var(--theme-border)] bg-[var(--theme-bg,#0D0D0D)] shadow-lg focus:outline-none [--anchor-gap:4px]"
+            className="z-[1200] max-h-40 overflow-auto border border-[var(--theme-border)] bg-[var(--theme-bg,#0D0D0D)] shadow-lg focus:outline-none [--anchor-gap:4px]"
             style={{ width: "var(--input-width)" }}
           >
             {filteredLockers.length === 0 ? (
@@ -103,22 +106,16 @@ export default function LockerPicker({
         </div>
       </Combobox>
 
-      <MapErrorBoundary>
-        <LockerMap
-          lockers={filteredLockers}
-          selectedLocker={selectedLocker}
-          onSelect={onSelectLocker}
-        />
-      </MapErrorBoundary>
-
-      {selectedLocker && (
-        <span className="font-serif italic text-[12px] text-hunter-gold">
-          {t("Selectat: {name} — {address}", {
-            name: selectedLocker.name,
-            address: selectedLocker.address,
-          })}
-        </span>
-      )}
+      <div className="relative isolate z-0">
+        <MapErrorBoundary>
+          <LockerMap
+            lockers={filteredLockers}
+            selectedLocker={selectedLocker}
+            onSelect={onSelectLocker}
+            origin={origin}
+          />
+        </MapErrorBoundary>
+      </div>
     </div>
   )
 }
