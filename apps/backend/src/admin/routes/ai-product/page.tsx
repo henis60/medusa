@@ -918,6 +918,53 @@ const AIProductPage = () => {
           }
         }
 
+        // Save English translations for variant titles (e.g. "Negru / M" →
+        // "Black / M"). ProductVariant.title is natively .translatable() too,
+        // but it's a separate stored string built at creation (buildVariants
+        // above), not re-derived from the option value at render time — so
+        // translating the option value alone (previous block) doesn't cover
+        // it. Cart/order line items display variant.title directly, so this
+        // is what actually fixes the translation there.
+        if (colors.length && aiResult.colors_en?.length) {
+          try {
+            const enByColor = new Map(
+              colors.map((c, i) => [c.toLowerCase(), aiResult.colors_en[i]]),
+            );
+            const variantTranslations = (product.variants ?? [])
+              .map((variant: any) => {
+                const translatedTitle = (variant.title ?? "")
+                  .split(" / ")
+                  .map((seg: string) => enByColor.get(seg.toLowerCase()) ?? seg)
+                  .join(" / ");
+                if (
+                  !translatedTitle ||
+                  translatedTitle.toLowerCase() === (variant.title ?? "").toLowerCase()
+                )
+                  return null;
+                return {
+                  reference: "product_variant",
+                  reference_id: variant.id,
+                  locale_code: "en-GB",
+                  translations: { title: translatedTitle },
+                };
+              })
+              .filter(Boolean);
+
+            if (variantTranslations.length) {
+              await sdk.client.fetch("/admin/translations/batch", {
+                method: "POST",
+                body: { create: variantTranslations },
+              });
+            }
+          } catch (err: any) {
+            console.warn(
+              "[AI] Variant title translation save failed:",
+              err?.message || err,
+            );
+            toast.warning("Traducerea variantelor nu a putut fi salvată");
+          }
+        }
+
         // Resolve a variant's color by exact title segment ("Color / Size"),
         // not substring — avoids "Negru" matching "Negru închis".
         const colorOfVariant = (variant: any): string | undefined => {
