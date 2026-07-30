@@ -19,9 +19,11 @@ export function loadNetopiaOptionsFromEnv(): NetopiaOptions {
       process.env.NETOPIA_SANDBOX !== "false" &&
       process.env.NETOPIA_TEST_MODE !== "false",
     notifyUrl: process.env.NETOPIA_NOTIFY_URL || `${backendUrl}/hooks/netopia`,
+    // The customer's BROWSER lands here after paying — must be the
+    // storefront, never the backend (that's notifyUrl's job, server-to-server).
     redirectUrl:
       process.env.NETOPIA_REDIRECT_URL ||
-      `${backendUrl}/hooks/netopia/complete`,
+      `${storefrontUrl}/finalizare-comanda/netopia/return`,
     language: process.env.NETOPIA_LANGUAGE || "ro",
   };
 }

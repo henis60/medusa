@@ -1,4 +1,6 @@
 {
+  "Finalizare comandă": "Finalizare comandă",
+  "Comandă": "Comandă",
   "Alege o adresă salvată": "Alege o adresă salvată",
   "Adresa de livrare": "Adresa de livrare",
   "Modifică": "Modifică",
@@ -9,6 +11,7 @@
   "Facturare": "Facturare",
   "Identică cu livrarea": "Identică cu livrarea",
   "Prenume": "Prenume",
+  "Companie": "Companie",
   "Nume de familie": "Nume de familie",
   "Cod poștal": "Cod poștal",
   "Telefon": "Telefon",
@@ -37,6 +40,7 @@
   "Detalii": "Detalii",
   "Un pas suplimentar va apărea": "Un pas suplimentar va apărea",
   "Confirmare comandă": "Confirmare comandă",
+  "Se pregătește plata…": "Se pregătește plata…",
   "Prin plasarea comenzii, confirmi că ai citit și ești de acord cu": "Prin plasarea comenzii, confirmi că ai citit și ești de acord cu",
   "Termenii și Condițiile": "Termenii și Condițiile",
   "Politica de Returnare": "Politica de Returnare",

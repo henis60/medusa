@@ -2,6 +2,9 @@ import React from "react"
 
 import { IconProps } from "types/icon"
 
+// A single thin arc rather than the previous bold two-tone (opacity-25 ring +
+// opacity-75 solid wedge) spinner — quieter, more in line with the site's
+// restrained editorial tone.
 const Spinner: React.FC<IconProps> = ({
   size = "16",
   color = "currentColor",
@@ -17,19 +20,13 @@ const Spinner: React.FC<IconProps> = ({
       viewBox="0 0 24 24"
       {...attributes}
     >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke={color}
-        strokeWidth="4"
-      ></circle>
+      <circle cx="12" cy="12" r="10" stroke={color} strokeWidth="1.5" strokeOpacity="0.2" />
       <path
-        className="opacity-75"
-        fill={color}
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-      ></path>
+        d="M22 12a10 10 0 0 0-10-10"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </svg>
   )
 }

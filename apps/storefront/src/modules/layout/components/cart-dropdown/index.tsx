@@ -176,7 +176,7 @@ const CartDropdown = ({
   // hydration or page navigation), except when already on the cart page.
   useEffect(() => {
     return onCartUpdated((detail) => {
-      if (detail.action === "add" && !pathname.includes("/cart")) {
+      if (detail.action === "add" && !pathname.includes("/cos")) {
         open()
       }
     })
@@ -507,7 +507,7 @@ const CartDropdown = ({
                           </div>
                           <div className="flex flex-col gap-2">
                             <LocalizedClientLink
-                              href="/cart"
+                              href="/cos"
                               passHref
                               onClick={close}
                               className="w-full"

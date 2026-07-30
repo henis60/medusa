@@ -14,18 +14,24 @@ const ShippingAddress = ({
   cart,
   checked,
   onChange,
+  onBillingAddressSelected,
 }: {
   customer: HttpTypes.StoreCustomer | null
   cart: HttpTypes.StoreCart | null
   checked: boolean
   onChange: () => void
+  // Called (with the picked address) when it's flagged as a billing address
+  // — using it as the shipping destination too would silently ship the
+  // order there, so "same as billing" shouldn't stay assumed, and the
+  // billing form should be prefilled with this same address (company
+  // included) rather than left blank.
+  onBillingAddressSelected?: (address: HttpTypes.StoreCartAddress) => void
 }) => {
   const t = useTranslations("checkout")
   const [formData, setFormData] = useState<Record<string, string>>({
     "shipping_address.first_name": cart?.shipping_address?.first_name || "",
     "shipping_address.last_name": cart?.shipping_address?.last_name || "",
     "shipping_address.address_1": cart?.shipping_address?.address_1 || "",
-    "shipping_address.company": cart?.shipping_address?.company || "",
     "shipping_address.postal_code": cart?.shipping_address?.postal_code || "",
     "shipping_address.city": cart?.shipping_address?.city || "",
     "shipping_address.country_code": cart?.shipping_address?.country_code || "",
@@ -58,13 +64,15 @@ const ShippingAddress = ({
         "shipping_address.first_name": address?.first_name || "",
         "shipping_address.last_name": address?.last_name || "",
         "shipping_address.address_1": address?.address_1 || "",
-        "shipping_address.company": address?.company || "",
         "shipping_address.postal_code": address?.postal_code || "",
         "shipping_address.city": address?.city || "",
         "shipping_address.country_code": address?.country_code || "",
         "shipping_address.province": address?.province || "",
         "shipping_address.phone": address?.phone || "",
       }))
+      if ((address as unknown as HttpTypes.StoreCustomerAddress).is_default_billing) {
+        onBillingAddressSelected?.(address)
+      }
     }
 
     if (email) {
@@ -184,7 +192,7 @@ const ShippingAddress = ({
           )}
         </div>
         <input type="checkbox" name="same_as_billing" checked={checked} readOnly className="sr-only" />
-        <span className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text-muted)]">
+        <span className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
           {t("Adresa de facturare este aceeași cu cea de livrare")}
         </span>
       </div>

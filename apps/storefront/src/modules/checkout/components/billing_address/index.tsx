@@ -1,11 +1,21 @@
 import { HttpTypes } from "@medusajs/types"
 import Input from "@modules/common/components/input"
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
 import CountrySelect from "../country-select"
 import LocalitySelect from "@modules/common/components/locality-select"
 
-const BillingAddress = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
+const BillingAddress = ({
+  cart,
+  prefill,
+}: {
+  cart: HttpTypes.StoreCart | null
+  // An address picked from the shipping step's saved-addresses dropdown
+  // that's flagged for billing — fills this form the same way selecting it
+  // would, instead of leaving it blank after auto-unchecking "same as
+  // shipping".
+  prefill?: HttpTypes.StoreCartAddress | null
+}) => {
   const t = useTranslations("checkout")
   const [formData, setFormData] = useState<Record<string, string>>({
     "billing_address.first_name": cart?.billing_address?.first_name || "",
@@ -16,8 +26,21 @@ const BillingAddress = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
     "billing_address.city": cart?.billing_address?.city || "",
     "billing_address.country_code": cart?.billing_address?.country_code || "",
     "billing_address.province": cart?.billing_address?.province || "",
-    "billing_address.phone": cart?.billing_address?.phone || "",
   })
+
+  useEffect(() => {
+    if (!prefill) return
+    setFormData({
+      "billing_address.first_name": prefill.first_name || "",
+      "billing_address.last_name": prefill.last_name || "",
+      "billing_address.address_1": prefill.address_1 || "",
+      "billing_address.company": prefill.company || "",
+      "billing_address.postal_code": prefill.postal_code || "",
+      "billing_address.city": prefill.city || "",
+      "billing_address.country_code": prefill.country_code || "",
+      "billing_address.province": prefill.province || "",
+    })
+  }, [prefill])
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -61,6 +84,14 @@ const BillingAddress = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
           data-testid="billing-address-input"
         />
         <Input
+          label={t("Companie")}
+          name="billing_address.company"
+          autoComplete="organization"
+          value={formData["billing_address.company"]}
+          onChange={handleChange}
+          data-testid="billing-company-input"
+        />
+        <Input
           label={t("Cod poștal")}
           name="billing_address.postal_code"
           autoComplete="postal-code"
@@ -86,14 +117,6 @@ const BillingAddress = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
             setFormData((prev) => ({ ...prev, [name]: value }))
           }
           required
-        />
-        <Input
-          label={t("Telefon")}
-          name="billing_address.phone"
-          autoComplete="tel"
-          value={formData["billing_address.phone"]}
-          onChange={handleChange}
-          data-testid="billing-phone-input"
         />
       </div>
     </>

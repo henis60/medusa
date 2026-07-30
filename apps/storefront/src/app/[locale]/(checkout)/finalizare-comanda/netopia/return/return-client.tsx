@@ -18,18 +18,20 @@ export default function NetopiaReturnClient() {
   const router = useRouter()
   const sessionId = searchParams.get("session_id")
   const failedParam = searchParams.get("failed")
-  const [stage, setStage] = useState<Stage>(failedParam === "1" ? "rejected" : "verifying")
+  const [stage, setStage] = useState<Stage>(
+    failedParam === "1" ? "rejected" : "verifying"
+  )
   const polls = useRef(0)
 
   useEffect(() => {
     if (!sessionId) {
-      router.replace("/cart")
+      router.replace("/cos")
       return
     }
 
     // Backend a semnalat deja că plata a eșuat — nu mai facem polling
     if (failedParam === "1") {
-      setTimeout(() => router.replace("/checkout?step=payment"), 4000)
+      setTimeout(() => router.replace("/finalizare-comanda?pas=sumar"), 4000)
       return
     }
 
@@ -43,7 +45,7 @@ export default function NetopiaReturnClient() {
 
       if (result.failed) {
         setStage("rejected")
-        setTimeout(() => router.replace("/checkout?step=payment"), 4000)
+        setTimeout(() => router.replace("/finalizare-comanda?pas=sumar"), 4000)
         return
       }
 
@@ -63,15 +65,21 @@ export default function NetopiaReturnClient() {
   const messages: Record<Stage, { heading: string; body: string }> = {
     verifying: {
       heading: t("Confirmare comandă"),
-      body: t("Plata ta este procesată în siguranță Te rugăm să nu închizi această fereastră"),
+      body: t(
+        "Plata ta este procesată în siguranță Te rugăm să nu închizi această fereastră"
+      ),
     },
     rejected: {
       heading: t("Plată respinsă"),
-      body: t("Tranzacția nu a putut fi finalizată Vei fi redirecționat înapoi la checkout"),
+      body: t(
+        "Tranzacția nu a putut fi finalizată Vei fi redirecționat înapoi la checkout"
+      ),
     },
     timeout: {
       heading: t("Plată în procesare"),
-      body: t("Comanda ta a fost înregistrată Vei primi un email de confirmare în scurt timp"),
+      body: t(
+        "Comanda ta a fost înregistrată Vei primi un email de confirmare în scurt timp"
+      ),
     },
   }
 
@@ -135,7 +143,10 @@ export default function NetopiaReturnClient() {
         style={{ backgroundColor: "#ffffff", height: "calc(100vh - 64px)" }}
       >
         {/* Animated seal */}
-        <div className="content-fade mb-10 relative" style={{ animationDelay: "80ms" }}>
+        <div
+          className="content-fade mb-10 relative"
+          style={{ animationDelay: "80ms" }}
+        >
           <svg
             width={100}
             height={100}
@@ -184,7 +195,12 @@ export default function NetopiaReturnClient() {
             )}
 
             {stage === "rejected" && (
-              <g stroke="#722F37" strokeWidth={1.5} strokeLinecap="round" opacity={0.85}>
+              <g
+                stroke="#722F37"
+                strokeWidth={1.5}
+                strokeLinecap="round"
+                opacity={0.85}
+              >
                 <line x1={44} y1={44} x2={56} y2={56} />
                 <line x1={56} y1={44} x2={44} y2={56} />
               </g>
@@ -235,31 +251,6 @@ export default function NetopiaReturnClient() {
         >
           {body}
         </p>
-
-        {/* Animated dots — only while verifying */}
-        {stage === "verifying" && (
-          <div
-            className="content-fade flex items-center gap-2 mt-8"
-            style={{ animationDelay: "360ms" }}
-            aria-label={t("Se procesează")}
-          >
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="dot"
-                style={{
-                  width: 4,
-                  height: 4,
-                  borderRadius: "50%",
-                  backgroundColor: "#C9A84C",
-                  opacity: 0.5,
-                  animationDelay: `${i * 0.25}s`,
-                }}
-              />
-            ))}
-          </div>
-        )}
-
       </div>
     </>
   )

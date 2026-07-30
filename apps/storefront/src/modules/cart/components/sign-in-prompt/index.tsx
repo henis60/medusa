@@ -14,7 +14,7 @@ const SignInPrompt = async () => {
         </p>
       </div>
       <LocalizedClientLink
-        href="/profil?redirectTo=/cart"
+        href="/profil?redirectTo=/cos"
         data-testid="sign-in-button"
         className="shrink-0 text-center font-sans text-[9px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-hunter-gold hover:text-hunter-gold transition-colors px-5 py-3 small:py-2.5 w-full small:w-auto"
       >

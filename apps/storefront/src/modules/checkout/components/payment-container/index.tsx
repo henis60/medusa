@@ -1,5 +1,6 @@
 import { Radio as RadioGroupOption } from "@headlessui/react"
-import { Text, clx } from "@modules/common/components/ui"
+import { clx } from "@modules/common/components/ui"
+import { fieldLabelClass } from "@modules/checkout/components/typography"
 import React, { useContext, useMemo, type JSX } from "react"
 
 import Radio from "@modules/common/components/radio"
@@ -49,7 +50,7 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
               ? "border-hunter-gold bg-hunter-gold"
               : "border-[var(--theme-border)]"
           )} />
-          <span className="font-sans text-[11px] text-[var(--theme-text)]">
+          <span className="font-serif text-[14px] text-[var(--theme-text)]">
             {paymentInfoMap[paymentProviderId]?.title || paymentProviderId}
           </span>
           {isManual(paymentProviderId) && isDevelopment && (
@@ -113,9 +114,9 @@ export const StripeCardContainer = ({
       {selectedPaymentOptionId === paymentProviderId &&
         (stripeReady ? (
           <div className="my-4 transition-all duration-150 ease-in-out">
-            <Text className="txt-medium-plus text-ui-fg-base mb-1">
+            <span className={fieldLabelClass}>
               {t("Enter your card details:")}
-            </Text>
+            </span>
             <CardElement
               options={useOptions as StripeCardElementOptions}
               onChange={(e) => {
