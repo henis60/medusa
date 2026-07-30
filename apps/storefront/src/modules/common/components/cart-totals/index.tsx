@@ -22,52 +22,56 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals, showTax = false }) => {
   const t = useTranslations("common")
 
   return (
-    <div className="flex flex-col gap-3 font-sans text-[10px] uppercase tracking-[2px]">
-      <div className="flex justify-between text-[var(--theme-text-muted)]">
-        <span>{t("Produse")}</span>
-        <span data-testid="cart-subtotal" data-value={item_subtotal ?? 0}>
-          {convertToLocale({ amount: item_subtotal ?? 0, currency_code })}
-        </span>
-      </div>
-
-      <div className="flex justify-between text-[var(--theme-text-muted)]">
-        <span>{t("Livrare")}</span>
-        <span data-testid="cart-shipping" data-value={shipping_subtotal ?? 0}>
-          {shipping_subtotal
-            ? convertToLocale({ amount: shipping_subtotal, currency_code })
-            : "—"}
-        </span>
-      </div>
-
-      {!!discount_subtotal && (
-        <div className="flex justify-between text-hunter-gold">
-          <span>{t("Reducere")}</span>
-          <span data-testid="cart-discount" data-value={discount_subtotal}>
-            − {convertToLocale({ amount: discount_subtotal, currency_code })}
-          </span>
-        </div>
-      )}
-
-      {showTax && (
+    <>
+      <div className="flex flex-col gap-3 font-sans text-[12px] small:text-[13px] uppercase tracking-[2px]">
         <div className="flex justify-between text-[var(--theme-text-muted)]">
-          <span>{t("TVA")}</span>
-          <span data-testid="cart-taxes" data-value={tax_total ?? 0}>
-            {convertToLocale({ amount: tax_total ?? 0, currency_code })}
+          <span>{t("Produse")}</span>
+          <span data-testid="cart-subtotal" data-value={item_subtotal ?? 0}>
+            {convertToLocale({ amount: item_subtotal ?? 0, currency_code })}
           </span>
         </div>
-      )}
 
-      <div className="border-t border-[var(--theme-border)] pt-3 flex justify-between items-baseline mt-1">
-        <span className="text-[var(--theme-text-muted)]">{t("Total")}</span>
+        <div className="flex justify-between text-[var(--theme-text-muted)]">
+          <span>{t("Livrare")}</span>
+          <span data-testid="cart-shipping" data-value={shipping_subtotal ?? 0}>
+            {shipping_subtotal
+              ? convertToLocale({ amount: shipping_subtotal, currency_code })
+              : "—"}
+          </span>
+        </div>
+
+        {!!discount_subtotal && (
+          <div className="flex justify-between text-hunter-gold">
+            <span>{t("Reducere")}</span>
+            <span data-testid="cart-discount" data-value={discount_subtotal}>
+              − {convertToLocale({ amount: discount_subtotal, currency_code })}
+            </span>
+          </div>
+        )}
+
+        {showTax && (
+          <div className="flex justify-between text-[var(--theme-text-muted)]">
+            <span>{t("TVA")}</span>
+            <span data-testid="cart-taxes" data-value={tax_total ?? 0}>
+              {convertToLocale({ amount: tax_total ?? 0, currency_code })}
+            </span>
+          </div>
+        )}
+      </div>
+
+      <div className="border-t border-[var(--theme-border)] pt-4 flex justify-between items-baseline">
+        <span className="font-sans text-[12px] small:text-[13px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
+          {t("Total")}
+        </span>
         <span
-          className="font-display text-[20px] leading-none text-hunter-gold"
+          className="font-display text-[22px] small:text-[26px] leading-none text-hunter-gold"
           data-testid="cart-total"
           data-value={total ?? 0}
         >
           {convertToLocale({ amount: total ?? 0, currency_code })}
         </span>
       </div>
-    </div>
+    </>
   )
 }
 

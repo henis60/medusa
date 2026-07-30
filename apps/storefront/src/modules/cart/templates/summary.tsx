@@ -1,9 +1,9 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import { convertToLocale } from "@lib/util/money"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import DiscountCode from "@modules/checkout/components/discount-code"
+import CartTotals from "@modules/common/components/cart-totals"
 import { HttpTypes } from "@medusajs/types"
 
 type SummaryProps = {
@@ -11,75 +11,27 @@ type SummaryProps = {
 }
 
 function getCheckoutStep(cart: HttpTypes.StoreCart) {
-  if (!cart?.shipping_address?.address_1 || !cart.email) return "address"
-  if (cart?.shipping_methods?.length === 0) return "delivery"
-  return "payment"
+  if (!cart?.shipping_address?.address_1 || !cart.email) return "adresa"
+  if (cart?.shipping_methods?.length === 0) return "livrare"
+  return "sumar"
 }
 
 const Summary = ({ cart }: SummaryProps) => {
   const t = useTranslations("cart")
   const step = getCheckoutStep(cart)
-  const {
-    currency_code,
-    item_subtotal,
-    shipping_subtotal,
-    discount_total,
-    total,
-  } = cart
 
   return (
     <div className="flex flex-col gap-6 border border-[var(--theme-border)] p-6 small:p-8">
-      <h2 className="font-sans text-[12px] small:text-[13px] uppercase tracking-[4px] text-[var(--theme-text)]">
-        {t("Sumar")}
-      </h2>
-
       <DiscountCode cart={cart} />
 
-      <div className="flex flex-col gap-3 font-sans text-[12px] small:text-[13px] uppercase tracking-[2px]">
-        <div className="flex justify-between text-[var(--theme-text-muted)]">
-          <span>{t("Produse")}</span>
-          <span data-testid="cart-subtotal" data-value={item_subtotal ?? 0}>
-            {convertToLocale({ amount: item_subtotal ?? 0, currency_code })}
-          </span>
-        </div>
+      <CartTotals totals={cart} />
 
-        <div className="flex justify-between text-[var(--theme-text-muted)]">
-          <span>{t("Livrare")}</span>
-          <span data-testid="cart-shipping" data-value={shipping_subtotal ?? 0}>
-            {shipping_subtotal
-              ? convertToLocale({ amount: shipping_subtotal, currency_code })
-              : "—"}
-          </span>
-        </div>
-
-        {!!discount_total && (
-          <div className="flex justify-between text-hunter-gold">
-            <span>{t("Reducere")}</span>
-            <span data-testid="cart-discount" data-value={discount_total}>
-              − {convertToLocale({ amount: discount_total, currency_code })}
-            </span>
-          </div>
-        )}
-      </div>
-
-      <div className="border-t border-[var(--theme-border)] pt-4 flex justify-between items-baseline">
-        <span className="font-sans text-[12px] small:text-[13px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
-          {t("Total")}
-        </span>
-        <span
-          className="font-display text-[22px] small:text-[26px] leading-none text-hunter-gold"
-          data-testid="cart-total"
-          data-value={total ?? 0}
-        >
-          {convertToLocale({ amount: total ?? 0, currency_code })}
-        </span>
-      </div>
       <div>
         <LocalizedClientLink
-          href={"/checkout?step=" + step}
+          href={"/finalizare-comanda?pas=" + step}
           data-testid="checkout-button"
         >
-          <button className="w-full py-3.5 font-sans text-[12px] small:text-[13px] uppercase tracking-[4px] bg-hunter-gold text-hunter-dark hover:opacity-90 transition-opacity">
+          <button className="w-full h-12 font-sans uppercase tracking-[3px] text-[11px] bg-hunter-gold text-hunter-dark hover:opacity-90 transition-opacity">
             {t("Finalizează comanda")}
           </button>
         </LocalizedClientLink>

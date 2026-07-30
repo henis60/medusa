@@ -29,7 +29,7 @@ const LanguageSelect = ({ locales, currentLocale }: LanguageSelectProps) => {
   }
 
   return (
-    <div className="flex items-center justify-between font-sans text-[11px] uppercase tracking-[0.2em] text-[var(--theme-text-muted)]">
+    <div className="flex items-center justify-between font-sans text-[13px] uppercase tracking-[0.2em] text-[var(--theme-text-muted)]">
       <span>{t("Limbă")}</span>
       <div className="flex items-center border border-[var(--theme-border)]">
         {locales.map((l, i) => (

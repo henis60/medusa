@@ -33,10 +33,14 @@ function FitToLockers({
   // does. Only the latter should block centering on the selected pin/origin.
   const hasSelectedCoords = selectedLocker?.lat != null && selectedLocker?.lng != null
 
-  // A manually selected locker always takes precedence.
+  // A manually selected locker always takes precedence. Always zoom in to a
+  // focused level — not just "at most MAX_FIT_ZOOM" — since the bounds-fit
+  // fallback below can leave the map zoomed way out (e.g. fit to every locker
+  // in a whole city), and capping against that stale zoom would leave a
+  // selected locker looking un-zoomed.
   useEffect(() => {
     if (hasSelectedCoords) {
-      map.setView([selectedLocker!.lat as number, selectedLocker!.lng as number], Math.min(map.getZoom(), MAX_FIT_ZOOM))
+      map.setView([selectedLocker!.lat as number, selectedLocker!.lng as number], ORIGIN_ZOOM)
     }
   }, [selectedLocker])
 

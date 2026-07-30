@@ -34,10 +34,10 @@ function handleReturn(req: MedusaRequest, res: MedusaResponse) {
   const ntpStatus = (req.query.status ?? body.status) as string | undefined;
 
   if (!sessionId) {
-    return res.redirect(`${STOREFRONT_URL}/cart`);
+    return res.redirect(`${STOREFRONT_URL}/cos`);
   }
 
-  const returnBase = `${STOREFRONT_URL}/checkout/netopia/return`;
+  const returnBase = `${STOREFRONT_URL}/finalizare-comanda/netopia/return`;
 
   // errorCode != 0 sau status explicit de eroare → card refuzat / anulat
   const failed =

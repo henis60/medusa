@@ -1,4 +1,6 @@
 {
+  "Finalizare comandă": "Checkout",
+  "Comandă": "Order",
   "Alege o adresă salvată": "Choose a saved address",
   "Adresa de livrare": "Shipping address",
   "Modifică": "Edit",
@@ -9,6 +11,7 @@
   "Facturare": "Billing",
   "Identică cu livrarea": "Same as shipping",
   "Prenume": "First name",
+  "Companie": "Company",
   "Nume de familie": "Last name",
   "Cod poștal": "Postal code",
   "Telefon": "Phone",
@@ -37,6 +40,7 @@
   "Detalii": "Details",
   "Un pas suplimentar va apărea": "An additional step will appear",
   "Confirmare comandă": "Order confirmation",
+  "Se pregătește plata…": "Preparing payment…",
   "Prin plasarea comenzii, confirmi că ai citit și ești de acord cu": "By placing your order, you confirm that you have read and agree to the",
   "Termenii și Condițiile": "Terms and Conditions",
   "Politica de Returnare": "Return Policy",

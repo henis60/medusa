@@ -14,10 +14,26 @@ import MapErrorBoundary from "./map-error-boundary"
 
 const LockerMap = dynamic(() => import("./locker-map"), {
   ssr: false,
-  loading: () => (
-    <div className="h-56 sm:h-72 md:h-80 w-full bg-[var(--theme-border)] animate-pulse" />
-  ),
+  loading: () => <MapSkeleton />,
 })
+
+// Matches the shipping-options loading skeleton (bordered rows with pulsing
+// bars) instead of a single solid pulsing block, for a consistent loading
+// language across the delivery step.
+function MapSkeleton() {
+  return (
+    <div className="h-56 sm:h-72 md:h-80 w-full border border-[var(--theme-border)] p-4 flex flex-col gap-3 animate-pulse">
+      <div className="flex items-center gap-3">
+        <div className="w-3 h-3 rounded-full bg-[var(--theme-border)]" />
+        <div className="h-3 w-32 rounded bg-[var(--theme-border)]" />
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="w-3 h-3 rounded-full bg-[var(--theme-border)]" />
+        <div className="h-3 w-24 rounded bg-[var(--theme-border)]" />
+      </div>
+    </div>
+  )
+}
 
 type LockerPickerProps = {
   lockers: EawbLocker[]
@@ -45,8 +61,13 @@ export default function LockerPicker({
   if (loadingLockers) {
     return (
       <div className="flex flex-col gap-3">
-        <div className="h-10 w-full bg-[var(--theme-border)] animate-pulse" />
-        <div className="h-56 sm:h-72 md:h-80 w-full bg-[var(--theme-border)] animate-pulse" />
+        <div className="flex items-center justify-between px-4 py-3 border border-[var(--theme-border)] animate-pulse">
+          <div className="flex items-center gap-3">
+            <div className="w-3 h-3 rounded-full bg-[var(--theme-border)]" />
+            <div className="h-3 w-40 rounded bg-[var(--theme-border)]" />
+          </div>
+        </div>
+        <MapSkeleton />
       </div>
     )
   }

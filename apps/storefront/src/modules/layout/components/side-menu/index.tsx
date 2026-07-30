@@ -171,7 +171,7 @@ function FeaturedCollectionSubmenu({
   return (
     <div className="flex flex-col h-full">
       <SubmenuHeader title={collection.title} onBack={onBack} />
-      <nav className="flex-1 px-8 pt-8 pb-6 overflow-y-auto">
+      <nav className="flex-1 px-8 py-4 overflow-y-auto">
         <ul className="flex flex-col">
           <li>
             <LocalizedClientLink
@@ -218,7 +218,7 @@ function ReadyToWearSubmenu({
   return (
     <div className="flex flex-col h-full">
       <SubmenuHeader title={t("Ready to Wear")} onBack={onBack} />
-      <nav className="flex-1 px-8 pt-8 pb-6 overflow-y-auto">
+      <nav className="flex-1 px-8 py-4 overflow-y-auto">
         <ul className="flex flex-col">
           <li>
             <LocalizedClientLink
@@ -280,7 +280,7 @@ function AccesoriiSubmenu({
   return (
     <div className="flex flex-col h-full">
       <SubmenuHeader title={t("Accesorii")} onBack={onBack} />
-      <nav className="flex-1 px-8 pt-8 pb-6 overflow-y-auto">
+      <nav className="flex-1 px-8 py-4 overflow-y-auto">
         <ul className="flex flex-col">
           {parent && (
             <li>
@@ -325,7 +325,7 @@ function WorldOfTheHunterSubmenu({
   return (
     <div className="flex flex-col h-full">
       <SubmenuHeader title={t("World of The Hunter")} onBack={onBack} />
-      <nav className="flex-1 px-8 pt-8 pb-6 overflow-y-auto">
+      <nav className="flex-1 px-8 py-4 overflow-y-auto">
         <p className="font-sans text-[11px] uppercase tracking-[2.5px] text-[var(--theme-text-muted)] mb-3">
           {t("Style Guides")}
         </p>
@@ -448,7 +448,7 @@ const SideMenu = ({
                                 </div>
 
                                 {/* Navigation */}
-                                <nav className="flex-1 px-8 pt-8 pb-6 flex flex-col">
+                                <nav className="flex-1 px-8 py-4 flex flex-col">
                                   {/* Primary group */}
                                   <ul className="flex flex-col">
                                     <li>
@@ -507,7 +507,10 @@ const SideMenu = ({
                                     {[
                                       { label: t("Profil"), href: "/profil" },
                                       { label: t("Contact"), href: "/contact" },
-                                      { label: t("Wishlist"), href: "/wishlist" },
+                                      {
+                                        label: t("Wishlist"),
+                                        href: "/wishlist",
+                                      },
                                       {
                                         label: t("Relații cu clienții"),
                                         href: "/relatii-clienti",
@@ -527,7 +530,7 @@ const SideMenu = ({
                                 </nav>
 
                                 {/* Footer */}
-                                <div className="shrink-0 px-8 pb-8 pt-6 flex flex-col gap-y-4 border-t border-[var(--theme-border)]">
+                                <div className="shrink-0 px-8 py-4 flex flex-col gap-y-4 border-t border-[var(--theme-border)]">
                                   {!!locales?.length && (
                                     <LanguageSelect
                                       locales={locales}
