@@ -471,6 +471,7 @@ const AIProductPage = () => {
   const [rows, setRows] = useState<Row[]>([]);
   const [processing, setProcessing] = useState(false);
   const [extraInstructions, setExtraInstructions] = useState("");
+  const [disableInventory, setDisableInventory] = useState(true);
   const csvRef = useRef<HTMLInputElement>(null);
   // Monotonic id source for new rows. Using `prev.length` (the old approach)
   // collides after a delete: e.g. rows indexed 0,1,2 → delete index 1 → length
@@ -761,6 +762,7 @@ const AIProductPage = () => {
           description: aiResult.description,
           handle: suffix ? `${aiResult.handle}-${suffix}` : aiResult.handle,
           status: "proposed",
+          ...(disableInventory ? { track_inventory: false } : {}),
           ...(material ? { material } : {}),
           thumbnail: imageUrls[0],
           images: imageUrls.map((url) => ({ url })),
@@ -1275,23 +1277,39 @@ const AIProductPage = () => {
       </details>
 
       {/* ── AI instructions ── */}
-      <Container className="px-5 py-4 flex flex-col gap-2">
-        <div className="flex items-baseline justify-between">
-          <Text size="small" weight="plus" className="text-ui-fg-base">
-            Instrucțiuni extra pentru AI
+      <Container className="px-5 py-4 flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-baseline justify-between">
+            <Text size="small" weight="plus" className="text-ui-fg-base">
+              Instrucțiuni extra pentru AI
+            </Text>
+            <Text size="small" className="text-ui-fg-muted">
+              opțional — aplicate la toate produsele din sesiune
+            </Text>
+          </div>
+          <textarea
+            value={extraInstructions}
+            onChange={(e) => setExtraInstructions(e.target.value)}
+            placeholder={`Ex: Produsele sunt pentru sezonul toamnă-iarnă 2025. Accentuează căldura și robustețea materialelor.`}
+            disabled={processing}
+            rows={2}
+            className="w-full rounded-lg border border-ui-border-base bg-ui-bg-field px-3 py-2 text-sm text-ui-fg-base placeholder:text-ui-fg-muted focus:border-ui-border-interactive focus:outline-none resize-none disabled:opacity-40 disabled:cursor-not-allowed"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <CheckCell
+            checked={disableInventory}
+            onChange={setDisableInventory}
+            disabled={processing}
+          />
+          <Text size="small" className="text-ui-fg-base">
+            Dezactivează Manage Inventory
           </Text>
           <Text size="small" className="text-ui-fg-muted">
-            opțional — aplicate la toate produsele din sesiune
+            — produsele vor fi create fără verificare de stoc
           </Text>
         </div>
-        <textarea
-          value={extraInstructions}
-          onChange={(e) => setExtraInstructions(e.target.value)}
-          placeholder={`Ex: Produsele sunt pentru sezonul toamnă-iarnă 2025. Accentuează căldura și robustețea materialelor.`}
-          disabled={processing}
-          rows={2}
-          className="w-full rounded-lg border border-ui-border-base bg-ui-bg-field px-3 py-2 text-sm text-ui-fg-base placeholder:text-ui-fg-muted focus:border-ui-border-interactive focus:outline-none resize-none disabled:opacity-40 disabled:cursor-not-allowed"
-        />
       </Container>
 
       {/* Table */}
