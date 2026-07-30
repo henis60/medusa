@@ -110,7 +110,11 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     : ""
 
   const colorsField = needColorDetection
-    ? `- "colors": culorile PRODUSULUI (ignoră ambalaj/suport/fundal). Butoniere → culoarea pietrei centrale (dacă există), altfel culoarea generală; cravate → culoarea de fundal a modelului; orice alt produs → culoarea dominantă. EXCLUSIV culori de bază simple: Negru, Alb, Gri, Maro, Bej, Crem, Roșu, Albastru, Navy, Verde, Galben, Portocaliu, Mov, Roz, Auriu, Argintiu — fără modificatori. O singură culoare dacă toate imaginile sunt același colorway; mai multe DOAR dacă există colorway-uri cu adevărat diferite. Fiecare culoare o singură dată, fără duplicate.
+    ? `- "colors": culorile PRODUSULUI (ignoră ambalaj/suport/fundal). Butoniere → culoarea pietrei centrale (dacă există), altfel culoarea generală; cravate → culoarea de fundal a modelului; orice alt produs → culoarea dominantă. EXCLUSIV culori de bază simple: Negru, Alb, Gri, Maro, Bej, Crem, Roșu, Albastru, Navy, Verde, Galben, Portocaliu, Mov, Roz, Auriu, Argintiu — fără modificatori. Fiecare culoare o singură dată, fără duplicate. ${
+        n > 1
+          ? "O singură culoare dacă toate imaginile sunt același colorway; mai multe DOAR dacă există colorway-uri cu adevărat diferite ÎN IMAGINILE PRIMITE."
+          : "Ai o SINGURĂ imagine — returnează EXACT o singură culoare (cea vizibilă în această imagine). NU presupune și NU adăuga alte culori în care produsul ar putea exista, chiar dacă știi din alte surse că modelul vine și în alte variante — nu ai dovadă vizuală pentru ele aici."
+      }
 - "colors_hex": array paralel cu "colors" — codul hex dominant din imagine per culoare
 - "colors_en": array paralel cu "colors" — traducerea în engleză a fiecărei culori (ex: "Negru" → "Black", "Maro" → "Brown", "Bej" → "Beige")`
     : `- "colors": ${JSON.stringify(colors)} (furnizate — returnează exact)
