@@ -61,7 +61,13 @@ export const listEawbShippingPrices = async (
     .then(({ prices }) => prices ?? {})
 }
 
-export type EawbLocker = { id: number; name: string; address: string }
+export type EawbLocker = {
+  id: number
+  name: string
+  address: string
+  lat: number | null
+  lng: number | null
+}
 
 // Lists lockers available for a given eAWB shipping option near the cart's
 // delivery locality (used by the checkout locker picker).

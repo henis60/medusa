@@ -8,7 +8,7 @@ import { EuroparcelClient } from "../../../../modules/eawb/lib/client"
  * locker picker for "...to locker" services.
  *
  * GET /store/eawb/lockers?option_id=...&cart_id=...
- * → { lockers: [{ id, name, address }] }
+ * → { lockers: [{ id, name, address, lat, lng }] }
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const optionId = req.query.option_id as string | undefined
@@ -48,7 +48,13 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
     const lockers = (locations ?? [])
       .filter((l) => l.is_active)
-      .map((l) => ({ id: l.id, name: l.name, address: l.address }))
+      .map((l) => ({
+        id: l.id,
+        name: l.name,
+        address: l.address,
+        lat: l.coordinates?.lat ?? null,
+        lng: l.coordinates?.long ?? null,
+      }))
 
     return res.json({ lockers })
   } catch (err) {

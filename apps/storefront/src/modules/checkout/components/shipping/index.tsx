@@ -1,13 +1,5 @@
 "use client"
-import {
-  Combobox,
-  ComboboxButton,
-  ComboboxInput,
-  ComboboxOption,
-  ComboboxOptions,
-  Radio,
-  RadioGroup,
-} from "@headlessui/react"
+import { Radio, RadioGroup } from "@headlessui/react"
 import { setShippingMethod } from "@lib/data/cart"
 import {
   EawbLocker,
@@ -19,10 +11,10 @@ import {
   lineItemsToTrackItems,
   trackAddShippingInfo,
 } from "@lib/util/analytics"
-import { ChevronUpDown, Loader } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import Divider from "@modules/common/components/divider"
+import LockerPicker from "./locker-map/locker-picker"
 import { useSearchParams } from "next/navigation"
 import { usePathname, useRouter } from "@i18n/navigation"
 import { useCallback, useEffect, useState } from "react"
@@ -236,6 +228,8 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
         id: Number(d.fixed_location_id),
         name: d.locker_name ?? t("Locker selectat"),
         address: "",
+        lat: null,
+        lng: null,
       })
     }
     setLoadingLockers(true)
@@ -380,65 +374,15 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
                 <span className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
                   {t("Alege lockerul")} <span className="text-rose-500">*</span>
                 </span>
-                {loadingLockers ? (
-                  <span className="flex items-center gap-2 text-[var(--theme-text-muted)] text-[13px]">
-                    <Loader /> {t("Se încarcă lockerele…")}
-                  </span>
-                ) : lockers.length === 0 ? (
-                  <span className="font-serif italic text-[13px] text-[var(--theme-text-muted)]">
-                    {t("Niciun locker disponibil pentru acest curier în localitatea ta Alege livrare la ușă")}
-                  </span>
-                ) : (
-                  <Combobox
-                    value={selectedLocker}
-                    onChange={handleSelectLocker}
-                    immediate
-                    onClose={() => setLockerQuery("")}
-                  >
-                    <div className="relative w-full">
-                      <ComboboxInput
-                        className="appearance-none w-full h-10 px-3 pr-8 bg-transparent border border-[var(--theme-border)] text-[var(--theme-text)] font-sans text-[12px] focus:outline-none focus:border-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)] transition-colors"
-                        displayValue={(l: EawbLocker | null) => l?.name ?? ""}
-                        onChange={(e) => setLockerQuery(e.target.value)}
-                        placeholder={t("Caută locker după nume sau adresă")}
-                        autoComplete="off"
-                        data-testid="locker-input"
-                      />
-                      <ComboboxButton className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--theme-text-muted)]">
-                        <ChevronUpDown />
-                      </ComboboxButton>
-                      <ComboboxOptions
-                        anchor="bottom start"
-                        className="z-50 max-h-40 overflow-auto border border-[var(--theme-border)] bg-[var(--theme-bg,#0D0D0D)] shadow-lg focus:outline-none [--anchor-gap:4px]"
-                        style={{ width: "var(--input-width)" }}
-                      >
-                        {filteredLockers.length === 0 ? (
-                          <div className="px-3 py-1.5 font-sans text-[12px] text-[var(--theme-text-muted)]">
-                            {t("Niciun rezultat")}
-                          </div>
-                        ) : (
-                          filteredLockers.map((l) => (
-                            <ComboboxOption
-                              key={l.id}
-                              value={l}
-                              className="cursor-pointer px-3 py-1.5 font-sans text-[12px] leading-tight text-[var(--theme-text)] data-[focus]:bg-hunter-gold/10 data-[focus]:text-hunter-gold"
-                            >
-                              <span className="block truncate">{l.name}</span>
-                              <span className="block text-[11px] text-[var(--theme-text-muted)] truncate">
-                                {l.address}
-                              </span>
-                            </ComboboxOption>
-                          ))
-                        )}
-                      </ComboboxOptions>
-                    </div>
-                  </Combobox>
-                )}
-                {selectedLocker && (
-                  <span className="font-serif italic text-[12px] text-hunter-gold">
-                    {t("Selectat: {name} — {address}", { name: selectedLocker.name, address: selectedLocker.address })}
-                  </span>
-                )}
+                <LockerPicker
+                  lockers={lockers}
+                  filteredLockers={filteredLockers}
+                  loadingLockers={loadingLockers}
+                  selectedLocker={selectedLocker}
+                  onSelectLocker={handleSelectLocker}
+                  lockerQuery={lockerQuery}
+                  onQueryChange={setLockerQuery}
+                />
               </div>
             )}
           </div>

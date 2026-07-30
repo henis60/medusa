@@ -1,0 +1,124 @@
+"use client"
+import {
+  Combobox,
+  ComboboxButton,
+  ComboboxInput,
+  ComboboxOption,
+  ComboboxOptions,
+} from "@headlessui/react"
+import { ChevronUpDown, Loader } from "@medusajs/icons"
+import { EawbLocker } from "@lib/data/fulfillment"
+import { useTranslations } from "next-intl"
+import dynamic from "next/dynamic"
+import MapErrorBoundary from "./map-error-boundary"
+
+const LockerMap = dynamic(() => import("./locker-map"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-56 sm:h-72 md:h-80 w-full bg-[var(--theme-border)] animate-pulse" />
+  ),
+})
+
+type LockerPickerProps = {
+  lockers: EawbLocker[]
+  filteredLockers: EawbLocker[]
+  loadingLockers: boolean
+  selectedLocker: EawbLocker | null
+  onSelectLocker: (locker: EawbLocker | null) => void
+  lockerQuery: string
+  onQueryChange: (query: string) => void
+}
+
+export default function LockerPicker({
+  lockers,
+  filteredLockers,
+  loadingLockers,
+  selectedLocker,
+  onSelectLocker,
+  lockerQuery,
+  onQueryChange,
+}: LockerPickerProps) {
+  const t = useTranslations("checkout")
+
+  if (loadingLockers) {
+    return (
+      <span className="flex items-center gap-2 text-[var(--theme-text-muted)] text-[13px]">
+        <Loader /> {t("Se încarcă lockerele…")}
+      </span>
+    )
+  }
+
+  if (lockers.length === 0) {
+    return (
+      <span className="font-serif italic text-[13px] text-[var(--theme-text-muted)]">
+        {t("Niciun locker disponibil pentru acest curier în localitatea ta Alege livrare la ușă")}
+      </span>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <Combobox
+        value={selectedLocker}
+        onChange={onSelectLocker}
+        immediate
+        onClose={() => onQueryChange("")}
+      >
+        <div className="relative w-full">
+          <ComboboxInput
+            className="appearance-none w-full h-10 px-3 pr-8 bg-transparent border border-[var(--theme-border)] text-[var(--theme-text)] font-sans text-[12px] focus:outline-none focus:border-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)] transition-colors"
+            displayValue={(l: EawbLocker | null) => l?.name ?? ""}
+            onChange={(e) => onQueryChange(e.target.value)}
+            placeholder={t("Caută locker după nume sau adresă")}
+            autoComplete="off"
+            data-testid="locker-input"
+          />
+          <ComboboxButton className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--theme-text-muted)]">
+            <ChevronUpDown />
+          </ComboboxButton>
+          <ComboboxOptions
+            anchor="bottom start"
+            className="z-50 max-h-40 overflow-auto border border-[var(--theme-border)] bg-[var(--theme-bg,#0D0D0D)] shadow-lg focus:outline-none [--anchor-gap:4px]"
+            style={{ width: "var(--input-width)" }}
+          >
+            {filteredLockers.length === 0 ? (
+              <div className="px-3 py-1.5 font-sans text-[12px] text-[var(--theme-text-muted)]">
+                {t("Niciun rezultat")}
+              </div>
+            ) : (
+              filteredLockers.map((l) => (
+                <ComboboxOption
+                  key={l.id}
+                  value={l}
+                  className="cursor-pointer px-3 py-1.5 font-sans text-[12px] leading-tight text-[var(--theme-text)] data-[focus]:bg-hunter-gold/10 data-[focus]:text-hunter-gold"
+                >
+                  <span className="block truncate">{l.name}</span>
+                  <span className="block text-[11px] text-[var(--theme-text-muted)] truncate">
+                    {l.address}
+                  </span>
+                </ComboboxOption>
+              ))
+            )}
+          </ComboboxOptions>
+        </div>
+      </Combobox>
+
+      <MapErrorBoundary>
+        <LockerMap
+          lockers={filteredLockers}
+          selectedLocker={selectedLocker}
+          onSelect={onSelectLocker}
+        />
+      </MapErrorBoundary>
+
+      {selectedLocker && (
+        <span className="font-serif italic text-[12px] text-hunter-gold">
+          {t("Selectat: {name} — {address}", {
+            name: selectedLocker.name,
+            address: selectedLocker.address,
+          })}
+        </span>
+      )}
+    </div>
+  )
+}
