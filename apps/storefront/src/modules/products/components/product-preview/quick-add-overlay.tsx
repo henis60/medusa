@@ -4,7 +4,7 @@ import { addToCart } from "@lib/data/cart"
 import { emitCartUpdated } from "@lib/util/cart-events"
 import { HttpTypes } from "@medusajs/types"
 import { useState, useMemo, useEffect, useRef } from "react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { createPortal } from "react-dom"
 import { COLOR_OPTION_NAMES as COLOR_TITLES } from "@lib/util/product"
 
@@ -142,6 +142,7 @@ export default function QuickAddOverlay({
   desktopOnly,
 }: Props) {
   const t = useTranslations("products")
+  const locale = useLocale()
   const countryCode = "ro"
   const [selected, setSelected] = useState<Record<string, string>>({})
   const [adding, setAdding] = useState(false)
@@ -334,6 +335,7 @@ export default function QuickAddOverlay({
       variantId: effectiveVariant.id,
       quantity: 1,
       countryCode,
+      locale,
     })
     emitCartUpdated(freshCart, { action: "add" })
     setAdding(false)

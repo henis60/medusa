@@ -24,6 +24,7 @@ function FavoriteRow({
   onRemove: () => void
 }) {
   const t = useTranslations("wishlist")
+  const locale = useLocale()
   const [adding, setAdding] = useState(false)
   const [added, setAdded] = useState(false)
 
@@ -73,6 +74,7 @@ function FavoriteRow({
       variantId: defaultVariant.id,
       quantity: 1,
       countryCode,
+      locale,
     })
     emitCartUpdated(freshCart, { action: "add" })
     setAdding(false)

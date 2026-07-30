@@ -3,7 +3,7 @@
 import { addToCart } from "@lib/data/cart"
 import { emitCartUpdated } from "@lib/util/cart-events"
 import { useRouter } from "@i18n/navigation"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useState } from "react"
 
 type Props = {
@@ -14,6 +14,7 @@ type Props = {
 
 export default function QuickAddButton({ variantId, productHandle, hasMultipleOptions }: Props) {
   const t = useTranslations("products")
+  const locale = useLocale()
   const [adding, setAdding] = useState(false)
   const countryCode = "ro"
   const router = useRouter()
@@ -25,7 +26,7 @@ export default function QuickAddButton({ variantId, productHandle, hasMultipleOp
     if (!variantId) return
 
     setAdding(true)
-    const freshCart = await addToCart({ variantId, quantity: 1, countryCode })
+    const freshCart = await addToCart({ variantId, quantity: 1, countryCode, locale })
     emitCartUpdated(freshCart, { action: "add" })
     setAdding(false)
   }

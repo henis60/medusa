@@ -4,7 +4,7 @@ import { addToCart } from "@lib/data/cart"
 import { emitCartUpdated } from "@lib/util/cart-events"
 import { HttpTypes } from "@medusajs/types"
 import { useEffect, useState, useMemo } from "react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { COLOR_OPTION_NAMES as COLOR_TITLES } from "@lib/util/product"
 
 const SIZE_ORDER = [
@@ -86,6 +86,7 @@ export default function DesktopQuickAdd({
   onVariantSelect,
 }: Props) {
   const t = useTranslations("products")
+  const locale = useLocale()
   const countryCode = "ro"
   const [selected, setSelected] = useState<Record<string, string>>({})
   const [adding, setAdding] = useState(false)
@@ -223,6 +224,7 @@ export default function DesktopQuickAdd({
       variantId: effectiveVariant.id,
       quantity: 1,
       countryCode,
+      locale,
     })
     emitCartUpdated(freshCart, { action: "add" })
     setAdding(false)
