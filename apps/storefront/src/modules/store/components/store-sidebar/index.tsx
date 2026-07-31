@@ -24,6 +24,14 @@ type Props = {
   buildHref: (nextSlug: string[]) => string
 }
 
+// Medusa's admin metadata editor stores values as strings even for
+// boolean-looking fields, so a category's always_open metadata can arrive as
+// either `true` or `"true"` depending on how it was set.
+const isAlwaysOpen = (category: HttpTypes.StoreProductCategory) => {
+  const value = category.metadata?.always_open
+  return value === true || value === "true"
+}
+
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2.5 mb-4">
@@ -112,7 +120,8 @@ export default function StoreSidebar({
               {topCategories.map((c) => {
                 const subs = subcategoriesOf(c.id)
                 const isActiveParent = activeParentId === c.id
-                const showSubs = subs.length > 0 && isActiveParent
+                const showSubs =
+                  subs.length > 0 && (isActiveParent || isAlwaysOpen(c))
                 return (
                   <div key={c.id}>
                     <NavItem
