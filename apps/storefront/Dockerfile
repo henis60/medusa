@@ -8,15 +8,12 @@
 FROM node:20-slim AS builder
 WORKDIR /app
 
-# The storefront is a leaf workspace (no internal @dtc/* deps), so we install it
-# standalone instead of the whole monorepo — smaller image, faster builds.
-# Resolve deps fresh ON LINUX so platform-specific binaries (Next.js SWC) are
-# installed. --legacy-peer-deps keeps the from-scratch resolve fast under the
-# React 19 peer ranges. --include=dev because the build needs Tailwind/TS/etc.
-COPY apps/storefront/package.json ./package.json
-COPY .npmrc ./.npmrc
-RUN npm install --include=dev --legacy-peer-deps --no-audit --no-fund \
-    --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000
+# The storefront is a leaf workspace (no internal @dtc/* deps), but the repo's
+# root lockfile is the canonical source of truth. Install the storefront
+# workspace from that lockfile so the image build stays deterministic.
+COPY package.json package-lock.json .npmrc ./
+COPY apps/storefront/package.json ./apps/storefront/package.json
+RUN npm ci --workspace apps/storefront --include-workspace-root=false --legacy-peer-deps --no-audit --no-fund
 
 # NEXT_PUBLIC_* values are inlined into the client bundle at BUILD time, so they
 # must be present now (not only at runtime). On Railway declare these ARGs so the

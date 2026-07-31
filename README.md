@@ -266,7 +266,7 @@ To enable an optional integration, add its env vars to `apps/backend/.env` (Neto
 
 ## Roadmap
 
-- **CI pipeline** — no automated lint/test/build gate on PRs yet; add GitHub Actions running `turbo lint test build` before merge.
+- **CI pipeline** — GitHub Actions now runs lint, test, and build on pull requests and pushes to main/master, providing a basic merge gate before deployment.
 - **Automated tests** — `turbo test` is wired at the root but the backend has no meaningful test coverage on the custom modules/workflows (Netopia webhook handling and Oblio invoice generation are the highest-value first targets given their side effects).
 - **Explicit feature flags** — replace the implicit "provider loads if its env vars exist" pattern with a documented, single source of truth for which integrations are active per environment.
 - **Docker Compose for local dev** — currently only a production Dockerfile exists; no one-command local Postgres/Redis stack.
