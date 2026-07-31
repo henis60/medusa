@@ -4,9 +4,13 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# 1) Install workspace deps from the committed root lockfile.
-#    Copy only the manifests first so Docker caches this layer across
-#    deploys whenever dependencies haven't changed.
+# 1) Install backend's own deps only — the storefront's package.json used to
+#    be copied in too, resolving the whole monorepo (backend + storefront)
+#    fresh on every backend build. That dragged ~1000+ irrelevant storefront
+#    packages into the backend's registry resolution for no reason (backend
+#    doesn't need them), adding unnecessary exposure to registry rate limits.
+#    Copy only the manifest first so Docker caches this layer across deploys
+#    whenever dependencies haven't changed.
 #    Resolve deps fresh ON LINUX (drop the lockfile first) so platform-specific
 #    native packages (e.g. @swc/core-linux-x64-gnu) are installed. A
 #    Windows-generated lockfile omits those entries, and neither `npm ci` nor
@@ -14,7 +18,6 @@ WORKDIR /app
 #    keeps the from-scratch resolve fast (no peer backtracking).
 COPY package.json package-lock.json .npmrc ./
 COPY apps/backend/package.json ./apps/backend/package.json
-COPY apps/storefront/package.json ./apps/storefront/package.json
 RUN rm -f package-lock.json && npm install --legacy-peer-deps --no-audit --no-fund
 
 # 2) Build the backend (compiles the server + bundles the admin dashboard).
