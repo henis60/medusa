@@ -25,7 +25,7 @@ const ProductInfo = ({ product, action }: ProductInfoProps) => {
             product.categories?.map((cat) => (
               <LocalizedClientLink
                 key={cat.id}
-                href={`/categories/${cat.handle}`}
+                href={`/ready-to-wear/${cat.handle}`}
                 className="font-sans text-[9px] uppercase tracking-[5px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
               >
                 {cat.name}

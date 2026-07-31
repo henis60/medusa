@@ -93,6 +93,43 @@ export default function Space() {
     return () => window.removeEventListener("resize", updateActive)
   }, [updateActive])
 
+  // On mobile, only one zone is visible at a time and nothing else in the
+  // section hints there's more to the side — it can read as a single static
+  // panel rather than a carousel. Nudge it once, the first time the section
+  // scrolls into view: peek 48px to the right, then settle back to 0.
+  useEffect(() => {
+    const el = zonesRef.current
+    if (!el || window.innerWidth > 768) return
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
+    if (prefersReducedMotion) return
+
+    let peekTimer: ReturnType<typeof setTimeout> | undefined
+    let settleTimer: ReturnType<typeof setTimeout> | undefined
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+        observer.disconnect()
+        peekTimer = setTimeout(() => {
+          el.scrollTo({ left: 48, behavior: "smooth" })
+          settleTimer = setTimeout(() => {
+            el.scrollTo({ left: 0, behavior: "smooth" })
+          }, 550)
+        }, 400)
+      },
+      { threshold: 0.4 }
+    )
+    observer.observe(el)
+    return () => {
+      observer.disconnect()
+      clearTimeout(peekTimer)
+      clearTimeout(settleTimer)
+    }
+  }, [])
+
   function handlePointerDown(e: React.PointerEvent) {
     tapRef.current = { x: e.clientX, y: e.clientY }
   }

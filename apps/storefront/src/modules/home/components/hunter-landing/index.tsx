@@ -151,6 +151,25 @@ const HunterLanding = ({ shopSlot }: { shopSlot?: React.ReactNode }) => {
                     }
                   )
                 )
+                // The kicker's leading gold line (.kicker-bar) has its own
+                // grow-in animation in CSS, gated behind a `.kicker.visible`
+                // class — but nothing here ever adds that class, so the CSS
+                // animation never fires and the bar sits at width:0
+                // permanently. Animate it directly with framer instead,
+                // same as everything else in this effect.
+                if (isKicker) {
+                  const bar = htmlEl.querySelector<HTMLElement>(".kicker-bar")
+                  if (bar) {
+                    bar.style.width = "0px"
+                    controls.push(
+                      animate(
+                        bar,
+                        { width: ["0px", "32px"] },
+                        { duration: 0.6, ease: [0.23, 1, 0.32, 1], delay: 0.1 }
+                      )
+                    )
+                  }
+                }
               }
               unsub()
             },
