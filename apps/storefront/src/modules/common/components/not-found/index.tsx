@@ -1,5 +1,5 @@
+import { Link } from "@i18n/navigation"
 import { getTranslations } from "next-intl/server"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 type NotFoundContentProps = {
   title?: string
@@ -12,7 +12,11 @@ const NotFoundContent = async ({
 }: NotFoundContentProps) => {
   const t = await getTranslations("common")
   const resolvedTitle = title ?? t("Pagină negăsită")
-  const resolvedDescription = description ?? t("Se pare că te-ai rătăcit Pagina căutată nu mai există sau și-a schimbat locul")
+  const resolvedDescription =
+    description ??
+    t(
+      "Se pare că te-ai rătăcit Pagina căutată nu mai există sau și-a schimbat locul",
+    )
   return (
     <div
       className="flex flex-col items-center justify-center text-center px-6 gap-4"
@@ -30,12 +34,12 @@ const NotFoundContent = async ({
       >
         {resolvedDescription}
       </p>
-      <LocalizedClientLink
+      <Link
         href="/"
         className="mt-2 px-6 py-3 font-sans text-[10px] uppercase tracking-[4px] border border-hunter-gold text-hunter-gold hover:bg-hunter-gold hover:text-hunter-dark transition-colors"
       >
         {t("Înapoi la pagina principală")}
-      </LocalizedClientLink>
+      </Link>
     </div>
   )
 }
