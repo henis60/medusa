@@ -4,21 +4,25 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# 1) Install backend's own deps only — the storefront's package.json used to
-#    be copied in too, resolving the whole monorepo (backend + storefront)
-#    fresh on every backend build. That dragged ~1000+ irrelevant storefront
-#    packages into the backend's registry resolution for no reason (backend
-#    doesn't need them), adding unnecessary exposure to registry rate limits.
+# 1) Install backend's own deps only from the committed root lockfile.
+#    The storefront's package.json used to be copied in too, resolving the
+#    whole monorepo (backend + storefront) together — that dragged ~1000+
+#    irrelevant storefront packages into the backend's registry resolution
+#    for no reason, adding unnecessary exposure to registry rate limits.
 #    Copy only the manifest first so Docker caches this layer across deploys
 #    whenever dependencies haven't changed.
-#    Resolve deps fresh ON LINUX (drop the lockfile first) so platform-specific
-#    native packages (e.g. @swc/core-linux-x64-gnu) are installed. A
-#    Windows-generated lockfile omits those entries, and neither `npm ci` nor
-#    `npm install` heals them when the lockfile is present. --legacy-peer-deps
-#    keeps the from-scratch resolve fast (no peer backtracking).
+#    The lockfile is regenerated on Linux (via WSL) so it includes every
+#    platform's optional native packages (verified: @esbuild/linux-x64,
+#    @swc/core-linux-x64-gnu, @img/sharp-linux-x64, @rollup/rollup-linux-x64-gnu
+#    are all present) — a prior lockfile generated on Windows only had
+#    Windows-platform variants, which made `npm ci` fall back to live
+#    registry resolution for the missing platform packages mid-install and
+#    hang for 20+ minutes. With a Linux-inclusive lockfile, `npm ci` is fast
+#    and deterministic (~48s locally) since it never needs to resolve
+#    anything live from the registry.
 COPY package.json package-lock.json .npmrc ./
 COPY apps/backend/package.json ./apps/backend/package.json
-RUN rm -f package-lock.json && npm install --legacy-peer-deps --no-audit --no-fund
+RUN npm ci --workspace apps/backend --include-workspace-root=false --legacy-peer-deps --no-audit --no-fund
 
 # 2) Build the backend (compiles the server + bundles the admin dashboard).
 #    NODE_OPTIONS heap headroom is scoped to THIS build step only — at runtime a
