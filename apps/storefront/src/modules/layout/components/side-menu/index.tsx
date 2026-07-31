@@ -26,6 +26,27 @@ type ScrollGuardProps = {
 }
 
 const SideMenuScrollGuard = ({ open }: ScrollGuardProps) => {
+  // Wheel/touchmove preventDefault alone is unreliable on mobile Safari
+  // (rubber-band overscroll can still chain to the body). Locking body
+  // overflow directly is what actually stops background scroll on mobile.
+  useEffect(() => {
+    if (!open) return
+
+    const { overflow, position, width, top } = document.body.style
+    const scrollY = window.scrollY
+    document.body.style.overflow = "hidden"
+    document.body.style.position = "fixed"
+    document.body.style.width = "100%"
+    document.body.style.top = `-${scrollY}px`
+    return () => {
+      document.body.style.overflow = overflow
+      document.body.style.position = position
+      document.body.style.width = width
+      document.body.style.top = top
+      window.scrollTo(0, scrollY)
+    }
+  }, [open])
+
   useEffect(() => {
     if (!open) return
 
