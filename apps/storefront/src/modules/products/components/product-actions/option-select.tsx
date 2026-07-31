@@ -77,7 +77,7 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
   return (
     <div className="flex flex-col gap-y-3">
       <span className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
-        {t("Selectează {title}", { title })}
+        {isColorOption ? t("Selectează culoarea") : t("Selectează mărimea")}
       </span>
       <div className="flex flex-wrap gap-2" data-testid={dataTestId}>
         {filteredOptions.map((v) => {
