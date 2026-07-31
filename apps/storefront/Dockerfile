@@ -6,17 +6,13 @@
 
 # ---- Builder: install deps and build the standalone output ----
 FROM node:20-slim AS builder
-RUN npm install -g npm@10.9.2
 WORKDIR /app
 
-# Resolve deps fresh ON LINUX so platform-specific native packages (e.g.
-# @next/swc-linux-x64-gnu) are installed. The root package-lock.json is
-# generated on Windows and only pins Windows-platform optional deps — `npm ci`
-# against it can't heal that, forcing npm to fall back to live registry
-# resolution for the missing platform packages mid-install. Installing
-# standalone (storefront's package.json copied in AS the root one, no
-# workspace, no lockfile) also avoids pulling the backend's deps into this
-# image, which a root-lockfile-based install would otherwise resolve too.
+# The storefront is a leaf workspace (no internal @dtc/* deps), so we install it
+# standalone instead of the whole monorepo — smaller image, faster builds.
+# Resolve deps fresh ON LINUX so platform-specific binaries (Next.js SWC) are
+# installed. --legacy-peer-deps keeps the from-scratch resolve fast under the
+# React 19 peer ranges. --include=dev because the build needs Tailwind/TS/etc.
 COPY apps/storefront/package.json ./package.json
 COPY .npmrc ./.npmrc
 RUN npm install --include=dev --legacy-peer-deps --no-audit --no-fund

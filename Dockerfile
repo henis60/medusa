@@ -1,27 +1,20 @@
 # syntax=docker/dockerfile:1
 # Build context = repo root (so we can use the committed root lockfile).
 FROM node:20-slim
-RUN npm install -g npm@10.9.2
 
 WORKDIR /app
 
-# 1) Install workspace deps.
+# 1) Install workspace deps from the committed root lockfile.
 #    Copy only the manifests first so Docker caches this layer across
 #    deploys whenever dependencies haven't changed.
 #    Resolve deps fresh ON LINUX (drop the lockfile first) so platform-specific
-#    native packages (e.g. @next/swc-linux-x64-gnu, @esbuild/linux-x64) are
-#    installed. The committed lockfile is generated on Windows and only pins
-#    Windows-platform optional deps (verified: package-lock.json has
-#    @esbuild/win32-x64 but no Linux esbuild/rollup variants at all) — `npm ci`
-#    against it can't heal that, and forces npm to fall back to live registry
-#    resolution for the missing platform packages mid-install, which is what
-#    made this step hang for 20+ minutes on Railway instead of the ~4 minutes
-#    it takes locally on Windows (where the lockfile already matches).
+#    native packages (e.g. @swc/core-linux-x64-gnu) are installed. A
+#    Windows-generated lockfile omits those entries, and neither `npm ci` nor
+#    `npm install` heals them when the lockfile is present. --legacy-peer-deps
+#    keeps the from-scratch resolve fast (no peer backtracking).
 COPY package.json package-lock.json .npmrc ./
 COPY apps/backend/package.json ./apps/backend/package.json
-ENV NPM_CONFIG_FETCH_RETRIES=10
-ENV NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=30000
-ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=600000
+COPY apps/storefront/package.json ./apps/storefront/package.json
 RUN rm -f package-lock.json && npm install --legacy-peer-deps --no-audit --no-fund
 
 # 2) Build the backend (compiles the server + bundles the admin dashboard).
