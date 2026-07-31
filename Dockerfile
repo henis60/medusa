@@ -13,7 +13,11 @@ WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 COPY apps/backend/package.json ./apps/backend/package.json
 COPY apps/storefront/package.json ./apps/storefront/package.json
-RUN npm ci --workspace apps/backend --include-workspace-root=false --legacy-peer-deps --no-audit --no-fund
+ENV NPM_CONFIG_FETCH_RETRIES=10
+ENV NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=30000
+ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=600000
+ENV NPM_CONFIG_MAXSOCKETS=1
+RUN npm ci --workspace apps/backend --include-workspace-root=false --legacy-peer-deps --no-audit --no-fund --prefer-offline
 
 # 2) Build the backend (compiles the server + bundles the admin dashboard).
 #    NODE_OPTIONS heap headroom is scoped to THIS build step only — at runtime a
