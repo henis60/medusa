@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import Image from "next/image"
 
 function Section({
   label,
@@ -113,6 +114,22 @@ const CustomerServiceTemplate = async () => {
             {t("prin curier, în 3–5 zile lucrătoare, în toată România Vei primi un cod de urmărire (tracking) pentru a-ți monitoriza coletul"
             )}
           </p>
+          <div className="pt-2">
+            <Image
+              src="/payments/netopia-badge-light.png"
+              alt="Plăți securizate cu Netopia Payments"
+              width={1852}
+              height={349}
+              className="h-7 w-auto dark:hidden"
+            />
+            <Image
+              src="/payments/netopia-badge-dark.png"
+              alt="Plăți securizate cu Netopia Payments"
+              width={1852}
+              height={349}
+              className="hidden h-7 w-auto dark:block"
+            />
+          </div>
         </Section>
 
         <Section title={t("Retur, schimb și rambursare")}>

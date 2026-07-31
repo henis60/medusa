@@ -1,6 +1,7 @@
 "use client"
 
 import { useTranslations } from "next-intl"
+import Image from "next/image"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
@@ -23,6 +24,24 @@ export default function HomepageFooter() {
         <span className="hidden medium:inline font-serif italic text-xs text-hunter-gold/70">
           {t("Return of the Elegant Gentleman")}
         </span>
+
+        {/* Legally required (OUG/ANPC ADR regulation): SAL dispute-resolution
+            pictogram on the homepage, linking externally to the ANPC SAL
+            platform. */}
+        <a
+          href="https://reclamatiisal.anpc.ro"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Soluționarea Alternativă a Litigiilor - ANPC"
+        >
+          <Image
+            src="/payments/anpc-sal-pictograma.png"
+            alt="ANPC - Soluționarea Alternativă a Litigiilor"
+            width={201}
+            height={50}
+            className="h-[38px] w-auto"
+          />
+        </a>
 
         <span className="font-sans text-[9px] uppercase tracking-[3px] text-[rgba(232,213,163,0.4)]">
           © {new Date().getFullYear()} {t("Toate drepturile rezervate")}
