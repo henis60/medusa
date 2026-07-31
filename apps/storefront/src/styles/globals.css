@@ -1637,10 +1637,11 @@ body.hunter-landing-active::before {
   cursor: none;
   transition: flex 0.65s cubic-bezier(0.23, 1, 0.32, 1);
 }
-.zones:has(.zone:hover) .zone:not(:hover) {
+.zones:has(.zone:hover, .zone.is-active) .zone:not(:hover):not(.is-active) {
   flex: 0.28;
 }
-.zone:hover {
+.zone:hover,
+.zone.is-active {
   flex: 3.2;
 }
 
@@ -1655,7 +1656,8 @@ body.hunter-landing-active::before {
   transform: translateZ(0);
   transition: transform 0.42s cubic-bezier(0.23, 1, 0.32, 1);
 }
-.zone:hover .zone-bg {
+.zone:hover .zone-bg,
+.zone.is-active .zone-bg {
   transform: scale(1.02);
 }
 
@@ -1682,7 +1684,8 @@ body.hunter-landing-active::before {
   background: rgba(6, 10, 8, 0.45);
   transition: background 0.5s;
 }
-.zone:hover .zone-tex {
+.zone:hover .zone-tex,
+.zone.is-active .zone-tex {
   background: rgba(6, 10, 8, 0.25);
 }
 
@@ -1700,7 +1703,8 @@ body.hunter-landing-active::before {
   transform-origin: left;
   transition: transform 0.55s 0.1s cubic-bezier(0.23, 1, 0.32, 1);
 }
-.zone:hover::before {
+.zone:hover::before,
+.zone.is-active::before {
   transform: scaleX(1);
 }
 
@@ -1716,7 +1720,8 @@ body.hunter-landing-active::before {
   z-index: 2;
   transition: opacity 0.3s;
 }
-.zone:hover .zone-collapsed {
+.zone:hover .zone-collapsed,
+.zone.is-active .zone-collapsed {
   opacity: 0;
   pointer-events: none;
 }
@@ -1755,7 +1760,8 @@ body.hunter-landing-active::before {
     transform 0.4s 0.2s cubic-bezier(0.23, 1, 0.32, 1);
   pointer-events: none;
 }
-.zone:hover .zone-expanded {
+.zone:hover .zone-expanded,
+.zone.is-active .zone-expanded {
   opacity: 1;
   transform: translateY(0);
   pointer-events: all;
@@ -1776,7 +1782,8 @@ body.hunter-landing-active::before {
   pointer-events: none;
   transition: transform 0.65s cubic-bezier(0.23, 1, 0.32, 1);
 }
-.zone:hover .zone-glyph {
+.zone:hover .zone-glyph,
+.zone.is-active .zone-glyph {
   transform: translateY(-8px) scale(1.04);
 }
 

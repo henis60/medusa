@@ -64,14 +64,14 @@ export default function Space() {
   const [activeId, setActiveId] = useState<string | null>(null)
   const tapRef = useRef<{ x: number; y: number } | null>(null)
 
-  // Recompute which zone is most visible in the scroll container
+  // Recompute which zone is most visible in the scroll container. Desktop
+  // doesn't scroll this container horizontally at all (flex layout, no
+  // overflow) — activeId there is driven only by the intro reveal below and
+  // by CSS :hover, so this bails out without touching it.
   const updateActive = useCallback(() => {
     const el = zonesRef.current
     if (!el) return
-    if (window.innerWidth > 768) {
-      setActiveId(null)
-      return
-    }
+    if (window.innerWidth > 768) return
     const zoneEls = Array.from(el.querySelectorAll<HTMLElement>(".zone"))
     if (!zoneEls.length) return
     const cw = el.offsetWidth
@@ -94,69 +94,26 @@ export default function Space() {
     return () => window.removeEventListener("resize", updateActive)
   }, [updateActive])
 
-  // Scroll-jacking on mobile: while the section is docked at the top of the
-  // viewport and the carousel hasn't been fully swiped through yet, a
-  // vertical swipe drives the carousel's horizontal scroll instead of the
-  // page — so swiping down "drains" sideways through every zone first,
-  // then releases back to normal page scroll once it reaches the end (and
-  // symmetrically in reverse on the way back up). This makes the section
-  // unmistakably a carousel instead of a single static panel.
+  // All zones start collapsed either way. The first time the section
+  // scrolls into view, reveal the first one (Salon) — on desktop this
+  // drives the same .is-active CSS that :hover otherwise controls, so the
+  // opening zone expands automatically before the visitor has done
+  // anything; on mobile it's the same class the swipe/tap logic below
+  // already drives. Interaction (hover on desktop, swipe/tap on mobile)
+  // takes over normally from there — no scroll-jacking, no auto-advance.
   useEffect(() => {
-    const el = zonesRef.current
     const section = sectionRef.current
-    if (!el || !section || window.innerWidth > 768) return
-
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches
-    if (prefersReducedMotion) return
-
-    let lastY = 0
-    // Decided once per gesture (at touchstart), not re-evaluated mid-swipe:
-    // iOS Safari commits a touch sequence to native scrolling on its first
-    // unprevented touchmove, so switching a gesture from "page scroll" to
-    // "carousel drag" partway through wouldn't reliably cancel it anyway.
-    let capturing = false
-
-    const maxScroll = () => el.scrollWidth - el.clientWidth
-
-    function onTouchStart(e: TouchEvent) {
-      lastY = e.touches[0].clientY
-      const rect = section!.getBoundingClientRect()
-      capturing = rect.top <= 80 && rect.top > -80
-    }
-
-    function onTouchMove(e: TouchEvent) {
-      if (!capturing) return
-      const currentY = e.touches[0].clientY
-      const deltaY = lastY - currentY // positive = swiping up = scroll-down intent
-      const atStart = el.scrollLeft <= 0
-      const atEnd = el.scrollLeft >= maxScroll() - 1
-
-      if ((deltaY > 0 && atEnd) || (deltaY < 0 && atStart)) {
-        // Carousel has nothing left to give in this direction — stop
-        // capturing so the rest of this gesture scrolls the page normally.
-        capturing = false
-        return
-      }
-
-      e.preventDefault()
-      el.scrollLeft += deltaY
-      lastY = currentY
-    }
-
-    function onTouchEnd() {
-      capturing = false
-    }
-
-    section.addEventListener("touchstart", onTouchStart, { passive: true })
-    section.addEventListener("touchmove", onTouchMove, { passive: false })
-    section.addEventListener("touchend", onTouchEnd, { passive: true })
-    return () => {
-      section.removeEventListener("touchstart", onTouchStart)
-      section.removeEventListener("touchmove", onTouchMove)
-      section.removeEventListener("touchend", onTouchEnd)
-    }
+    if (!section) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+        observer.disconnect()
+        setActiveId(ZONES[0].id)
+      },
+      { threshold: 0.4 }
+    )
+    observer.observe(section)
+    return () => observer.disconnect()
   }, [])
 
   function handlePointerDown(e: React.PointerEvent) {
