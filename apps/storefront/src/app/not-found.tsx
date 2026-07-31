@@ -18,7 +18,7 @@ export default function NotFound() {
         >
           <h1>Pagină negăsită</h1>
           <p>Se pare că te-ai rătăcit. Pagina căutată nu mai există sau și-a schimbat locul.</p>
-          <a href="/" style={{ marginTop: "8px" }}>Înapoi la pagina principală</a>
+          <a href="/" onClick={(e) => { e.preventDefault(); window.location.href = "/"; }} style={{ marginTop: "8px" }}>Înapoi la pagina principală</a>
         </div>
       </body>
     </html>
