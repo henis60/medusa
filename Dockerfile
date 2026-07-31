@@ -22,6 +22,15 @@ WORKDIR /app
 #    anything live from the registry.
 COPY package.json package-lock.json .npmrc ./
 COPY apps/backend/package.json ./apps/backend/package.json
+# NPM_CONFIG_* env vars apply process-wide regardless of cwd (unlike .npmrc,
+# which npm only reads from the exact working directory) — this makes retry/
+# backoff apply to every RUN step below, including step 3's install in a
+# different directory. Kept short: 5 retries capped at 20s each is enough to
+# ride out a brief 429 (worst case ~5+10+20+20+20=75s added) without risking
+# another multi-hour stall if something's genuinely stuck.
+ENV NPM_CONFIG_FETCH_RETRIES=5
+ENV NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=5000
+ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=20000
 RUN npm ci --workspace apps/backend --include-workspace-root=false --legacy-peer-deps --no-audit --no-fund
 
 # 2) Build the backend (compiles the server + bundles the admin dashboard).
@@ -39,6 +48,17 @@ WORKDIR /app/apps/backend
 RUN NODE_OPTIONS=--max-old-space-size=4096 npm run build
 
 # 3) Install production-only deps for the built server output.
+#    This has no lockfile (package.json is generated at build time by
+#    `medusa build`), so it's a fresh live resolution — that's what hit a 429
+#    here before. It previously had no retry config at all (the NPM_CONFIG_*
+#    env vars above now cover it too, since they apply process-wide).
+#    --prefer-offline reuses the tarballs step 1 already pulled into the
+#    shared npm cache, cutting most of the network traffic this still needs.
+#    (Tried copying step 1's node_modules + `npm prune --omit=dev` instead,
+#    to avoid a second install entirely — it's unsafe: without a lockfile,
+#    prune couldn't reliably tell prod deps from dev deps and stripped
+#    sharp/@medusajs/medusa while keeping react/typescript, the opposite of
+#    what --omit=dev should do.)
 WORKDIR /app/apps/backend/.medusa/server
 RUN npm install --omit=dev --legacy-peer-deps --prefer-offline --no-audit --no-fund
 
