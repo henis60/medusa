@@ -6,6 +6,7 @@
 
 # ---- Builder: install deps and build the standalone output ----
 FROM node:20-slim AS builder
+RUN npm install -g npm@10.9.2
 WORKDIR /app
 
 # The storefront is a leaf workspace (no internal @dtc/* deps), but the repo's

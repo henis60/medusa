@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
 # Build context = repo root (so we can use the committed root lockfile).
 FROM node:20-slim
+RUN npm install -g npm@10.9.2
 
 WORKDIR /app
 
