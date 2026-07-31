@@ -6,6 +6,15 @@ import { useEffect, useRef, useState, forwardRef } from "react"
 import { useTranslations } from "next-intl"
 import { clx } from "@modules/common/components/ui"
 
+// Medusa's admin metadata editor stores values as strings even for
+// boolean-looking fields, so a category's always_open metadata can arrive as
+// either `true` or `"true"` depending on how it was set. Kept in sync with
+// the same helper in store-sidebar/index.tsx (desktop).
+const isAlwaysOpen = (category: HttpTypes.StoreProductCategory) => {
+  const value = category.metadata?.always_open
+  return value === true || value === "true"
+}
+
 type Props = {
   categories: HttpTypes.StoreProductCategory[]
   collections: HttpTypes.StoreCollection[]
@@ -130,9 +139,16 @@ export default function CategoryPills({
   const activeParentId = selectedCat
     ? selectedCat.parent_category?.id ?? selectedCat.id
     : null
-  const subChips = activeParentId
-    ? categories.filter((c) => c.parent_category?.id === activeParentId)
-    : []
+  // always_open parents already render their subs inline in the main pill
+  // row above (see topCategories.flatMap) — skip them here to avoid showing
+  // the same subcategories a second time in this reveal row.
+  const activeParentCategory = activeParentId
+    ? categories.find((c) => c.id === activeParentId)
+    : null
+  const subChips =
+    activeParentId && !(activeParentCategory && isAlwaysOpen(activeParentCategory))
+      ? categories.filter((c) => c.parent_category?.id === activeParentId)
+      : []
   const activeParentHandle = activeParentId
     ? categories.find((c) => c.id === activeParentId)?.handle
     : undefined
@@ -155,20 +171,55 @@ export default function CategoryPills({
           >
             {t("Toate")}
           </Link>
-          {topCategories.map((c) => (
-            <Link
-              key={c.id}
-              href={
-                activeCategoryId === c.id ? buildHref([]) : buildHref([c.handle])
+          {topCategories.flatMap((c) => {
+            // always_open categories are pure grouping nodes: they never
+            // render as their own pill — their subcategories render directly
+            // in their place, always visible, at the same pill level as any
+            // other category. Matches store-sidebar's desktop behavior.
+            if (isAlwaysOpen(c)) {
+              const subs = categories.filter(
+                (sub) => sub.parent_category?.id === c.id
+              )
+              if (subs.length > 0) {
+                return subs.map((sub) => (
+                  <Link
+                    key={sub.id}
+                    href={
+                      activeCategoryId === sub.id
+                        ? buildHref([])
+                        : buildHref([sub.handle])
+                    }
+                    prefetch={false}
+                    data-active={
+                      activeCategoryId === sub.id ? "true" : undefined
+                    }
+                    onClick={() =>
+                      onSelectCategory(
+                        activeCategoryId === sub.id ? null : sub.id
+                      )
+                    }
+                    className={link(activeCategoryId === sub.id)}
+                  >
+                    {sub.name}
+                  </Link>
+                ))
               }
-              prefetch={false}
-              data-active={activeCategoryId === c.id || activeParentId === c.id ? "true" : undefined}
-              onClick={() => onSelectCategory(activeCategoryId === c.id ? null : c.id)}
-              className={link(activeCategoryId === c.id || activeParentId === c.id)}
-            >
-              {c.name}
-            </Link>
-          ))}
+            }
+            return (
+              <Link
+                key={c.id}
+                href={
+                  activeCategoryId === c.id ? buildHref([]) : buildHref([c.handle])
+                }
+                prefetch={false}
+                data-active={activeCategoryId === c.id || activeParentId === c.id ? "true" : undefined}
+                onClick={() => onSelectCategory(activeCategoryId === c.id ? null : c.id)}
+                className={link(activeCategoryId === c.id || activeParentId === c.id)}
+              >
+                {c.name}
+              </Link>
+            )
+          })}
           {collections.map((c) => (
             <Link
               key={c.id}
