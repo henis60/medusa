@@ -25,7 +25,7 @@ export default function MediaLibraryPicker({
   const [q, setQ] = useState("");
   const [prefix, setPrefix] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [convert, setConvert] = useState(true);
+  const [convert, setConvert] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [selectedUrls, setSelectedUrls] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);

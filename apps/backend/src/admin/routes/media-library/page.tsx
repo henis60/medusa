@@ -66,15 +66,18 @@ function DeleteAssetDialog({
         <div className="px-4 py-4">
           <Text size="small" className="text-ui-fg-subtle">
             Alege „Șterge definitiv” pentru a elimina fișierul din R2, sau
-            „Ascunde” pentru a-l scoate doar din bibliotecă (rămâne pe
-            storage).
+            „Ascunde” pentru a-l scoate doar din bibliotecă (rămâne pe storage).
           </Text>
         </div>
         <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-ui-border-base">
           <Button variant="secondary" disabled={busy} onClick={onClose}>
             Anulează
           </Button>
-          <Button variant="secondary" isLoading={busy} onClick={() => run(false)}>
+          <Button
+            variant="secondary"
+            isLoading={busy}
+            onClick={() => run(false)}
+          >
             Ascunde din bibliotecă
           </Button>
           <Button variant="danger" isLoading={busy} onClick={() => run(true)}>
@@ -178,7 +181,10 @@ function EditAssetDrawer({
             <Text size="small" weight="plus">
               Nume fișier
             </Text>
-            <Input value={filename} onChange={(e) => setFilename(e.target.value)} />
+            <Input
+              value={filename}
+              onChange={(e) => setFilename(e.target.value)}
+            />
             {asset.linked_products.length > 0 && (
               <Text size="xsmall" className="text-ui-fg-error">
                 Atenție: imaginea e folosită de {asset.linked_products.length}{" "}
@@ -222,13 +228,17 @@ const MediaLibraryPage = () => {
   const [q, setQ] = useState("");
   const [prefix, setPrefix] = useState(""); // current folder, e.g. "hoodies/"
   const [cursor, setCursor] = useState<string | undefined>(undefined);
-  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([]);
+  const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>(
+    [],
+  );
   const [editingAsset, setEditingAsset] = useState<MediaAsset | null>(null);
   const [deletingAsset, setDeletingAsset] = useState<MediaAsset | null>(null);
-  const [previewingAsset, setPreviewingAsset] = useState<MediaAsset | null>(null);
+  const [previewingAsset, setPreviewingAsset] = useState<MediaAsset | null>(
+    null,
+  );
   const [unlinkedOnly, setUnlinkedOnly] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [convert, setConvert] = useState(true);
+  const [convert, setConvert] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
@@ -304,7 +314,9 @@ const MediaLibraryPage = () => {
   const handleDeleted = async (permanent: boolean) => {
     setDeletingAsset(null);
     await queryClient.invalidateQueries({ queryKey: ["media-library"] });
-    toast.success(permanent ? "Șters definitiv din R2" : "Ascuns din bibliotecă");
+    toast.success(
+      permanent ? "Șters definitiv din R2" : "Ascuns din bibliotecă",
+    );
   };
 
   const goNext = () => {
@@ -442,7 +454,10 @@ const MediaLibraryPage = () => {
                 className="flex flex-col items-center justify-center gap-1.5 aspect-square rounded border border-ui-border-base hover:bg-ui-bg-subtle transition-colors"
               >
                 <Folder className="w-8 h-8 text-ui-fg-subtle" />
-                <Text size="xsmall" className="truncate max-w-[90%] text-ui-fg-subtle">
+                <Text
+                  size="xsmall"
+                  className="truncate max-w-[90%] text-ui-fg-subtle"
+                >
                   {folder.split("/").filter(Boolean).pop()}
                 </Text>
               </button>
