@@ -36,7 +36,7 @@ export default function ContactForm() {
     const e: Errors = {}
     if (String(data.get("name") ?? "").trim().length < 2) e.name = true
     if (!validateEmail(String(data.get("email") ?? "").trim())) e.email = true
-    if (String(data.get("message") ?? "").trim().length < 10) e.message = true
+    if (String(data.get("message") ?? "").trim().length < 1) e.message = true
     return e
   }
 
@@ -111,7 +111,7 @@ export default function ContactForm() {
         <button
           type="button"
           onClick={() => setStatus("idle")}
-          className="mt-2 self-center font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5"
+          className="mt-2 self-center h-11 px-8 font-sans text-[10px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark hover:opacity-90 transition-opacity"
         >
           {t("Trimite alt mesaj")}
         </button>

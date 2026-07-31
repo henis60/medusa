@@ -525,7 +525,7 @@ const SideMenu = ({
 
                                     <li>
                                       <LocalizedClientLink
-                                        href="/world-of-the-hunter/made-to-measure"
+                                        href="/made-to-measure"
                                         className="flex items-center py-2 small:py-2.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
                                         onClick={handleClose}
                                       >

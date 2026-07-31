@@ -14,7 +14,12 @@ export async function generateMetadata({
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: "app" })
   return {
-    title: t("The Hunter House — Return of the Elegant Gentleman"),
+    // .absolute bypasses the root layout's title template ("%s | The Hunter
+    // House") — this string already IS the full brand title, so without
+    // .absolute it would render doubled ("...Gentleman | The Hunter House").
+    title: {
+      absolute: t("The Hunter House — Return of the Elegant Gentleman"),
+    },
     description: t("Tailoring premium, The Hunter Bar și o comunitate exclusivă, reunite într-un spațiu unic în România"
     ),
   }

@@ -52,12 +52,40 @@ const cinzel = Cinzel({
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),
+  title: {
+    default: "The Hunter House — Return of the Elegant Gentleman",
+    // Pages that only set a plain string title (e.g. "Contact") get this
+    // suffix automatically; pages building their own full "X | Brand"
+    // string (product/category pages) aren't affected — the template only
+    // applies when a page's title is a bare string, not when it already
+    // contains the brand.
+    template: "%s | The Hunter House",
+  },
+  description:
+    "Tailoring premium, The Hunter Bar și o comunitate exclusivă, reunite într-un spațiu unic în România.",
   icons: {
     icon: [
       { url: "/favicon.svg", media: "(prefers-color-scheme: light)" },
       { url: "/favicon-dark.svg", media: "(prefers-color-scheme: dark)" },
     ],
     apple: "/apple-touch-icon.png",
+  },
+}
+
+const ORGANIZATION_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "ClothingStore",
+  name: "The Hunter House",
+  legalName: "S.C. BOJO HOUSE S.R.L.",
+  url: getBaseURL(),
+  telephone: "+40765080667",
+  email: "contact@thehunter.ro",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Str. Piața Eroilor, nr. 2",
+    addressLocality: "Târgu Lăpuș",
+    addressRegion: "Maramureș",
+    addressCountry: "RO",
   },
 }
 
@@ -96,6 +124,15 @@ export default async function RootLayout({ children, params }: Props) {
       suppressHydrationWarning
       className={`${playfairDisplay.variable} ${cormorantGaramond.variable} ${raleway.variable} ${cinzel.variable}`}
     >
+      <head>
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(ORGANIZATION_JSON_LD),
+          }}
+        />
+      </head>
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <GoogleAnalytics />

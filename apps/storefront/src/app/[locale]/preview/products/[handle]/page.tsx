@@ -39,12 +39,12 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const searchParams = await props.searchParams
 
   if (!searchParams.token) {
-    return { title: "Preview | Medusa Store" }
+    return { title: { absolute: "Preview | The Hunter House" } }
   }
 
   const region = await getRegion("ro")
   if (!region) {
-    return { title: "Preview | Medusa Store" }
+    return { title: { absolute: "Preview | The Hunter House" } }
   }
 
   const product = await fetchPreviewProduct(
@@ -54,11 +54,11 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   )
 
   const title = product?.title
-    ? `${product.title} (Preview) | Medusa Store`
-    : "Preview | Medusa Store"
+    ? `${product.title} (Preview) | The Hunter House`
+    : "Preview | The Hunter House"
 
   return {
-    title,
+    title: { absolute: title },
     description: product?.title ?? "Product preview",
     robots: { index: false, follow: false },
   }

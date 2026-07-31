@@ -13,7 +13,6 @@ const SECTION_IDS = [
   "bar",
   "giftcard",
   "membership",
-  "subscribe",
   "contact",
 ] as const
 

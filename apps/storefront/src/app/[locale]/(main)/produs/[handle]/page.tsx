@@ -3,7 +3,11 @@ import { notFound } from "next/navigation"
 import { getProductByHandle, listProductHandles } from "@lib/data/products"
 import { getRegionStatic } from "@lib/data/regions"
 import { setRequestLocaleValue } from "@lib/util/request-locale"
+import { getBaseURL } from "@lib/util/env"
+import { getProductPrice } from "@lib/util/get-product-price"
 import ProductTemplate from "@modules/products/templates"
+
+const SITE_NAME = "The Hunter House"
 
 const COUNTRY = "ro"
 
@@ -39,12 +43,31 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     notFound()
   }
 
+  const description = product.description
+    ? product.description.slice(0, 300)
+    : `${product.title} — ${SITE_NAME}`
+  const title = `${product.title} | ${SITE_NAME}`
+
   return {
-    title: `${product.title} | Medusa Store`,
-    description: `${product.title}`,
+    // .absolute bypasses the root layout's title template ("%s | The Hunter
+    // House") — `title` here already has the brand suffix baked in, so
+    // without it the page would render "Product | The Hunter House | The
+    // Hunter House".
+    title: { absolute: title },
+    description,
+    alternates: {
+      canonical: `/produs/${handle}`,
+    },
     openGraph: {
-      title: `${product.title} | Medusa Store`,
-      description: `${product.title}`,
+      title,
+      description,
+      images: product.thumbnail ? [{ url: product.thumbnail }] : [],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
       images: product.thumbnail ? [product.thumbnail] : [],
     },
   }
@@ -68,12 +91,44 @@ export default async function ProductPage(props: Props) {
     notFound()
   }
 
+  const { cheapestPrice } = getProductPrice({ product: pricedProduct })
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: pricedProduct.title,
+    description: pricedProduct.description ?? pricedProduct.title,
+    image: pricedProduct.images?.length
+      ? pricedProduct.images.map((img) => img.url)
+      : pricedProduct.thumbnail
+      ? [pricedProduct.thumbnail]
+      : [],
+    brand: { "@type": "Brand", name: "The Hunter House" },
+    ...(cheapestPrice
+      ? {
+          offers: {
+            "@type": "Offer",
+            priceCurrency: cheapestPrice.currency_code.toUpperCase(),
+            price: cheapestPrice.calculated_price_number.toFixed(2),
+            availability: "https://schema.org/InStock",
+            url: `${getBaseURL()}/produs/${handle}`,
+          },
+        }
+      : {}),
+  }
+
   return (
-    <ProductTemplate
-      product={pricedProduct}
-      region={region}
-      countryCode={COUNTRY}
-      images={pricedProduct.images ?? []}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ProductTemplate
+        product={pricedProduct}
+        region={region}
+        countryCode={COUNTRY}
+        images={pricedProduct.images ?? []}
+      />
+    </>
   )
 }
