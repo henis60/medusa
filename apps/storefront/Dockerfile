@@ -14,7 +14,7 @@ WORKDIR /app
 # workspace from that lockfile so the image build stays deterministic.
 COPY package.json package-lock.json .npmrc ./
 COPY apps/storefront/package.json ./apps/storefront/package.json
-RUN --mount=type=cache,target=/root/.npm \
+RUN --mount=type=cache,id=npm-cache-storefront,target=/root/.npm \
     npm ci --workspace apps/storefront --include-workspace-root=false --legacy-peer-deps --no-audit --no-fund \
     && npm install --no-save @next/swc-linux-x64-gnu@15.5.18 @swc/core-linux-x64-gnu@1.15.41 --legacy-peer-deps --no-audit --no-fund
 
@@ -53,7 +53,7 @@ COPY --from=builder /app/public ./public
 # next/image optimization needs sharp at runtime. The standalone tracer can miss
 # its native binaries, so install sharp in isolation and merge it (and its deps)
 # into the standalone node_modules.
-RUN --mount=type=cache,target=/root/.npm \
+RUN --mount=type=cache,id=npm-cache-sharp,target=/root/.npm \
     mkdir -p /tmp/sharp && cd /tmp/sharp \
     && npm init -y >/dev/null 2>&1 \
     && npm install sharp --no-audit --no-fund --legacy-peer-deps \
