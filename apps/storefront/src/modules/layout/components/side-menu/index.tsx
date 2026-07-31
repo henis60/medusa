@@ -74,29 +74,54 @@ const subLinkClass =
 
 type SubmenuKey = "rtw" | "accesorii" | "featured" | "hunter"
 
-function MenuTrigger({ label, onOpen }: { label: string; onOpen: () => void }) {
+function MenuTrigger({
+  label,
+  onOpen,
+  badge,
+  disabled,
+}: {
+  label: string
+  onOpen: () => void
+  badge?: string
+  disabled?: boolean
+}) {
   return (
     <li>
       <button
         type="button"
-        onClick={onOpen}
-        className="w-full flex items-center justify-between py-2 small:py-2.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
+        onClick={disabled ? undefined : onOpen}
+        disabled={disabled}
+        aria-disabled={disabled}
+        className={`w-full flex items-center justify-between py-2 small:py-2.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] transition-colors duration-200 ${
+          disabled
+            ? "text-[var(--theme-text-muted)] cursor-default"
+            : "text-[var(--theme-text)] hover:text-hunter-gold"
+        }`}
       >
-        <span>{label}</span>
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="text-[var(--theme-text-muted)]"
-          aria-hidden="true"
-        >
-          <polyline points="9 6 15 12 9 18" />
-        </svg>
+        <span className="flex items-center gap-2">
+          {label}
+          {badge && (
+            <span className="font-sans text-[10px] uppercase tracking-[3px] text-hunter-gold leading-none">
+              {badge}
+            </span>
+          )}
+        </span>
+        {!disabled && (
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-[var(--theme-text-muted)]"
+            aria-hidden="true"
+          >
+            <polyline points="9 6 15 12 9 18" />
+          </svg>
+        )}
       </button>
     </li>
   )
@@ -466,10 +491,12 @@ const SideMenu = ({
                                       </LocalizedClientLink>
                                     </li>
 
-                                    {/* Ready to Wear â†’ submeniu */}
+                                    {/* Ready to Wear — Coming Soon, not expandable */}
                                     <MenuTrigger
                                       label={t("Ready to Wear")}
                                       onOpen={() => setActiveSubmenu("rtw")}
+                                      badge={t("Coming Soon")}
+                                      disabled
                                     />
 
                                     {/* Accesorii â†’ submeniu */}
