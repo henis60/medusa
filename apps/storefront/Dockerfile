@@ -14,7 +14,8 @@ WORKDIR /app
 # workspace from that lockfile so the image build stays deterministic.
 COPY package.json package-lock.json .npmrc ./
 COPY apps/storefront/package.json ./apps/storefront/package.json
-RUN npm ci --workspace apps/storefront --include-workspace-root=false --legacy-peer-deps --no-audit --no-fund
+RUN npm ci --workspace apps/storefront --include-workspace-root=false --legacy-peer-deps --no-audit --no-fund \
+    && npm install --no-save @next/swc-linux-x64-gnu@15.5.18 @swc/core-linux-x64-gnu@1.15.41 --legacy-peer-deps --no-audit --no-fund
 
 # NEXT_PUBLIC_* values are inlined into the client bundle at BUILD time, so they
 # must be present now (not only at runtime). On Railway declare these ARGs so the
