@@ -1,10 +1,5 @@
-import Link from "next/link"
-
-// This is the true root not-found route — Next.js renders it for any
-// request that doesn't match a [locale] segment at all, so it sits outside
-// [locale]/layout.tsx's NextIntlClientProvider. NotFoundContent's Link (from
-// next-intl) needs that provider to resolve a locale; without it, it throws
-// client-side. Use plain next/link here instead of pulling in NotFoundContent.
+// This is the true root not-found route — rendered for any request that
+// doesn't match a [locale] segment. No i18n context here, so use plain HTML.
 export default function NotFound() {
   return (
     <html lang="ro">
@@ -23,7 +18,7 @@ export default function NotFound() {
         >
           <h1>Pagină negăsită</h1>
           <p>Se pare că te-ai rătăcit. Pagina căutată nu mai există sau și-a schimbat locul.</p>
-          <Link href="/">Înapoi la pagina principală</Link>
+          <a href="/" style={{ marginTop: "8px" }}>Înapoi la pagina principală</a>
         </div>
       </body>
     </html>
