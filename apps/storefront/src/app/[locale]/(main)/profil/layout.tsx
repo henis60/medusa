@@ -16,6 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: customer
       ? t("Sumarul activității contului tău")
       : t("Intră în contul tău The Hunter House"),
+    robots: { index: false, follow: false },
   }
 }
 

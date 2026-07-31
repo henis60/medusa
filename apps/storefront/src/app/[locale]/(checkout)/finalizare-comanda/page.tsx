@@ -19,6 +19,7 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "app" })
   return {
     title: t("Checkout"),
+    robots: { index: false, follow: false },
   }
 }
 

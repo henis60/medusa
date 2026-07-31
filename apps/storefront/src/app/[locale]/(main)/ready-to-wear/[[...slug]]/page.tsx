@@ -49,6 +49,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: t("Ready to Wear"),
       description: t("Explore all of our products"),
+      // Sort/color/price filters are client-side query params, never part
+      // of this path — canonical is always just the clean page itself, so
+      // Google indexes one URL per category/collection instead of a
+      // separate one per filter combination.
+      alternates: { canonical: "/ready-to-wear" },
     }
   }
 
@@ -71,6 +76,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: name,
     description: category?.description || t("Explore all of our products"),
+    // Same reasoning as the base page above: canonical is this
+    // category/collection's own clean path (query-string filters excluded),
+    // never the top-level shop — each one is distinct, indexable content.
+    alternates: { canonical: `/ready-to-wear/${fullPath}` },
   }
 }
 
