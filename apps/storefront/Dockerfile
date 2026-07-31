@@ -13,9 +13,9 @@ WORKDIR /app
 # Resolve deps fresh ON LINUX so platform-specific binaries (Next.js SWC) are
 # installed. --legacy-peer-deps keeps the from-scratch resolve fast under the
 # React 19 peer ranges. --include=dev because the build needs Tailwind/TS/etc.
-COPY apps/storefront/package.json ./package.json
-COPY .npmrc ./.npmrc
-RUN npm install --include=dev --legacy-peer-deps --no-audit --no-fund
+COPY apps/storefront/package*.json ./
+COPY .npmrc ./
+RUN npm ci --legacy-peer-deps --no-audit --no-fund
 
 # NEXT_PUBLIC_* values are inlined into the client bundle at BUILD time, so they
 # must be present now (not only at runtime). On Railway declare these ARGs so the
