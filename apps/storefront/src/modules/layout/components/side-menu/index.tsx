@@ -319,8 +319,8 @@ function WorldOfTheHunterSubmenu({
 }) {
   const t = useTranslations("layout")
   const STYLE_GUIDES = [
-    { label: t("Wedding Season") },
-    { label: t("Shooting Wear") },
+    { label: t("Wedding Season"), status: "coming-soon" },
+    { label: t("Shooting Wear"), status: "coming-soon" },
   ]
   return (
     <div className="flex flex-col h-full">
@@ -331,12 +331,14 @@ function WorldOfTheHunterSubmenu({
         </p>
         <ul className="flex flex-col">
           {STYLE_GUIDES.map((g) => (
-            <li key={g.label}>
+            <li key={g.label} className="relative">
               <span className="block py-2 small:py-2.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text-muted)] cursor-default">
-                {g.label} -{" "}
-                <span className="text-[var(--theme-text-muted)]">
-                  Coming Soon
-                </span>
+                {g.label}
+                {g.status === "coming-soon" && (
+                  <span className="ml-2 text-[11px] px-1.5 py-0.5 border border-[var(--theme-text-muted)] rounded text-[var(--theme-text-muted)] uppercase tracking-[0.5px] font-sans font-normal">
+                    {t("Coming Soon")}
+                  </span>
+                )}
               </span>
             </li>
           ))}
