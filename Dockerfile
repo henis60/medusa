@@ -17,8 +17,7 @@ ENV NPM_CONFIG_FETCH_RETRIES=10
 ENV NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=30000
 ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=600000
 ENV NPM_CONFIG_MAXSOCKETS=1
-RUN --mount=type=cache,id=npm-cache-backend,target=/root/.npm \
-    npm ci --workspace apps/backend --include-workspace-root=false --legacy-peer-deps --no-audit --no-fund --prefer-offline
+RUN npm ci --workspace apps/backend --include-workspace-root=false --legacy-peer-deps --no-audit --no-fund --prefer-offline
 
 # 2) Build the backend (compiles the server + bundles the admin dashboard).
 #    NODE_OPTIONS heap headroom is scoped to THIS build step only — at runtime a
@@ -36,8 +35,7 @@ RUN NODE_OPTIONS=--max-old-space-size=4096 npm run build
 
 # 3) Install production-only deps for the built server output.
 WORKDIR /app/apps/backend/.medusa/server
-RUN --mount=type=cache,id=npm-cache-backend-runtime,target=/root/.npm \
-    npm install --omit=dev --legacy-peer-deps --prefer-offline --no-audit --no-fund
+RUN npm install --omit=dev --legacy-peer-deps --prefer-offline --no-audit --no-fund
 
 ENV NODE_ENV=production
 EXPOSE 9000
