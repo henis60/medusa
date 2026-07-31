@@ -335,7 +335,7 @@ function WorldOfTheHunterSubmenu({
               <span className="flex items-center gap-2 py-2 small:py-2.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text-muted)] cursor-default">
                 {g.label}
                 {g.status === "coming-soon" && (
-                  <span className="text-[11px] px-1.5 py-0.5 border border-[var(--theme-text-muted)] rounded text-[var(--theme-text-muted)] uppercase tracking-[0.5px] font-sans font-normal leading-none">
+                  <span className="font-sans text-[10px] uppercase tracking-[3px] text-hunter-gold leading-none">
                     {t("Coming Soon")}
                   </span>
                 )}

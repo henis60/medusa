@@ -108,9 +108,29 @@ const SIZE_ORDER = [
 
 const sortOptionValues = (
   values: HttpTypes.StoreProductOptionValue[],
-  isColor: boolean
+  isColor: boolean,
+  option?: HttpTypes.StoreProductOption,
+  variants?: HttpTypes.StoreProductVariant[]
 ) => {
-  if (isColor) return values
+  if (isColor) {
+    // Colors follow variant creation order (matches image grouping), same
+    // as the product page's option-select.tsx — raw option.values order is
+    // not consistent across store/preview APIs, so returning it as-is here
+    // made color order diverge from the product page.
+    if (!option || !variants) return values
+    const seen: string[] = []
+    for (const v of variants) {
+      const val = v.options?.find((o) => o.option_id === option.id)?.value
+      if (val && !seen.includes(val)) seen.push(val)
+    }
+    const ordered = seen
+      .map((val) => values.find((v) => v.value === val))
+      .filter((v): v is HttpTypes.StoreProductOptionValue => Boolean(v))
+    for (const v of values) {
+      if (v.value && !seen.includes(v.value)) ordered.push(v)
+    }
+    return ordered.length ? ordered : values
+  }
   return [...values].sort((a, b) => {
     const ai = SIZE_ORDER.indexOf((a.value ?? "").toUpperCase())
     const bi = SIZE_ORDER.indexOf((b.value ?? "").toUpperCase())
@@ -437,7 +457,15 @@ export default function QuickAddOverlay({
           }}
         >
           {pickableOptions.map((option) => {
-            const sortedValues = sortOptionValues(option.values ?? [], false)
+            const isColorOpt = COLOR_TITLES.includes(
+              option?.title?.toLowerCase() ?? ""
+            )
+            const sortedValues = sortOptionValues(
+              option.values ?? [],
+              isColorOpt,
+              option,
+              variants
+            )
             return (
               <div
                 key={option.id}
@@ -538,9 +566,14 @@ export default function QuickAddOverlay({
                   {/* Options */}
                   <div className="px-6 py-5 flex flex-col gap-6 overflow-y-auto max-h-[50dvh]">
                     {pickableOptions.map((option) => {
+                      const isColorOpt = COLOR_TITLES.includes(
+                        option?.title?.toLowerCase() ?? ""
+                      )
                       const sortedValues = sortOptionValues(
                         option.values ?? [],
-                        false
+                        isColorOpt,
+                        option,
+                        variants
                       )
                       return (
                         <div key={option.id} className="flex flex-col gap-3">
