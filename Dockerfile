@@ -47,20 +47,20 @@ COPY apps/backend ./apps/backend
 WORKDIR /app/apps/backend
 RUN NODE_OPTIONS=--max-old-space-size=4096 npm run build
 
-# 3) Install production-only deps for the built server output.
-#    This has no lockfile (package.json is generated at build time by
-#    `medusa build`), so it's a fresh live resolution — that's what hit a 429
-#    here before. It previously had no retry config at all (the NPM_CONFIG_*
-#    env vars above now cover it too, since they apply process-wide).
-#    --prefer-offline reuses the tarballs step 1 already pulled into the
-#    shared npm cache, cutting most of the network traffic this still needs.
-#    (Tried copying step 1's node_modules + `npm prune --omit=dev` instead,
-#    to avoid a second install entirely — it's unsafe: without a lockfile,
-#    prune couldn't reliably tell prod deps from dev deps and stripped
-#    sharp/@medusajs/medusa while keeping react/typescript, the opposite of
-#    what --omit=dev should do.)
+# 3) No separate install here. This used to run a second `npm install
+#    --omit=dev` for .medusa/server, but that's unneeded: this Dockerfile is
+#    single-stage, so the full /app/node_modules (dev deps included) ships in
+#    the final image regardless of anything done here — a prod-only reinstall
+#    wasn't trimming the image, just duplicating work. Node resolves modules
+#    by walking up parent directories for node_modules, and
+#    /app/apps/backend/.medusa/server is a descendant of /app, so everything
+#    already resolves from the node_modules step 1 installed. Verified
+#    locally: with .medusa/server/node_modules absent, `require.resolve` for
+#    sharp/@medusajs/medusa/express and `npm run start` (medusa start) both
+#    correctly fall back to the ancestor node_modules. Removing this step
+#    also removes its own lockfile-less live-resolution 429 exposure entirely,
+#    rather than just retrying through it.
 WORKDIR /app/apps/backend/.medusa/server
-RUN npm install --omit=dev --legacy-peer-deps --prefer-offline --no-audit --no-fund
 
 ENV NODE_ENV=production
 EXPOSE 9000
