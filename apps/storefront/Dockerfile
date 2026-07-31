@@ -9,13 +9,17 @@ FROM node:20-slim AS builder
 RUN npm install -g npm@10.9.2
 WORKDIR /app
 
-# The storefront is a leaf workspace (no internal @dtc/* deps), but the repo's
-# root lockfile is the canonical source of truth. Install the storefront
-# workspace from that lockfile so the image build stays deterministic.
-COPY package.json package-lock.json .npmrc ./
-COPY apps/storefront/package.json ./apps/storefront/package.json
-RUN npm ci --workspace apps/storefront --include-workspace-root=false --legacy-peer-deps --no-audit --no-fund \
-    && npm install --no-save @next/swc-linux-x64-gnu@15.5.18 @swc/core-linux-x64-gnu@1.15.41 --legacy-peer-deps --no-audit --no-fund
+# Resolve deps fresh ON LINUX so platform-specific native packages (e.g.
+# @next/swc-linux-x64-gnu) are installed. The root package-lock.json is
+# generated on Windows and only pins Windows-platform optional deps — `npm ci`
+# against it can't heal that, forcing npm to fall back to live registry
+# resolution for the missing platform packages mid-install. Installing
+# standalone (storefront's package.json copied in AS the root one, no
+# workspace, no lockfile) also avoids pulling the backend's deps into this
+# image, which a root-lockfile-based install would otherwise resolve too.
+COPY apps/storefront/package.json ./package.json
+COPY .npmrc ./.npmrc
+RUN npm install --include=dev --legacy-peer-deps --no-audit --no-fund
 
 # NEXT_PUBLIC_* values are inlined into the client bundle at BUILD time, so they
 # must be present now (not only at runtime). On Railway declare these ARGs so the
