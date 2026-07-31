@@ -50,6 +50,15 @@ const TermsOfUseTemplate = async () => {
 
       {/* Sections */}
       <div className="page-container py-10 flex flex-col gap-12">
+        <Section title={t("Date de identificare")}>
+          <ul className="flex flex-col gap-1.5">
+            <li>{t("Denumire firmă:")} S.C. BOJO HOUSE S.R.L.</li>
+            <li>{t("Nr Reg Comerțului:")} J24/356/2023</li>
+            <li>{t("CUI")}: 47739604</li>
+            <li>{t("Adresă:")} Str. Piața Eroilor, nr. 2, Târgu Lăpuș, Maramureș</li>
+          </ul>
+        </Section>
+
         <Section title={t("Acceptarea termenilor")}>
           <p>
             {t("Prin accesarea și utilizarea site-ului")}{" "}

@@ -52,8 +52,14 @@ const PrivacyPolicyTemplate = async () => {
       <div className="page-container py-10 flex flex-col gap-12">
         <Section label={t("GDPR")} title={t("Operatorul de date")}>
           <p>
-            {t("Datele tale cu caracter personal sunt prelucrate de [Denumire firmă], cu sediul în [Adresă], CUI [Completează], înregistrată la Registrul Comerțului sub nr [Completează]"
-            )}
+            {t("Datele tale cu caracter personal sunt prelucrate de")}{" "}
+            <span className="text-[var(--theme-text)]">
+              S.C. BOJO HOUSE S.R.L.
+            </span>
+            {", "}
+            {t("cu sediul în")} Str. Piața Eroilor, nr. 2, Târgu Lăpuș, Maramureș,{" "}
+            {t("CUI")} 47739604{", "}
+            {t("înregistrată la Registrul Comerțului sub nr")} J24/356/2023.
           </p>
           <p>
             {t("Pentru orice întrebare legată de datele tale, ne poți scrie la")}{" "}
