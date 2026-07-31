@@ -76,11 +76,11 @@ export default function Space() {
     if (!zoneEls.length) return
     const cw = el.offsetWidth
     const sl = el.scrollLeft
-    const zw = zoneEls[0].offsetWidth
     let best = zoneEls[0]
     let bestRatio = -1
-    zoneEls.forEach((z, i) => {
-      const zStart = i * zw
+    zoneEls.forEach((z) => {
+      const zStart = z.offsetLeft
+      const zw = z.offsetWidth
       const vis = Math.max(0, Math.min(zStart + zw, sl + cw) - Math.max(zStart, sl))
       if (vis / zw > bestRatio) { bestRatio = vis / zw; best = z }
     })
@@ -120,6 +120,16 @@ export default function Space() {
     tapRef.current = { x: e.clientX, y: e.clientY }
   }
 
+  // On desktop, Salon opens via the intro reveal (see effect above) using the
+  // same .is-active class :hover otherwise drives. Once the visitor hovers
+  // any zone for the first time, hand control back to CSS :hover entirely —
+  // otherwise .is-active never clears and Salon stays expanded forever
+  // alongside whichever zone is actually hovered.
+  function handleZonesMouseOver() {
+    if (window.innerWidth <= 768) return
+    setActiveId(null)
+  }
+
   function handleClick(e: React.MouseEvent) {
     if (window.innerWidth > 768) return
     const start = tapRef.current
@@ -128,9 +138,10 @@ export default function Space() {
     if ((e.target as HTMLElement).closest(".zone.is-active")) return
     const el = zonesRef.current
     if (!el) return
-    const zw = el.querySelectorAll<HTMLElement>(".zone")[0]?.offsetWidth ?? 0
-    const next = (Math.round(el.scrollLeft / zw) + 1) % ZONES.length
-    el.scrollTo({ left: next * zw, behavior: "smooth" })
+    const zoneEls = Array.from(el.querySelectorAll<HTMLElement>(".zone"))
+    const activeIndex = zoneEls.findIndex((z) => z.dataset.zoneId === activeId)
+    const nextZone = zoneEls[(Math.max(activeIndex, 0) + 1) % zoneEls.length]
+    el.scrollTo({ left: nextZone.offsetLeft, behavior: "smooth" })
   }
 
   return (
@@ -142,6 +153,7 @@ export default function Space() {
         onScroll={updateActive}
         onPointerDown={handlePointerDown}
         onClick={handleClick}
+        onMouseOver={handleZonesMouseOver}
       >
         {ZONES.map((zone) => (
           <div

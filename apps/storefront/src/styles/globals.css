@@ -3484,10 +3484,14 @@ a.cb-value:hover {
   }
   .zone {
     flex: none !important;
-    width: 82vw;
+    width: 60px;
     height: 100%;
     scroll-snap-align: start;
     border-right: 2px solid rgba(0, 0, 0, 0.25);
+    transition: width 0.65s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .zone.is-active {
+    width: 82vw;
   }
   .zone:hover,
   .zones:has(.zone:hover) .zone:not(:hover) {
