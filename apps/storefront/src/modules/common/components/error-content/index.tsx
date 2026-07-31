@@ -23,7 +23,7 @@ const ErrorContent = ({
   const resolvedDescription =
     description ??
     t(
-      "Ceva nu a funcționat cum trebuie Poți reîncerca sau te poți întoarce la pagina principală"
+      "Ceva nu a funcționat cum trebuie Poți reîncerca sau te poți întoarce la pagina principală",
     )
   const resolvedHomeLabel = homeLabel ?? t("Înapoi la pagina principală")
   return (
@@ -47,14 +47,14 @@ const ErrorContent = ({
         {reset && (
           <button
             onClick={reset}
-            className="px-6 py-3 font-sans text-[10px] uppercase tracking-[4px] bg-hunter-gold text-hunter-dark hover:opacity-90 transition-opacity"
+            className="flex items-center justify-center min-h-[48px] px-6 py-3 font-sans text-[10px] uppercase tracking-[4px] bg-hunter-gold text-hunter-dark hover:opacity-90 transition-opacity"
           >
             {t("Reîncearcă")}
           </button>
         )}
         <LocalizedClientLink
           href={homeHref}
-          className="px-6 py-3 font-sans text-[10px] uppercase tracking-[4px] border border-hunter-gold text-hunter-gold hover:bg-hunter-gold hover:text-hunter-dark transition-colors"
+          className="flex items-center justify-center min-h-[48px] px-6 py-3 font-sans text-[10px] uppercase tracking-[4px] border border-hunter-gold text-hunter-gold hover:bg-hunter-gold hover:text-hunter-dark transition-colors"
         >
           {resolvedHomeLabel}
         </LocalizedClientLink>

@@ -1,16 +1,23 @@
 import { Link } from "@i18n/navigation"
+import { routing } from "@i18n/routing"
 import { getTranslations } from "next-intl/server"
 
 type NotFoundContentProps = {
   title?: string
   description?: string
+  locale?: string
 }
 
 const NotFoundContent = async ({
   title,
   description,
+  locale,
 }: NotFoundContentProps) => {
-  const t = await getTranslations("common")
+  const resolvedLocale = locale ?? routing.defaultLocale
+  const t = await getTranslations({
+    locale: resolvedLocale,
+    namespace: "common",
+  })
   const resolvedTitle = title ?? t("Pagină negăsită")
   const resolvedDescription =
     description ??

@@ -16,12 +16,19 @@ export async function generateMetadata({
   }
 }
 
-export default async function NotFound() {
-  const t = await getTranslations("app")
+export default async function NotFound({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: "app" })
   return (
     <NotFoundContent
+      locale={locale}
       title={t("Coș negăsit")}
-      description={t("Coșul pe care încerci să îl accesezi nu există Șterge cookie-urile și încearcă din nou"
+      description={t(
+        "Coșul pe care încerci să îl accesezi nu există Șterge cookie-urile și încearcă din nou",
       )}
     />
   )

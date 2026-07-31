@@ -16,6 +16,11 @@ export async function generateMetadata({
   }
 }
 
-export default function NotFound() {
-  return <NotFoundContent />
+export default async function NotFound({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  return <NotFoundContent locale={locale} />
 }
