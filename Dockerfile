@@ -15,7 +15,8 @@ WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 COPY apps/backend/package.json ./apps/backend/package.json
 COPY apps/storefront/package.json ./apps/storefront/package.json
-RUN rm -f package-lock.json && npm install --legacy-peer-deps --no-audit --no-fund
+RUN rm -f package-lock.json && npm install --legacy-peer-deps --no-audit --no-fund \
+    --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000
 
 # 2) Build the backend (compiles the server + bundles the admin dashboard).
 #    NODE_OPTIONS heap headroom is scoped to THIS build step only — at runtime a
