@@ -137,6 +137,7 @@ function buildVariants(
   skuPrefix: string,
   priceRon: number | number[],
   colorsHex: string[] = [],
+  disableInventory = false,
 ) {
   const priceFor = (idx: number) => {
     const amount = Array.isArray(priceRon)
@@ -157,6 +158,7 @@ function buildVariants(
           sku: `${skuPrefix}-${slugify(color)}-${slugify(size)}`,
           options: { Culoare: color, Mărime: size },
           ...(hex ? { material: hex, metadata: { color_hex: hex } } : {}),
+          ...(disableInventory ? { manage_inventory: false } : {}),
           prices: priceFor(ci),
         };
       }),
@@ -170,6 +172,7 @@ function buildVariants(
         sku: `${skuPrefix}-${slugify(color)}`,
         options: { Culoare: color },
         ...(hex ? { material: hex, metadata: { color_hex: hex } } : {}),
+        ...(disableInventory ? { manage_inventory: false } : {}),
         prices: priceFor(ci),
       };
     });
@@ -179,11 +182,18 @@ function buildVariants(
       title: size,
       sku: `${skuPrefix}-${slugify(size)}`,
       options: { Mărime: size },
+      ...(disableInventory ? { manage_inventory: false } : {}),
       prices: priceFor(si),
     }));
   }
   return [
-    { title: "Default", sku: skuPrefix, options: {}, prices: priceFor(0) },
+    {
+      title: "Default",
+      sku: skuPrefix,
+      options: {},
+      ...(disableInventory ? { manage_inventory: false } : {}),
+      prices: priceFor(0),
+    },
   ];
 }
 
@@ -762,7 +772,6 @@ const AIProductPage = () => {
           description: aiResult.description,
           handle: suffix ? `${aiResult.handle}-${suffix}` : aiResult.handle,
           status: "proposed",
-          ...(disableInventory ? { track_inventory: false } : {}),
           ...(material ? { material } : {}),
           thumbnail: imageUrls[0],
           images: imageUrls.map((url) => ({ url })),
@@ -786,6 +795,7 @@ const AIProductPage = () => {
             suffix ? `${row.sku_prefix}-${suffix}` : row.sku_prefix,
             priceRon,
             aiResult.colors_hex ?? [],
+            disableInventory,
           ),
           ...(categoryId ? { categories: [{ id: categoryId }] } : {}),
           ...(collectionId ? { collection_id: collectionId } : {}),
