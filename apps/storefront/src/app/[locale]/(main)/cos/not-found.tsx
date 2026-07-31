@@ -1,14 +1,15 @@
 import { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
+import { routing } from "@i18n/routing"
 
 import NotFoundContent from "@modules/common/components/not-found"
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ locale: string }>
+  params?: Promise<{ locale?: string }>
 }): Promise<Metadata> {
-  const { locale } = await params
+  const locale = (await params)?.locale ?? routing.defaultLocale
   const t = await getTranslations({ locale, namespace: "app" })
   return {
     title: t("404 — Coș negăsit"),
@@ -19,9 +20,9 @@ export async function generateMetadata({
 export default async function NotFound({
   params,
 }: {
-  params: Promise<{ locale: string }>
+  params?: Promise<{ locale?: string }>
 }) {
-  const { locale } = await params
+  const locale = (await params)?.locale ?? routing.defaultLocale
   const t = await getTranslations({ locale, namespace: "app" })
   return (
     <NotFoundContent
