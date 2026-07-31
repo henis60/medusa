@@ -455,8 +455,8 @@ function ImageCell({
       {pickerOpen && (
         <MediaLibraryPicker
           onClose={() => setPickerOpen(false)}
-          onSelect={(url) => {
-            onLibraryUrls(row.index, [...row.libraryUrls, url]);
+          onSelect={(urls) => {
+            onLibraryUrls(row.index, [...row.libraryUrls, ...urls]);
             setPickerOpen(false);
           }}
         />
@@ -940,7 +940,8 @@ const AIProductPage = () => {
                   .join(" / ");
                 if (
                   !translatedTitle ||
-                  translatedTitle.toLowerCase() === (variant.title ?? "").toLowerCase()
+                  translatedTitle.toLowerCase() ===
+                    (variant.title ?? "").toLowerCase()
                 )
                   return null;
                 return {
@@ -1382,7 +1383,9 @@ const AIProductPage = () => {
                     <td className="py-2 px-3">
                       <ImageCell
                         row={row}
-                        onLibraryUrls={(i, u) => updateField(i, "libraryUrls", u)}
+                        onLibraryUrls={(i, u) =>
+                          updateField(i, "libraryUrls", u)
+                        }
                         disabled={disabled}
                       />
                     </td>

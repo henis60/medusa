@@ -1,5 +1,4 @@
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import ChevronDown from "@modules/common/icons/chevron-down"
 
 export default function CheckoutLayout({
   children,
@@ -16,12 +15,16 @@ export default function CheckoutLayout({
             className="font-display text-xl tracking-[0.12em] flex items-baseline gap-1.5 hover:opacity-80 transition-opacity"
             data-testid="store-link"
           >
-            <span className="text-[var(--theme-text)] uppercase">The Hunter</span>
+            <span className="text-[var(--theme-text)] uppercase">
+              The Hunter
+            </span>
           </LocalizedClientLink>
           <div className="flex-1 basis-0" />
         </nav>
       </div>
-      <div className="relative" data-testid="checkout-container">{children}</div>
+      <div className="relative" data-testid="checkout-container">
+        {children}
+      </div>
     </div>
   )
 }

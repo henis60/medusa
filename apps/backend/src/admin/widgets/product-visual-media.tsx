@@ -178,15 +178,19 @@ const ProductVisualMediaWidget = ({
     }
   };
 
-  const addFromLibrary = async (url: string) => {
+  const addFromLibraryUrls = async (urls: string[]) => {
     setPickerOpen(false);
-    if (images.some((img) => img.url === url)) {
-      toast.info("Imaginea este deja atașată produsului");
+    const newUrls = urls.filter(
+      (url) => !images.some((img) => img.url === url),
+    );
+    if (newUrls.length === 0) {
+      toast.info("Toate imaginile selectate sunt deja atașate produsului");
       return;
     }
+
     await saveImages(
-      [...images, { id: "", url, variants: [] }],
-      thumbnail ?? url,
+      [...images, ...newUrls.map((url) => ({ id: "", url, variants: [] }))],
+      thumbnail ?? newUrls[0],
     );
   };
 
@@ -329,7 +333,11 @@ const ProductVisualMediaWidget = ({
                         <IconButton
                           size="small"
                           disabled={busy}
-                          title={hasColorOption ? "Asociază culori" : "Asociază variante"}
+                          title={
+                            hasColorOption
+                              ? "Asociază culori"
+                              : "Asociază variante"
+                          }
                           className="bg-ui-bg-base shadow-elevation-card-rest text-ui-fg-base hover:bg-ui-bg-base-hover"
                         >
                           <Tag />
@@ -341,7 +349,9 @@ const ProductVisualMediaWidget = ({
                           weight="plus"
                           className="px-2 pb-1 text-ui-fg-subtle"
                         >
-                          {hasColorOption ? "Asociază culori" : "Asociază variante"}
+                          {hasColorOption
+                            ? "Asociază culori"
+                            : "Asociază variante"}
                         </Text>
                         {hasColorOption
                           ? colorGroups.map((group) => {
@@ -357,7 +367,11 @@ const ProductVisualMediaWidget = ({
                                     checked={checked}
                                     disabled={busy}
                                     onCheckedChange={(v) =>
-                                      toggleVariants(image.id, group.variantIds, !!v)
+                                      toggleVariants(
+                                        image.id,
+                                        group.variantIds,
+                                        !!v,
+                                      )
                                     }
                                   />
                                   <Text size="small">{group.label}</Text>
@@ -365,7 +379,9 @@ const ProductVisualMediaWidget = ({
                               );
                             })
                           : variants.map((variant) => {
-                              const checked = explicitVariantIds.has(variant.id);
+                              const checked = explicitVariantIds.has(
+                                variant.id,
+                              );
                               return (
                                 <label
                                   key={variant.id}
@@ -375,7 +391,11 @@ const ProductVisualMediaWidget = ({
                                     checked={checked}
                                     disabled={busy}
                                     onCheckedChange={(v) =>
-                                      toggleVariants(image.id, [variant.id], !!v)
+                                      toggleVariants(
+                                        image.id,
+                                        [variant.id],
+                                        !!v,
+                                      )
                                     }
                                   />
                                   <Text size="small">{variant.title}</Text>
@@ -395,7 +415,7 @@ const ProductVisualMediaWidget = ({
       {pickerOpen && (
         <MediaLibraryPicker
           onClose={() => setPickerOpen(false)}
-          onSelect={addFromLibrary}
+          onSelect={addFromLibraryUrls}
         />
       )}
       {removingImage && (
