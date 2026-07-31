@@ -602,7 +602,7 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
   }
 
   redirect({
-    href: "/checkout?step=delivery",
+    href: "/finalizare-comanda?pas=livrare",
     locale: (await getLocale()) || "ro",
   })
 }

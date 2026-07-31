@@ -24,7 +24,7 @@ export default function CheckoutError({
         reset={reset}
         title={t("Magazin temporar indisponibil")}
         description={t("Nu am putut contacta serverul chiar acum Dacă ai finalizat deja plata, comanda ta este în siguranță Te rugăm să revii peste câteva minute")}
-        homeHref="/cart"
+        homeHref="/cos"
         homeLabel={t("Înapoi la coș")}
       />
     )
@@ -34,7 +34,7 @@ export default function CheckoutError({
     <ErrorContent
       reset={reset}
       description={t("Nu-ți face griji — dacă ai finalizat plata, comanda ta este în siguranță și vei primi un email de confirmare Poți reîncerca sau reveni la coș")}
-      homeHref="/cart"
+      homeHref="/cos"
       homeLabel={t("Înapoi la coș")}
     />
   )

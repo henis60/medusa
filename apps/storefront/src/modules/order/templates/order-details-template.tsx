@@ -5,6 +5,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import React, { useEffect, useState } from "react"
 import { lineItemsToTrackItems, trackPurchase } from "@lib/util/analytics"
 import { useTranslations } from "next-intl"
+import { useRouter } from "@i18n/navigation"
 
 type OrderDetailsTemplateProps = {
   order: HttpTypes.StoreOrder
@@ -49,6 +50,7 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
   shippingDetailsSlot,
   orderSummarySlot,
 }) => {
+  const router = useRouter()
   const t = useTranslations("order")
   const [downloading, setDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState<string | null>(null)
@@ -109,17 +111,19 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
       <div
         className={
           standalone
-            ? "flex flex-col small:flex-row-reverse small:items-center small:justify-between gap-3 pb-6 small:px-8 small:pt-8"
+            ? "flex flex-col small:flex-row small:items-center small:justify-between gap-3 pt-4 pb-6 small:px-8 small:pt-8"
             : "hidden small:flex small:flex-row-reverse small:items-center small:justify-between gap-3 small:px-8 small:pt-8 small:pb-6"
         }
       >
-        <LocalizedClientLink
-          href={standalone ? "/" : "/profil/comenzi"}
-          className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5"
-          data-testid="back-to-overview-button"
-        >
-          {standalone ? t("← Acasă") : t("← Înapoi")}
-        </LocalizedClientLink>
+        {!standalone ? (
+          <LocalizedClientLink
+            href="/profil/comenzi"
+            className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
+            data-testid="back-to-overview-button"
+          >
+            {t("← Înapoi")}
+          </LocalizedClientLink>
+        ) : null}
         <h1 className="font-display text-[28px] small:text-[32px] leading-[1] text-[var(--theme-text)]">
           {t("Comanda #{displayId}", { displayId: order.display_id ?? "" })}
         </h1>
@@ -150,6 +154,16 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
             {downloadError && (
               <p className="mt-3 text-sm text-red-500">{downloadError}</p>
             )}
+          </div>
+        )}
+        {standalone && (
+          <div className="small:px-8 pt-1 small:pt-6 pb-2 small:pb-8 !border-t-0 flex flex-col small:items-end">
+            <button
+              onClick={() => router.push("/")}
+              className="w-full small:w-auto h-12 small:px-8 bg-hunter-gold text-hunter-dark hover:bg-hunter-gold/90 transition-colors font-sans uppercase tracking-[3px] text-[11px] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {t("Continuă cumpărăturile")}
+            </button>
           </div>
         )}
       </div>
