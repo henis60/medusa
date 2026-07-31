@@ -7,12 +7,33 @@ import { AnimatePresence, motion } from "framer-motion"
 import Image from "next/image"
 import { useTranslations } from "next-intl"
 import {
-  ArrowsPointingOutMini,
   ChevronLeftMini,
   ChevronRightMini,
   XMark,
 } from "@medusajs/icons"
 import { useSelectedVariant } from "@modules/products/context/selected-variant-context"
+
+// Minimalist "expand to fullscreen" glyph — four open corner brackets,
+// styled in the site's gold accent instead of a generic filled icon.
+function ExpandIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M9 3H4v5" />
+      <path d="M15 3h5v5" />
+      <path d="M20 15v5h-5" />
+      <path d="M4 15v5h5" />
+    </svg>
+  )
+}
 
 function ImageLightbox({
   images,
@@ -302,9 +323,9 @@ export default function VariantAwareGallery({
           <button
             onClick={() => setLightboxOpen(true)}
             aria-label={t("Vizualizează pe tot ecranul")}
-            className="absolute bottom-3 right-3 flex items-center justify-center w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow-md text-[var(--theme-text)] transition-all duration-200 hover:bg-hunter-gold hover:text-hunter-dark hover:scale-105"
+            className="absolute bottom-3 right-3 flex items-center justify-center w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow-md text-hunter-gold transition-all duration-200 hover:scale-105"
           >
-            <ArrowsPointingOutMini className="w-3.5 h-3.5" />
+            <ExpandIcon className="w-4 h-4" />
           </button>
         </div>
       </div>

@@ -119,9 +119,39 @@ export default function StoreSidebar({
             <nav className="flex flex-col">
               {topCategories.map((c) => {
                 const subs = subcategoriesOf(c.id)
+
+                // always_open categories are pure grouping nodes: they're
+                // never shown or selectable themselves — their
+                // subcategories render directly in their place, always
+                // expanded, at the same top-level weight as any other
+                // category.
+                if (isAlwaysOpen(c) && subs.length > 0) {
+                  return (
+                    <div key={c.id}>
+                      {subs.map((sub) => (
+                        <NavItem
+                          key={sub.id}
+                          active={activeCategoryId === sub.id}
+                          href={
+                            activeCategoryId === sub.id
+                              ? buildHref([])
+                              : buildHref([sub.handle])
+                          }
+                          onClick={() =>
+                            onSelectCategory(
+                              activeCategoryId === sub.id ? null : sub.id
+                            )
+                          }
+                        >
+                          {sub.name}
+                        </NavItem>
+                      ))}
+                    </div>
+                  )
+                }
+
                 const isActiveParent = activeParentId === c.id
-                const showSubs =
-                  subs.length > 0 && (isActiveParent || isAlwaysOpen(c))
+                const showSubs = subs.length > 0 && isActiveParent
                 return (
                   <div key={c.id}>
                     <NavItem
