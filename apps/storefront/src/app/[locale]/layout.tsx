@@ -70,6 +70,17 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-touch-icon.png",
   },
+  // Site-wide defaults — individual pages (e.g. product) override title/
+  // description/images but inherit siteName/locale/card from here unless
+  // they set their own.
+  openGraph: {
+    siteName: "The Hunter House",
+    locale: "ro_RO",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 }
 
 const ORGANIZATION_JSON_LD = {
@@ -80,10 +91,15 @@ const ORGANIZATION_JSON_LD = {
   url: getBaseURL(),
   telephone: "+40765080667",
   email: "contact@thehunter.ro",
+  // The physical/visitable store — used here for local SEO (this is what
+  // should surface for "Baia Mare" area searches and Google Maps matching).
+  // The company's registered legal address (Târgu Lăpuș) is a compliance
+  // disclosure, not an SEO signal — it belongs on the legal pages
+  // (terms-of-use, privacy-policy, relatii-clienti), not in structured data.
   address: {
     "@type": "PostalAddress",
-    streetAddress: "Str. Piața Eroilor, nr. 2",
-    addressLocality: "Târgu Lăpuș",
+    streetAddress: "Bulevardul Unirii 7",
+    addressLocality: "Baia Mare",
     addressRegion: "Maramureș",
     addressCountry: "RO",
   },
