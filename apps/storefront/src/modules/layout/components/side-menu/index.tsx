@@ -154,7 +154,7 @@ function FeaturedCollectionSubmenu({
   const categoriesWithChildren = new Set(
     categories
       .filter((c) => (c.category_children?.length ?? 0) > 0)
-      .map((c) => c.id)
+      .map((c) => c.id),
   )
   const seen = new Set<string>()
   const productCategories: HttpTypes.StoreProductCategory[] = []
@@ -212,7 +212,7 @@ function ReadyToWearSubmenu({
 }) {
   const t = useTranslations("layout")
   const nonAccesoriiCategories = categories.filter(
-    (c) => !c.parent_category && c.name?.toLowerCase() !== "accesorii"
+    (c) => !c.parent_category && c.name?.toLowerCase() !== "accesorii",
   )
 
   return (
@@ -333,7 +333,10 @@ function WorldOfTheHunterSubmenu({
           {STYLE_GUIDES.map((g) => (
             <li key={g.label}>
               <span className="block py-2 small:py-2.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text-muted)] cursor-default">
-                {g.label}
+                {g.label} -{" "}
+                <span className="text-[var(--theme-text-muted)]">
+                  Coming Soon
+                </span>
               </span>
             </li>
           ))}
@@ -589,7 +592,7 @@ const SideMenu = ({
                         </>
                       )}
                     </AnimatePresence>,
-                    document.body
+                    document.body,
                   )}
               </>
             )
