@@ -173,11 +173,10 @@ const CustomerServiceTemplate = async () => {
 
         <Section title={t("Informații legale")}>
           <ul className="flex flex-col gap-1.5">
-            <li>{t("Denumire firmă: [Completează]")}</li>
-            <li>{t("CUI: [Completează]")}</li>
-            <li>{t("Nr Reg Comerțului: [Completează]")}</li>
-            <li>{t("Adresă: [Completează]")}</li>
-            <li>{t("Capital social: [Completează, dacă este cazul]")}</li>
+            <li>{t("Denumire firmă:")} S.C. BOJO HOUSE S.R.L.</li>
+            <li>{t("Nr Reg Comerțului:")} J24/356/2023</li>
+            <li>{t("CUI:")} 47739604</li>
+            <li>{t("Adresă:")} Str. Piața Eroilor, nr. 2, Târgu Lăpuș, Maramureș</li>
           </ul>
           <div className="flex flex-col gap-1.5">
             <a
@@ -201,6 +200,12 @@ const CustomerServiceTemplate = async () => {
             {t("Litigiile pot fi soluționate și pe cale alternativă (SAL), prin intermediul ANPC")}
           </p>
           <div className="flex flex-wrap gap-x-5 gap-y-2">
+            <LocalizedClientLink
+              href="/terms-of-use"
+              className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
+            >
+              {t("Termeni și condiții")}
+            </LocalizedClientLink>
             <LocalizedClientLink
               href="/privacy-policy"
               className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
