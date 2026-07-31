@@ -112,7 +112,14 @@ export default function Collections() {
 
         {/* MtM Process */}
         <div className="mtm-inline rv-group">
-          <div className="mtm-inline-header rv">
+          {/* No "rv" here: this is already a direct child of the .rv-group
+              above, which independently animates each of its children via a
+              staggered opacity/transform tween. Also having "rv" made this
+              element match the reveal effect's top-level ".rv" selector too,
+              so two competing WAAPI animations fought over its opacity at
+              once — the flicker (visible → vanish → reappear) described
+              elsewhere in hunter-landing/index.tsx as this exact bug class. */}
+          <div className="mtm-inline-header">
             <div className="mtm-tag">{t("Made to measure")}</div>
             <h3 className="mtm-inline-title">
               {t("Costumul tău nu se găsește –")}

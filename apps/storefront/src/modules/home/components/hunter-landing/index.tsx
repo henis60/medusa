@@ -83,8 +83,11 @@ const HunterLanding = ({ shopSlot }: { shopSlot?: React.ReactNode }) => {
           const htmlEl = el as HTMLElement
           const isGroup = el.classList.contains("rv-group")
           const isLineDraw = el.classList.contains("line-draw")
-          const isKicker =
-            el.classList.contains("kicker") && !el.classList.contains("rv")
+          // Most kickers in the sections below carry BOTH "kicker" and "rv"
+          // classes (only GiftCard's is a bare "kicker") — excluding "rv"
+          // here meant the kicker-bar grow-in never ran for 8 of the 9
+          // sections, since they never took this branch as isKicker.
+          const isKicker = el.classList.contains("kicker")
           // Stagger delay comes from a data attribute, NOT an inline
           // transition-delay: many of these elements (links, buttons, grids)
           // carry a CSS `transition` for hover, and a real transition-delay on

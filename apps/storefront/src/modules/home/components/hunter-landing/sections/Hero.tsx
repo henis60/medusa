@@ -21,11 +21,13 @@ const Hero = () => {
     offset: ["start start", "end start"],
   })
   // Scroll-linked parallax transform on a large full-bleed background image
-  // is a common source of scroll jank on mobile browsers (the transform
-  // fights with native scrolling/compositing on less powerful GPUs). The
-  // mobile hero is a fixed 100svh section anyway, so the parallax adds
-  // little visually there — disable it below the tablet breakpoint instead
-  // of fighting for smoothness.
+  // can be a source of scroll jank on mobile browsers (the transform fights
+  // with native scrolling/compositing on less powerful GPUs) — but framer's
+  // useTransform drives a compositor-only `transform` (GPU-accelerated,
+  // same as .hero-bg's will-change: transform), so a smaller-magnitude
+  // parallax is safe there too. Kept lighter on mobile (15% vs 35%) rather
+  // than disabled outright, so it's still felt without the jank risk of the
+  // full desktop range.
   const [isMobile, setIsMobile] = useState(false)
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)")
@@ -37,7 +39,7 @@ const Hero = () => {
   const bgY = useTransform(
     scrollYProgress,
     [0, 1],
-    isMobile ? ["0%", "0%"] : ["0%", "35%"]
+    isMobile ? ["0%", "15%"] : ["0%", "35%"]
   )
 
   const marqueeItems = t.raw("marqueeItems") as string[]

@@ -59,6 +59,7 @@ export default function Space() {
     },
   ]
 
+  const sectionRef = useRef<HTMLElement>(null)
   const zonesRef = useRef<HTMLDivElement>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
   const tapRef = useRef<{ x: number; y: number } | null>(null)
@@ -93,40 +94,68 @@ export default function Space() {
     return () => window.removeEventListener("resize", updateActive)
   }, [updateActive])
 
-  // On mobile, only one zone is visible at a time and nothing else in the
-  // section hints there's more to the side — it can read as a single static
-  // panel rather than a carousel. Nudge it once, the first time the section
-  // scrolls into view: peek 48px to the right, then settle back to 0.
+  // Scroll-jacking on mobile: while the section is docked at the top of the
+  // viewport and the carousel hasn't been fully swiped through yet, a
+  // vertical swipe drives the carousel's horizontal scroll instead of the
+  // page — so swiping down "drains" sideways through every zone first,
+  // then releases back to normal page scroll once it reaches the end (and
+  // symmetrically in reverse on the way back up). This makes the section
+  // unmistakably a carousel instead of a single static panel.
   useEffect(() => {
     const el = zonesRef.current
-    if (!el || window.innerWidth > 768) return
+    const section = sectionRef.current
+    if (!el || !section || window.innerWidth > 768) return
 
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches
     if (prefersReducedMotion) return
 
-    let peekTimer: ReturnType<typeof setTimeout> | undefined
-    let settleTimer: ReturnType<typeof setTimeout> | undefined
+    let lastY = 0
+    // Decided once per gesture (at touchstart), not re-evaluated mid-swipe:
+    // iOS Safari commits a touch sequence to native scrolling on its first
+    // unprevented touchmove, so switching a gesture from "page scroll" to
+    // "carousel drag" partway through wouldn't reliably cancel it anyway.
+    let capturing = false
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return
-        observer.disconnect()
-        peekTimer = setTimeout(() => {
-          el.scrollTo({ left: 48, behavior: "smooth" })
-          settleTimer = setTimeout(() => {
-            el.scrollTo({ left: 0, behavior: "smooth" })
-          }, 550)
-        }, 400)
-      },
-      { threshold: 0.4 }
-    )
-    observer.observe(el)
+    const maxScroll = () => el.scrollWidth - el.clientWidth
+
+    function onTouchStart(e: TouchEvent) {
+      lastY = e.touches[0].clientY
+      const rect = section!.getBoundingClientRect()
+      capturing = rect.top <= 80 && rect.top > -80
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      if (!capturing) return
+      const currentY = e.touches[0].clientY
+      const deltaY = lastY - currentY // positive = swiping up = scroll-down intent
+      const atStart = el.scrollLeft <= 0
+      const atEnd = el.scrollLeft >= maxScroll() - 1
+
+      if ((deltaY > 0 && atEnd) || (deltaY < 0 && atStart)) {
+        // Carousel has nothing left to give in this direction — stop
+        // capturing so the rest of this gesture scrolls the page normally.
+        capturing = false
+        return
+      }
+
+      e.preventDefault()
+      el.scrollLeft += deltaY
+      lastY = currentY
+    }
+
+    function onTouchEnd() {
+      capturing = false
+    }
+
+    section.addEventListener("touchstart", onTouchStart, { passive: true })
+    section.addEventListener("touchmove", onTouchMove, { passive: false })
+    section.addEventListener("touchend", onTouchEnd, { passive: true })
     return () => {
-      observer.disconnect()
-      clearTimeout(peekTimer)
-      clearTimeout(settleTimer)
+      section.removeEventListener("touchstart", onTouchStart)
+      section.removeEventListener("touchmove", onTouchMove)
+      section.removeEventListener("touchend", onTouchEnd)
     }
   }, [])
 
@@ -148,7 +177,7 @@ export default function Space() {
   }
 
   return (
-    <section className="space-sec" id="space">
+    <section className="space-sec" id="space" ref={sectionRef}>
       <div
         ref={zonesRef}
         className="zones rv"

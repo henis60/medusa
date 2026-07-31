@@ -215,7 +215,7 @@ export const getProductByHandle = async (
         handle,
         region_id: regionId,
         fields:
-          "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags,",
+          "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags,*categories",
       },
       next: { tags: ["products"], revalidate: 3600 },
       cache: "force-cache",
