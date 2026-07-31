@@ -232,7 +232,7 @@ export default function MediaLibraryPicker({
                   </div>
                 </button>
               );
-            }))}
+            })}
           </div>
         </div>
         <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-ui-border-base">
