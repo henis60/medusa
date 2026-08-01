@@ -3491,22 +3491,23 @@ a.cb-value:hover {
   }
   /* One-time reveal on scroll-into-view: peek strips fade/slide in with a
      stagger, mirroring the desktop domino effect without touching zone
-     widths (which would break swipe/tap distance — see Space.tsx). */
+     widths (which would break swipe/tap distance — see Space.tsx).
+     A self-contained CSS animation (not a transition toggled by a second
+     JS-driven class) so there's no timing race with any fallback: the
+     un-animated base state is opacity 1 already, this only plays an
+     entrance on top of it. */
+  @keyframes zoneCollapsedIn {
+    from { opacity: 0; transform: translateX(14px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
   .zones-intro .zone-collapsed {
-    opacity: 0;
-    transform: translateX(14px);
-    transition: opacity 0.5s cubic-bezier(0.23, 1, 0.32, 1),
-      transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    animation: zoneCollapsedIn 0.5s cubic-bezier(0.23, 1, 0.32, 1) both;
   }
-  .zones-intro.zones-intro-revealed .zone-collapsed {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  .zones-intro .zone:nth-child(1) .zone-collapsed { transition-delay: 0.05s; }
-  .zones-intro .zone:nth-child(2) .zone-collapsed { transition-delay: 0.15s; }
-  .zones-intro .zone:nth-child(3) .zone-collapsed { transition-delay: 0.25s; }
-  .zones-intro .zone:nth-child(4) .zone-collapsed { transition-delay: 0.35s; }
-  .zones-intro .zone:nth-child(5) .zone-collapsed { transition-delay: 0.45s; }
+  .zones-intro .zone:nth-child(1) .zone-collapsed { animation-delay: 0.05s; }
+  .zones-intro .zone:nth-child(2) .zone-collapsed { animation-delay: 0.15s; }
+  .zones-intro .zone:nth-child(3) .zone-collapsed { animation-delay: 0.25s; }
+  .zones-intro .zone:nth-child(4) .zone-collapsed { animation-delay: 0.35s; }
+  .zones-intro .zone:nth-child(5) .zone-collapsed { animation-delay: 0.45s; }
   .zone:hover,
   .zones:has(.zone:hover) .zone:not(:hover) {
     flex: none !important;

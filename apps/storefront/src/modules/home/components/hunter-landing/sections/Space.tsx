@@ -62,8 +62,7 @@ export default function Space() {
   const sectionRef = useRef<HTMLElement>(null)
   const zonesRef = useRef<HTMLDivElement>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
-  const [introPlaying, setIntroPlaying] = useState(true)
-  const [introRevealed, setIntroRevealed] = useState(false)
+  const [introPlaying, setIntroPlaying] = useState(false)
   const tapRef = useRef<{ x: number; y: number } | null>(null)
 
   // Recompute which zone is most visible in the scroll container. Desktop
@@ -112,32 +111,18 @@ export default function Space() {
         observer.disconnect()
         setActiveId(ZONES[0].id)
         // Purely cosmetic stagger for the mobile peek strip (see
-        // .zones-intro in globals.css) — doesn't touch zone widths, so it
-        // can't interfere with swipe/tap distances the way an animated
-        // width change would. Two steps: mount hidden, then flip to
-        // revealed a tick later so the opacity/transform transition
-        // actually has something to animate toward.
-        requestAnimationFrame(() => setIntroRevealed(true))
-        window.setTimeout(() => setIntroPlaying(false), 900)
+        // .zones-intro in globals.css) — a self-contained CSS animation
+        // (animation-fill-mode: both), not a class pair coordinated by JS
+        // timers. That means there's nothing to race or get stuck: the
+        // base (no-class) state is already opacity 1, so if this observer
+        // never fires for any reason, the strip is still visible — it just
+        // never plays the entrance animation, instead of staying invisible.
+        setIntroPlaying(true)
       },
       { threshold: 0.4 }
     )
     observer.observe(section)
     return () => observer.disconnect()
-  }, [])
-
-  // Failsafe: the intro CSS starts the mobile peek strip at opacity 0 and
-  // relies on the IntersectionObserver above to flip it back to 1. If that
-  // observer never fires for any reason (backgrounded tab, layout not
-  // settled yet, etc.), those zones would stay invisible forever instead of
-  // just missing an animation — so force the reveal after a fixed delay
-  // regardless of scroll position.
-  useEffect(() => {
-    const fallback = window.setTimeout(() => {
-      setIntroRevealed(true)
-      setIntroPlaying(false)
-    }, 2500)
-    return () => window.clearTimeout(fallback)
   }, [])
 
   function handlePointerDown(e: React.PointerEvent) {
@@ -172,7 +157,7 @@ export default function Space() {
     <section className="space-sec" id="space" ref={sectionRef}>
       <div
         ref={zonesRef}
-        className={`zones rv${introPlaying ? " zones-intro" : ""}${introRevealed ? " zones-intro-revealed" : ""}`}
+        className={`zones rv${introPlaying ? " zones-intro" : ""}`}
         data-rv-delay="0.12"
         onScroll={updateActive}
         onPointerDown={handlePointerDown}
