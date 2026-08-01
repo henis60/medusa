@@ -5,6 +5,7 @@ import {
 import { listCategories } from "@lib/data/categories"
 import { listLocales } from "@lib/data/locales"
 import { listRegions } from "@lib/data/regions"
+import { isMetadataFlagSet } from "@lib/util/metadata-flag"
 import { HttpTypes, StoreRegion } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
@@ -21,14 +22,21 @@ export default async function Nav() {
     listCategories(),
   ])
 
-  const sortedCollections = [...collections].sort(
-    (a, b) =>
-      new Date(b.created_at ?? 0).getTime() -
-      new Date(a.created_at ?? 0).getTime()
+  // Which collection shows as its own top-level menu entry (previously just
+  // "whichever collection was created most recently") is now an explicit
+  // opt-in via metadata.featured — set it on exactly one collection in the
+  // admin's Metadata editor. Every other collection shows up in the menu's
+  // "Colecții" list unconditionally (mirrors "Ready to Wear" showing every
+  // category except the one flagged as the Accessories parent).
+  const featuredCollectionRef = collections.find((c) =>
+    isMetadataFlagSet(c.metadata, "featured")
+  )
+  const menuCollections = collections.filter(
+    (c) => c.id !== featuredCollectionRef?.id
   )
 
-  const featuredCollection = sortedCollections[0]
-    ? await getCollectionWithProductCategories(sortedCollections[0].id)
+  const featuredCollection = featuredCollectionRef
+    ? await getCollectionWithProductCategories(featuredCollectionRef.id)
     : null
 
   return (
@@ -39,7 +47,7 @@ export default async function Nav() {
             regions={regions}
             locales={locales}
             currentLocale={null}
-            collections={sortedCollections}
+            collections={menuCollections}
             categories={categories}
             featuredCollection={featuredCollection}
           />

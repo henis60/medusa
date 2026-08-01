@@ -14,8 +14,12 @@ export const listCategories = async (query?: Record<string, unknown>) => {
       {
         headers: getMedusaLocaleHeaders(),
         query: {
+          // +metadata: the nav menu decides what to show via metadata flags
+          // (see side-menu/index.tsx) rather than matching on category name,
+          // which breaks under any locale but the one those names were
+          // typed in.
           fields:
-            "*category_children, *products, *parent_category, *parent_category.parent_category",
+            "*category_children, *products, *parent_category, *parent_category.parent_category, +metadata",
           limit,
           ...query,
         },
