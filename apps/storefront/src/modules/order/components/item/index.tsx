@@ -14,6 +14,13 @@ type ItemProps = {
 const Item = async ({ item, currencyCode }: ItemProps) => {
   const t = await getTranslations("order")
   const imgSrc = getCartItemImageUrl(item)
+  // item.product_title is a denormalized snapshot captured at order-placement
+  // time (so the order survives the product being edited/deleted later) — it
+  // never re-resolves through Medusa's translation layer. item.variant.product
+  // is the live, expanded relation (see retrieveOrder's fields), so it
+  // reflects the current request's locale; fall back to the snapshot if
+  // it's missing.
+  const displayTitle = (item.variant as any)?.product?.title ?? item.product_title
 
   return (
     <div className="flex gap-4" data-testid="product-row">
@@ -21,7 +28,7 @@ const Item = async ({ item, currencyCode }: ItemProps) => {
         {imgSrc && (
           <Image
             src={imgSrc}
-            alt={item.product_title ?? ""}
+            alt={displayTitle ?? ""}
             fill
             className="object-cover object-center"
             sizes="72px"
@@ -34,7 +41,7 @@ const Item = async ({ item, currencyCode }: ItemProps) => {
             className="font-display text-[17px] leading-[1.2] text-[var(--theme-text)]"
             data-testid="product-name"
           >
-            {item.product_title}
+            {displayTitle}
           </p>
           <LineItemOptions
             variant={item.variant}
