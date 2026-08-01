@@ -164,8 +164,21 @@ const ProductVisualMediaWidget = ({
           // Only existing images carry a real id — new ones must omit the key
           // entirely (an empty string is still a truthy-shaped value to the
           // upsert and can confuse "is this new or existing" resolution).
-          images: nextImages.map((img) =>
-            img.id ? { id: img.id, url: img.url } : { url: img.url },
+          //
+          // `rank` is set explicitly here (not just implied by array
+          // position) because Medusa's product-update upsert matches
+          // existing images by id and, seeing the same id + same url,
+          // otherwise treats the row as unchanged and skips writing a new
+          // rank — so drag-reordering visually worked in this widget but
+          // never actually persisted, and getVariantImages() (which orders a
+          // variant's own images by rank) kept serving the OLD order to the
+          // storefront's product page. This is a backend/data problem, not a
+          // frontend rendering one: the gallery's on-screen order was never
+          // the order actually stored.
+          images: nextImages.map((img, index) =>
+            img.id
+              ? { id: img.id, url: img.url, rank: index }
+              : { url: img.url, rank: index },
           ),
           ...(nextThumbnail !== undefined ? { thumbnail: nextThumbnail } : {}),
         },
