@@ -62,6 +62,8 @@ export default function Space() {
   const sectionRef = useRef<HTMLElement>(null)
   const zonesRef = useRef<HTMLDivElement>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [introPlaying, setIntroPlaying] = useState(true)
+  const [introRevealed, setIntroRevealed] = useState(false)
   const tapRef = useRef<{ x: number; y: number } | null>(null)
 
   // Recompute which zone is most visible in the scroll container. Desktop
@@ -109,6 +111,14 @@ export default function Space() {
         if (!entry.isIntersecting) return
         observer.disconnect()
         setActiveId(ZONES[0].id)
+        // Purely cosmetic stagger for the mobile peek strip (see
+        // .zones-intro in globals.css) — doesn't touch zone widths, so it
+        // can't interfere with swipe/tap distances the way an animated
+        // width change would. Two steps: mount hidden, then flip to
+        // revealed a tick later so the opacity/transform transition
+        // actually has something to animate toward.
+        requestAnimationFrame(() => setIntroRevealed(true))
+        window.setTimeout(() => setIntroPlaying(false), 900)
       },
       { threshold: 0.4 }
     )
@@ -148,7 +158,7 @@ export default function Space() {
     <section className="space-sec" id="space" ref={sectionRef}>
       <div
         ref={zonesRef}
-        className="zones rv"
+        className={`zones rv${introPlaying ? " zones-intro" : ""}${introRevealed ? " zones-intro-revealed" : ""}`}
         data-rv-delay="0.12"
         onScroll={updateActive}
         onPointerDown={handlePointerDown}
