@@ -1,8 +1,8 @@
 import { Metadata } from "next"
-import { getTranslations } from "next-intl/server"
+import { getTranslations, getLocale } from "next-intl/server"
 
 import ProfileDetails from "@modules/account/components/profile-details"
-import { notFound } from "next/navigation"
+import { redirect } from "@i18n/navigation"
 import { retrieveCustomer } from "@lib/data/customer"
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -17,8 +17,10 @@ export default async function Profile() {
   const t = await getTranslations("account")
   const customer = await retrieveCustomer()
 
+  // Signed out — send them to /profil itself (renders the login form via
+  // profil/layout.tsx) rather than a dead-end 404.
   if (!customer) {
-    notFound()
+    redirect({ href: "/profil", locale: await getLocale() })
   }
 
   return (

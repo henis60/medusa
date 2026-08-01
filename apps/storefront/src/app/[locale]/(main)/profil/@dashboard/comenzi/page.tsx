@@ -1,8 +1,9 @@
 import { Metadata } from "next"
-import { getTranslations } from "next-intl/server"
+import { getTranslations, getLocale } from "next-intl/server"
 
 import OrderOverview from "@modules/account/components/order-overview"
-import { notFound } from "next/navigation"
+import { redirect } from "@i18n/navigation"
+import { retrieveCustomer } from "@lib/data/customer"
 import { listOrders } from "@lib/data/orders"
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -15,11 +16,18 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Orders() {
   const t = await getTranslations("account")
-  const orders = await listOrders()
 
-  if (!orders) {
-    notFound()
+  // Signed out — send them to /profil itself (renders the login form via
+  // profil/layout.tsx) rather than a dead-end 404. Previously this page had
+  // no auth check at all: listOrders() would throw on the backend's 401
+  // (no auth headers), surfacing as an unhandled 500 instead of any kind of
+  // graceful redirect/404.
+  const customer = await retrieveCustomer().catch(() => null)
+  if (!customer) {
+    redirect({ href: "/profil", locale: await getLocale() })
   }
+
+  const orders = await listOrders()
 
   return (
     <div className="w-full" data-testid="orders-page-wrapper">

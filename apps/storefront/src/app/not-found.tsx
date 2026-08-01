@@ -1,19 +1,34 @@
 // This is the true root not-found route — rendered for any request that
-// doesn't match a [locale] segment (there's no root layout.tsx, so this file
-// must supply its own <html>/<body>, same as global-error.tsx). Unlike that
-// file, this one can safely import the global stylesheet and reuse
-// NotFoundContent (like every other not-found.tsx in the app): globals.css
-// defines `:root` light-theme CSS variables directly, with no dependency on
-// ThemeProvider's runtime dark-mode toggle, so it renders correctly even
-// this far outside the [locale] layout tree.
-import "styles/globals.css"
-import NotFoundContent from "@modules/common/components/not-found"
-
+// doesn't match a [locale] segment. There's no root layout.tsx, so this file
+// must render its own <html>/<body> (same constraint as global-error.tsx).
+// That means NO client components can be nested inside it: hydrating a
+// client component (e.g. NotFoundContent's back-home button, which uses
+// useRouter) in an <html>/<body> with no root layout above it produced a
+// production-only React hydration crash (minified error #310) — confirmed
+// by reverting to plain static HTML, same as this file had before
+// NotFoundContent was (incorrectly) reused here. The other not-found.tsx
+// files in the app render inside the real [locale] layout tree and don't
+// have this problem — only this root one is special.
 export default function NotFound() {
   return (
     <html lang="ro">
       <body>
-        <NotFoundContent />
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            padding: "0 24px",
+            gap: "16px",
+            minHeight: "100vh",
+          }}
+        >
+          <h1>Pagină negăsită</h1>
+          <p>Se pare că te-ai rătăcit. Pagina căutată nu mai există sau și-a schimbat locul.</p>
+          <a href="/" style={{ marginTop: "8px" }}>Înapoi la pagina principală</a>
+        </div>
       </body>
     </html>
   )
