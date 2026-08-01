@@ -12,10 +12,11 @@ type Props = {
   isFeatured?: boolean
   noOverlay?: boolean
   activeImage?: string | null
+  activeVariant?: HttpTypes.StoreProductVariant | null
   onVariantSelect?: (variant: HttpTypes.StoreProductVariant | null) => void
 }
 
-export default function CardImages({ product, isFeatured, noOverlay, activeImage, onVariantSelect }: Props) {
+export default function CardImages({ product, isFeatured, noOverlay, activeImage, activeVariant, onVariantSelect }: Props) {
   const t = useTranslations("products")
   const allImages = product.images ?? []
   const variants = product.variants ?? []
@@ -67,7 +68,16 @@ export default function CardImages({ product, isFeatured, noOverlay, activeImage
           productId={product.id}
           productHandle={product.handle ?? undefined}
           productTitle={product.title ?? undefined}
-          productThumbnail={product.thumbnail}
+          productThumbnail={activeImage ?? product.thumbnail}
+          variantId={activeVariant?.id ?? null}
+          variantTitle={
+            ((activeVariant as any)?.options as { value?: string }[] | undefined)
+              ?.map((o) => o.value)
+              .filter(Boolean)
+              .join(" · ") ||
+            activeVariant?.title ||
+            null
+          }
         />
       </div>
 

@@ -73,9 +73,11 @@ export default function CardWrapper({ product, isFeatured, forceDark }: Props) {
   const options = product.options ?? []
 
   const [activeImage, setActiveImage] = useState<string | null>(null)
+  const [activeVariant, setActiveVariant] = useState<HttpTypes.StoreProductVariant | null>(null)
 
   const handleVariantSelect = useCallback(
     (variant: HttpTypes.StoreProductVariant | null) => {
+      setActiveVariant(variant)
       if (!variant) {
         setActiveImage(null)
         return
@@ -93,6 +95,7 @@ export default function CardWrapper({ product, isFeatured, forceDark }: Props) {
         isFeatured={isFeatured}
         noOverlay={!!forceDark}
         activeImage={activeImage}
+        activeVariant={activeVariant}
         onVariantSelect={handleVariantSelect}
       />
 
