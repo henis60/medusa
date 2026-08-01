@@ -8,8 +8,13 @@ type OrderSummaryProps = {
 
 const OrderSummary = async ({ order }: OrderSummaryProps) => {
   const t = await getTranslations("order")
+  // Falsy-checking `amount` (the previous `amount ? ... : null`) hid the
+  // value entirely whenever it was legitimately 0 — most visibly on
+  // Shipping when a free-shipping promotion zeroed it out, leaving that row
+  // blank instead of showing "0.00 LEI". Only null/undefined (field not
+  // present at all) should skip rendering.
   const fmt = (amount?: number | null) =>
-    amount
+    amount != null
       ? convertToLocale({ amount, currency_code: order.currency_code })
       : null
 
