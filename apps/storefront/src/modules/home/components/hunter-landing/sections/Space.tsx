@@ -62,7 +62,6 @@ export default function Space() {
   const sectionRef = useRef<HTMLElement>(null)
   const zonesRef = useRef<HTMLDivElement>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
-  const [introPlaying, setIntroPlaying] = useState(false)
   const tapRef = useRef<{ x: number; y: number } | null>(null)
 
   // Recompute which zone is most visible in the scroll container. Desktop
@@ -102,27 +101,58 @@ export default function Space() {
   // anything; on mobile it's the same class the swipe/tap logic below
   // already drives. Interaction (hover on desktop, swipe/tap on mobile)
   // takes over normally from there — no scroll-jacking, no auto-advance.
+  //
+  // The mobile peek strips get an entrance animation using the same
+  // framer-motion animate()+inView() primitives the rest of the site's
+  // scroll-reveal system already uses (see hunter-landing/index.tsx) —
+  // proven to work reliably, instead of a bespoke CSS-animation/
+  // IntersectionObserver combination. Inline opacity/transform are cleared
+  // once the animation finishes so is-active/:hover CSS keeps controlling
+  // the element afterward (framer's WAAPI wrapper commits the final
+  // keyframe as a real inline style on finish, which would otherwise
+  // permanently outrank those class-based rules).
   useEffect(() => {
     const section = sectionRef.current
     if (!section) return
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return
-        observer.disconnect()
-        setActiveId(ZONES[0].id)
-        // Purely cosmetic stagger for the mobile peek strip (see
-        // .zones-intro in globals.css) — a self-contained CSS animation
-        // (animation-fill-mode: both), not a class pair coordinated by JS
-        // timers. That means there's nothing to race or get stuck: the
-        // base (no-class) state is already opacity 1, so if this observer
-        // never fires for any reason, the strip is still visible — it just
-        // never plays the entrance animation, instead of staying invisible.
-        setIntroPlaying(true)
-      },
-      { threshold: 0.4 }
-    )
-    observer.observe(section)
-    return () => observer.disconnect()
+    let cancelled = false
+    let stopInView: (() => void) | undefined
+
+    import("framer-motion").then(({ inView, animate }) => {
+      if (cancelled) return
+      stopInView = inView(
+        section,
+        () => {
+          setActiveId(ZONES[0].id)
+          if (window.innerWidth <= 768) {
+            const labels = Array.from(
+              section.querySelectorAll<HTMLElement>(".zone-collapsed")
+            )
+            labels.forEach((el, i) => {
+              el.style.opacity = "0"
+              el.style.transform = "translateX(14px)"
+              const controls = animate(
+                el,
+                {
+                  opacity: [0, 1],
+                  transform: ["translateX(14px)", "translateX(0)"],
+                },
+                { duration: 0.5, ease: [0.23, 1, 0.32, 1], delay: 0.05 + i * 0.1 }
+              )
+              controls.finished.then(() => {
+                el.style.opacity = ""
+                el.style.transform = ""
+              })
+            })
+          }
+        },
+        { amount: 0.4 }
+      )
+    })
+
+    return () => {
+      cancelled = true
+      stopInView?.()
+    }
   }, [])
 
   function handlePointerDown(e: React.PointerEvent) {
@@ -157,7 +187,7 @@ export default function Space() {
     <section className="space-sec" id="space" ref={sectionRef}>
       <div
         ref={zonesRef}
-        className={`zones rv${introPlaying ? " zones-intro" : ""}`}
+        className="zones rv"
         data-rv-delay="0.12"
         onScroll={updateActive}
         onPointerDown={handlePointerDown}
