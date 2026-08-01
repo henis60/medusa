@@ -12,6 +12,7 @@ import { FavoritesProvider } from "@lib/context/favorites-context"
 import { ConsentProvider } from "@lib/context/consent-context"
 import CookieConsent from "@modules/common/components/cookie-consent"
 import GoogleAnalytics from "@modules/common/components/google-analytics"
+import ChunkErrorGuard from "@modules/common/components/chunk-error-guard"
 import {
   Cinzel,
   Cormorant_Garamond,
@@ -151,6 +152,7 @@ export default async function RootLayout({ children, params }: Props) {
       </head>
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
+          <ChunkErrorGuard />
           <GoogleAnalytics />
           <ThemeProvider>
             <ConsentProvider>
