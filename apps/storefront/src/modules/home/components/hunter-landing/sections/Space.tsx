@@ -126,6 +126,20 @@ export default function Space() {
     return () => observer.disconnect()
   }, [])
 
+  // Failsafe: the intro CSS starts the mobile peek strip at opacity 0 and
+  // relies on the IntersectionObserver above to flip it back to 1. If that
+  // observer never fires for any reason (backgrounded tab, layout not
+  // settled yet, etc.), those zones would stay invisible forever instead of
+  // just missing an animation — so force the reveal after a fixed delay
+  // regardless of scroll position.
+  useEffect(() => {
+    const fallback = window.setTimeout(() => {
+      setIntroRevealed(true)
+      setIntroPlaying(false)
+    }, 2500)
+    return () => window.clearTimeout(fallback)
+  }, [])
+
   function handlePointerDown(e: React.PointerEvent) {
     tapRef.current = { x: e.clientX, y: e.clientY }
   }
