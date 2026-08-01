@@ -7,6 +7,7 @@ import { useElements, useStripe } from "@stripe/react-stripe-js"
 import React, { useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import ErrorMessage from "../error-message"
+import { getDisplayableErrorMessage } from "@lib/util/stale-deployment"
 
 type PaymentButtonProps = {
   cart: HttpTypes.StoreCart
@@ -77,7 +78,7 @@ const StripePaymentButton = ({
   const onPaymentCompleted = async () => {
     await placeOrder()
       .catch((err) => {
-        setErrorMessage(err.message)
+        setErrorMessage(getDisplayableErrorMessage(err, t("A apărut o eroare Reîncearcă")))
       })
       .finally(() => {
         setSubmitting(false)
@@ -176,7 +177,7 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
   const onPaymentCompleted = async () => {
     await placeOrder()
       .catch((err) => {
-        setErrorMessage(err.message)
+        setErrorMessage(getDisplayableErrorMessage(err, t("A apărut o eroare Reîncearcă")))
       })
       .finally(() => {
         setSubmitting(false)
@@ -263,7 +264,7 @@ const NetopiaPaymentButton = ({
       // butonul Back din pagina Netopia nu readuce o pagină posibil coruptă.
       window.location.replace(redirectUrl)
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : String(err))
+      setErrorMessage(getDisplayableErrorMessage(err, t("A apărut o eroare Reîncearcă")))
       setSubmitting(false)
     }
   }

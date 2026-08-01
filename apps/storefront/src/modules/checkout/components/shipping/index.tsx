@@ -30,6 +30,7 @@ import { useSearchParams } from "next/navigation"
 import { usePathname, useRouter } from "@i18n/navigation"
 import { useCallback, useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
+import { getDisplayableErrorMessage } from "@lib/util/stale-deployment"
 
 // A shipping option that delivers to a parcel locker requires the customer
 // to pick a specific locker. Detection is purely structural: the eAWB
@@ -193,7 +194,7 @@ const Shipping: React.FC<ShippingProps> = ({
     await setShippingMethod({ cartId: cart.id, shippingMethodId: id, data })
       .catch((err) => {
         setShippingMethodId(currentId)
-        setError(err.message)
+        setError(getDisplayableErrorMessage(err, t("A apărut o eroare Reîncearcă")))
       })
       .finally(() => setIsLoading(false))
   }

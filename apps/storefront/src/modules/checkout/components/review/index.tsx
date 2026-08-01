@@ -9,6 +9,7 @@ import { HttpTypes } from "@medusajs/types"
 import { useTranslations } from "next-intl"
 import { bodyMutedClass, sectionTitleClass } from "@modules/checkout/components/typography"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { getDisplayableErrorMessage } from "@lib/util/stale-deployment"
 
 // Netopia is the store's only payment provider, so there's no method to pick
 // — the session is initiated silently as soon as this step opens, instead of
@@ -51,7 +52,9 @@ const Review = ({
     setInitiating(true)
     setInitError(null)
     initiatePaymentSession(cart, { provider_id: providerId })
-      .catch((err) => setInitError(err instanceof Error ? err.message : String(err)))
+      .catch((err) =>
+        setInitError(getDisplayableErrorMessage(err, t("A apărut o eroare Reîncearcă")))
+      )
       .finally(() => setInitiating(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, previousStepsCompleted, paidByGiftcard, hasPaymentSession])

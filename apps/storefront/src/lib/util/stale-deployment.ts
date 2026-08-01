@@ -47,3 +47,27 @@ export function reloadForNewDeployment() {
   } catch {}
   window.location.reload()
 }
+
+/**
+ * Turns a caught error into text safe to show a customer. Framework/network
+ * internals (a stale server action id, a failed chunk load, "Failed to
+ * fetch") must never reach the screen verbatim — a raw "Server Action ...
+ * was not found" with a link to Next's docs means nothing to a shopper mid
+ * checkout. Genuine backend validation messages (Medusa's own "Adresa de
+ * livrare este necesară" etc.) are left as-is; they're meant to be read.
+ *
+ * For the stale-deployment case specifically, this also triggers the reload
+ * that recovers from it — the caller only needs a string to show for the
+ * brief moment before that reload lands.
+ */
+export function getDisplayableErrorMessage(
+  err: unknown,
+  fallback: string
+): string {
+  if (isStaleDeploymentError(err)) {
+    reloadForNewDeployment()
+    return fallback
+  }
+  if (err instanceof Error && err.message) return err.message
+  return fallback
+}
