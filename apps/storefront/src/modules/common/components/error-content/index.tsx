@@ -46,7 +46,16 @@ const ErrorContent = ({
       <div className="flex flex-col small:flex-row items-stretch small:items-center justify-center gap-4 mt-2 w-full max-w-xs small:max-w-none">
         {reset && (
           <button
-            onClick={reset}
+            onClick={() => {
+              // Next's reset() just re-renders the segment without
+              // refetching data that may have caused the crash (e.g. a
+              // stale cache entry, a module that failed to load) — it
+              // often no-ops, which is why users have to hit browser
+              // refresh manually. A hard reload guarantees the same
+              // recovery reset() is supposed to provide.
+              reset()
+              window.location.reload()
+            }}
             className="flex items-center justify-center min-h-[48px] px-6 py-3 font-sans text-[10px] uppercase tracking-[4px] bg-hunter-gold text-hunter-dark hover:opacity-90 transition-opacity"
           >
             {t("Reîncearcă")}
