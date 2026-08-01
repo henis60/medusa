@@ -3,16 +3,18 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import Image from "next/image"
 
 function Section({
+  id,
   label,
   title,
   children,
 }: {
+  id?: string
   label?: string
   title: string
   children: React.ReactNode
 }) {
   return (
-    <section className="grid grid-cols-1 small:grid-cols-[180px_1fr] gap-4 small:gap-10 border-t border-[var(--theme-border)] pt-8">
+    <section id={id} className="grid grid-cols-1 small:grid-cols-[180px_1fr] gap-4 small:gap-10 border-t border-[var(--theme-border)] pt-8 scroll-mt-24">
       <div>
         {label && (
           <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-2">
@@ -132,7 +134,7 @@ const CustomerServiceTemplate = async () => {
           </div>
         </Section>
 
-        <Section title={t("Retur, schimb și rambursare")}>
+        <Section id="retur" title={t("Retur, schimb și rambursare")}>
           <p>
             {t("Conform legislației din România și UE, ai dreptul de retragere în")}{" "}
             <span className="text-[var(--theme-text)]">{t("14 zile")}</span>{" "}

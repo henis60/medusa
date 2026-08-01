@@ -8,6 +8,7 @@ import { useSearchParams } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 import { useTranslations } from "next-intl"
 import { bodyMutedClass, sectionTitleClass } from "@modules/checkout/components/typography"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 // Netopia is the store's only payment provider, so there's no method to pick
 // — the session is initiated silently as soon as this step opens, instead of
@@ -66,9 +67,27 @@ const Review = ({
         <>
           <p className={`${bodyMutedClass} leading-relaxed mb-6`}>
             {t("Prin plasarea comenzii, confirmi că ai citit și ești de acord cu")}{" "}
-            <span className="text-[var(--theme-text)]">{t("Termenii și Condițiile")}</span>,{" "}
-            <span className="text-[var(--theme-text)]">{t("Politica de Returnare")}</span> și{" "}
-            <span className="text-[var(--theme-text)]">{t("Politica de Confidențialitate")}</span>.
+            <LocalizedClientLink
+              href="/terms-of-use"
+              className="text-[var(--theme-text)] border-b border-hunter-gold/40 hover:border-hunter-gold transition-colors"
+            >
+              {t("Termenii și Condițiile")}
+            </LocalizedClientLink>
+            ,{" "}
+            <LocalizedClientLink
+              href="/relatii-clienti#retur"
+              className="text-[var(--theme-text)] border-b border-hunter-gold/40 hover:border-hunter-gold transition-colors"
+            >
+              {t("Politica de Returnare")}
+            </LocalizedClientLink>
+            {" "}și{" "}
+            <LocalizedClientLink
+              href="/privacy-policy"
+              className="text-[var(--theme-text)] border-b border-hunter-gold/40 hover:border-hunter-gold transition-colors"
+            >
+              {t("Politica de Confidențialitate")}
+            </LocalizedClientLink>
+            .
           </p>
           {paidByGiftcard || hasPaymentSession ? (
             <PaymentButton cart={cart} data-testid="submit-order-button" />
