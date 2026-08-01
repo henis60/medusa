@@ -1,6 +1,6 @@
-import { Link } from "@i18n/navigation"
 import { routing } from "@i18n/routing"
 import { getTranslations } from "next-intl/server"
+import BackHomeButton from "./back-home-button"
 
 type NotFoundContentProps = {
   title?: string
@@ -41,12 +41,7 @@ const NotFoundContent = async ({
       >
         {resolvedDescription}
       </p>
-      <Link
-        href="/"
-        className="mt-2 px-6 py-3 font-sans text-[10px] uppercase tracking-[4px] border border-hunter-gold text-hunter-gold hover:bg-hunter-gold hover:text-hunter-dark transition-colors"
-      >
-        {t("Înapoi la pagina principală")}
-      </Link>
+      <BackHomeButton label={t("Înapoi la pagina principală")} />
     </div>
   )
 }

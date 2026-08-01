@@ -3,11 +3,19 @@
 import { sdk } from "@lib/config"
 import medusaError from "@lib/util/medusa-error"
 import { getAuthHeaders, getCacheOptions } from "./cookies"
+import { getMedusaLocaleHeaders } from "@lib/util/request-locale"
 import { HttpTypes } from "@medusajs/types"
 
 export const retrieveOrder = async (id: string) => {
   const headers = {
     ...(await getAuthHeaders()),
+    // Without this, `items.variant.product.title` (the live relation the
+    // order item component prefers over its frozen product_title snapshot)
+    // always comes back in the base locale (Romanian) — this page renders
+    // inside [locale]'s tree, so getRequestLocaleValue() already has it,
+    // no override needed (contrast with cart.ts's Server Actions, invoked
+    // directly from Client Components outside any route render).
+    ...getMedusaLocaleHeaders(),
   }
 
   const next = {
@@ -47,6 +55,7 @@ export const retrieveOrderByDisplayId = async (displayId: string) => {
 
   const headers = {
     ...(await getAuthHeaders()),
+    ...getMedusaLocaleHeaders(),
   }
 
   const next = {
@@ -88,6 +97,7 @@ export const listOrders = async (
 ) => {
   const headers = {
     ...(await getAuthHeaders()),
+    ...getMedusaLocaleHeaders(),
   }
 
   const next = {
