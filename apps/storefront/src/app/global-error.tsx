@@ -37,7 +37,18 @@ export default function GlobalError({
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginTop: "0.5rem" }}>
             <button
-              onClick={reset}
+              onClick={() => {
+                // reset() alone just re-renders the segment without
+                // refetching whatever crashed (a stale cache entry, a
+                // module that failed to load, a broken font/provider at
+                // RootLayout level) — it often no-ops, leaving the same
+                // error on screen and making the button look broken. A
+                // hard reload guarantees the recovery reset() is supposed
+                // to provide (same fix already applied to the nested
+                // error.tsx boundaries' ErrorContent component).
+                reset()
+                window.location.reload()
+              }}
               style={{
                 padding: "0.75rem 1.5rem",
                 background: "#c9a84c",
