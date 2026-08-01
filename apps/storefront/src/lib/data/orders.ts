@@ -6,7 +6,79 @@ import { getAuthHeaders, getCacheOptions } from "./cookies"
 import { getMedusaLocaleHeaders } from "@lib/util/request-locale"
 import { HttpTypes } from "@medusajs/types"
 
+// Medusa's translation module only applies to the top-level queried entity —
+// /store/orders/:id returns the order itself translated, but NOT the deeply
+// nested items.variant.product relation (same limitation documented in
+// retrieveCart, cart.ts — confirmed there directly: an en-GB locale header
+// still returns the Romanian product title at that nested path). /store/
+// products DOES translate correctly, so overlay real values from there
+// instead of trusting the order response's nested product/variant data.
+async function applyProductTranslationOverlay(
+  items: HttpTypes.StoreOrderLineItem[] | null | undefined,
+  headers: Record<string, string>,
+  localeHeaders: Record<string, string>
+) {
+  if (!items?.length || !Object.keys(localeHeaders).length) return
+
+  const productIds = Array.from(
+    new Set(items.map((item) => item.product_id).filter(Boolean))
+  ) as string[]
+  if (!productIds.length) return
+
+  type TranslatedProduct = {
+    id: string
+    title: string
+    variants?: {
+      id: string
+      title: string
+      options?: { option_id: string; value: string }[]
+    }[]
+  }
+
+  const productById = await sdk.client
+    .fetch<{ products: TranslatedProduct[] }>(`/store/products`, {
+      method: "GET",
+      query: {
+        id: productIds,
+        fields:
+          "id,title,variants.id,variants.title,variants.options.option_id,variants.options.value",
+        limit: productIds.length,
+      },
+      headers: { ...headers, ...localeHeaders },
+    })
+    .then(({ products }) => new Map(products.map((p) => [p.id, p])))
+    .catch(() => new Map<string, TranslatedProduct>())
+
+  for (const item of items) {
+    const translated = item.product_id
+      ? productById.get(item.product_id)
+      : undefined
+    if (!translated) continue
+
+    item.product_title = translated.title
+    if (item.variant && (item.variant as any).product) {
+      ;(item.variant as any).product.title = translated.title
+    }
+
+    const variantId = item.variant?.id
+    const translatedVariant = translated.variants?.find(
+      (v) => v.id === variantId
+    )
+    if (!translatedVariant || !item.variant) continue
+
+    item.variant.title = translatedVariant.title
+    const valueByOptionId = new Map(
+      (translatedVariant.options ?? []).map((o) => [o.option_id, o.value])
+    )
+    for (const opt of (item.variant as any).options ?? []) {
+      const translatedValue = valueByOptionId.get(opt.option_id)
+      if (translatedValue) opt.value = translatedValue
+    }
+  }
+}
+
 export const retrieveOrder = async (id: string) => {
+  const localeHeaders = getMedusaLocaleHeaders()
   const headers = {
     ...(await getAuthHeaders()),
     // Without this, `items.variant.product.title` (the live relation the
@@ -15,14 +87,14 @@ export const retrieveOrder = async (id: string) => {
     // inside [locale]'s tree, so getRequestLocaleValue() already has it,
     // no override needed (contrast with cart.ts's Server Actions, invoked
     // directly from Client Components outside any route render).
-    ...getMedusaLocaleHeaders(),
+    ...localeHeaders,
   }
 
   const next = {
     ...(await getCacheOptions("orders")),
   }
 
-  return sdk.client
+  const order = await sdk.client
     .fetch<HttpTypes.StoreOrderResponse>(`/store/orders/${id}`, {
       method: "GET",
       query: {
@@ -40,6 +112,9 @@ export const retrieveOrder = async (id: string) => {
     })
     .then(({ order }) => order)
     .catch((err) => medusaError(err))
+
+  await applyProductTranslationOverlay(order?.items, headers, localeHeaders)
+  return order
 }
 
 // Order detail URLs use the human-friendly display_id (/profil/comenzi/148)
