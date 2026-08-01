@@ -38,7 +38,18 @@ export default async function OrderDetailPage(props: Props) {
     redirect({ href: "/profil", locale: await getLocale() })
   }
 
-  const order = await retrieveOrderByDisplayId(displayId).catch(() => null)
+  // Passed explicitly (not left to retrieveOrderByDisplayId's internal
+  // fallback) because this page is almost always reached via client-side
+  // navigation from /profil/comenzi under the same already-mounted
+  // [locale]/layout.tsx — Next.js skips re-running that layout's function
+  // body on a soft nav, so the cache() value it seeds never gets set for
+  // this request, and the order would render in the base locale until a
+  // hard refresh. next-intl's own getLocale() is populated per-request
+  // regardless (used above for the redirect already).
+  const locale = await getLocale()
+  const order = await retrieveOrderByDisplayId(displayId, locale).catch(
+    () => null
+  )
 
   if (!order) {
     notFound()

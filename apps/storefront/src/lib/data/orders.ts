@@ -77,16 +77,20 @@ async function applyProductTranslationOverlay(
   }
 }
 
-export const retrieveOrder = async (id: string) => {
-  const localeHeaders = getMedusaLocaleHeaders()
+export const retrieveOrder = async (id: string, locale?: string) => {
+  // getMedusaLocaleHeaders() with no argument falls back to
+  // getRequestLocaleValue(), which is only populated by [locale]/layout.tsx
+  // actually re-running its function body — Next.js skips that on a
+  // soft/client-side navigation between two pages under the same already-
+  // mounted layout (e.g. /profil/comenzi -> /profil/comenzi/[displayId]).
+  // That left this page showing the base locale (Romanian) on first
+  // client-side nav, only correcting itself on a hard refresh (which does
+  // re-run the whole layout tree). Callers now pass next-intl's own
+  // getLocale() explicitly (reliable per-request, set by next-intl's own
+  // middleware on every request) instead of relying on that cache.
+  const localeHeaders = getMedusaLocaleHeaders(locale)
   const headers = {
     ...(await getAuthHeaders()),
-    // Without this, `items.variant.product.title` (the live relation the
-    // order item component prefers over its frozen product_title snapshot)
-    // always comes back in the base locale (Romanian) — this page renders
-    // inside [locale]'s tree, so getRequestLocaleValue() already has it,
-    // no override needed (contrast with cart.ts's Server Actions, invoked
-    // directly from Client Components outside any route render).
     ...localeHeaders,
   }
 
@@ -121,7 +125,10 @@ export const retrieveOrder = async (id: string) => {
 // instead of the internal order_… id. The store API can't fetch by
 // display_id directly, so we scan the customer's own orders for it (cheap:
 // almost no customer exceeds one page), then load the full order by id.
-export const retrieveOrderByDisplayId = async (displayId: string) => {
+export const retrieveOrderByDisplayId = async (
+  displayId: string,
+  locale?: string
+) => {
   const wanted = Number(displayId)
 
   if (!Number.isInteger(wanted) || wanted <= 0) {
@@ -130,7 +137,7 @@ export const retrieveOrderByDisplayId = async (displayId: string) => {
 
   const headers = {
     ...(await getAuthHeaders()),
-    ...getMedusaLocaleHeaders(),
+    ...getMedusaLocaleHeaders(locale),
   }
 
   const next = {
@@ -156,7 +163,7 @@ export const retrieveOrderByDisplayId = async (displayId: string) => {
 
     const match = orders.find((o) => o.display_id === wanted)
     if (match) {
-      return retrieveOrder(match.id)
+      return retrieveOrder(match.id, locale)
     }
 
     if (offset + pageSize >= count) {

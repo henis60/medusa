@@ -8,7 +8,7 @@ import ShippingDetails from "@modules/order/components/shipping-details"
 import OrderSummary from "@modules/order/components/order-summary"
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { getTranslations } from "next-intl/server"
+import { getTranslations, getLocale } from "next-intl/server"
 
 type Props = {
   params: Promise<{ id: string }>
@@ -34,7 +34,17 @@ export async function generateMetadata({
 // purely cosmetic, doesn't change that the id is still opaque/unguessable.
 export default async function ComandaPage(props: Props) {
   const params = await props.params
-  const order = await retrieveOrder(orderIdFromSlug(params.id)).catch(() => null)
+  // Passed explicitly rather than left to retrieveOrder's internal fallback:
+  // this page can be reached via a client-side router.replace() (see the
+  // Netopia return flow) under an already-mounted [locale]/layout.tsx, which
+  // Next.js doesn't re-run on a soft navigation — so the cache() value that
+  // layout seeds never gets set for this request, and the order would
+  // render in the base locale until a hard refresh. next-intl's own
+  // getLocale() is populated per-request regardless.
+  const locale = await getLocale()
+  const order = await retrieveOrder(orderIdFromSlug(params.id), locale).catch(
+    () => null
+  )
 
   if (!order) {
     return notFound()
