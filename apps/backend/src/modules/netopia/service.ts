@@ -126,7 +126,13 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
     const browserInfo = inputData.browser_info as
       | NetopiaBrowserInfo
       | undefined;
-    const redirectUrl = `${this.options.redirectUrl}?session_id=${sessionId}`;
+    // Locale is stamped onto the redirect URL (rather than relying on the
+    // storefront's locale cookie surviving the trip) because Netopia's
+    // return can be a cross-site POST, which browsers never attach
+    // SameSite cookies to — see the comment on initiateNetopiaPayment in
+    // apps/storefront/src/lib/data/cart.ts.
+    const locale = (inputData.locale as string | undefined) || "ro";
+    const redirectUrl = `${this.options.redirectUrl}?session_id=${sessionId}&locale=${encodeURIComponent(locale)}`;
 
     let response;
     try {

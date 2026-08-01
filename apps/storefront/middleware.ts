@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import createMiddleware from "next-intl/middleware"
 import { routing } from "./src/i18n/routing"
 
+const VALID_LOCALES: readonly string[] = routing.locales
+
 const intlMiddleware = createMiddleware(routing)
 
 const CACHE_ID_COOKIE = "_medusa_cache_id"
@@ -48,6 +50,17 @@ const BYPASS_PREFIXES = ["/ro-localities/", "/_next/", "/api/"]
 // bypass next-intl for all of them instead of hand-listing every prefix.
 const HAS_FILE_EXTENSION = /\.[a-zA-Z0-9]+$/
 
+// The Netopia return page can't rely on the `_medusa_locale` cookie: the
+// customer's browser gets there via a cross-site redirect from Netopia (a
+// POST, for a 3DS challenge — see initiateNetopiaPayment in
+// src/lib/data/cart.ts), which browsers never attach SameSite cookies to,
+// even "Lax". The locale the customer was actually using is instead stamped
+// onto that redirect URL as a `?locale=` query param — honor it here by
+// overriding the cookie next-intl's middleware reads, and re-persist it so
+// the rest of the post-payment flow (e.g. /comanda/[id]) stays in that locale.
+const NETOPIA_RETURN_PATH = "/finalizare-comanda/netopia/return"
+const LOCALE_COOKIE = "_medusa_locale"
+
 export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   if (
@@ -65,9 +78,30 @@ export default function middleware(request: NextRequest) {
   // the comment in src/i18n/routing.ts for why both live behind one flag.
   const headers = new Headers(request.headers)
   headers.delete("accept-language")
+
+  const requestedLocale =
+    pathname === NETOPIA_RETURN_PATH
+      ? request.nextUrl.searchParams.get("locale")
+      : null
+  const localeOverride =
+    requestedLocale && VALID_LOCALES.includes(requestedLocale)
+      ? requestedLocale
+      : null
+
+  if (localeOverride) {
+    headers.set("cookie", `${LOCALE_COOKIE}=${localeOverride}`)
+  }
+
   const localeRequest = new NextRequest(request, { headers })
 
   const response = intlMiddleware(localeRequest)
+
+  if (localeOverride) {
+    response.cookies.set(LOCALE_COOKIE, localeOverride, {
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax",
+    })
+  }
 
   // Ensure a stable cache id cookie exists. It is used to build per-visitor
   // cache tags (see getCacheTag), which Next.js relies on to revalidate the

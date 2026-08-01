@@ -5,7 +5,7 @@ import { initiateNetopiaPayment, placeOrder } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { useElements, useStripe } from "@stripe/react-stripe-js"
 import React, { useState } from "react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import ErrorMessage from "../error-message"
 
 type PaymentButtonProps = {
@@ -245,6 +245,7 @@ const NetopiaPaymentButton = ({
   "data-testid"?: string
 }) => {
   const t = useTranslations("checkout")
+  const locale = useLocale()
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -252,7 +253,7 @@ const NetopiaPaymentButton = ({
     setSubmitting(true)
     setErrorMessage(null)
     try {
-      const redirectUrl = await initiateNetopiaPayment(cart.id, providerId, collectBrowserInfo())
+      const redirectUrl = await initiateNetopiaPayment(cart.id, providerId, collectBrowserInfo(), locale)
       if (!redirectUrl) {
         setErrorMessage(t("Nu am putut iniția plata Reîncearcă"))
         setSubmitting(false)

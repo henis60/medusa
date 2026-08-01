@@ -404,7 +404,14 @@ export type NetopiaBrowserInfo = Record<string, string>
 export async function initiateNetopiaPayment(
   cartId: string,
   providerId: string,
-  browserInfo?: NetopiaBrowserInfo
+  browserInfo?: NetopiaBrowserInfo,
+  // Netopia redirects the browser back cross-site — often via a POST (3DS
+  // ACS callback), which browsers never attach SameSite cookies to (not even
+  // "Lax", which only allows GET top-level navigations). So the storefront's
+  // locale cookie can't be trusted to survive the round trip; instead we
+  // stamp the locale the customer was actually using onto the redirect URL
+  // itself, read back on `/finalizare-comanda/netopia/return`.
+  locale?: string
 ): Promise<string | undefined> {
   // Trimitem doar id-urile de care are nevoie SDK-ul — coșul complet (cu toate
   // variantele/imaginile/opțiunile) ar fi serializat integral peste rețea la
@@ -434,6 +441,7 @@ export async function initiateNetopiaPayment(
           }
         : undefined,
       browser_info: browserInfo,
+      locale,
     },
   }, { revalidate: false })) as { payment_collection?: HttpTypes.StorePaymentCollection }
 
