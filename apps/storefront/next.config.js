@@ -45,6 +45,14 @@ const nextConfig = {
       dynamic: 0,
       static: 0,
     },
+    // This app's root layout lives at a top-level dynamic segment
+    // (app/[locale]/layout.tsx) with no app/layout.tsx above it — exactly
+    // the case Next's docs cite as the reason global-not-found.js exists:
+    // there's no single root layout to compose a 404 page from. Without
+    // this flag, the plain app/not-found.tsx fallback has to hand-render
+    // its own <html>/<body> with zero client-side JS (see that file's
+    // comment for the hydration crash that resulted from not doing this).
+    globalNotFound: true,
   },
   // Verbose fetch logging helps in dev but is noisy/slower in production.
   ...(process.env.NODE_ENV === "production"
