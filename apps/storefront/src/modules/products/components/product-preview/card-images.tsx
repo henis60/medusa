@@ -69,13 +69,22 @@ export default function CardImages({ product, isFeatured, noOverlay, activeImage
           productHandle={product.handle ?? undefined}
           productTitle={product.title ?? undefined}
           productThumbnail={activeImage ?? product.thumbnail}
-          variantId={activeVariant?.id ?? null}
+          // Before any color/size is picked, this must resolve to the exact
+          // same variant the quick-add overlay defaults to (variants[0]) —
+          // otherwise favoriting with nothing selected saves variantId=null,
+          // and then explicitly picking that same (first) variant afterwards
+          // compares as "different", letting it be added a second time
+          // instead of being recognized as already favorited.
+          variantId={(activeVariant ?? variants[0] ?? null)?.id ?? null}
           variantTitle={
-            ((activeVariant as any)?.options as { value?: string }[] | undefined)
+            (((activeVariant ?? variants[0]) as any)?.options as
+              | { value?: string }[]
+              | undefined
+            )
               ?.map((o) => o.value)
               .filter(Boolean)
               .join(" · ") ||
-            activeVariant?.title ||
+            (activeVariant ?? variants[0])?.title ||
             null
           }
         />
