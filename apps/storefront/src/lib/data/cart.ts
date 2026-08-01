@@ -97,38 +97,65 @@ export async function retrieveCart(
   // entity — /store/carts/:id returns the cart itself translated, but NOT
   // the deeply nested items.variant.product relation (confirmed directly:
   // the same request with an en-GB locale header still returns the
-  // Romanian product title at that path). /store/products DOES translate
-  // correctly, so overlay real titles from there instead of trusting the
-  // cart response's nested product data.
+  // Romanian product title at that path). Same limitation applies to
+  // items.variant.title and items.variant.options[].value (the color/size
+  // label shown under the product name in cart/drawer). /store/products
+  // DOES translate correctly, so overlay real values from there instead of
+  // trusting the cart response's nested product/variant data.
   if (cart?.items?.length && Object.keys(localeHeaders).length) {
     const productIds = Array.from(
       new Set(cart.items.map((item) => item.product_id).filter(Boolean))
     ) as string[]
 
     if (productIds.length) {
-      const titleById = await sdk.client
-        .fetch<{ products: { id: string; title: string }[] }>(
-          `/store/products`,
-          {
-            method: "GET",
-            query: { id: productIds, fields: "id,title", limit: productIds.length },
-            headers: { ...headers, ...localeHeaders },
-          }
-        )
-        .then(({ products }) =>
-          new Map(products.map((p) => [p.id, p.title]))
-        )
-        .catch(() => new Map<string, string>())
+      type TranslatedProduct = {
+        id: string
+        title: string
+        variants?: {
+          id: string
+          title: string
+          options?: { option_id: string; value: string }[]
+        }[]
+      }
+
+      const productById = await sdk.client
+        .fetch<{ products: TranslatedProduct[] }>(`/store/products`, {
+          method: "GET",
+          query: {
+            id: productIds,
+            fields:
+              "id,title,variants.id,variants.title,variants.options.option_id,variants.options.value",
+            limit: productIds.length,
+          },
+          headers: { ...headers, ...localeHeaders },
+        })
+        .then(({ products }) => new Map(products.map((p) => [p.id, p])))
+        .catch(() => new Map<string, TranslatedProduct>())
 
       for (const item of cart.items) {
-        const translatedTitle = item.product_id
-          ? titleById.get(item.product_id)
+        const translated = item.product_id
+          ? productById.get(item.product_id)
           : undefined
-        if (translatedTitle) {
-          item.product_title = translatedTitle
-          if (item.variant && (item.variant as any).product) {
-            ;(item.variant as any).product.title = translatedTitle
-          }
+        if (!translated) continue
+
+        item.product_title = translated.title
+        if (item.variant && (item.variant as any).product) {
+          ;(item.variant as any).product.title = translated.title
+        }
+
+        const variantId = item.variant?.id
+        const translatedVariant = translated.variants?.find(
+          (v) => v.id === variantId
+        )
+        if (!translatedVariant || !item.variant) continue
+
+        item.variant.title = translatedVariant.title
+        const valueByOptionId = new Map(
+          (translatedVariant.options ?? []).map((o) => [o.option_id, o.value])
+        )
+        for (const opt of (item.variant as any).options ?? []) {
+          const translatedValue = valueByOptionId.get(opt.option_id)
+          if (translatedValue) opt.value = translatedValue
         }
       }
     }

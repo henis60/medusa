@@ -2,7 +2,8 @@ import { defineWidgetConfig } from "@medusajs/admin-sdk"
 import { DetailWidgetProps, HttpTypes } from "@medusajs/framework/types"
 import { useMemo, useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Container, Heading, Text, Input, Textarea, Button, toast } from "@medusajs/ui"
+import { Container, Heading, Text, Input, Textarea, Button, IconButton, toast } from "@medusajs/ui"
+import { ChevronDownMini, ChevronUpMini } from "@medusajs/icons"
 import { sdk } from "../lib/client"
 
 // Medusa's "Manage Translations" settings page deliberately hides
@@ -27,6 +28,7 @@ const ProductTranslationsWidget = ({
   data: product,
 }: DetailWidgetProps<HttpTypes.AdminProduct>) => {
   const queryClient = useQueryClient()
+  const [expanded, setExpanded] = useState(false)
 
   const { data: fullProduct, isLoading: loadingProduct } = useQuery({
     queryFn: () =>
@@ -169,15 +171,27 @@ const ProductTranslationsWidget = ({
     <Container className="divide-y p-0">
       <div className="flex items-center justify-between px-6 py-4">
         <Heading level="h2">Traduceri (English)</Heading>
-        <Button
-          size="small"
-          onClick={() => saveMutation.mutate()}
-          disabled={!isDirty || saveMutation.isPending}
-          isLoading={saveMutation.isPending}
-        >
-          Salvează
-        </Button>
+        <div className="flex items-center gap-x-2">
+          {expanded && (
+            <Button
+              size="small"
+              onClick={() => saveMutation.mutate()}
+              disabled={!isDirty || saveMutation.isPending}
+              isLoading={saveMutation.isPending}
+            >
+              Salvează
+            </Button>
+          )}
+          <IconButton
+            size="small"
+            variant="transparent"
+            onClick={() => setExpanded((e) => !e)}
+          >
+            {expanded ? <ChevronUpMini /> : <ChevronDownMini />}
+          </IconButton>
+        </div>
       </div>
+      {expanded && (
       <div className="flex flex-col gap-y-4 px-6 py-4">
         {rows.map((row) => (
           <div key={row.key} className="flex flex-col gap-y-1">
@@ -199,6 +213,7 @@ const ProductTranslationsWidget = ({
           </div>
         ))}
       </div>
+      )}
     </Container>
   )
 }
