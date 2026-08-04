@@ -567,9 +567,21 @@ const Shipping: React.FC<ShippingProps> = ({
               (!!lockerOptionId && !selectedLocker)
             }
             data-testid="submit-delivery-option-button"
-            className={ctaButtonClass}
+            className={`relative overflow-hidden ${ctaButtonClass}`}
           >
-            {isLoading ? t("Se procesează…") : t("Continuă cu confirmarea")}
+            <span
+              className={`flex items-center justify-center gap-2 transition-opacity duration-150 ${
+                isLoading ? "opacity-0" : "opacity-100"
+              }`}
+            >
+              {t("Continuă cu confirmarea")}
+            </span>
+            {isLoading && (
+              <span className="absolute inset-0 flex items-center justify-center gap-2">
+                <Spinner size="14" />
+                {t("Se procesează…")}
+              </span>
+            )}
           </button>
         </>
       ) : (
