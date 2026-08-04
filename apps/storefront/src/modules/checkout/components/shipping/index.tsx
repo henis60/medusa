@@ -17,6 +17,7 @@ import {
 import { HttpTypes } from "@medusajs/types"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import Divider from "@modules/common/components/divider"
+import Spinner from "@modules/common/icons/spinner"
 import LockerPicker from "./locker-map/locker-picker"
 import {
   bodyMutedClass,
