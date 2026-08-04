@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
+import { useEffect, useRef, useState } from "react"
+import { motion, useMotionValue, animate } from "framer-motion"
 import { useTranslations } from "next-intl"
 
 type Props = {
@@ -10,10 +10,77 @@ type Props = {
   onClick?: () => void
 }
 
+// Where the user last dragged the button to, in pixels applied on top of
+// its default docked position — persists across visits on this device.
+const POSITION_KEY = "hunter_appt_btn_pos"
+const EDGE_MARGIN = 8
+
 export default function AppointmentButton({ transparent, hideOnTop, onClick }: Props) {
   const t = useTranslations("layout")
   const [scrolled, setScrolled] = useState(false)
   const [isScrolling, setIsScrolling] = useState(false)
+  // Drag-to-reposition is a touch/mobile affordance — desktop keeps the
+  // fixed vertical tab on the right edge, unaffected by any of this.
+  const [isMobile, setIsMobile] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const dragX = useMotionValue(0)
+  const dragY = useMotionValue(0)
+  const wasDragged = useRef(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px)")
+    const update = () => setIsMobile(mq.matches)
+    update()
+    mq.addEventListener("change", update)
+    return () => mq.removeEventListener("change", update)
+  }, [])
+
+  useEffect(() => {
+    if (!isMobile) return
+    try {
+      const saved = localStorage.getItem(POSITION_KEY)
+      if (saved) {
+        const pos = JSON.parse(saved)
+        if (typeof pos?.x === "number" && typeof pos?.y === "number") {
+          dragX.set(pos.x)
+          dragY.set(pos.y)
+        }
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMobile])
+
+  // Snaps the button to whichever screen edge (left/right) it's closest to
+  // once dropped, and clamps its vertical position to stay fully on-screen —
+  // a free-floating x/y would let it get dragged half off the viewport or
+  // stranded mid-screen, which reads as broken rather than "positionable".
+  const snapToEdge = () => {
+    const el = containerRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const goRight = rect.left + rect.width / 2 > window.innerWidth / 2
+    const targetLeft = goRight
+      ? window.innerWidth - rect.width - EDGE_MARGIN
+      : EDGE_MARGIN
+    const minTop = EDGE_MARGIN
+    const maxTop = window.innerHeight - rect.height - EDGE_MARGIN
+    const targetTop = Math.min(Math.max(rect.top, minTop), maxTop)
+
+    // rect is in viewport coordinates; dragX/dragY are the transform already
+    // applied on top of the element's untransformed (base) position — so the
+    // base is rect minus the current transform, and the new transform is
+    // just the delta from base to the snapped target.
+    const baseLeft = rect.left - dragX.get()
+    const baseTop = rect.top - dragY.get()
+    const nextX = targetLeft - baseLeft
+    const nextY = targetTop - baseTop
+
+    animate(dragX, nextX, { type: "spring", stiffness: 420, damping: 34 })
+    animate(dragY, nextY, { type: "spring", stiffness: 420, damping: 34 })
+    try {
+      localStorage.setItem(POSITION_KEY, JSON.stringify({ x: nextX, y: nextY }))
+    } catch {}
+  }
 
   useEffect(() => {
     if (!hideOnTop) return
@@ -41,17 +108,44 @@ export default function AppointmentButton({ transparent, hideOnTop, onClick }: P
 
   const visible = !hideOnTop || scrolled
 
+  const handleClick = () => {
+    // A drag gesture ends with a native click firing on release — swallow
+    // that one so dropping the button doesn't also open the modal.
+    if (wasDragged.current) {
+      wasDragged.current = false
+      return
+    }
+    onClick?.()
+  }
+
   return (
     <motion.div
-      className="fixed right-0 z-40 bottom-[160px] translate-y-0 small:bottom-auto small:top-[72%] small:-translate-y-1/2"
-      animate={{ opacity: visible ? 1 : 0, x: visible ? 0 : 12 }}
-      whileHover={{ x: -5 }}
+      ref={containerRef}
+      className={`fixed right-0 z-40 bottom-[160px] translate-y-0 small:bottom-auto small:top-[72%] small:-translate-y-1/2 ${
+        isMobile ? "touch-none" : ""
+      }`}
+      drag={isMobile}
+      dragMomentum={false}
+      dragElastic={0.15}
+      onDragStart={() => {
+        wasDragged.current = true
+      }}
+      onDragEnd={snapToEdge}
+      animate={{ opacity: visible ? 1 : 0, ...(isMobile ? {} : { x: visible ? 0 : 12 }) }}
+      whileHover={isMobile ? undefined : { x: -5 }}
+      whileDrag={{ scale: 1.08 }}
       whileTap={{ scale: 0.92 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      style={{ pointerEvents: visible ? "auto" : "none" }}
+      style={
+        {
+          pointerEvents: visible ? "auto" : "none",
+          x: dragX,
+          y: dragY,
+        } as any
+      }
     >
       <button
-        onClick={onClick}
+        onClick={handleClick}
         className={`flex transition-colors cursor-pointer ${
           transparent
             ? "bg-transparent border-y border-l border-white/20 text-white/60 hover:text-hunter-gold hover:border-hunter-gold/60"
