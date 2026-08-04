@@ -66,7 +66,10 @@ export function buildContent(
   return {
     envelopes_count: 0,
     pallets_count: 0,
-    parcels_count: count,
+    // Always a single physical parcel — `count` only scales its weight
+    // above. Europarcel validates parcels.length === parcels_count, so this
+    // must stay 1 in lockstep with the single-entry `parcels` array below.
+    parcels_count: 1,
     total_weight: weight,
     parcels: [
       { size: { weight, width: 30, height: 20, length: 40 }, sequence_no: 1 },
