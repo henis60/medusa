@@ -13,6 +13,17 @@
 import "styles/globals.css"
 import NotFoundContent from "@modules/common/components/not-found"
 
+// next-intl's build plugin (next.config.js's withNextIntl) wraps every
+// server-rendered page app-wide — including this one, despite it having
+// nothing to do with [locale] — so getRequestConfig's `requestLocale` still
+// resolves here, and that internally reads cookies/headers. Next.js tries
+// to statically prerender this route at build time (nothing here looks
+// dynamic from its own code), then hits that headers() read at actual
+// request time and throws "Page changed from static to dynamic at runtime"
+// — Next.js doesn't support flipping rendering mode after the fact. Forcing
+// dynamic up front avoids the mismatch instead of fighting it.
+export const dynamic = "force-dynamic"
+
 export default function NotFound() {
   return (
     <html lang="ro">
