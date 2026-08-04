@@ -2,7 +2,6 @@
 
 import { useTranslations } from "next-intl"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import DiscountCode from "@modules/checkout/components/discount-code"
 import CartTotals from "@modules/common/components/cart-totals"
 import { HttpTypes } from "@medusajs/types"
 
@@ -22,8 +21,6 @@ const Summary = ({ cart }: SummaryProps) => {
 
   return (
     <div className="flex flex-col gap-6 border border-[var(--theme-border)] p-6 small:p-8">
-      <DiscountCode cart={cart} />
-
       <CartTotals totals={cart} />
 
       <div>
