@@ -20,12 +20,9 @@ const Hero = () => {
     target: heroRef,
     offset: ["start start", "end start"],
   })
-  // Scroll-linked parallax transform on a large full-bleed background image
-  // is a common source of scroll jank on mobile browsers (the transform
-  // fights with native scrolling/compositing on less powerful GPUs). The
-  // mobile hero is a fixed 100svh section anyway, so the parallax adds
-  // little visually there — disable it below the tablet breakpoint instead
-  // of fighting for smoothness.
+  // Scroll-linked parallax on mobile turned out to still cause scroll jank
+  // on less powerful GPUs even at a reduced magnitude — disabled outright
+  // there rather than just toned down.
   const [isMobile, setIsMobile] = useState(false)
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)")

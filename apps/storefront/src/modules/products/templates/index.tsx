@@ -87,6 +87,7 @@ const ProductTemplate = async ({
                   productHandle={product.handle ?? ""}
                   productTitle={product.title ?? ""}
                   productThumbnail={product.thumbnail ?? null}
+                  variants={product.variants}
                 />
               }
             />

@@ -182,7 +182,7 @@ const WeddingGuideTemplate = () => {
             onClick={() => setOpen(true)}
             className="shrink-0 h-11 px-8 flex items-center font-sans text-[10px] uppercase tracking-[3px] bg-hunter-gold text-hunter-dark hover:opacity-90 transition-opacity cursor-pointer"
           >
-            {t("Rezervă o întâlnire")}
+            {t("Programează o întâlnire")}
           </button>
         </div>
       </div>

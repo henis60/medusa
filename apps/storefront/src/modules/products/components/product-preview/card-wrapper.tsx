@@ -5,7 +5,7 @@ import { useState, useCallback } from "react"
 import { useTranslations } from "next-intl"
 import CardImages from "./card-images"
 import DesktopQuickAdd from "./desktop-quick-add"
-import { isInStoreOnly, COLOR_OPTION_NAMES } from "@lib/util/product"
+import { isInStoreOnly } from "@lib/util/product"
 
 // Reveals on hover anywhere over the card link (group), floating above the
 // image bottom with an inset gap from the edges.
@@ -30,34 +30,22 @@ function HoverOverlay({
 }
 
 function getVariantImage(
-  variant: HttpTypes.StoreProductVariant,
-  allImages: HttpTypes.StoreProductImage[],
-  options: HttpTypes.StoreProductOption[],
-  allVariants: HttpTypes.StoreProductVariant[]
+  variant: HttpTypes.StoreProductVariant
 ): string | null {
-  if (variant.images?.length) {
-    return (variant.images[0] as HttpTypes.StoreProductImage).url ?? null
-  }
-  const colorOption = options.find((o) =>
-    COLOR_OPTION_NAMES.includes(o.title?.toLowerCase() ?? "")
-  )
-  if (!colorOption || !allImages.length) return null
-  const colorValues = [
-    ...Array.from(
-      new Set(
-        allVariants
-          .map(
-            (v) => v.options?.find((o) => o.option_id === colorOption.id)?.value
-          )
-          .filter(Boolean) as string[]
-      )
-    ),
-  ]
-  const variantColor = variant.options?.find(
-    (o) => o.option_id === colorOption.id
-  )?.value
-  const idx = variantColor ? colorValues.indexOf(variantColor) : -1
-  return idx >= 0 && idx < allImages.length ? allImages[idx].url ?? null : null
+  // variant.images is Medusa's real, explicit assignment (set in the admin
+  // via the media widget's "Asociază culori" — @medusajs/product's
+  // getVariantImages()), and its order mirrors the product gallery's own
+  // order for whichever images are assigned to this variant. There used to
+  // be a fallback here that guessed a variant's image by matching the
+  // variant's position among a product's colors to the Nth image in the
+  // gallery — since that's pure index arithmetic with no real link to which
+  // photo is actually of which color, reordering the gallery in admin
+  // shifted every guess, seemingly at random. An unassigned variant now
+  // falls through to the product's normal gallery/thumbnail instead of a
+  // guess.
+  return variant.images?.length
+    ? ((variant.images[0] as HttpTypes.StoreProductImage).url ?? null)
+    : null
 }
 
 type Props = {
@@ -68,22 +56,18 @@ type Props = {
 
 export default function CardWrapper({ product, isFeatured, forceDark }: Props) {
   const t = useTranslations("products")
-  const allImages = product.images ?? []
   const variants = product.variants ?? []
   const options = product.options ?? []
 
   const [activeImage, setActiveImage] = useState<string | null>(null)
+  const [activeVariant, setActiveVariant] = useState<HttpTypes.StoreProductVariant | null>(null)
 
   const handleVariantSelect = useCallback(
     (variant: HttpTypes.StoreProductVariant | null) => {
-      if (!variant) {
-        setActiveImage(null)
-        return
-      }
-      const url = getVariantImage(variant, allImages, options, variants)
-      setActiveImage(url ?? null)
+      setActiveVariant(variant)
+      setActiveImage(variant ? getVariantImage(variant) : null)
     },
-    [allImages, options, variants]
+    []
   )
 
   return (
@@ -93,6 +77,7 @@ export default function CardWrapper({ product, isFeatured, forceDark }: Props) {
         isFeatured={isFeatured}
         noOverlay={!!forceDark}
         activeImage={activeImage}
+        activeVariant={activeVariant}
         onVariantSelect={handleVariantSelect}
       />
 

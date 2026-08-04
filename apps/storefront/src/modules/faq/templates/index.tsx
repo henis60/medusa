@@ -162,7 +162,7 @@ const FAQTemplate = () => {
           </div>
           <LocalizedClientLink
             href="/contact"
-            className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors border-b border-current pb-0.5"
+            className="font-sans text-[10px] uppercase tracking-[3px] text-hunter-gold border-b border-hunter-gold/40 hover:border-hunter-gold transition-colors w-fit pb-0.5"
           >
             {t("Contactează-ne")}
           </LocalizedClientLink>

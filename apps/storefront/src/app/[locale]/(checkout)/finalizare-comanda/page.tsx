@@ -19,6 +19,7 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "app" })
   return {
     title: t("Checkout"),
+    robots: { index: false, follow: false },
   }
 }
 
@@ -53,14 +54,14 @@ export default async function Checkout({
       <CartViewTracker cart={cart} event="begin_checkout" />
       <div className="content-container pt-4 pb-0">
         <LocalizedClientLink
-          href="/cart"
+          href="/cos"
           className="inline-flex items-center gap-2 text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors font-sans text-[11px] uppercase tracking-[3px]"
         >
           <span>←</span>
           <span>{t("Înapoi")}</span>
         </LocalizedClientLink>
       </div>
-      <div className="grid grid-cols-1 small:grid-cols-[1fr_416px] content-container gap-x-40 py-12">
+      <div className="grid grid-cols-1 small:grid-cols-[1fr_416px] content-container gap-x-40 pt-6 pb-12">
         <PaymentWrapper cart={cart}>
           <CheckoutForm cart={cart} customer={customer} />
         </PaymentWrapper>

@@ -3,6 +3,7 @@
 import React from "react"
 import { useFormStatus } from "react-dom"
 import { useTranslations } from "next-intl"
+import Spinner from "@modules/common/icons/spinner"
 
 export function SubmitButton({
   children,
@@ -23,9 +24,21 @@ export function SubmitButton({
       type="submit"
       disabled={pending}
       data-testid={dataTestId}
-      className={`w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed ${className ?? ""}`}
+      className={`relative w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:cursor-not-allowed overflow-hidden ${className ?? ""}`}
     >
-      {pending ? t("Se procesează…") : children}
+      <span
+        className={`flex items-center justify-center gap-2 transition-opacity duration-150 ${
+          pending ? "opacity-0" : "opacity-100"
+        }`}
+      >
+        {children}
+      </span>
+      {pending && (
+        <span className="absolute inset-0 flex items-center justify-center gap-2">
+          <Spinner size="14" />
+          {t("Se procesează…")}
+        </span>
+      )}
     </button>
   )
 }

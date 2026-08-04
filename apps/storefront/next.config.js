@@ -71,10 +71,15 @@ const nextConfig = {
         protocol: "https",
         hostname: "*.s3.amazonaws.com",
       },
-      // Cloudflare R2 public dev URLs (product images)
+      // Cloudflare R2 public dev URLs (product images) — used on staging
       {
         protocol: "https",
         hostname: "*.r2.dev",
+      },
+      // Cloudflare R2 custom domain (production product images)
+      {
+        protocol: "https",
+        hostname: "media.thehunter.ro",
       },
       // Backend public file host (product images)
       ...urlToRemotePattern(process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL),

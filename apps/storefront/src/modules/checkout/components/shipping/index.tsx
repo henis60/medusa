@@ -1,32 +1,37 @@
 "use client"
-import {
-  Combobox,
-  ComboboxButton,
-  ComboboxInput,
-  ComboboxOption,
-  ComboboxOptions,
-  Radio,
-  RadioGroup,
-} from "@headlessui/react"
+import { Radio, RadioGroup } from "@headlessui/react"
 import { setShippingMethod } from "@lib/data/cart"
 import {
   EawbLocker,
+  EawbLockerOrigin,
+  getEawbOrigin,
   listEawbLockers,
   listEawbShippingPrices,
 } from "@lib/data/fulfillment"
 import { convertToLocale } from "@lib/util/money"
+import { haversineKm } from "@lib/util/geo"
 import {
   lineItemsToTrackItems,
   trackAddShippingInfo,
 } from "@lib/util/analytics"
-import { ChevronUpDown, Loader } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import Divider from "@modules/common/components/divider"
+import Spinner from "@modules/common/icons/spinner"
+import LockerPicker from "./locker-map/locker-picker"
+import {
+  bodyMutedClass,
+  ctaButtonClass,
+  editLinkClass,
+  fieldLabelClass,
+  priceTextClass,
+  sectionTitleClass,
+} from "@modules/checkout/components/typography"
 import { useSearchParams } from "next/navigation"
 import { usePathname, useRouter } from "@i18n/navigation"
 import { useCallback, useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
+import { getDisplayableErrorMessage } from "@lib/util/stale-deployment"
 
 // A shipping option that delivers to a parcel locker requires the customer
 // to pick a specific locker. Detection is purely structural: the eAWB
@@ -58,12 +63,18 @@ function formatAddress(address: HttpTypes.StoreCartAddress) {
   return ret
 }
 
-const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) => {
+const Shipping: React.FC<ShippingProps> = ({
+  cart,
+  availableShippingMethods,
+}) => {
   const t = useTranslations("checkout")
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingPrices, setIsLoadingPrices] = useState(true)
-  const [showPickupOptions, setShowPickupOptions] = useState<string>(PICKUP_OPTION_OFF)
-  const [calculatedPricesMap, setCalculatedPricesMap] = useState<Record<string, number>>({})
+  const [showPickupOptions, setShowPickupOptions] =
+    useState<string>(PICKUP_OPTION_OFF)
+  const [calculatedPricesMap, setCalculatedPricesMap] = useState<
+    Record<string, number>
+  >({})
   const [error, setError] = useState<string | null>(null)
   // True when the last price fetch failed outright (network/API error) —
   // shown as a retryable error, never cached, and never confused with a
@@ -78,11 +89,12 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
   const [loadingLockers, setLoadingLockers] = useState(false)
   const [selectedLocker, setSelectedLocker] = useState<EawbLocker | null>(null)
   const [lockerQuery, setLockerQuery] = useState("")
+  const [lockerOrigin, setLockerOrigin] = useState<EawbLockerOrigin>(null)
 
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
-  const isOpen = searchParams.get("step") === "delivery"
+  const isOpen = searchParams.get("pas") === "livrare"
 
   const _shippingMethods = availableShippingMethods?.filter(
     (sm) => (sm as any).service_zone?.fulfillment_set?.type !== "pickup"
@@ -96,11 +108,21 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
   // calculated ones only once they have a price (a courier that's inactive in
   // the eAWB account or doesn't serve the address returns no price). While
   // prices are loading we still show the calculated options with a spinner.
+  //
+  // The option already saved on the cart (shippingMethodId) is always kept
+  // visible too, regardless of what the live re-price call just returned —
+  // returning to this step later re-fetches current prices, and if that
+  // call transiently fails or omits an option (rate limiting, a courier
+  // that's briefly unavailable), a customer who already has a valid,
+  // previously-confirmed selection (e.g. a locker they picked) would
+  // otherwise see it vanish and get told no courier serves their address at
+  // all — even though their shipping method is still genuinely set.
   const visibleShippingMethods = _shippingMethods?.filter(
     (o) =>
       o.price_type !== "calculated" ||
       isLoadingPrices ||
-      (calculatedPricesMap[o.id] ?? 0) > 0
+      (calculatedPricesMap[o.id] ?? 0) > 0 ||
+      o.id === shippingMethodId
   )
 
   const fetchPrices = useCallback(() => {
@@ -123,7 +145,10 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
   // quantities, which the delivery price can depend on) — not on every
   // re-render/re-visit of this step with the same destination.
   const a = cart.shipping_address
-  const itemCount = (cart.items ?? []).reduce((s, i) => s + (i.quantity ?? 0), 0)
+  const itemCount = (cart.items ?? []).reduce(
+    (s, i) => s + (i.quantity ?? 0),
+    0
+  )
   const destinationSignature = [
     cart.id,
     a?.city ?? "",
@@ -148,7 +173,8 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
     }
   }, [availableShippingMethods])
 
-  const handleEdit = () => router.push(pathname + "?step=delivery", { scroll: false })
+  const handleEdit = () =>
+    router.push(pathname + "?pas=livrare", { scroll: false })
   const handleSubmit = () => {
     const tier = availableShippingMethods?.find(
       (m) => m.id === shippingMethodId
@@ -159,7 +185,7 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
       cart.total ?? undefined,
       tier ?? undefined
     )
-    router.push(pathname + "?step=payment", { scroll: false })
+    router.push(pathname + "?pas=sumar", { scroll: false })
   }
 
   const handleSetShippingMethod = async (
@@ -172,9 +198,15 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
     else setShowPickupOptions(PICKUP_OPTION_OFF)
     let currentId: string | null = null
     setIsLoading(true)
-    setShippingMethodId((prev) => { currentId = prev; return id })
+    setShippingMethodId((prev) => {
+      currentId = prev
+      return id
+    })
     await setShippingMethod({ cartId: cart.id, shippingMethodId: id, data })
-      .catch((err) => { setShippingMethodId(currentId); setError(err.message) })
+      .catch((err) => {
+        setShippingMethodId(currentId)
+        setError(getDisplayableErrorMessage(err, t("A apărut o eroare Reîncearcă")))
+      })
       .finally(() => setIsLoading(false))
   }
 
@@ -186,11 +218,15 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
       setLockerOptionId(option.id)
       setSelectedLocker(null)
       setLockerQuery("")
+      setLockerOrigin(null)
       setLoadingLockers(true)
       listEawbLockers(option.id, cart.id).then((ls) => {
         setLockers(ls)
         setLoadingLockers(false)
       })
+      // Fetched separately so Nominatim's latency never delays the locker
+      // list/map from showing — the map just re-centers once this resolves.
+      getEawbOrigin(cart.id).then(setLockerOrigin)
     } else {
       setLockerOptionId(null)
       setSelectedLocker(null)
@@ -207,6 +243,28 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
     })
   }
 
+  // Once both the locker list and the geocoded address are in, auto-pick the
+  // closest locker — unless one's already selected (e.g. restored from cart).
+  useEffect(() => {
+    if (!lockerOptionId || selectedLocker || !lockerOrigin) return
+    const withCoords = lockers.filter((l) => l.lat != null && l.lng != null)
+    if (withCoords.length === 0) return
+    const nearest = withCoords.reduce((best, l) =>
+      haversineKm(lockerOrigin, {
+        lat: l.lat as number,
+        lng: l.lng as number,
+      }) <
+      haversineKm(lockerOrigin, {
+        lat: best.lat as number,
+        lng: best.lng as number,
+      })
+        ? l
+        : best
+    )
+    handleSelectLocker(nearest)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lockers, lockerOrigin, lockerOptionId, selectedLocker])
+
   const filteredLockers = lockerQuery
     ? lockers.filter((l) =>
         `${l.name} ${l.address}`
@@ -215,11 +273,16 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
       )
     : lockers
 
-  useEffect(() => { setError(null) }, [isOpen])
+  useEffect(() => {
+    setError(null)
+  }, [isOpen])
 
-  // Restore the locker picker when returning to the step with a locker service
-  // already selected on the cart. Skips if a locker is already being handled in
-  // this session, so committing a selection (which updates the cart) doesn't
+  // Reopen the locker picker when returning to the step with a locker service
+  // already selected on the cart. Doesn't restore the previous locker itself
+  // (it has no coordinates to center the map on) — the nearest-locker effect
+  // below re-picks one once the list and geocoded address load, same as a
+  // fresh selection. Skips if a locker is already being handled in this
+  // session, so committing a selection (which updates the cart) doesn't
   // re-trigger a reload.
   useEffect(() => {
     if (lockerOptionId) return
@@ -230,52 +293,72 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
     if (!opt || !isLockerOption(opt)) return
 
     setLockerOptionId(opt.id)
-    const d = (sm?.data ?? {}) as { fixed_location_id?: number; locker_name?: string }
-    if (d.fixed_location_id) {
-      setSelectedLocker({
-        id: Number(d.fixed_location_id),
-        name: d.locker_name ?? t("Locker selectat"),
-        address: "",
-      })
-    }
     setLoadingLockers(true)
     listEawbLockers(opt.id, cart.id).then((ls) => {
       setLockers(ls)
       setLoadingLockers(false)
     })
+    getEawbOrigin(cart.id).then(setLockerOrigin)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [availableShippingMethods])
 
   const radioClass = (selected: boolean, disabled?: boolean) =>
     `flex items-center justify-between py-3 px-4 border mb-2 cursor-pointer transition-colors ${
-      selected ? "border-hunter-gold bg-hunter-gold/5" :
-      disabled ? "border-[var(--theme-border)] opacity-40 cursor-not-allowed" :
-      "border-[var(--theme-border)] hover:border-[var(--theme-text-muted)]"
+      selected
+        ? "border-hunter-gold bg-hunter-gold/5"
+        : disabled
+        ? "border-[var(--theme-border)] opacity-40 cursor-not-allowed"
+        : "border-[var(--theme-border)] hover:border-[var(--theme-text-muted)]"
     }`
 
   return (
-    <div className={!isOpen && (cart.shipping_methods?.length ?? 0) === 0 ? "opacity-50 pointer-events-none select-none" : ""}>
+    <div
+      className={
+        !isOpen && (cart.shipping_methods?.length ?? 0) === 0
+          ? "opacity-50 pointer-events-none select-none"
+          : ""
+      }
+    >
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <span className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)]">
-            {t("Livrare")}
-          </span>
+          <span className={sectionTitleClass}>{t("Livrare")}</span>
           {!isOpen && (cart.shipping_methods?.length ?? 0) > 0 && (
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="text-hunter-gold">
-              <circle cx="6" cy="6" r="5.5" stroke="currentColor" strokeWidth="1"/>
-              <path d="M3.5 6l1.8 1.8L8.5 4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 12 12"
+              fill="none"
+              className="text-hunter-gold"
+            >
+              <circle
+                cx="6"
+                cy="6"
+                r="5.5"
+                stroke="currentColor"
+                strokeWidth="1"
+              />
+              <path
+                d="M3.5 6l1.8 1.8L8.5 4.5"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           )}
         </div>
-        {!isOpen && cart?.shipping_address && cart?.billing_address && cart?.email && (
-          <button
-            onClick={handleEdit}
-            className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
-            data-testid="edit-delivery-button"
-          >
-            {t("Modifică")}
-          </button>
-        )}
+        {!isOpen &&
+          cart?.shipping_address &&
+          cart?.billing_address &&
+          cart?.email && (
+            <button
+              onClick={handleEdit}
+              className={editLinkClass}
+              data-testid="edit-delivery-button"
+            >
+              {t("Modifică")}
+            </button>
+          )}
       </div>
 
       {isOpen ? (
@@ -285,7 +368,9 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
               <RadioGroup
                 value={showPickupOptions}
                 onChange={() => {
-                  const id = _pickupMethods?.find((o) => !o.insufficient_inventory)?.id
+                  const id = _pickupMethods?.find(
+                    (o) => !o.insufficient_inventory
+                  )?.id
                   if (id) handleSetShippingMethod(id, "pickup")
                 }}
               >
@@ -295,28 +380,38 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
                   className={radioClass(showPickupOptions === PICKUP_OPTION_ON)}
                 >
                   <div className="flex items-center gap-3">
-                    <span className={`w-3 h-3 rounded-full border flex-shrink-0 ${showPickupOptions === PICKUP_OPTION_ON ? "border-hunter-gold bg-hunter-gold" : "border-[var(--theme-border)]"}`} />
-                    <span className="font-serif text-[13px] text-[var(--theme-text)]">{t("Ridicare din magazin")}</span>
+                    <span
+                      className={`w-3 h-3 rounded-full border flex-shrink-0 ${
+                        showPickupOptions === PICKUP_OPTION_ON
+                          ? "border-hunter-gold bg-hunter-gold"
+                          : "border-[var(--theme-border)]"
+                      }`}
+                    />
+                    <span className="font-serif text-[14px] text-[var(--theme-text)]">
+                      {t("Ridicare din magazin")}
+                    </span>
                   </div>
-                  <span className="font-serif italic text-[13px] text-[var(--theme-text-muted)]">—</span>
+                  <span className={priceTextClass}>—</span>
                 </Radio>
               </RadioGroup>
             )}
 
             {isLoadingPrices ? (
               <div className="flex flex-col gap-2">
-                {Array.from({ length: _shippingMethods?.length || 3 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between px-4 py-3 border border-[var(--theme-border)] animate-pulse"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 rounded-full bg-[var(--theme-border)]" />
-                      <div className="h-3 w-32 rounded bg-[var(--theme-border)]" />
+                {Array.from({ length: _shippingMethods?.length || 3 }).map(
+                  (_, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between px-4 py-3 border border-[var(--theme-border)] animate-pulse"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 rounded-full bg-[var(--theme-border)]" />
+                        <div className="h-3 w-32 rounded bg-[var(--theme-border)]" />
+                      </div>
+                      <div className="h-3 w-16 rounded bg-[var(--theme-border)]" />
                     </div>
-                    <div className="h-3 w-16 rounded bg-[var(--theme-border)]" />
-                  </div>
-                ))}
+                  )
+                )}
               </div>
             ) : (
               <RadioGroup
@@ -335,15 +430,36 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
                       className={radioClass(option.id === shippingMethodId)}
                     >
                       <div className="flex items-center gap-3">
-                        <span className={`w-3 h-3 rounded-full border flex-shrink-0 ${option.id === shippingMethodId ? "border-hunter-gold bg-hunter-gold" : "border-[var(--theme-border)]"}`} />
-                        <span className="font-serif text-[13px] text-[var(--theme-text)]">{option.name}</span>
+                        <span
+                          className={`w-3 h-3 rounded-full border flex-shrink-0 ${
+                            option.id === shippingMethodId
+                              ? "border-hunter-gold bg-hunter-gold"
+                              : "border-[var(--theme-border)]"
+                          }`}
+                        />
+                        <span className="font-serif text-[14px] text-[var(--theme-text)]">
+                          {option.name}
+                        </span>
                       </div>
-                      <span className="font-serif italic text-[13px] text-[var(--theme-text-muted)]">
-                        {option.price_type === "flat" ? (
-                          convertToLocale({ amount: option.amount!, currency_code: cart?.currency_code })
-                        ) : calculatedPricesMap[option.id] ? (
-                          convertToLocale({ amount: calculatedPricesMap[option.id], currency_code: cart?.currency_code })
-                        ) : t("Indisponibil")}
+                      <span
+                        className={
+                          option.price_type !== "flat" &&
+                          !calculatedPricesMap[option.id]
+                            ? bodyMutedClass
+                            : priceTextClass
+                        }
+                      >
+                        {option.price_type === "flat"
+                          ? convertToLocale({
+                              amount: option.amount!,
+                              currency_code: cart?.currency_code,
+                            })
+                          : calculatedPricesMap[option.id]
+                          ? convertToLocale({
+                              amount: calculatedPricesMap[option.id],
+                              currency_code: cart?.currency_code,
+                            })
+                          : t("Indisponibil")}
                       </span>
                     </Radio>
                   )
@@ -353,8 +469,10 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
 
             {!isLoadingPrices && pricesFetchFailed && (
               <div className="flex items-center justify-between gap-3 py-2">
-                <p className="font-serif italic text-[13px] text-[var(--theme-text-muted)]">
-                  {t("Nu am putut verifica prețurile de livrare Încearcă din nou")}
+                <p className={bodyMutedClass}>
+                  {t(
+                    "Nu am putut verifica prețurile de livrare Încearcă din nou"
+                  )}
                 </p>
                 <button
                   type="button"
@@ -370,75 +488,28 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
               !pricesFetchFailed &&
               (visibleShippingMethods?.length ?? 0) === 0 &&
               !hasPickupOptions && (
-                <p className="font-serif italic text-[13px] text-[var(--theme-text-muted)] py-2">
-                  {t("Niciun curier nu livrează la această adresă Verifică adresa de livrare")}
+                <p className={`${bodyMutedClass} py-2`}>
+                  {t(
+                    "Niciun curier nu livrează la această adresă Verifică adresa de livrare"
+                  )}
                 </p>
               )}
 
             {lockerOptionId && (
               <div className="mt-2 mb-2 border border-[var(--theme-border)] p-4 flex flex-col gap-2">
-                <span className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
+                <span className={fieldLabelClass}>
                   {t("Alege lockerul")} <span className="text-rose-500">*</span>
                 </span>
-                {loadingLockers ? (
-                  <span className="flex items-center gap-2 text-[var(--theme-text-muted)] text-[13px]">
-                    <Loader /> {t("Se încarcă lockerele…")}
-                  </span>
-                ) : lockers.length === 0 ? (
-                  <span className="font-serif italic text-[13px] text-[var(--theme-text-muted)]">
-                    {t("Niciun locker disponibil pentru acest curier în localitatea ta Alege livrare la ușă")}
-                  </span>
-                ) : (
-                  <Combobox
-                    value={selectedLocker}
-                    onChange={handleSelectLocker}
-                    immediate
-                    onClose={() => setLockerQuery("")}
-                  >
-                    <div className="relative w-full">
-                      <ComboboxInput
-                        className="appearance-none w-full h-10 px-3 pr-8 bg-transparent border border-[var(--theme-border)] text-[var(--theme-text)] font-sans text-[12px] focus:outline-none focus:border-[var(--theme-text-muted)] hover:border-[var(--theme-text-muted)] transition-colors"
-                        displayValue={(l: EawbLocker | null) => l?.name ?? ""}
-                        onChange={(e) => setLockerQuery(e.target.value)}
-                        placeholder={t("Caută locker după nume sau adresă")}
-                        autoComplete="off"
-                        data-testid="locker-input"
-                      />
-                      <ComboboxButton className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--theme-text-muted)]">
-                        <ChevronUpDown />
-                      </ComboboxButton>
-                      <ComboboxOptions
-                        anchor="bottom start"
-                        className="z-50 max-h-40 overflow-auto border border-[var(--theme-border)] bg-[var(--theme-bg,#0D0D0D)] shadow-lg focus:outline-none [--anchor-gap:4px]"
-                        style={{ width: "var(--input-width)" }}
-                      >
-                        {filteredLockers.length === 0 ? (
-                          <div className="px-3 py-1.5 font-sans text-[12px] text-[var(--theme-text-muted)]">
-                            {t("Niciun rezultat")}
-                          </div>
-                        ) : (
-                          filteredLockers.map((l) => (
-                            <ComboboxOption
-                              key={l.id}
-                              value={l}
-                              className="cursor-pointer px-3 py-1.5 font-sans text-[12px] leading-tight text-[var(--theme-text)] data-[focus]:bg-hunter-gold/10 data-[focus]:text-hunter-gold"
-                            >
-                              <span className="block truncate">{l.name}</span>
-                              <span className="block text-[11px] text-[var(--theme-text-muted)] truncate">
-                                {l.address}
-                              </span>
-                            </ComboboxOption>
-                          ))
-                        )}
-                      </ComboboxOptions>
-                    </div>
-                  </Combobox>
-                )}
-                {selectedLocker && (
-                  <span className="font-serif italic text-[12px] text-hunter-gold">
-                    {t("Selectat: {name} — {address}", { name: selectedLocker.name, address: selectedLocker.address })}
-                  </span>
-                )}
+                <LockerPicker
+                  lockers={lockers}
+                  filteredLockers={filteredLockers}
+                  loadingLockers={loadingLockers}
+                  origin={lockerOrigin}
+                  selectedLocker={selectedLocker}
+                  onSelectLocker={handleSelectLocker}
+                  lockerQuery={lockerQuery}
+                  onQueryChange={setLockerQuery}
+                />
               </div>
             )}
           </div>
@@ -446,7 +517,9 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
           {showPickupOptions === PICKUP_OPTION_ON && (
             <RadioGroup
               value={shippingMethodId}
-              onChange={(v) => { if (v) handleSetShippingMethod(v, "pickup") }}
+              onChange={(v) => {
+                if (v) handleSetShippingMethod(v, "pickup")
+              }}
               className="mb-6"
             >
               {_pickupMethods?.map((option) => (
@@ -455,26 +528,46 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
                   value={option.id}
                   disabled={option.insufficient_inventory}
                   data-testid="delivery-option-radio"
-                  className={radioClass(option.id === shippingMethodId, option.insufficient_inventory)}
+                  className={radioClass(
+                    option.id === shippingMethodId,
+                    option.insufficient_inventory
+                  )}
                 >
                   <div className="flex items-start gap-3">
-                    <span className={`w-3 h-3 rounded-full border flex-shrink-0 mt-0.5 ${option.id === shippingMethodId ? "border-hunter-gold bg-hunter-gold" : "border-[var(--theme-border)]"}`} />
+                    <span
+                      className={`w-3 h-3 rounded-full border flex-shrink-0 mt-0.5 ${
+                        option.id === shippingMethodId
+                          ? "border-hunter-gold bg-hunter-gold"
+                          : "border-[var(--theme-border)]"
+                      }`}
+                    />
                     <div className="flex flex-col">
-                      <span className="font-serif text-[13px] text-[var(--theme-text)]">{option.name}</span>
+                      <span className="font-serif text-[14px] text-[var(--theme-text)]">
+                        {option.name}
+                      </span>
                       <span className="font-serif italic text-[12px] text-[var(--theme-text-muted)]">
-                        {formatAddress((option as any).service_zone?.fulfillment_set?.location?.address as HttpTypes.StoreCartAddress)}
+                        {formatAddress(
+                          (option as any).service_zone?.fulfillment_set
+                            ?.location?.address as HttpTypes.StoreCartAddress
+                        )}
                       </span>
                     </div>
                   </div>
-                  <span className="font-serif italic text-[13px] text-[var(--theme-text-muted)]">
-                    {convertToLocale({ amount: option.amount!, currency_code: cart?.currency_code })}
+                  <span className={priceTextClass}>
+                    {convertToLocale({
+                      amount: option.amount!,
+                      currency_code: cart?.currency_code,
+                    })}
                   </span>
                 </Radio>
               ))}
             </RadioGroup>
           )}
 
-          <ErrorMessage error={error} data-testid="delivery-option-error-message" />
+          <ErrorMessage
+            error={error}
+            data-testid="delivery-option-error-message"
+          />
           <button
             onClick={handleSubmit}
             disabled={
@@ -484,19 +577,36 @@ const Shipping: React.FC<ShippingProps> = ({ cart, availableShippingMethods }) =
               (!!lockerOptionId && !selectedLocker)
             }
             data-testid="submit-delivery-option-button"
-            className="w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+            className={`relative overflow-hidden ${ctaButtonClass}`}
           >
-            {isLoading ? t("Se procesează…") : t("Continuă cu metoda de plată")}
+            <span
+              className={`flex items-center justify-center gap-2 transition-opacity duration-150 ${
+                isLoading ? "opacity-0" : "opacity-100"
+              }`}
+            >
+              {t("Continuă cu confirmarea")}
+            </span>
+            {isLoading && (
+              <span className="absolute inset-0 flex items-center justify-center gap-2">
+                <Spinner size="14" />
+                {t("Se procesează…")}
+              </span>
+            )}
           </button>
         </>
       ) : (
         <div>
           {cart && (cart.shipping_methods?.length ?? 0) > 0 && (
             <div className="flex flex-col gap-1">
-              <span className="font-sans text-[8px] uppercase tracking-[3px] text-[var(--theme-text-muted)] mb-1">{t("Metodă")}</span>
-              <span className="font-serif italic text-[13px] text-[var(--theme-text-muted)]">
+              <span className={fieldLabelClass}>{t("Metodă")}</span>
+              <span className="font-serif italic text-[14px] text-[var(--theme-text)]">
                 {cart.shipping_methods!.at(-1)!.name}{" "}
-                {convertToLocale({ amount: cart.shipping_methods!.at(-1)!.amount!, currency_code: cart?.currency_code })}
+                <span className={priceTextClass}>
+                  {convertToLocale({
+                    amount: cart.shipping_methods!.at(-1)!.amount!,
+                    currency_code: cart?.currency_code,
+                  })}
+                </span>
               </span>
             </div>
           )}

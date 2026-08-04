@@ -59,27 +59,28 @@ export default function Space() {
     },
   ]
 
+  const sectionRef = useRef<HTMLElement>(null)
   const zonesRef = useRef<HTMLDivElement>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
   const tapRef = useRef<{ x: number; y: number } | null>(null)
 
-  // Recompute which zone is most visible in the scroll container
+  // Recompute which zone is most visible in the scroll container. Desktop
+  // doesn't scroll this container horizontally at all (flex layout, no
+  // overflow) — activeId there is driven only by the intro reveal below and
+  // by CSS :hover, so this bails out without touching it.
   const updateActive = useCallback(() => {
     const el = zonesRef.current
     if (!el) return
-    if (window.innerWidth > 768) {
-      setActiveId(null)
-      return
-    }
+    if (window.innerWidth > 768) return
     const zoneEls = Array.from(el.querySelectorAll<HTMLElement>(".zone"))
     if (!zoneEls.length) return
     const cw = el.offsetWidth
     const sl = el.scrollLeft
-    const zw = zoneEls[0].offsetWidth
     let best = zoneEls[0]
     let bestRatio = -1
-    zoneEls.forEach((z, i) => {
-      const zStart = i * zw
+    zoneEls.forEach((z) => {
+      const zStart = z.offsetLeft
+      const zw = z.offsetWidth
       const vis = Math.max(0, Math.min(zStart + zw, sl + cw) - Math.max(zStart, sl))
       if (vis / zw > bestRatio) { bestRatio = vis / zw; best = z }
     })
@@ -93,8 +94,79 @@ export default function Space() {
     return () => window.removeEventListener("resize", updateActive)
   }, [updateActive])
 
+  // All zones start collapsed either way. The first time the section
+  // scrolls into view, reveal the first one (Salon) — on desktop this
+  // drives the same .is-active CSS that :hover otherwise controls, so the
+  // opening zone expands automatically before the visitor has done
+  // anything; on mobile it's the same class the swipe/tap logic below
+  // already drives. Interaction (hover on desktop, swipe/tap on mobile)
+  // takes over normally from there — no scroll-jacking, no auto-advance.
+  //
+  // The mobile peek strips get an entrance animation using the same
+  // framer-motion animate()+inView() primitives the rest of the site's
+  // scroll-reveal system already uses (see hunter-landing/index.tsx) —
+  // proven to work reliably, instead of a bespoke CSS-animation/
+  // IntersectionObserver combination. Inline opacity/transform are cleared
+  // once the animation finishes so is-active/:hover CSS keeps controlling
+  // the element afterward (framer's WAAPI wrapper commits the final
+  // keyframe as a real inline style on finish, which would otherwise
+  // permanently outrank those class-based rules).
+  useEffect(() => {
+    const section = sectionRef.current
+    if (!section) return
+    let cancelled = false
+    let stopInView: (() => void) | undefined
+
+    import("framer-motion").then(({ inView, animate }) => {
+      if (cancelled) return
+      stopInView = inView(
+        section,
+        () => {
+          setActiveId(ZONES[0].id)
+          if (window.innerWidth <= 768) {
+            const labels = Array.from(
+              section.querySelectorAll<HTMLElement>(".zone-collapsed")
+            )
+            labels.forEach((el, i) => {
+              el.style.opacity = "0"
+              el.style.transform = "translateX(14px)"
+              const controls = animate(
+                el,
+                {
+                  opacity: [0, 1],
+                  transform: ["translateX(14px)", "translateX(0)"],
+                },
+                { duration: 0.5, ease: [0.23, 1, 0.32, 1], delay: 0.05 + i * 0.1 }
+              )
+              controls.finished.then(() => {
+                el.style.opacity = ""
+                el.style.transform = ""
+              })
+            })
+          }
+        },
+        { amount: 0.4 }
+      )
+    })
+
+    return () => {
+      cancelled = true
+      stopInView?.()
+    }
+  }, [])
+
   function handlePointerDown(e: React.PointerEvent) {
     tapRef.current = { x: e.clientX, y: e.clientY }
+  }
+
+  // On desktop, Salon opens via the intro reveal (see effect above) using the
+  // same .is-active class :hover otherwise drives. Once the visitor hovers
+  // any zone for the first time, hand control back to CSS :hover entirely —
+  // otherwise .is-active never clears and Salon stays expanded forever
+  // alongside whichever zone is actually hovered.
+  function handleZonesMouseOver() {
+    if (window.innerWidth <= 768) return
+    setActiveId(null)
   }
 
   function handleClick(e: React.MouseEvent) {
@@ -105,13 +177,14 @@ export default function Space() {
     if ((e.target as HTMLElement).closest(".zone.is-active")) return
     const el = zonesRef.current
     if (!el) return
-    const zw = el.querySelectorAll<HTMLElement>(".zone")[0]?.offsetWidth ?? 0
-    const next = (Math.round(el.scrollLeft / zw) + 1) % ZONES.length
-    el.scrollTo({ left: next * zw, behavior: "smooth" })
+    const zoneEls = Array.from(el.querySelectorAll<HTMLElement>(".zone"))
+    const activeIndex = zoneEls.findIndex((z) => z.dataset.zoneId === activeId)
+    const nextZone = zoneEls[(Math.max(activeIndex, 0) + 1) % zoneEls.length]
+    el.scrollTo({ left: nextZone.offsetLeft, behavior: "smooth" })
   }
 
   return (
-    <section className="space-sec" id="space">
+    <section className="space-sec" id="space" ref={sectionRef}>
       <div
         ref={zonesRef}
         className="zones rv"
@@ -119,6 +192,7 @@ export default function Space() {
         onScroll={updateActive}
         onPointerDown={handlePointerDown}
         onClick={handleClick}
+        onMouseOver={handleZonesMouseOver}
       >
         {ZONES.map((zone) => (
           <div

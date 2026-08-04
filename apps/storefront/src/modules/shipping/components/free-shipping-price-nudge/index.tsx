@@ -270,7 +270,7 @@ function FreeShippingPopup({
         <div className="flex gap-3">
           <LocalizedClientLink
             className="rounded-2xl bg-transparent shadow-none outline-none border-[1px] border-white text-[15px] py-2.5 px-4"
-            href="/cart"
+            href="/cos"
           >
             {t("View cart")}
           </LocalizedClientLink>

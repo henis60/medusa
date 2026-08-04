@@ -35,12 +35,22 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     notFound()
   }
 
-  const metadata = {
-    title: `${collection.title} | Medusa Store`,
-    description: `${collection.title} collection`,
-  } as Metadata
+  const description =
+    (collection.metadata?.description as string | undefined) ??
+    `${collection.title} — The Hunter House`
 
-  return metadata
+  return {
+    // .absolute bypasses the root layout's title template — this string
+    // already has the brand suffix baked in.
+    title: { absolute: `${collection.title} | The Hunter House` },
+    description,
+    // This route duplicates /ready-to-wear/<handle> (the linked, canonical
+    // version) — point search engines there to avoid duplicate-content
+    // treatment while keeping this route itself reachable/functional.
+    alternates: {
+      canonical: `/ready-to-wear/${params.handle}`,
+    },
+  } satisfies Metadata
 }
 
 export default async function CollectionPage(props: Props) {

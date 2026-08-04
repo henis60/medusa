@@ -1,6 +1,7 @@
 ﻿import { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { getTranslations } from "next-intl/server"
+import { redirect } from "@i18n/navigation"
+import { getTranslations, getLocale } from "next-intl/server"
 
 import AddressBook from "@modules/account/components/address-book"
 import { getRegion } from "@lib/data/regions"
@@ -17,9 +18,15 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function Addresses() {
   const t = await getTranslations("account")
   const customer = await retrieveCustomer()
-  const region = await getRegion("ro")
 
-  if (!customer || !region) {
+  // Signed out — send them to /profil itself (renders the login form via
+  // profil/layout.tsx) rather than a dead-end 404.
+  if (!customer) {
+    redirect({ href: "/profil", locale: await getLocale() })
+  }
+
+  const region = await getRegion("ro")
+  if (!region) {
     notFound()
   }
 

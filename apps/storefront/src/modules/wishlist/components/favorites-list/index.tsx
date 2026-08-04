@@ -19,11 +19,12 @@ function FavoriteRow({
   product,
   onRemove,
 }: {
-  item: { id: string; handle: string; title: string; thumbnail: string | null }
+  item: { id: string; variantId?: string | null; variantTitle?: string | null; handle: string; title: string; thumbnail: string | null }
   product?: HttpTypes.StoreProduct
   onRemove: () => void
 }) {
   const t = useTranslations("wishlist")
+  const locale = useLocale()
   const [adding, setAdding] = useState(false)
   const [added, setAdded] = useState(false)
 
@@ -42,9 +43,14 @@ function FavoriteRow({
       )[0]
   }, [product])
 
+  const savedVariant = item.variantId
+    ? product?.variants?.find((v) => v.id === item.variantId) ?? null
+    : null
   const singleVariant =
     product?.variants?.length === 1 ? product.variants[0] : null
-  const defaultVariant = singleVariant ?? cheapestVariant
+  // Prefer the exact variant saved from the product page (e.g. a specific
+  // color) over guessing the cheapest/only one.
+  const defaultVariant = savedVariant ?? singleVariant ?? cheapestVariant
 
   const inStock = defaultVariant
     ? !defaultVariant.manage_inventory ||
@@ -53,9 +59,10 @@ function FavoriteRow({
     : false
 
   const canQuickAdd =
-    !!defaultVariant && (product?.options?.length ?? 0) <= 1
+    !!defaultVariant && (!!savedVariant || (product?.options?.length ?? 0) <= 1)
 
   const variantLabel = useMemo(() => {
+    if (item.variantTitle) return item.variantTitle
     const opts = (defaultVariant as any)?.options as
       | { value?: string }[]
       | undefined
@@ -64,7 +71,7 @@ function FavoriteRow({
       defaultVariant?.title ||
       null
     )
-  }, [defaultVariant])
+  }, [defaultVariant, item.variantTitle])
 
   const handleAdd = async () => {
     if (!defaultVariant?.id || adding) return
@@ -73,6 +80,7 @@ function FavoriteRow({
       variantId: defaultVariant.id,
       quantity: 1,
       countryCode,
+      locale,
     })
     emitCartUpdated(freshCart, { action: "add" })
     setAdding(false)
@@ -192,10 +200,10 @@ function FavoriteRow({
   )
 }
 
-function FavoritesListSkeleton() {
+function FavoritesListSkeleton({ count = 3 }: { count?: number }) {
   return (
     <div className="flex flex-col divide-y divide-[var(--theme-border)] small:px-8 py-4">
-      {[0, 1, 2].map((i) => (
+      {Array.from({ length: count }, (_, i) => i).map((i) => (
         <div key={i} className="flex gap-4 py-4 px-3 -mx-3 animate-pulse">
           <div className="w-16 h-20 shrink-0 bg-[var(--theme-surface)]" />
           <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
@@ -222,9 +230,18 @@ export default function FavoritesList() {
   const locale = useLocale()
   const { favorites, toggle, loaded } = useFavorites()
   const [products, setProducts] = useState<Record<string, HttpTypes.StoreProduct>>({})
+  // Keeps the whole row hidden behind a skeleton until product data (price,
+  // stock, add-to-cart button) has arrived — otherwise the image/title from
+  // localStorage pop in first and the rest of the row follows a beat later.
+  const [productsLoaded, setProductsLoaded] = useState(false)
+  const idsKey = favorites.map((f) => f.id).join(",")
 
   useEffect(() => {
-    if (!favorites.length) return
+    if (!favorites.length) {
+      setProductsLoaded(true)
+      return
+    }
+    setProductsLoaded(false)
     let cancelled = false
     getProductsByIds({
       ids: favorites.map((f) => f.id),
@@ -233,14 +250,16 @@ export default function FavoritesList() {
     }).then((fetched) => {
       if (cancelled) return
       setProducts(Object.fromEntries(fetched.map((p) => [p.id, p])))
+      setProductsLoaded(true)
     })
     return () => {
       cancelled = true
     }
-  }, [favorites.map((f) => f.id).join(","), locale])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idsKey, locale])
 
-  if (!loaded) {
-    return <FavoritesListSkeleton />
+  if (!loaded || !productsLoaded) {
+    return <FavoritesListSkeleton count={favorites.length || 3} />
   }
 
   if (favorites.length === 0) {
@@ -266,7 +285,7 @@ export default function FavoritesList() {
     <div className="flex flex-col divide-y divide-[var(--theme-border)] small:px-8 py-4">
       {favorites.map((item) => (
         <FavoriteRow
-          key={item.id}
+          key={`${item.id}:${item.variantId ?? ""}`}
           item={item}
           product={products[item.id]}
           onRemove={() => toggle(item)}

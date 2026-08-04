@@ -1,17 +1,20 @@
 import { getTranslations } from "next-intl/server"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import Image from "next/image"
 
 function Section({
+  id,
   label,
   title,
   children,
 }: {
+  id?: string
   label?: string
   title: string
   children: React.ReactNode
 }) {
   return (
-    <section className="grid grid-cols-1 small:grid-cols-[180px_1fr] gap-4 small:gap-10 border-t border-[var(--theme-border)] pt-8">
+    <section id={id} className="grid grid-cols-1 small:grid-cols-[180px_1fr] gap-4 small:gap-10 border-t border-[var(--theme-border)] pt-8 scroll-mt-24">
       <div>
         {label && (
           <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)] mb-2">
@@ -113,9 +116,25 @@ const CustomerServiceTemplate = async () => {
             {t("prin curier, în 3–5 zile lucrătoare, în toată România Vei primi un cod de urmărire (tracking) pentru a-ți monitoriza coletul"
             )}
           </p>
+          <div className="pt-2">
+            <Image
+              src="/payments/netopia-badge-light.png"
+              alt="Plăți securizate cu Netopia Payments"
+              width={1852}
+              height={349}
+              className="h-7 w-auto dark:hidden"
+            />
+            <Image
+              src="/payments/netopia-badge-dark.png"
+              alt="Plăți securizate cu Netopia Payments"
+              width={1852}
+              height={349}
+              className="hidden h-7 w-auto dark:block"
+            />
+          </div>
         </Section>
 
-        <Section title={t("Retur, schimb și rambursare")}>
+        <Section id="retur" title={t("Retur, schimb și rambursare")}>
           <p>
             {t("Conform legislației din România și UE, ai dreptul de retragere în")}{" "}
             <span className="text-[var(--theme-text)]">{t("14 zile")}</span>{" "}
@@ -156,11 +175,10 @@ const CustomerServiceTemplate = async () => {
 
         <Section title={t("Informații legale")}>
           <ul className="flex flex-col gap-1.5">
-            <li>{t("Denumire firmă: [Completează]")}</li>
-            <li>{t("CUI: [Completează]")}</li>
-            <li>{t("Nr Reg Comerțului: [Completează]")}</li>
-            <li>{t("Adresă: [Completează]")}</li>
-            <li>{t("Capital social: [Completează, dacă este cazul]")}</li>
+            <li>{t("Denumire firmă:")} S.C. BOJO HOUSE S.R.L.</li>
+            <li>{t("Nr Reg Comerțului:")} J24/356/2023</li>
+            <li>{t("CUI:")} 47739604</li>
+            <li>{t("Adresă:")} Str. Piața Eroilor, nr. 2, Târgu Lăpuș, Maramureș</li>
           </ul>
           <div className="flex flex-col gap-1.5">
             <a
@@ -184,6 +202,12 @@ const CustomerServiceTemplate = async () => {
             {t("Litigiile pot fi soluționate și pe cale alternativă (SAL), prin intermediul ANPC")}
           </p>
           <div className="flex flex-wrap gap-x-5 gap-y-2">
+            <LocalizedClientLink
+              href="/terms-of-use"
+              className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
+            >
+              {t("Termeni și condiții")}
+            </LocalizedClientLink>
             <LocalizedClientLink
               href="/privacy-policy"
               className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"

@@ -9,10 +9,15 @@ type Props = {
   productHandle?: string
   productTitle?: string
   productThumbnail?: string | null
+  // The color/size currently picked in the grid card's quick-add overlay, if
+  // any — so saving from the card records that specific variant instead of
+  // always the product's generic thumbnail/id.
+  variantId?: string | null
+  variantTitle?: string | null
   size?: number
 }
 
-export default function FavoriteButton({ productId, productHandle, productTitle, productThumbnail, size = 16 }: Props) {
+export default function FavoriteButton({ productId, productHandle, productTitle, productThumbnail, variantId, variantTitle, size = 16 }: Props) {
   const t = useTranslations("products")
   const { isFavorite, toggle } = useFavorites()
   const [mounted, setMounted] = useState(false)
@@ -21,13 +26,20 @@ export default function FavoriteButton({ productId, productHandle, productTitle,
 
   // Favorites live in localStorage (client-only), so keep the default state
   // until mounted to avoid a hydration mismatch.
-  const on = mounted && !!productId && isFavorite(productId)
+  const on = mounted && !!productId && isFavorite(productId, variantId)
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     if (!productId || !productHandle) return
-    toggle({ id: productId, handle: productHandle, title: productTitle ?? "", thumbnail: productThumbnail ?? null })
+    toggle({
+      id: productId,
+      variantId,
+      variantTitle,
+      handle: productHandle,
+      title: productTitle ?? "",
+      thumbnail: productThumbnail ?? null,
+    })
   }
 
   return (

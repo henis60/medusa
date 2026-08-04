@@ -89,6 +89,11 @@ export default async function sendOrderConfirmationEmail({
       channel: "email",
       data: {
         order_id: order.display_id,
+        // Links to the standalone /comanda/[id] confirmation page (no login
+        // required — matches the post-payment redirect), not /profil/comenzi,
+        // which 404s/requires auth for guest checkouts. Mirrors
+        // orderIdToSlug in apps/storefront/src/lib/util/order-slug.ts.
+        order_slug: order.id.replace(/^order_/, ""),
         customer_name:
           `${order.customer?.first_name ?? ""} ${order.customer?.last_name ?? ""}`.trim() ||
           "Client",

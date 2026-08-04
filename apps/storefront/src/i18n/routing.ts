@@ -16,7 +16,14 @@ export const routing = defineRouting({
   localeCookie: {
     name: "_medusa_locale",
     maxAge: 60 * 60 * 24 * 365,
-    sameSite: "strict",
+    // "strict" (the previous value) is dropped by the browser on any
+    // cross-site top-level navigation — including the redirect Netopia sends
+    // the customer's browser back through after payment — so the locale
+    // cookie never reached the middleware on that request and the return
+    // page always fell back to defaultLocale ("ro"). "lax" still blocks the
+    // cookie on cross-site subresource/XHR requests, but allows it on
+    // top-level GET navigations like this one.
+    sameSite: "lax",
     secure: false,
   },
 })

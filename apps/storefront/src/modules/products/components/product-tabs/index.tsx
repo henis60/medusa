@@ -8,6 +8,11 @@ type ProductTabsProps = {
   product: HttpTypes.StoreProduct
 }
 
+const hasProductInfo = (product: HttpTypes.StoreProduct) =>
+  !!product.origin_country ||
+  !!product.weight ||
+  !!(product.length && product.width && product.height)
+
 const ProductTabs = ({ product }: ProductTabsProps) => {
   const t = useTranslations("products")
   const tabs = [
@@ -15,10 +20,10 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
       label: t("Descriere"),
       component: <ProductDescriptionTab product={product} />,
     }] : []),
-    {
+    ...(hasProductInfo(product) ? [{
       label: t("Detalii produs"),
       component: <ProductInfoTab product={product} />,
-    },
+    }] : []),
     {
       label: t("Livrare & Retururi"),
       component: <ShippingInfoTab />,

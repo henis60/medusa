@@ -137,6 +137,7 @@ function buildVariants(
   skuPrefix: string,
   priceRon: number | number[],
   colorsHex: string[] = [],
+  disableInventory = false,
 ) {
   const priceFor = (idx: number) => {
     const amount = Array.isArray(priceRon)
@@ -157,6 +158,7 @@ function buildVariants(
           sku: `${skuPrefix}-${slugify(color)}-${slugify(size)}`,
           options: { Culoare: color, Mărime: size },
           ...(hex ? { material: hex, metadata: { color_hex: hex } } : {}),
+          ...(disableInventory ? { manage_inventory: false } : {}),
           prices: priceFor(ci),
         };
       }),
@@ -170,6 +172,7 @@ function buildVariants(
         sku: `${skuPrefix}-${slugify(color)}`,
         options: { Culoare: color },
         ...(hex ? { material: hex, metadata: { color_hex: hex } } : {}),
+        ...(disableInventory ? { manage_inventory: false } : {}),
         prices: priceFor(ci),
       };
     });
@@ -179,11 +182,18 @@ function buildVariants(
       title: size,
       sku: `${skuPrefix}-${slugify(size)}`,
       options: { Mărime: size },
+      ...(disableInventory ? { manage_inventory: false } : {}),
       prices: priceFor(si),
     }));
   }
   return [
-    { title: "Default", sku: skuPrefix, options: {}, prices: priceFor(0) },
+    {
+      title: "Default",
+      sku: skuPrefix,
+      options: {},
+      ...(disableInventory ? { manage_inventory: false } : {}),
+      prices: priceFor(0),
+    },
   ];
 }
 
@@ -455,8 +465,8 @@ function ImageCell({
       {pickerOpen && (
         <MediaLibraryPicker
           onClose={() => setPickerOpen(false)}
-          onSelect={(url) => {
-            onLibraryUrls(row.index, [...row.libraryUrls, url]);
+          onSelect={(urls) => {
+            onLibraryUrls(row.index, [...row.libraryUrls, ...urls]);
             setPickerOpen(false);
           }}
         />
@@ -471,6 +481,7 @@ const AIProductPage = () => {
   const [rows, setRows] = useState<Row[]>([]);
   const [processing, setProcessing] = useState(false);
   const [extraInstructions, setExtraInstructions] = useState("");
+  const [disableInventory, setDisableInventory] = useState(true);
   const csvRef = useRef<HTMLInputElement>(null);
   // Monotonic id source for new rows. Using `prev.length` (the old approach)
   // collides after a delete: e.g. rows indexed 0,1,2 → delete index 1 → length
@@ -784,6 +795,7 @@ const AIProductPage = () => {
             suffix ? `${row.sku_prefix}-${suffix}` : row.sku_prefix,
             priceRon,
             aiResult.colors_hex ?? [],
+            disableInventory,
           ),
           ...(categoryId ? { categories: [{ id: categoryId }] } : {}),
           ...(collectionId ? { collection_id: collectionId } : {}),
@@ -915,6 +927,54 @@ const AIProductPage = () => {
               err?.message || err,
             );
             toast.warning("Traducerea culorilor nu a putut fi salvată");
+          }
+        }
+
+        // Save English translations for variant titles (e.g. "Negru / M" →
+        // "Black / M"). ProductVariant.title is natively .translatable() too,
+        // but it's a separate stored string built at creation (buildVariants
+        // above), not re-derived from the option value at render time — so
+        // translating the option value alone (previous block) doesn't cover
+        // it. Cart/order line items display variant.title directly, so this
+        // is what actually fixes the translation there.
+        if (colors.length && aiResult.colors_en?.length) {
+          try {
+            const enByColor = new Map(
+              colors.map((c, i) => [c.toLowerCase(), aiResult.colors_en[i]]),
+            );
+            const variantTranslations = (product.variants ?? [])
+              .map((variant: any) => {
+                const translatedTitle = (variant.title ?? "")
+                  .split(" / ")
+                  .map((seg: string) => enByColor.get(seg.toLowerCase()) ?? seg)
+                  .join(" / ");
+                if (
+                  !translatedTitle ||
+                  translatedTitle.toLowerCase() ===
+                    (variant.title ?? "").toLowerCase()
+                )
+                  return null;
+                return {
+                  reference: "product_variant",
+                  reference_id: variant.id,
+                  locale_code: "en-GB",
+                  translations: { title: translatedTitle },
+                };
+              })
+              .filter(Boolean);
+
+            if (variantTranslations.length) {
+              await sdk.client.fetch("/admin/translations/batch", {
+                method: "POST",
+                body: { create: variantTranslations },
+              });
+            }
+          } catch (err: any) {
+            console.warn(
+              "[AI] Variant title translation save failed:",
+              err?.message || err,
+            );
+            toast.warning("Traducerea variantelor nu a putut fi salvată");
           }
         }
 
@@ -1228,23 +1288,39 @@ const AIProductPage = () => {
       </details>
 
       {/* ── AI instructions ── */}
-      <Container className="px-5 py-4 flex flex-col gap-2">
-        <div className="flex items-baseline justify-between">
-          <Text size="small" weight="plus" className="text-ui-fg-base">
-            Instrucțiuni extra pentru AI
+      <Container className="px-5 py-4 flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-baseline justify-between">
+            <Text size="small" weight="plus" className="text-ui-fg-base">
+              Instrucțiuni extra pentru AI
+            </Text>
+            <Text size="small" className="text-ui-fg-muted">
+              opțional — aplicate la toate produsele din sesiune
+            </Text>
+          </div>
+          <textarea
+            value={extraInstructions}
+            onChange={(e) => setExtraInstructions(e.target.value)}
+            placeholder={`Ex: Produsele sunt pentru sezonul toamnă-iarnă 2025. Accentuează căldura și robustețea materialelor.`}
+            disabled={processing}
+            rows={2}
+            className="w-full rounded-lg border border-ui-border-base bg-ui-bg-field px-3 py-2 text-sm text-ui-fg-base placeholder:text-ui-fg-muted focus:border-ui-border-interactive focus:outline-none resize-none disabled:opacity-40 disabled:cursor-not-allowed"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <CheckCell
+            checked={disableInventory}
+            onChange={setDisableInventory}
+            disabled={processing}
+          />
+          <Text size="small" className="text-ui-fg-base">
+            Dezactivează Manage Inventory
           </Text>
           <Text size="small" className="text-ui-fg-muted">
-            opțional — aplicate la toate produsele din sesiune
+            — produsele vor fi create fără verificare de stoc
           </Text>
         </div>
-        <textarea
-          value={extraInstructions}
-          onChange={(e) => setExtraInstructions(e.target.value)}
-          placeholder={`Ex: Produsele sunt pentru sezonul toamnă-iarnă 2025. Accentuează căldura și robustețea materialelor.`}
-          disabled={processing}
-          rows={2}
-          className="w-full rounded-lg border border-ui-border-base bg-ui-bg-field px-3 py-2 text-sm text-ui-fg-base placeholder:text-ui-fg-muted focus:border-ui-border-interactive focus:outline-none resize-none disabled:opacity-40 disabled:cursor-not-allowed"
-        />
       </Container>
 
       {/* Table */}
@@ -1317,7 +1393,9 @@ const AIProductPage = () => {
                     <td className="py-2 px-3">
                       <ImageCell
                         row={row}
-                        onLibraryUrls={(i, u) => updateField(i, "libraryUrls", u)}
+                        onLibraryUrls={(i, u) =>
+                          updateField(i, "libraryUrls", u)
+                        }
                         disabled={disabled}
                       />
                     </td>

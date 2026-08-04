@@ -16,6 +16,7 @@ export async function generateMetadata({
   return {
     title: t("Cart"),
     description: t("View your cart"),
+    robots: { index: false, follow: false },
   }
 }
 

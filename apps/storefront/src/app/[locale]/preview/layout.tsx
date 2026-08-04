@@ -6,6 +6,11 @@ import Nav from "@modules/layout/templates/nav"
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),
+  // Safety net: every page under /preview is internal tooling (unpublished
+  // product previews), never meant to be indexed. Individual pages here also
+  // set this themselves, but a layout-level default means a future page
+  // added under /preview is noindex by default instead of by remembering to.
+  robots: { index: false, follow: false },
 }
 
 export default async function PreviewLayout({

@@ -8,14 +8,18 @@
 FROM node:20-slim AS builder
 WORKDIR /app
 
-# The storefront is a leaf workspace (no internal @dtc/* deps), so we install it
-# standalone instead of the whole monorepo — smaller image, faster builds.
-# Resolve deps fresh ON LINUX so platform-specific binaries (Next.js SWC) are
-# installed. --legacy-peer-deps keeps the from-scratch resolve fast under the
-# React 19 peer ranges. --include=dev because the build needs Tailwind/TS/etc.
-COPY apps/storefront/package.json ./package.json
-COPY .npmrc ./.npmrc
-RUN npm install --include=dev --legacy-peer-deps --no-audit --no-fund
+# Install the storefront workspace from the committed root lockfile.
+# The lockfile is regenerated on Linux (via WSL) so it includes every
+# platform's optional native packages (verified: @next/swc-linux-x64-gnu,
+# @esbuild/linux-x64, @rollup/rollup-linux-x64-gnu are all present) — a prior
+# lockfile generated on Windows only had Windows-platform variants, which made
+# `npm ci` fall back to live registry resolution for the missing platform
+# packages mid-install. With a Linux-inclusive lockfile, `npm ci` is fast and
+# deterministic (~38s locally) since it never needs to resolve anything live
+# from the registry. --include=dev because the build needs Tailwind/TS/etc.
+COPY package.json package-lock.json .npmrc ./
+COPY apps/storefront/package.json ./apps/storefront/package.json
+RUN npm ci --workspace apps/storefront --include-workspace-root=false --include=dev --legacy-peer-deps --no-audit --no-fund
 
 # NEXT_PUBLIC_* values are inlined into the client bundle at BUILD time, so they
 # must be present now (not only at runtime). On Railway declare these ARGs so the

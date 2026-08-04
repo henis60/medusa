@@ -32,12 +32,18 @@ function handleReturn(req: MedusaRequest, res: MedusaResponse) {
     | string
     | undefined;
   const ntpStatus = (req.query.status ?? body.status) as string | undefined;
+  // Stamped onto redirectUrl at payment initiation (see NetopiaProviderService
+  // .initiatePayment) so the storefront doesn't have to rely on its locale
+  // cookie surviving this cross-site redirect — must be forwarded, not
+  // dropped, or the return page always renders in the default locale.
+  const locale = (req.query.locale ?? body.locale) as string | undefined;
+  const localeQS = locale ? `&locale=${encodeURIComponent(locale)}` : "";
 
   if (!sessionId) {
-    return res.redirect(`${STOREFRONT_URL}/cart`);
+    return res.redirect(`${STOREFRONT_URL}/cos`);
   }
 
-  const returnBase = `${STOREFRONT_URL}/checkout/netopia/return`;
+  const returnBase = `${STOREFRONT_URL}/finalizare-comanda/netopia/return`;
 
   // errorCode != 0 sau status explicit de eroare → card refuzat / anulat
   const failed =
@@ -46,10 +52,10 @@ function handleReturn(req: MedusaRequest, res: MedusaResponse) {
     ntpStatus === "REJECTED";
 
   if (failed) {
-    return res.redirect(`${returnBase}?session_id=${sessionId}&failed=1`);
+    return res.redirect(`${returnBase}?session_id=${sessionId}&failed=1${localeQS}`);
   }
 
-  return res.redirect(`${returnBase}?session_id=${sessionId}`);
+  return res.redirect(`${returnBase}?session_id=${sessionId}${localeQS}`);
 }
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {

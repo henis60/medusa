@@ -16,15 +16,64 @@
  * a full reload to pick up the new deployment's JS.
  */
 export function isStaleDeploymentError(err: unknown): boolean {
+  // Next/webpack throws a real ChunkLoadError (with this exact `name`) when
+  // a lazy-loaded chunk 404s — the far more common way a stale tab notices
+  // a new deploy than the server-action case below, since it can be
+  // triggered by any dynamic import(), not just a mounted component calling
+  // a now-unrecognized action id.
+  if (err && typeof err === "object" && (err as any).name === "ChunkLoadError") {
+    return true
+  }
   const message = err instanceof Error ? err.message : String(err ?? "")
   return (
     /failed to find server action/i.test(message) ||
-    /older or newer deployment/i.test(message)
+    /older or newer deployment/i.test(message) ||
+    /loading chunk [\w.-]+ failed/i.test(message) ||
+    /chunkloaderror/i.test(message) ||
+    // Thrown by webpack's own require runtime when an RSC prefetch (e.g. a
+    // <Link> entering the viewport) resolves a module id that no longer
+    // exists in the currently-loaded bundle — same stale-tab-after-deploy
+    // root cause as the cases above, just surfacing as a raw TypeError
+    // instead of a named Next.js error.
+    /cannot read properties of undefined \(reading 'call'\)/i.test(message)
   )
 }
 
+// Guards against a reload loop: if the deploy itself is somehow broken (not
+// just this tab being stale), reloading wouldn't fix anything and would just
+// hammer the user's browser forever. One reload per tab session is enough
+// to recover from the normal stale-chunk case.
+const RELOAD_GUARD_KEY = "hunter_stale_deploy_reload"
+
 export function reloadForNewDeployment() {
-  if (typeof window !== "undefined") {
-    window.location.reload()
+  if (typeof window === "undefined") return
+  try {
+    if (sessionStorage.getItem(RELOAD_GUARD_KEY)) return
+    sessionStorage.setItem(RELOAD_GUARD_KEY, "1")
+  } catch {}
+  window.location.reload()
+}
+
+/**
+ * Turns a caught error into text safe to show a customer. Framework/network
+ * internals (a stale server action id, a failed chunk load, "Failed to
+ * fetch") must never reach the screen verbatim — a raw "Server Action ...
+ * was not found" with a link to Next's docs means nothing to a shopper mid
+ * checkout. Genuine backend validation messages (Medusa's own "Adresa de
+ * livrare este necesară" etc.) are left as-is; they're meant to be read.
+ *
+ * For the stale-deployment case specifically, this also triggers the reload
+ * that recovers from it — the caller only needs a string to show for the
+ * brief moment before that reload lands.
+ */
+export function getDisplayableErrorMessage(
+  err: unknown,
+  fallback: string
+): string {
+  if (isStaleDeploymentError(err)) {
+    reloadForNewDeployment()
+    return fallback
   }
+  if (err instanceof Error && err.message) return err.message
+  return fallback
 }

@@ -12,10 +12,11 @@ type Props = {
   isFeatured?: boolean
   noOverlay?: boolean
   activeImage?: string | null
+  activeVariant?: HttpTypes.StoreProductVariant | null
   onVariantSelect?: (variant: HttpTypes.StoreProductVariant | null) => void
 }
 
-export default function CardImages({ product, isFeatured, noOverlay, activeImage, onVariantSelect }: Props) {
+export default function CardImages({ product, isFeatured, noOverlay, activeImage, activeVariant, onVariantSelect }: Props) {
   const t = useTranslations("products")
   const allImages = product.images ?? []
   const variants = product.variants ?? []
@@ -67,7 +68,25 @@ export default function CardImages({ product, isFeatured, noOverlay, activeImage
           productId={product.id}
           productHandle={product.handle ?? undefined}
           productTitle={product.title ?? undefined}
-          productThumbnail={product.thumbnail}
+          productThumbnail={activeImage ?? product.thumbnail}
+          // Before any color/size is picked, this must resolve to the exact
+          // same variant the quick-add overlay defaults to (variants[0]) —
+          // otherwise favoriting with nothing selected saves variantId=null,
+          // and then explicitly picking that same (first) variant afterwards
+          // compares as "different", letting it be added a second time
+          // instead of being recognized as already favorited.
+          variantId={(activeVariant ?? variants[0] ?? null)?.id ?? null}
+          variantTitle={
+            (((activeVariant ?? variants[0]) as any)?.options as
+              | { value?: string }[]
+              | undefined
+            )
+              ?.map((o) => o.value)
+              .filter(Boolean)
+              .join(" · ") ||
+            (activeVariant ?? variants[0])?.title ||
+            null
+          }
         />
       </div>
 

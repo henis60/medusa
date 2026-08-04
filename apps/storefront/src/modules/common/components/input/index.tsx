@@ -110,6 +110,13 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           {type === "password" && (
             <button
               type="button"
+              // Without this, a mousedown on this button (which sits right
+              // next to the input) can blur the input first, racing with
+              // the click that follows — the toggle then only reliably
+              // fires while the input already has focus. Preventing the
+              // default here stops that focus change entirely, so the
+              // click always registers regardless of prior focus state.
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors"
             >

@@ -4,7 +4,7 @@ import { addToCart } from "@lib/data/cart"
 import { emitCartUpdated } from "@lib/util/cart-events"
 import { HttpTypes } from "@medusajs/types"
 import { useEffect, useState, useMemo } from "react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { COLOR_OPTION_NAMES as COLOR_TITLES } from "@lib/util/product"
 
 const SIZE_ORDER = [
@@ -72,6 +72,29 @@ const sortOptionValues = (values: HttpTypes.StoreProductOptionValue[]) =>
     return ai - bi
   })
 
+// Colors follow variant creation order (matches image grouping), same as
+// the product page's option-select.tsx — the raw option.values order isn't
+// consistent across store/preview APIs, so alphabetical sorting here made
+// color order diverge from the product page.
+const colorOrderedValues = (
+  option: HttpTypes.StoreProductOption,
+  variants: HttpTypes.StoreProductVariant[]
+) => {
+  const rawValues = option.values ?? []
+  const seen: string[] = []
+  for (const v of variants) {
+    const val = v.options?.find((o) => o.option_id === option.id)?.value
+    if (val && !seen.includes(val)) seen.push(val)
+  }
+  const ordered = seen
+    .map((val) => rawValues.find((v) => v.value === val))
+    .filter((v): v is HttpTypes.StoreProductOptionValue => Boolean(v))
+  for (const v of rawValues) {
+    if (v.value && !seen.includes(v.value)) ordered.push(v)
+  }
+  return ordered.length ? ordered : rawValues
+}
+
 type Props = {
   variants: HttpTypes.StoreProductVariant[]
   options: HttpTypes.StoreProductOption[]
@@ -86,6 +109,7 @@ export default function DesktopQuickAdd({
   onVariantSelect,
 }: Props) {
   const t = useTranslations("products")
+  const locale = useLocale()
   const countryCode = "ro"
   const [selected, setSelected] = useState<Record<string, string>>({})
   const [adding, setAdding] = useState(false)
@@ -223,6 +247,7 @@ export default function DesktopQuickAdd({
       variantId: effectiveVariant.id,
       quantity: 1,
       countryCode,
+      locale,
     })
     emitCartUpdated(freshCart, { action: "add" })
     setAdding(false)
@@ -239,7 +264,12 @@ export default function DesktopQuickAdd({
     >
       <div className="px-3 pt-3 pb-3 flex flex-col gap-2">
         {pickableOptions.map((option) => {
-          const sortedValues = sortOptionValues(option.values ?? [])
+          const isColorOpt = COLOR_TITLES.includes(
+            option?.title?.toLowerCase() ?? ""
+          )
+          const sortedValues = isColorOpt
+            ? colorOrderedValues(option, variants)
+            : sortOptionValues(option.values ?? [])
           return (
             <div key={option.id} className="flex items-center gap-1 flex-wrap">
               {sortedValues.map((v) => {

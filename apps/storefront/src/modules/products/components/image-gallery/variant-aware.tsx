@@ -7,12 +7,33 @@ import { AnimatePresence, motion } from "framer-motion"
 import Image from "next/image"
 import { useTranslations } from "next-intl"
 import {
-  ArrowsPointingOutMini,
   ChevronLeftMini,
   ChevronRightMini,
   XMark,
 } from "@medusajs/icons"
 import { useSelectedVariant } from "@modules/products/context/selected-variant-context"
+
+// Minimalist "expand to fullscreen" glyph — four open corner brackets,
+// styled in the site's gold accent instead of a generic filled icon.
+function ExpandIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M9 3H4v5" />
+      <path d="M15 3h5v5" />
+      <path d="M20 15v5h-5" />
+      <path d="M4 15v5h5" />
+    </svg>
+  )
+}
 
 function ImageLightbox({
   images,
@@ -51,22 +72,101 @@ function ImageLightbox({
     }
   }, [])
 
-  const touchStartX = useRef<number | null>(null)
-  const onTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX
+  // Pinch-to-zoom + pan on the image itself, kept separate from the page's
+  // own viewport zoom (which would zoom the whole overlay, let the user pan
+  // off past its edges, and fight with the swipe-to-next-image gesture).
+  // While at 1x, a single finger still swipes to the next/previous image;
+  // once zoomed in, a single finger pans the zoomed image instead.
+  const [zoom, setZoom] = useState({ scale: 1, x: 0, y: 0 })
+  const gestureRef = useRef<{
+    mode: "none" | "pinch" | "pan" | "swipe"
+    startDist: number
+    startScale: number
+    startMid: { x: number; y: number }
+    startZoom: { x: number; y: number }
+    startTouchX: number
+  }>({
+    mode: "none",
+    startDist: 0,
+    startScale: 1,
+    startMid: { x: 0, y: 0 },
+    startZoom: { x: 0, y: 0 },
+    startTouchX: 0,
+  })
+
+  // Reset zoom whenever the shown image changes.
+  useEffect(() => {
+    setZoom({ scale: 1, x: 0, y: 0 })
+  }, [index])
+
+  const touchDist = (a: React.Touch, b: React.Touch) =>
+    Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY)
+  const touchMid = (a: React.Touch, b: React.Touch) => ({
+    x: (a.clientX + b.clientX) / 2,
+    y: (a.clientY + b.clientY) / 2,
+  })
+
+  const onImgTouchStart = (e: React.TouchEvent) => {
+    const g = gestureRef.current
+    if (e.touches.length === 2) {
+      const [a, b] = [e.touches[0], e.touches[1]]
+      g.mode = "pinch"
+      g.startDist = touchDist(a, b)
+      g.startScale = zoom.scale
+      g.startMid = touchMid(a, b)
+      g.startZoom = { x: zoom.x, y: zoom.y }
+    } else if (e.touches.length === 1) {
+      const t0 = e.touches[0]
+      g.mode = zoom.scale > 1.01 ? "pan" : "swipe"
+      g.startTouchX = t0.clientX
+      g.startMid = { x: t0.clientX, y: t0.clientY }
+      g.startZoom = { x: zoom.x, y: zoom.y }
+    }
   }
-  const onTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current === null) return
-    const dx = e.changedTouches[0].clientX - touchStartX.current
-    if (Math.abs(dx) > 40) dx < 0 ? next() : prev()
-    touchStartX.current = null
+
+  const onImgTouchMove = (e: React.TouchEvent) => {
+    const g = gestureRef.current
+    if (g.mode === "pinch" && e.touches.length === 2) {
+      e.preventDefault()
+      const [a, b] = [e.touches[0], e.touches[1]]
+      const scale = Math.min(4, Math.max(1, g.startScale * (touchDist(a, b) / g.startDist)))
+      const m = touchMid(a, b)
+      setZoom({
+        scale,
+        x: g.startZoom.x + (m.x - g.startMid.x),
+        y: g.startZoom.y + (m.y - g.startMid.y),
+      })
+    } else if (g.mode === "pan" && e.touches.length === 1) {
+      e.preventDefault()
+      const t0 = e.touches[0]
+      setZoom((z) => ({
+        ...z,
+        x: g.startZoom.x + (t0.clientX - g.startMid.x),
+        y: g.startZoom.y + (t0.clientY - g.startMid.y),
+      }))
+    }
+    // "swipe" mode intentionally doesn't preventDefault or move anything —
+    // onTouchEnd decides next/prev from the total delta, same as before.
+  }
+
+  const onImgTouchEnd = (e: React.TouchEvent) => {
+    const g = gestureRef.current
+    if (g.mode === "swipe") {
+      const dx = (e.changedTouches[0]?.clientX ?? g.startTouchX) - g.startTouchX
+      if (Math.abs(dx) > 40) (dx < 0 ? next() : prev())
+    } else if (g.mode === "pinch" || g.mode === "pan") {
+      // Snap back to natural size/position if pinched back down near 1x.
+      setZoom((z) => (z.scale <= 1.05 ? { scale: 1, x: 0, y: 0 } : z))
+    }
+    if (e.touches.length === 0) g.mode = "none"
   }
 
   const selected = images[index]
 
   return createPortal(
     <div
-      className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center"
+      className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center overscroll-none"
+      style={{ touchAction: "none" }}
       onClick={onClose}
     >
       <button
@@ -113,8 +213,14 @@ function ImageLightbox({
           alt={t("Imagine produs")}
           draggable={false}
           onClick={(e) => e.stopPropagation()}
-          onTouchStart={onTouchStart}
-          onTouchEnd={onTouchEnd}
+          onTouchStart={onImgTouchStart}
+          onTouchMove={onImgTouchMove}
+          onTouchEnd={onImgTouchEnd}
+          style={{
+            transform: `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.scale})`,
+            transition: gestureRef.current.mode === "none" ? "transform 0.15s ease-out" : "none",
+            touchAction: "none",
+          }}
           className="max-w-[92vw] max-h-[92vh] w-auto h-auto object-contain select-none"
         />
       )}
@@ -166,6 +272,15 @@ export default function VariantAwareGallery({
   const thumbsRef = useRef<HTMLDivElement>(null)
   const mainImageRef = useRef<HTMLDivElement>(null)
   const thumbDragStart = useRef<{ y: number; scrollTop: number } | null>(null)
+  // The very first image is server-rendered and already visible in the
+  // initial HTML — fading it in from opacity:0 on hydration only delays
+  // its paint until framer-motion runs. Skip the enter animation for that
+  // one render; every later switch (variant change, arrow/dot/drag) still
+  // gets the fade, since it's genuinely replacing on-screen content.
+  const isFirstRender = useRef(true)
+  useEffect(() => {
+    isFirstRender.current = false
+  }, [])
 
   useEffect(() => {
     if (!mainImageRef.current) return
@@ -280,7 +395,7 @@ export default function VariantAwareGallery({
             {selected?.url && (
               <motion.div
                 key={selected.url}
-                initial={{ opacity: 0 }}
+                initial={isFirstRender.current ? false : { opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.35, ease: "easeInOut" }}
@@ -302,9 +417,9 @@ export default function VariantAwareGallery({
           <button
             onClick={() => setLightboxOpen(true)}
             aria-label={t("Vizualizează pe tot ecranul")}
-            className="absolute bottom-3 right-3 flex items-center justify-center w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow-md text-[var(--theme-text)] transition-all duration-200 hover:bg-hunter-gold hover:text-hunter-dark hover:scale-105"
+            className="absolute bottom-3 right-3 flex items-center justify-center w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow-md text-hunter-gold transition-all duration-200 hover:scale-105"
           >
-            <ArrowsPointingOutMini className="w-3.5 h-3.5" />
+            <ExpandIcon className="w-4 h-4" />
           </button>
         </div>
       </div>

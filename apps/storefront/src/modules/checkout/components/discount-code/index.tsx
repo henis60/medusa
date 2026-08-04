@@ -6,6 +6,11 @@ import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
 import { useTranslations } from "next-intl"
 import ErrorMessage from "../error-message"
+import { emitCartUpdated } from "@lib/util/cart-events"
+import {
+  isStaleDeploymentError,
+  reloadForNewDeployment,
+} from "@lib/util/stale-deployment"
 
 type DiscountCodeProps = {
   cart: HttpTypes.StoreCart
@@ -22,7 +27,8 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
     const remaining = promotions
       .filter((p) => p.code !== code && p.code !== undefined)
       .map((p) => p.code!)
-    await applyPromotions(remaining)
+    const updatedCart = await applyPromotions(remaining)
+    emitCartUpdated(updatedCart)
   }
 
   const addPromotionCode = async (formData: FormData) => {
@@ -40,9 +46,28 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
       )
       if (!applied) {
         setErrorMessage(t("Codul promoțional nu este valid sau a expirat"))
+      } else {
+        // The cart's payment session is commonly invalidated/recreated once
+        // totals change — Review (and anything else in checkout) needs to
+        // see the fresh cart to notice that and re-initiate, or its
+        // "preparing payment" state spins forever until a hard reload. See
+        // CartRefreshOnUpdate, now mounted in the checkout layout.
+        emitCartUpdated(updatedCart)
       }
     } catch (e) {
-      setErrorMessage(e instanceof Error ? e.message : String(e))
+      // applyPromotions actually throws for an invalid/expired code (Medusa
+      // rejects it server-side) rather than silently omitting it from
+      // cart.promotions — so this catch, not the `!applied` branch above, is
+      // what really runs for a bad code. Show the same specific message
+      // there is meant to cover; a stale-deployment error is the one other
+      // realistic failure mode for this action, and still gets its own
+      // recovery reload instead.
+      if (isStaleDeploymentError(e)) {
+        reloadForNewDeployment()
+        setErrorMessage(t("A apărut o eroare Reîncearcă"))
+      } else {
+        setErrorMessage(t("Codul promoțional nu este valid sau a expirat"))
+      }
     }
     if (input) input.value = ""
   }

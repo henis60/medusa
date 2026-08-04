@@ -11,7 +11,7 @@ import {
   Text,
   toast,
 } from "@medusajs/ui";
-import { Folder, XMark } from "@medusajs/icons";
+import { Check, Folder, XMark } from "@medusajs/icons";
 import { uploadFiles } from "../lib/image-upload";
 import { fetchMediaAssets } from "../lib/media-library-api";
 
@@ -19,14 +19,15 @@ export default function MediaLibraryPicker({
   onSelect,
   onClose,
 }: {
-  onSelect: (url: string) => void;
+  onSelect: (urls: string[]) => void;
   onClose: () => void;
 }) {
   const [q, setQ] = useState("");
   const [prefix, setPrefix] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [convert, setConvert] = useState(true);
+  const [convert, setConvert] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
+  const [selectedUrls, setSelectedUrls] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
@@ -74,6 +75,19 @@ export default function MediaLibraryPicker({
           path: arr.slice(0, i + 1).join("/") + "/",
         }))
     : [];
+
+  const toggleSelection = (url: string) => {
+    setSelectedUrls((prev) =>
+      prev.includes(url) ? prev.filter((u) => u !== url) : [...prev, url],
+    );
+  };
+
+  const selectAssets = () => {
+    if (selectedUrls.length === 0) return;
+    onSelect(selectedUrls);
+    setSelectedUrls([]);
+    onClose();
+  };
 
   return createPortal(
     <div
@@ -188,20 +202,50 @@ export default function MediaLibraryPicker({
                   </Text>
                 </button>
               ))}
-            {(data?.assets ?? []).map((asset) => (
-              <button
-                key={asset.key}
-                onClick={() => onSelect(asset.url)}
-                title={asset.alt_text ?? asset.key}
-                className="aspect-square rounded border border-ui-border-base overflow-hidden hover:ring-2 hover:ring-ui-border-interactive transition-shadow"
-              >
-                <img
-                  src={asset.url}
-                  alt={asset.alt_text ?? ""}
-                  className="w-full h-full object-cover"
-                />
-              </button>
-            ))}
+            {(data?.assets ?? []).map((asset) => {
+              const selected = selectedUrls.includes(asset.url);
+              return (
+                <button
+                  key={asset.key}
+                  type="button"
+                  onClick={() => toggleSelection(asset.url)}
+                  title={asset.alt_text ?? asset.key}
+                  className={`aspect-square rounded border overflow-hidden transition-shadow ${
+                    selected
+                      ? "border-ui-border-interactive shadow-outline-interactive"
+                      : "border-ui-border-base hover:ring-2 hover:ring-ui-border-interactive"
+                  }`}
+                >
+                  <div className="relative w-full h-full">
+                    <img
+                      src={asset.url}
+                      alt={asset.alt_text ?? ""}
+                      className="w-full h-full object-cover"
+                    />
+                    {selected && (
+                      <div className="absolute inset-0 bg-black/20 flex items-start justify-end p-1">
+                        <div className="bg-ui-bg-base rounded-full w-6 h-6 flex items-center justify-center text-ui-fg-interactive">
+                          <Check className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-ui-border-base">
+          <Text size="small" className="text-ui-fg-muted">
+            {selectedUrls.length} imagine{selectedUrls.length === 1 ? " selectată" : " selectate"}
+          </Text>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" onClick={onClose}>
+              Anulează
+            </Button>
+            <Button onClick={selectAssets} disabled={selectedUrls.length === 0}>
+              Adaugă {selectedUrls.length > 0 ? `${selectedUrls.length}` : "din bibliotecă"}
+            </Button>
           </div>
         </div>
       </div>
