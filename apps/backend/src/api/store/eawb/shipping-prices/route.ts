@@ -102,6 +102,16 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
     return res.json({ prices })
   } catch (err) {
-    return res.status(200).json({ prices: {}, error: (err as Error).message })
+    // A genuine failure calling Europarcel (timeout, auth/session expiry,
+    // rate limit, transient 5xx) must NOT come back as 200 { prices: {} } —
+    // that's byte-for-byte identical to "successfully checked, no courier
+    // serves this address" on the storefront, which then shows "Niciun
+    // curier nu livrează la această adresă" instead of a retryable error —
+    // even to a customer who already has a valid, previously-confirmed
+    // shipping method (e.g. a locker) selected on their cart. The
+    // storefront's listEawbShippingPrices deliberately does NOT swallow a
+    // thrown/non-2xx response into {} for exactly this reason; returning
+    // 200 here defeated that.
+    return res.status(502).json({ error: (err as Error).message })
   }
 }

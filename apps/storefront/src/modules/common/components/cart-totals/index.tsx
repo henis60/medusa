@@ -15,17 +15,9 @@ type CartTotalsProps = {
     discount_subtotal?: number | null
   }
   showTax?: boolean
-  // Shipping isn't known/calculated yet on the cart page (no address/
-  // delivery method chosen there) — only show this row once checkout has
-  // that information.
-  showShipping?: boolean
 }
 
-const CartTotals: React.FC<CartTotalsProps> = ({
-  totals,
-  showTax = false,
-  showShipping = false,
-}) => {
+const CartTotals: React.FC<CartTotalsProps> = ({ totals, showTax = false }) => {
   const { currency_code, total, tax_total, item_subtotal, shipping_subtotal, discount_subtotal } = totals
   const t = useTranslations("common")
 
@@ -39,16 +31,14 @@ const CartTotals: React.FC<CartTotalsProps> = ({
           </span>
         </div>
 
-        {showShipping && (
-          <div className="flex justify-between text-[var(--theme-text-muted)]">
-            <span>{t("Livrare")}</span>
-            <span data-testid="cart-shipping" data-value={shipping_subtotal ?? 0}>
-              {shipping_subtotal
-                ? convertToLocale({ amount: shipping_subtotal, currency_code })
-                : "—"}
-            </span>
-          </div>
-        )}
+        <div className="flex justify-between text-[var(--theme-text-muted)]">
+          <span>{t("Livrare")}</span>
+          <span data-testid="cart-shipping" data-value={shipping_subtotal ?? 0}>
+            {shipping_subtotal
+              ? convertToLocale({ amount: shipping_subtotal, currency_code })
+              : "—"}
+          </span>
+        </div>
 
         {!!discount_subtotal && (
           <div className="flex justify-between text-hunter-gold">

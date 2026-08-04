@@ -108,11 +108,21 @@ const Shipping: React.FC<ShippingProps> = ({
   // calculated ones only once they have a price (a courier that's inactive in
   // the eAWB account or doesn't serve the address returns no price). While
   // prices are loading we still show the calculated options with a spinner.
+  //
+  // The option already saved on the cart (shippingMethodId) is always kept
+  // visible too, regardless of what the live re-price call just returned —
+  // returning to this step later re-fetches current prices, and if that
+  // call transiently fails or omits an option (rate limiting, a courier
+  // that's briefly unavailable), a customer who already has a valid,
+  // previously-confirmed selection (e.g. a locker they picked) would
+  // otherwise see it vanish and get told no courier serves their address at
+  // all — even though their shipping method is still genuinely set.
   const visibleShippingMethods = _shippingMethods?.filter(
     (o) =>
       o.price_type !== "calculated" ||
       isLoadingPrices ||
-      (calculatedPricesMap[o.id] ?? 0) > 0
+      (calculatedPricesMap[o.id] ?? 0) > 0 ||
+      o.id === shippingMethodId
   )
 
   const fetchPrices = useCallback(() => {

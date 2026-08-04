@@ -11,7 +11,7 @@ const CheckoutSummary = ({ cart }: { cart: HttpTypes.StoreCart }) => {
         <ItemsPreviewTemplate cart={cart} />
         <Divider />
         <DiscountCode cart={cart} />
-        <CartTotals totals={cart} showShipping />
+        <CartTotals totals={cart} />
       </div>
     </div>
   )
