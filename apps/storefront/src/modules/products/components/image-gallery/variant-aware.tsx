@@ -72,22 +72,101 @@ function ImageLightbox({
     }
   }, [])
 
-  const touchStartX = useRef<number | null>(null)
-  const onTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX
+  // Pinch-to-zoom + pan on the image itself, kept separate from the page's
+  // own viewport zoom (which would zoom the whole overlay, let the user pan
+  // off past its edges, and fight with the swipe-to-next-image gesture).
+  // While at 1x, a single finger still swipes to the next/previous image;
+  // once zoomed in, a single finger pans the zoomed image instead.
+  const [zoom, setZoom] = useState({ scale: 1, x: 0, y: 0 })
+  const gestureRef = useRef<{
+    mode: "none" | "pinch" | "pan" | "swipe"
+    startDist: number
+    startScale: number
+    startMid: { x: number; y: number }
+    startZoom: { x: number; y: number }
+    startTouchX: number
+  }>({
+    mode: "none",
+    startDist: 0,
+    startScale: 1,
+    startMid: { x: 0, y: 0 },
+    startZoom: { x: 0, y: 0 },
+    startTouchX: 0,
+  })
+
+  // Reset zoom whenever the shown image changes.
+  useEffect(() => {
+    setZoom({ scale: 1, x: 0, y: 0 })
+  }, [index])
+
+  const touchDist = (a: React.Touch, b: React.Touch) =>
+    Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY)
+  const touchMid = (a: React.Touch, b: React.Touch) => ({
+    x: (a.clientX + b.clientX) / 2,
+    y: (a.clientY + b.clientY) / 2,
+  })
+
+  const onImgTouchStart = (e: React.TouchEvent) => {
+    const g = gestureRef.current
+    if (e.touches.length === 2) {
+      const [a, b] = [e.touches[0], e.touches[1]]
+      g.mode = "pinch"
+      g.startDist = touchDist(a, b)
+      g.startScale = zoom.scale
+      g.startMid = touchMid(a, b)
+      g.startZoom = { x: zoom.x, y: zoom.y }
+    } else if (e.touches.length === 1) {
+      const t0 = e.touches[0]
+      g.mode = zoom.scale > 1.01 ? "pan" : "swipe"
+      g.startTouchX = t0.clientX
+      g.startMid = { x: t0.clientX, y: t0.clientY }
+      g.startZoom = { x: zoom.x, y: zoom.y }
+    }
   }
-  const onTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current === null) return
-    const dx = e.changedTouches[0].clientX - touchStartX.current
-    if (Math.abs(dx) > 40) dx < 0 ? next() : prev()
-    touchStartX.current = null
+
+  const onImgTouchMove = (e: React.TouchEvent) => {
+    const g = gestureRef.current
+    if (g.mode === "pinch" && e.touches.length === 2) {
+      e.preventDefault()
+      const [a, b] = [e.touches[0], e.touches[1]]
+      const scale = Math.min(4, Math.max(1, g.startScale * (touchDist(a, b) / g.startDist)))
+      const m = touchMid(a, b)
+      setZoom({
+        scale,
+        x: g.startZoom.x + (m.x - g.startMid.x),
+        y: g.startZoom.y + (m.y - g.startMid.y),
+      })
+    } else if (g.mode === "pan" && e.touches.length === 1) {
+      e.preventDefault()
+      const t0 = e.touches[0]
+      setZoom((z) => ({
+        ...z,
+        x: g.startZoom.x + (t0.clientX - g.startMid.x),
+        y: g.startZoom.y + (t0.clientY - g.startMid.y),
+      }))
+    }
+    // "swipe" mode intentionally doesn't preventDefault or move anything —
+    // onTouchEnd decides next/prev from the total delta, same as before.
+  }
+
+  const onImgTouchEnd = (e: React.TouchEvent) => {
+    const g = gestureRef.current
+    if (g.mode === "swipe") {
+      const dx = (e.changedTouches[0]?.clientX ?? g.startTouchX) - g.startTouchX
+      if (Math.abs(dx) > 40) (dx < 0 ? next() : prev())
+    } else if (g.mode === "pinch" || g.mode === "pan") {
+      // Snap back to natural size/position if pinched back down near 1x.
+      setZoom((z) => (z.scale <= 1.05 ? { scale: 1, x: 0, y: 0 } : z))
+    }
+    if (e.touches.length === 0) g.mode = "none"
   }
 
   const selected = images[index]
 
   return createPortal(
     <div
-      className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center"
+      className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center overscroll-none"
+      style={{ touchAction: "none" }}
       onClick={onClose}
     >
       <button
@@ -134,8 +213,14 @@ function ImageLightbox({
           alt={t("Imagine produs")}
           draggable={false}
           onClick={(e) => e.stopPropagation()}
-          onTouchStart={onTouchStart}
-          onTouchEnd={onTouchEnd}
+          onTouchStart={onImgTouchStart}
+          onTouchMove={onImgTouchMove}
+          onTouchEnd={onImgTouchEnd}
+          style={{
+            transform: `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.scale})`,
+            transition: gestureRef.current.mode === "none" ? "transform 0.15s ease-out" : "none",
+            touchAction: "none",
+          }}
           className="max-w-[92vw] max-h-[92vh] w-auto h-auto object-contain select-none"
         />
       )}

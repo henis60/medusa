@@ -14,6 +14,9 @@ type Props = {
 // its default docked position — persists across visits on this device.
 const POSITION_KEY = "hunter_appt_btn_pos"
 const EDGE_MARGIN = 8
+// The sticky header (nav-shell) is h-16 (64px) and always on top (z-[9001])
+// — the button must never come to rest underneath/behind it.
+const HEADER_EXCLUSION = 64 + EDGE_MARGIN
 
 export default function AppointmentButton({ transparent, hideOnTop, onClick }: Props) {
   const t = useTranslations("layout")
@@ -62,7 +65,7 @@ export default function AppointmentButton({ transparent, hideOnTop, onClick }: P
     const targetLeft = goRight
       ? window.innerWidth - rect.width - EDGE_MARGIN
       : EDGE_MARGIN
-    const minTop = EDGE_MARGIN
+    const minTop = HEADER_EXCLUSION
     const maxTop = window.innerHeight - rect.height - EDGE_MARGIN
     const targetTop = Math.min(Math.max(rect.top, minTop), maxTop)
 
