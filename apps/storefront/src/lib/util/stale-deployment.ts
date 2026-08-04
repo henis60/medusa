@@ -29,7 +29,13 @@ export function isStaleDeploymentError(err: unknown): boolean {
     /failed to find server action/i.test(message) ||
     /older or newer deployment/i.test(message) ||
     /loading chunk [\w.-]+ failed/i.test(message) ||
-    /chunkloaderror/i.test(message)
+    /chunkloaderror/i.test(message) ||
+    // Thrown by webpack's own require runtime when an RSC prefetch (e.g. a
+    // <Link> entering the viewport) resolves a module id that no longer
+    // exists in the currently-loaded bundle — same stale-tab-after-deploy
+    // root cause as the cases above, just surfacing as a raw TypeError
+    // instead of a named Next.js error.
+    /cannot read properties of undefined \(reading 'call'\)/i.test(message)
   )
 }
 
