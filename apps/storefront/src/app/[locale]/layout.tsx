@@ -142,6 +142,11 @@ export default async function RootLayout({ children, params }: Props) {
       className={`${playfairDisplay.variable} ${cormorantGaramond.variable} ${raleway.variable} ${cinzel.variable}`}
     >
       <head>
+        {/* Warms the DNS + TLS connection to the image host before the
+            first <img>/next/image request fires, shaving that handshake
+            off the critical path for the very first paint of any page. */}
+        <link rel="preconnect" href="https://media.thehunter.ro" />
+        <link rel="dns-prefetch" href="https://media.thehunter.ro" />
         <script
           type="application/ld+json"
           // eslint-disable-next-line react/no-danger

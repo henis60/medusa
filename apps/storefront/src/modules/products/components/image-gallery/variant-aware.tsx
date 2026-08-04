@@ -187,6 +187,15 @@ export default function VariantAwareGallery({
   const thumbsRef = useRef<HTMLDivElement>(null)
   const mainImageRef = useRef<HTMLDivElement>(null)
   const thumbDragStart = useRef<{ y: number; scrollTop: number } | null>(null)
+  // The very first image is server-rendered and already visible in the
+  // initial HTML — fading it in from opacity:0 on hydration only delays
+  // its paint until framer-motion runs. Skip the enter animation for that
+  // one render; every later switch (variant change, arrow/dot/drag) still
+  // gets the fade, since it's genuinely replacing on-screen content.
+  const isFirstRender = useRef(true)
+  useEffect(() => {
+    isFirstRender.current = false
+  }, [])
 
   useEffect(() => {
     if (!mainImageRef.current) return
@@ -301,7 +310,7 @@ export default function VariantAwareGallery({
             {selected?.url && (
               <motion.div
                 key={selected.url}
-                initial={{ opacity: 0 }}
+                initial={isFirstRender.current ? false : { opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.35, ease: "easeInOut" }}
