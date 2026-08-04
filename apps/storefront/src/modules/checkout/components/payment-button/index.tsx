@@ -8,6 +8,7 @@ import React, { useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import ErrorMessage from "../error-message"
 import { getDisplayableErrorMessage } from "@lib/util/stale-deployment"
+import Spinner from "@modules/common/icons/spinner"
 
 type PaymentButtonProps = {
   cart: HttpTypes.StoreCart
@@ -157,9 +158,23 @@ const StripePaymentButton = ({
         disabled={disabled || notReady || submitting}
         onClick={handlePayment}
         data-testid={dataTestId}
-        className="w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+        className={`relative w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:cursor-not-allowed overflow-hidden ${
+          disabled || notReady ? "opacity-40" : ""
+        }`}
       >
-        {submitting ? t("Se procesează…") : t("Plasează comanda")}
+        <span
+          className={`flex items-center justify-center gap-2 transition-opacity duration-150 ${
+            submitting ? "opacity-0" : "opacity-100"
+          }`}
+        >
+          {t("Plasează comanda")}
+        </span>
+        {submitting && (
+          <span className="absolute inset-0 flex items-center justify-center gap-2">
+            <Spinner size="14" />
+            {t("Se procesează…")}
+          </span>
+        )}
       </button>
       <ErrorMessage
         error={errorMessage}
@@ -196,9 +211,23 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
         disabled={notReady || submitting}
         onClick={handlePayment}
         data-testid="submit-order-button"
-        className="w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+        className={`relative w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:cursor-not-allowed overflow-hidden ${
+          notReady ? "opacity-40" : ""
+        }`}
       >
-        {submitting ? t("Se procesează…") : t("Plasează comanda")}
+        <span
+          className={`flex items-center justify-center gap-2 transition-opacity duration-150 ${
+            submitting ? "opacity-0" : "opacity-100"
+          }`}
+        >
+          {t("Plasează comanda")}
+        </span>
+        {submitting && (
+          <span className="absolute inset-0 flex items-center justify-center gap-2">
+            <Spinner size="14" />
+            {t("Se procesează…")}
+          </span>
+        )}
       </button>
       <ErrorMessage
         error={errorMessage}
@@ -275,9 +304,29 @@ const NetopiaPaymentButton = ({
         disabled={notReady || submitting}
         onClick={handlePayment}
         data-testid={dataTestId}
-        className="w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+        className={`relative w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:cursor-not-allowed overflow-hidden ${
+          notReady ? "opacity-40" : ""
+        }`}
       >
-        {submitting ? t("Se redirecționează…") : t("Plătește cu cardul")}
+        {/* This is the checkout's most consequential click — a plain text
+            swap gave no real sense that anything was happening while the
+            redirect URL request was in flight. A visible spinner reassures
+            the customer the button registered, without the
+            disabled:opacity-40 dimming used elsewhere (which read as
+            "broken" here, not "loading"). */}
+        <span
+          className={`flex items-center justify-center gap-2 transition-opacity duration-150 ${
+            submitting ? "opacity-0" : "opacity-100"
+          }`}
+        >
+          {t("Plătește cu cardul")}
+        </span>
+        {submitting && (
+          <span className="absolute inset-0 flex items-center justify-center gap-2">
+            <Spinner size="14" />
+            {t("Se redirecționează…")}
+          </span>
+        )}
       </button>
       <ErrorMessage
         error={errorMessage}

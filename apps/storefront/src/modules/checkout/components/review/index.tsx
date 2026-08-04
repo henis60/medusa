@@ -10,6 +10,7 @@ import { useTranslations } from "next-intl"
 import { bodyMutedClass, sectionTitleClass } from "@modules/checkout/components/typography"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { getDisplayableErrorMessage } from "@lib/util/stale-deployment"
+import Spinner from "@modules/common/icons/spinner"
 
 // Netopia is the store's only payment provider, so there's no method to pick
 // — the session is initiated silently as soon as this step opens, instead of
@@ -95,7 +96,18 @@ const Review = ({
           {paidByGiftcard || hasPaymentSession ? (
             <PaymentButton cart={cart} data-testid="submit-order-button" />
           ) : (
-            <div className="w-full h-12 bg-[var(--theme-border)] animate-pulse" />
+            // Same gold button treatment as the real payment button below
+            // (just disabled, with a spinner) instead of a plain gray
+            // skeleton bar — this step directly precedes that button, so
+            // swapping a generic pulse for the real thing read as jarring
+            // rather than a continuous "getting ready to pay" state.
+            <button
+              type="button"
+              disabled
+              className="w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] opacity-70 cursor-not-allowed flex items-center justify-center"
+            >
+              <Spinner size="14" />
+            </button>
           )}
           <ErrorMessage error={initError} data-testid="payment-init-error-message" />
         </>
