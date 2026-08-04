@@ -112,6 +112,16 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     // storefront's listEawbShippingPrices deliberately does NOT swallow a
     // thrown/non-2xx response into {} for exactly this reason; returning
     // 200 here defeated that.
+    //
+    // Logged here (not just returned in the response body) because the
+    // storefront's own SDK client only surfaces a generic "Bad Gateway"
+    // (status/statusText) for a non-2xx response — the actual Europarcel
+    // error never reaches the browser or the storefront's logs, only this
+    // backend's.
+    const logger = req.scope.resolve("logger")
+    logger.error(
+      `eAWB shipping-prices failed for cart ${cartId}: ${(err as Error).message}`
+    )
     return res.status(502).json({ error: (err as Error).message })
   }
 }
