@@ -41,8 +41,9 @@ export function isStaleDeploymentError(err: unknown): boolean {
 
 // Guards against a reload loop: if the deploy itself is somehow broken (not
 // just this tab being stale), reloading wouldn't fix anything and would just
-// hammer the user's browser forever. One reload per tab session is enough
-// to recover from the normal stale-chunk case.
+// hammer the user's browser forever. One reload per *stale bundle* is enough
+// to recover from the normal stale-chunk case — see clearStaleDeployReloadGuard
+// for why this key must not simply persist for the tab's entire lifetime.
 const RELOAD_GUARD_KEY = "hunter_stale_deploy_reload"
 
 export function reloadForNewDeployment() {
@@ -52,6 +53,24 @@ export function reloadForNewDeployment() {
     sessionStorage.setItem(RELOAD_GUARD_KEY, "1")
   } catch {}
   window.location.reload()
+}
+
+/**
+ * Call once a page has freshly mounted (see ChunkErrorGuard) to release the
+ * reload guard above. Without this, the guard — set once and never
+ * cleared — permanently disabled recovery for the rest of that browser
+ * tab's lifetime: a customer who hit one stale-chunk error, got auto-
+ * reloaded, and then (in a long-lived tab, across a *second* later deploy)
+ * hit another one would just see the raw error with no recovery, silently,
+ * forever. A fresh mount means whatever JS is now running just loaded
+ * successfully, so any stale-deployment error from this point on is a new,
+ * genuine incident that deserves its own reload.
+ */
+export function clearStaleDeployReloadGuard() {
+  if (typeof window === "undefined") return
+  try {
+    sessionStorage.removeItem(RELOAD_GUARD_KEY)
+  } catch {}
 }
 
 /**

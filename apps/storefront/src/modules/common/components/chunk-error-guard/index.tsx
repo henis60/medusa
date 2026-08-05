@@ -2,6 +2,7 @@
 
 import { useEffect } from "react"
 import {
+  clearStaleDeployReloadGuard,
   isStaleDeploymentError,
   reloadForNewDeployment,
 } from "@lib/util/stale-deployment"
@@ -24,13 +25,25 @@ import {
  */
 export default function ChunkErrorGuard() {
   useEffect(() => {
+    // This mount proves the JS currently running loaded successfully — any
+    // stale-deployment error from here on is a new, genuine incident (e.g. a
+    // second deploy landing while this tab stayed open) and deserves its
+    // own reload, not silence because an earlier, unrelated incident in
+    // this same tab already used up the one-time guard.
+    clearStaleDeployReloadGuard()
+
     const handleError = (event: ErrorEvent) => {
       if (isStaleDeploymentError(event.error ?? event.message)) {
+        // Otherwise the browser still prints the raw error to the console
+        // right as we're already reloading to fix it — confusing, since it
+        // looks like the guard failed when it's actually working.
+        event.preventDefault()
         reloadForNewDeployment()
       }
     }
     const handleRejection = (event: PromiseRejectionEvent) => {
       if (isStaleDeploymentError(event.reason)) {
+        event.preventDefault()
         reloadForNewDeployment()
       }
     }
