@@ -13,6 +13,11 @@ type Props = {
 // Where the user last dragged the button to, in pixels applied on top of
 // its default docked position — persists across visits on this device.
 const POSITION_KEY = "hunter_appt_btn_pos"
+// Vertical-only: keeps the button clear of the header/footer edges of the
+// screen. Horizontal snapping is deliberately flush (0) — the button's
+// border is drawn with one side omitted (see dockSide below), on the
+// assumption it sits flush against the screen edge with no gap to reveal
+// the missing side.
 const EDGE_MARGIN = 8
 // The sticky header (nav-shell) is h-16 (64px) and always on top (z-[9001])
 // — the button must never come to rest underneath/behind it.
@@ -29,6 +34,10 @@ export default function AppointmentButton({ transparent, hideOnTop, onClick }: P
   const dragX = useMotionValue(0)
   const dragY = useMotionValue(0)
   const wasDragged = useRef(false)
+  // Which edge the button is currently docked to — the border is drawn with
+  // one side omitted (flush against the screen edge), so this has to flip
+  // along with the snap or the omitted side ends up on the wrong side.
+  const [dockSide, setDockSide] = useState<"left" | "right">("right")
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 1023px)")
@@ -48,6 +57,9 @@ export default function AppointmentButton({ transparent, hideOnTop, onClick }: P
           dragX.set(pos.x)
           dragY.set(pos.y)
         }
+        if (pos?.dockSide === "left" || pos?.dockSide === "right") {
+          setDockSide(pos.dockSide)
+        }
       }
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -62,9 +74,11 @@ export default function AppointmentButton({ transparent, hideOnTop, onClick }: P
     if (!el) return
     const rect = el.getBoundingClientRect()
     const goRight = rect.left + rect.width / 2 > window.innerWidth / 2
-    const targetLeft = goRight
-      ? window.innerWidth - rect.width - EDGE_MARGIN
-      : EDGE_MARGIN
+    // Flush against the edge (0), not EDGE_MARGIN — the button's border
+    // omits whichever side faces the edge, on the assumption there's no gap
+    // to reveal it. It used to stop EDGE_MARGIN short of the true edge,
+    // which read as "doesn't snap exactly to the edge".
+    const targetLeft = goRight ? window.innerWidth - rect.width : 0
     const minTop = HEADER_EXCLUSION
     const maxTop = window.innerHeight - rect.height - EDGE_MARGIN
     const targetTop = Math.min(Math.max(rect.top, minTop), maxTop)
@@ -80,8 +94,13 @@ export default function AppointmentButton({ transparent, hideOnTop, onClick }: P
 
     animate(dragX, nextX, { type: "spring", stiffness: 420, damping: 34 })
     animate(dragY, nextY, { type: "spring", stiffness: 420, damping: 34 })
+    const nextDockSide = goRight ? "right" : "left"
+    setDockSide(nextDockSide)
     try {
-      localStorage.setItem(POSITION_KEY, JSON.stringify({ x: nextX, y: nextY }))
+      localStorage.setItem(
+        POSITION_KEY,
+        JSON.stringify({ x: nextX, y: nextY, dockSide: nextDockSide })
+      )
     } catch {}
   }
 
@@ -149,10 +168,14 @@ export default function AppointmentButton({ transparent, hideOnTop, onClick }: P
     >
       <button
         onClick={handleClick}
-        className={`flex transition-colors cursor-pointer ${
+        className={`flex transition-colors cursor-pointer border-y ${
+          // The edge-facing side omits its border (flush against the screen
+          // edge); the inner-facing side keeps it, mirroring when docked left.
+          dockSide === "left" ? "border-r" : "border-l"
+        } ${
           transparent
-            ? "bg-transparent border-y border-l border-white/20 text-white/60 hover:text-hunter-gold hover:border-hunter-gold/60"
-            : "bg-[var(--theme-bg)] border-y border-l border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:text-hunter-gold hover:border-hunter-gold"
+            ? "bg-transparent border-white/20 text-white/60 hover:text-hunter-gold hover:border-hunter-gold/60"
+            : "bg-[var(--theme-bg)] border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:text-hunter-gold hover:border-hunter-gold"
         }`}
         aria-label={t("Programare")}
       >
