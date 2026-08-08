@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useTranslations } from "next-intl"
 import AppointmentDatePicker from "@modules/programare/components/appointment-date-picker"
 import { useRecaptcha } from "@lib/hooks/use-recaptcha"
 import { useScrollLock } from "@lib/hooks/use-scroll-lock"
+import { isValidEmail, isValidPhone } from "@lib/util/validation"
 
 const inputClass = (err?: boolean) =>
   `w-full h-10 bg-transparent border px-3 font-sans text-sm text-[var(--theme-text)] placeholder:text-[var(--theme-text-muted)] focus:outline-none transition-colors ${
@@ -50,9 +51,24 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
     setErrorMsg(t("Nu am putut trimite cererea Încearcă din nou"))
   }
 
-  const handleClose = () => { reset(); onClose() }
+  // A mis-aimed click on the backdrop (or the X button) just hides the
+  // modal — it must not wipe a form the user may have spent a minute
+  // filling in. Data only clears on an explicit fresh start (after a
+  // successful submission).
+  const handleDismiss = () => { onClose() }
+  const handleCloseAfterSuccess = () => { reset(); onClose() }
 
   useScrollLock(open)
+
+  useEffect(() => {
+    if (!open) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleDismiss()
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   const goTo = (next: number) => setStep(next)
 
@@ -66,8 +82,8 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
   const handleSubmit = async () => {
     const e: Record<string, boolean> = {}
     if (name.trim().length < 2) e.name = true
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) e.email = true
-    if (!phone.trim()) e.phone = true
+    if (!isValidEmail(email)) e.email = true
+    if (!isValidPhone(phone)) e.phone = true
     if (message.trim().length < 2) e.message = true
     if (Object.keys(e).length) { setErrors(e); return }
     setErrors({}); setStatus("loading")
@@ -116,7 +132,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
           {/* Overlay */}
           <div
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={handleClose}
+            onClick={handleDismiss}
           />
 
           {/* Panel */}
@@ -125,15 +141,18 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 16 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             onFocusCapture={preload}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="appointment-modal-title"
           >
             {/* Header */}
             <div className="shrink-0 flex items-center justify-between px-6 pt-5 pb-4 border-b border-[var(--theme-border)]">
               <div>
                 <p className="font-sans text-[9px] uppercase tracking-[3px] text-hunter-gold/70 mb-0.5">{t("The Hunter House")}</p>
-                <h2 className="font-display text-lg text-[var(--theme-text)]">{t("Consultanță Made to Measure")}</h2>
+                <h2 id="appointment-modal-title" className="font-display text-lg text-[var(--theme-text)]">{t("Consultanță Made to Measure")}</h2>
               </div>
               <button
-                onClick={handleClose}
+                onClick={handleDismiss}
                 className="w-7 h-7 flex items-center justify-center text-[var(--theme-text-muted)] hover:text-[var(--theme-text)] transition-colors cursor-pointer"
                 aria-label={t("Închide")}
               >
@@ -181,7 +200,7 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
                       {t("Te contactăm în maximum 24 de ore pentru a confirma programarea")}
                     </p>
                     <button
-                      onClick={handleClose}
+                      onClick={handleCloseAfterSuccess}
                       className="mt-2 h-11 px-8 font-sans text-[11px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-hunter-gold hover:text-hunter-gold transition-colors cursor-pointer"
                     >
                       {t("Închide")}
@@ -213,6 +232,8 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
                     <AppointmentDatePicker
                       inline
                       hasError={dateError}
+                      initialDate={date}
+                      initialTime={time}
                       onSelect={(d, t) => { setDate(d); setTime(t); setDateError(false) }}
                     />
                   </div>
@@ -222,22 +243,22 @@ export default function AppointmentModal({ open, onClose }: { open: boolean; onC
                     <div className="flex flex-col gap-3">
                       <div>
                         <Label htmlFor="m-name" error={errors.name}>{t("Nume")}</Label>
-                        <input id="m-name" type="text" enterKeyHint="next" value={name} onChange={e => setName(e.target.value)} className={inputClass(errors.name)} />
+                        <input id="m-name" type="text" autoComplete="name" enterKeyHint="next" value={name} onChange={e => { setName(e.target.value); if (errors.name) setErrors(prev => ({ ...prev, name: false })) }} className={inputClass(errors.name)} />
                       </div>
                       <div>
                         <Label htmlFor="m-email" error={errors.email}>{t("Email")}</Label>
-                        <input id="m-email" type="email" enterKeyHint="next" value={email} onChange={e => setEmail(e.target.value)} className={inputClass(errors.email)} />
+                        <input id="m-email" type="email" autoComplete="email" enterKeyHint="next" value={email} onChange={e => { setEmail(e.target.value); if (errors.email) setErrors(prev => ({ ...prev, email: false })) }} className={inputClass(errors.email)} />
                       </div>
                     </div>
                     <div>
                       <Label htmlFor="m-phone" error={errors.phone}>{t("Telefon")}</Label>
-                      <input id="m-phone" type="tel" inputMode="tel" enterKeyHint="next" value={phone} onChange={e => setPhone(e.target.value)} className={inputClass(errors.phone)} />
+                      <input id="m-phone" type="tel" inputMode="tel" autoComplete="tel" enterKeyHint="next" value={phone} onChange={e => { setPhone(e.target.value); if (errors.phone) setErrors(prev => ({ ...prev, phone: false })) }} className={inputClass(errors.phone)} />
                     </div>
                     <div>
                       <Label htmlFor="m-message" error={errors.message}>{t("Mesaj")}</Label>
                       <textarea
                         id="m-message" rows={3} value={message}
-                        onChange={e => setMessage(e.target.value)}
+                        onChange={e => { setMessage(e.target.value); if (errors.message) setErrors(prev => ({ ...prev, message: false })) }}
                         className={`w-full bg-transparent border px-3 py-2.5 font-sans text-sm text-[var(--theme-text)] placeholder:text-[var(--theme-text-muted)] focus:outline-none transition-colors resize-none ${errors.message ? "border-red-400/60" : "border-[var(--theme-border)] focus:border-hunter-gold/60"}`}
                       />
                     </div>

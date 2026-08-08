@@ -1,7 +1,7 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import { startTransition } from "react"
+import { startTransition, useState } from "react"
 import { login } from "@lib/data/customer"
 import { LOGIN_VIEW } from "@modules/account/templates/login-template"
 import ErrorMessage from "@modules/checkout/components/error-message"
@@ -17,19 +17,36 @@ type Props = {
 
 const Login = ({ setCurrentView, redirectTo }: Props) => {
   const t = useTranslations("account")
-  const [message, formAction] = useActionState(login, null)
+  const [message, formAction, isPending] = useActionState(login, null)
   const { preload, getToken } = useRecaptcha()
+  const [awaitingToken, setAwaitingToken] = useState(false)
+  const [recaptchaError, setRecaptchaError] = useState<string | null>(null)
+  const pending = awaitingToken || isPending
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (pending) return
+
     const formData = new FormData(e.currentTarget)
     if (redirectTo) {
       formData.set("redirectTo", redirectTo)
     }
+
+    setAwaitingToken(true)
+    setRecaptchaError(null)
     const token = await getToken("login")
-    if (token) {
-      formData.set("recaptchaToken", token)
+    setAwaitingToken(false)
+
+    if (!token) {
+      setRecaptchaError(
+        t(
+          "Verificarea de securitate a eșuat Reîncearcă sau dezactivează temporar blocantele de reclame"
+        )
+      )
+      return
     }
+
+    formData.set("recaptchaToken", token)
     startTransition(() => formAction(formData))
   }
 
@@ -66,7 +83,10 @@ const Login = ({ setCurrentView, redirectTo }: Props) => {
             data-testid="password-input"
           />
         </div>
-        <ErrorMessage error={message} data-testid="login-error-message" />
+        <ErrorMessage
+          error={recaptchaError || message}
+          data-testid="login-error-message"
+        />
 
         <div className="flex justify-end mt-2">
           <button
@@ -80,6 +100,7 @@ const Login = ({ setCurrentView, redirectTo }: Props) => {
 
         <SubmitButton
           data-testid="sign-in-button"
+          pending={pending}
           className="w-full mt-4 h-12 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent font-sans uppercase tracking-[3px] text-[13px]"
         >
           {t("Autentificare")}

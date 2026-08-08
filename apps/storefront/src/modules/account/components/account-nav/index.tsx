@@ -72,12 +72,20 @@ const MobileNav = ({ route, t }: { route: string; t: NavT }) => {
                   data-testid={`${label.toLowerCase()}-link`}
                 >
                   {t(label)}
-                  <span
-                    aria-hidden
-                    className="font-serif text-[18px] text-hunter-gold/40 group-active:text-hunter-gold group-active:translate-x-0.5 transition-all"
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                    className="shrink-0 text-hunter-gold/40 group-active:text-hunter-gold group-active:translate-x-0.5 transition-all"
                   >
-                    ›
-                  </span>
+                    <polyline points="9 6 15 12 9 18" />
+                  </svg>
                 </LocalizedClientLink>
               </li>
             ))}

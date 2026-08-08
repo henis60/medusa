@@ -19,14 +19,26 @@ function daysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate()
 }
 
-function getSlots(date: Date): string[] {
+function isSameDay(a: Date, b: Date) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  )
+}
+
+function getSlots(date: Date, now: Date): string[] {
   const day = date.getDay()
   if (day === 0) return []
   const isWeekend = day === 6
   const startH = isWeekend ? 9 : 7
   const lastH = isWeekend ? 13 : 17
+  // Same-day booking must not offer hours that have already passed —
+  // without this a customer picking "today" at 4pm could still submit a
+  // 07:00 slot.
+  const earliestH = isSameDay(date, now) ? now.getHours() + 1 : startH
   const slots: string[] = []
-  for (let h = startH; h <= lastH; h++) {
+  for (let h = Math.max(startH, earliestH); h <= lastH; h++) {
     slots.push(`${String(h).padStart(2, "0")}:00`)
   }
   return slots
@@ -38,10 +50,21 @@ const dropUpBase =
   "absolute bottom-full mb-1 z-[9025] left-0 w-[272px] bg-white border border-gray-200 shadow-xl"
 const inlineBase = "mt-2 w-full bg-white border border-gray-200"
 
+// Parses the "DD.MM.YYYY" strings this component emits back into a Date.
+function parseInitialDate(value?: string): Date | null {
+  if (!value) return null
+  const [day, month, year] = value.split(".").map(Number)
+  if (!day || !month || !year) return null
+  const d = new Date(year, month - 1, day)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+
 export default function AppointmentDatePicker({
   hasError,
   onSelect,
   inline = false,
+  initialDate,
+  initialTime,
 }: {
   hasError?: boolean
   onSelect?: (date: string, time: string) => void
@@ -49,17 +72,24 @@ export default function AppointmentDatePicker({
   // dropdowns (overflow-hidden + scroll area), so the pickers render
   // in-flow there and push the content instead.
   inline?: boolean
+  // Lets the parent restore a previous selection when this component
+  // remounts (e.g. navigating back to this step after it was unmounted).
+  initialDate?: string
+  initialTime?: string
 }) {
   const t = useTranslations("programare")
-  const today = new Date()
+  const now = new Date()
+  const today = new Date(now)
   today.setHours(0, 0, 0, 0)
+
+  const parsedInitialDate = parseInitialDate(initialDate)
 
   const [calOpen, setCalOpen] = useState(false)
   const [timeOpen, setTimeOpen] = useState(false)
-  const [viewYear, setViewYear] = useState(today.getFullYear())
-  const [viewMonth, setViewMonth] = useState(today.getMonth())
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-  const [selectedTime, setSelectedTime] = useState("")
+  const [viewYear, setViewYear] = useState(parsedInitialDate?.getFullYear() ?? today.getFullYear())
+  const [viewMonth, setViewMonth] = useState(parsedInitialDate?.getMonth() ?? today.getMonth())
+  const [selectedDate, setSelectedDate] = useState<Date | null>(parsedInitialDate)
+  const [selectedTime, setSelectedTime] = useState(initialTime ?? "")
 
   const calRef = useRef<HTMLDivElement>(null)
   const timeRef = useRef<HTMLDivElement>(null)
@@ -83,7 +113,7 @@ export default function AppointmentDatePicker({
 
   const offset = firstDayOffset(viewYear, viewMonth)
   const days = daysInMonth(viewYear, viewMonth)
-  const slots = selectedDate ? getSlots(selectedDate) : []
+  const slots = selectedDate ? getSlots(selectedDate, now) : []
 
   const prevMonth = () => {
     if (viewMonth === 0) { setViewMonth(11); setViewYear((y) => y - 1) }
@@ -108,7 +138,12 @@ export default function AppointmentDatePicker({
 
   const isDisabled = (day: number) => {
     const d = new Date(viewYear, viewMonth, day)
-    return d < today || d.getDay() === 0
+    if (d < today || d.getDay() === 0) return true
+    // Today stays enabled by the date check above even after closing time —
+    // without this, a customer could still pick "today" once every slot has
+    // already passed and submit an appointment for no actual hour.
+    if (isSameDay(d, now) && getSlots(d, now).length === 0) return true
+    return false
   }
 
   const isSelected = (day: number) =>

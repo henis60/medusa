@@ -8,15 +8,21 @@ import Spinner from "@modules/common/icons/spinner"
 export function SubmitButton({
   children,
   className,
+  pending: pendingProp,
   "data-testid": dataTestId,
 }: {
   children: React.ReactNode
   variant?: string
   size?: string
   className?: string
+  // useFormStatus only reports pending for forms submitted via the native
+  // `action` prop — forms that dispatch their action manually (e.g. to
+  // inject a reCAPTCHA token first) need to pass their own pending state in.
+  pending?: boolean
   "data-testid"?: string
 }) {
-  const { pending } = useFormStatus()
+  const { pending: formPending } = useFormStatus()
+  const pending = pendingProp ?? formPending
   const t = useTranslations("checkout")
 
   return (

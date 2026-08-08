@@ -6,7 +6,8 @@ import { isRateLimitError } from "@lib/util/is-rate-limit-error"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
 import { redirect } from "@i18n/navigation"
-import { getLocale } from "next-intl/server"
+import { routing } from "@i18n/routing"
+import { getLocale } from "./locale-actions"
 import {
   getAuthHeaders,
   getCacheOptions,
@@ -157,7 +158,7 @@ export async function login(_currentState: unknown, formData: FormData) {
 
   const redirectTo = formData.get("redirectTo") as string | null
   if (redirectTo) {
-    redirect({ href: redirectTo, locale: await getLocale() })
+    redirect({ href: redirectTo, locale: (await getLocale()) ?? routing.defaultLocale })
   }
 }
 
@@ -174,7 +175,7 @@ export async function signout() {
   const cartCacheTag = await getCacheTag("carts")
   revalidateTag(cartCacheTag)
 
-  redirect({ href: "/profil", locale: await getLocale() })
+  redirect({ href: "/profil", locale: (await getLocale()) ?? routing.defaultLocale })
 }
 
 export async function resetPassword(

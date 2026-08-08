@@ -1,7 +1,7 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import { startTransition, useActionState } from "react"
+import { startTransition, useActionState, useState } from "react"
 import Input from "@modules/common/components/input"
 import { LOGIN_VIEW } from "@modules/account/templates/login-template"
 import ErrorMessage from "@modules/checkout/components/error-message"
@@ -16,19 +16,36 @@ type Props = {
 
 const Register = ({ setCurrentView }: Props) => {
   const t = useTranslations("account")
-  const [message, formAction] = useActionState(
+  const [message, formAction, isPending] = useActionState(
     signup as (state: string | null, formData: FormData) => Promise<string | null>,
     null as string | null
   )
   const { preload, getToken } = useRecaptcha()
+  const [awaitingToken, setAwaitingToken] = useState(false)
+  const [recaptchaError, setRecaptchaError] = useState<string | null>(null)
+  const pending = awaitingToken || isPending
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (pending) return
+
     const formData = new FormData(e.currentTarget)
+
+    setAwaitingToken(true)
+    setRecaptchaError(null)
     const token = await getToken("register")
-    if (token) {
-      formData.set("recaptchaToken", token)
+    setAwaitingToken(false)
+
+    if (!token) {
+      setRecaptchaError(
+        t(
+          "Verificarea de securitate a eșuat Reîncearcă sau dezactivează temporar blocantele de reclame"
+        )
+      )
+      return
     }
+
+    formData.set("recaptchaToken", token)
     startTransition(() => formAction(formData))
   }
 
@@ -80,6 +97,8 @@ const Register = ({ setCurrentView }: Props) => {
             name="phone"
             type="tel"
             autoComplete="tel"
+            pattern="^\+?[0-9][0-9\s\-.()]{6,16}[0-9]$"
+            title={t("Introdu un număr de telefon valid")}
             enterKeyHint="next"
             data-testid="phone-input"
           />
@@ -87,12 +106,16 @@ const Register = ({ setCurrentView }: Props) => {
             label={t("Parolă")}
             name="password"
             required
+            minLength={8}
             type="password"
             autoComplete="new-password"
             data-testid="password-input"
           />
         </div>
-        <ErrorMessage error={message} data-testid="register-error" />
+        <ErrorMessage
+          error={recaptchaError || message}
+          data-testid="register-error"
+        />
         <p className="font-sans text-[11px] text-[var(--theme-text-muted)] mt-6 leading-relaxed">
           {t("Prin crearea unui cont, ești de acord cu")}{" "}
           <LocalizedClientLink
@@ -111,6 +134,7 @@ const Register = ({ setCurrentView }: Props) => {
           .
         </p>
         <SubmitButton
+          pending={pending}
           className="w-full mt-4 h-12 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent font-sans uppercase tracking-[3px] text-[13px]"
           data-testid="register-button"
         >

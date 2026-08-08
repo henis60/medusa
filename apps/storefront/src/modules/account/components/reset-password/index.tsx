@@ -1,7 +1,7 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import { useActionState } from "react"
+import { useActionState, useState } from "react"
 import Input from "@modules/common/components/input"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
@@ -16,8 +16,27 @@ const ResetPassword = ({ token }: Props) => {
   const t = useTranslations("account")
   const resetWithToken = resetPassword.bind(null, token)
   const [message, formAction] = useActionState(resetWithToken, null)
+  const [validationError, setValidationError] = useState<string | null>(null)
 
   const isSuccess = message === "success"
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const formData = new FormData(e.currentTarget)
+    const password = String(formData.get("password") ?? "")
+    const confirm = String(formData.get("password_confirm") ?? "")
+
+    if (password.length < 8) {
+      e.preventDefault()
+      setValidationError(t("Parola trebuie să aibă minim 8 caractere"))
+      return
+    }
+    if (password !== confirm) {
+      e.preventDefault()
+      setValidationError(t("Parolele nu coincid"))
+      return
+    }
+    setValidationError(null)
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 py-16">
@@ -38,13 +57,13 @@ const ResetPassword = ({ token }: Props) => {
             </div>
             <LocalizedClientLink
               href="/profil"
-              className="font-sans text-[13px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
+              className="w-full h-12 flex items-center justify-center bg-hunter-gold text-hunter-dark hover:opacity-90 transition-opacity font-sans uppercase tracking-[3px] text-[13px]"
             >
               {t("Mergi la autentificare")}
             </LocalizedClientLink>
           </div>
         ) : (
-          <form className="w-full" action={formAction}>
+          <form className="w-full" action={formAction} onSubmit={handleSubmit}>
             <div className="flex flex-col w-full gap-y-3">
               <Input
                 label={t("Parolă nouă")}
@@ -52,6 +71,7 @@ const ResetPassword = ({ token }: Props) => {
                 type="password"
                 autoComplete="new-password"
                 required
+                minLength={8}
                 enterKeyHint="next"
               />
               <Input
@@ -60,9 +80,10 @@ const ResetPassword = ({ token }: Props) => {
                 type="password"
                 autoComplete="new-password"
                 required
+                minLength={8}
               />
             </div>
-            <ErrorMessage error={message} />
+            <ErrorMessage error={validationError || message} />
             <SubmitButton className="w-full mt-6 h-12 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent font-sans uppercase tracking-[3px] text-[13px]">
               {t("Salvează Parola")}
             </SubmitButton>

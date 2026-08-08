@@ -9,7 +9,7 @@ import {
 } from "@headlessui/react"
 import { ChevronUpDown } from "@medusajs/icons"
 import { useTranslations } from "next-intl"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 type County = { id: number; name: string; code: string }
 type Locality = { id: number; name: string }
@@ -68,6 +68,7 @@ function ComboField<T extends { id: number; name: string }>({
   disabled,
   placeholder,
   testId,
+  fieldName,
   requiredMessage,
   noResultsLabel,
   typeToSearchLabel,
@@ -80,12 +81,28 @@ function ComboField<T extends { id: number; name: string }>({
   disabled?: boolean
   placeholder?: string
   testId?: string
+  // Used for the input's `id` (and the label's `htmlFor`) — unlike `testId`,
+  // this must be unique even when two LocalitySelect instances share a page
+  // (e.g. shipping + billing address both rendered at once), so it's the
+  // actual submitted field name, not the fixed test id.
+  fieldName: string
   requiredMessage: string
   noResultsLabel: string
   typeToSearchLabel: string
 }) {
   const [query, setQuery] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Constraint validation on a combobox normally only looks at whatever text
+  // sits in the visible input — a user can type a name, never select an
+  // option (leaving `value` null and the real hidden field empty), and still
+  // pass `required` because the DOM input itself is non-empty. Driving
+  // validity off `value` directly instead makes it reflect an actual
+  // selection, not just typed text.
+  useEffect(() => {
+    inputRef.current?.setCustomValidity(required && !value ? requiredMessage : "")
+  }, [required, value, requiredMessage])
 
   const MAX_RESULTS = 50
   const list = options ?? []
@@ -104,9 +121,11 @@ function ComboField<T extends { id: number; name: string }>({
     onSelect(v)
   }
 
+  const inputId = `${fieldName}-field`
+
   return (
     <div className="flex flex-col w-full gap-1">
-      <label className={fieldLabelCls}>
+      <label className={fieldLabelCls} htmlFor={inputId}>
         {label}
         {required && <span className="text-rose-500 ml-0.5">*</span>}
       </label>
@@ -119,6 +138,8 @@ function ComboField<T extends { id: number; name: string }>({
       >
         <div className="relative w-full">
           <ComboboxInput
+            ref={inputRef}
+            id={inputId}
             className={`${controlCls} ${
               error ? "border-rose-500 focus:border-rose-500" : ""
             }`}
@@ -261,6 +282,7 @@ const LocalitySelect = ({
         onSelect={handleCounty}
         placeholder={t("Caută județ")}
         testId="province-select"
+        fieldName={countyFieldName}
         requiredMessage={t("Acest câmp este obligatoriu")}
         noResultsLabel={t("Niciun rezultat")}
         typeToSearchLabel={t("Scrie pentru a căuta…")}
@@ -272,6 +294,7 @@ const LocalitySelect = ({
         value={city}
         options={localities}
         onSelect={handleCity}
+        fieldName={cityFieldName}
         disabled={!county}
         placeholder={county ? t("Caută localitate") : t("Alege întâi județul")}
         testId="city-select"

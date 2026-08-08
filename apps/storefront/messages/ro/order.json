@@ -14,6 +14,8 @@
   "Nelivrată": "Nelivrată",
   "Livrată": "Livrată",
   "Parțial livrată": "Parțial livrată",
+  "Expediată": "Expediată",
+  "Parțial expediată": "Parțial expediată",
   "Anulată": "Anulată",
   "Returnată": "Returnată",
   "Parțial returnată": "Parțial returnată",
@@ -46,5 +48,6 @@
   "Descarcă factura": "Descarcă factura",
   "Factura nu este disponibilă încă": "Factura nu este disponibilă încă.",
   "Eroare la descărcarea facturii": "Eroare la descărcarea facturii.",
-  "Continuă cumpărăturile": "Continuă cumpărăturile"
+  "Continuă cumpărăturile": "Continuă cumpărăturile",
+  "Urmărește comanda": "Urmărește comanda"
 }

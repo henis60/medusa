@@ -40,6 +40,9 @@ const ProfileDetails = ({ customer }: ProfileDetailsProps) => {
   const t = useTranslations("account")
   const [successState, setSuccessState] = useState(false)
   const { state, open, close: closeModal } = useToggleState(false)
+  // See add-address.tsx: forces the form (and its Inputs' inline error
+  // state) to remount fresh on reopen instead of surviving a native reset.
+  const [formKey, setFormKey] = useState(0)
 
   const [formState, formAction] = useActionState(updateCustomerProfile, {
     success: false,
@@ -48,6 +51,7 @@ const ProfileDetails = ({ customer }: ProfileDetailsProps) => {
 
   const close = () => {
     setSuccessState(false)
+    setFormKey((k) => k + 1)
     closeModal()
   }
 
@@ -99,7 +103,7 @@ const ProfileDetails = ({ customer }: ProfileDetailsProps) => {
             {t("Editează detaliile")}
           </span>
         </Modal.Title>
-        <form action={formAction} className="flex flex-col flex-1 min-h-0">
+        <form key={formKey} action={formAction} className="flex flex-col flex-1 min-h-0">
           <Modal.Body>
             <div className="flex flex-col gap-y-2 w-full">
               <div className="grid grid-cols-1 gap-y-2">
@@ -127,6 +131,8 @@ const ProfileDetails = ({ customer }: ProfileDetailsProps) => {
                 name="phone"
                 type="tel"
                 autoComplete="tel"
+                pattern="^\+?[0-9][0-9\s\-.()]{6,16}[0-9]$"
+                title={t("Introdu un număr de telefon valid")}
                 defaultValue={customer.phone ?? ""}
                 data-testid="phone-input"
               />

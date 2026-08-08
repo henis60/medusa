@@ -23,6 +23,26 @@ function validateEmail(v: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
 }
 
+// enterKeyHint="next" only changes the mobile keyboard's label — tapping it
+// still fires a plain Enter keypress, which submits the form by default.
+// Move focus to the next field instead so "next" actually advances.
+function focusNextOnEnter(e: React.KeyboardEvent<HTMLInputElement>) {
+  if (e.key !== "Enter") return
+  e.preventDefault()
+
+  const form = e.currentTarget.form
+  if (!form) return
+
+  const fields = Array.from(
+    form.querySelectorAll<HTMLElement>("input, select, textarea, button")
+  ).filter((el) => !el.hasAttribute("disabled") && el.offsetParent !== null)
+
+  const index = fields.indexOf(e.currentTarget)
+  if (index !== -1 && index < fields.length - 1) {
+    fields[index + 1].focus()
+  }
+}
+
 export default function ContactForm() {
   const t = useTranslations("contact")
   const [status, setStatus] = useState<Status>("idle")
@@ -86,10 +106,16 @@ export default function ContactForm() {
         return
       }
 
-      const json = await res.json()
-
       if (!res.ok) {
-        setErrorMsg(t("Nu am putut trimite mesajul Verifică conexiunea și încearcă din nou"))
+        // A non-JSON error body (e.g. a proxy's 502 HTML page) must not
+        // throw here and fall into the generic connection-error catch below
+        // — parse defensively and still surface the server's own message
+        // when there is one, same as the newsletter form does.
+        const json = await res.json().catch(() => null)
+        setErrorMsg(
+          json?.error ||
+            t("Nu am putut trimite mesajul Verifică conexiunea și încearcă din nou")
+        )
         setStatus("error")
         return
       }
@@ -130,11 +156,11 @@ export default function ContactForm() {
         <div className="grid grid-cols-1 small:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="name" error={errors.name}>{t("Nume")}</Label>
-            <input id="name" name="name" type="text" enterKeyHint="next" className={inputClass(errors.name)} />
+            <input id="name" name="name" type="text" autoComplete="name" enterKeyHint="next" onKeyDown={focusNextOnEnter} onChange={() => errors.name && setErrors(prev => ({ ...prev, name: false }))} className={inputClass(errors.name)} />
           </div>
           <div>
             <Label htmlFor="email" error={errors.email}>{t("Email")}</Label>
-            <input id="email" name="email" type="email" enterKeyHint="next" className={inputClass(errors.email)} />
+            <input id="email" name="email" type="email" autoComplete="email" enterKeyHint="next" onKeyDown={focusNextOnEnter} onChange={() => errors.email && setErrors(prev => ({ ...prev, email: false }))} className={inputClass(errors.email)} />
           </div>
         </div>
         <div>
@@ -143,6 +169,7 @@ export default function ContactForm() {
             id="message"
             name="message"
             rows={4}
+            onChange={() => errors.message && setErrors(prev => ({ ...prev, message: false }))}
             className={`w-full bg-transparent border px-3 py-3 font-sans text-sm text-[var(--theme-text)] placeholder:text-[var(--theme-text-muted)] focus:outline-none transition-colors resize-y ${
               errors.message ? "border-red-400/60" : "border-[var(--theme-border)] focus:border-hunter-gold/50"
             }`}

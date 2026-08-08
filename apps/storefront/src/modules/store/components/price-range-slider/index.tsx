@@ -48,9 +48,12 @@ export default function PriceRangeSlider({
           min={sliderMin}
           max={sliderMax}
           value={loValue}
+          aria-label="Preț minim"
           onChange={(e) => setLo(Math.min(Number(e.target.value), hi))}
           onMouseUp={() => onCommit([lo, hi])}
           onTouchEnd={() => onCommit([lo, hi])}
+          onKeyUp={() => onCommit([lo, hi])}
+          onBlur={() => onCommit([lo, hi])}
           className={clx(
             "absolute w-full h-5 appearance-none bg-transparent pointer-events-none disabled:pointer-events-none",
             thumbClass
@@ -62,9 +65,12 @@ export default function PriceRangeSlider({
           min={sliderMin}
           max={sliderMax}
           value={hiValue}
+          aria-label="Preț maxim"
           onChange={(e) => setHi(Math.max(Number(e.target.value), lo))}
           onMouseUp={() => onCommit([lo, hi])}
           onTouchEnd={() => onCommit([lo, hi])}
+          onKeyUp={() => onCommit([lo, hi])}
+          onBlur={() => onCommit([lo, hi])}
           className={clx(
             "absolute w-full h-5 appearance-none bg-transparent pointer-events-none disabled:pointer-events-none",
             thumbClass

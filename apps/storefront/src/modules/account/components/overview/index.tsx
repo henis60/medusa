@@ -12,6 +12,7 @@ import { convertToLocale } from "@lib/util/money"
 
 const FULFILLED_STATUSES = [
   "fulfilled",
+  "shipped",
   "canceled",
   "returned",
   "partially_returned",
@@ -21,6 +22,8 @@ const STATUS_KEYS: Record<string, string> = {
   pending: "pending",
   not_fulfilled: "not_fulfilled",
   partially_fulfilled: "partially_fulfilled",
+  shipped: "shipped",
+  partially_shipped: "partially_shipped",
   requires_action: "requires_action",
 }
 

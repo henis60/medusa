@@ -134,21 +134,32 @@ const StripePaymentButton = ({
             (pi && pi.status === "requires_capture") ||
             (pi && pi.status === "succeeded")
           ) {
-            onPaymentCompleted()
+            return onPaymentCompleted()
           }
 
           setErrorMessage(error.message || null)
+          setSubmitting(false)
           return
         }
 
         if (
-          (paymentIntent && paymentIntent.status === "requires_capture") ||
-          paymentIntent.status === "succeeded"
+          paymentIntent &&
+          (paymentIntent.status === "requires_capture" ||
+            paymentIntent.status === "succeeded")
         ) {
           return onPaymentCompleted()
         }
 
-        return
+        // Any other non-terminal status (requires_action, processing, ...)
+        // never reaches onPaymentCompleted, whose .finally() is otherwise the
+        // only place submitting gets reset — without this the button stays
+        // disabled/spinning forever and the customer can't retry.
+        setErrorMessage(t("A apărut o eroare Reîncearcă"))
+        setSubmitting(false)
+      })
+      .catch((err) => {
+        setErrorMessage(getDisplayableErrorMessage(err, t("A apărut o eroare Reîncearcă")))
+        setSubmitting(false)
       })
   }
 

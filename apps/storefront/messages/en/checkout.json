@@ -18,6 +18,8 @@
   "Țară": "Country",
   "Cod promoțional": "Promotion code",
   "Aplică": "Apply",
+  "Se aplică…": "Applying…",
+  "Codul promoțional este deja aplicat": "This promotion code is already applied.",
   "Codul promoțional nu este valid sau a expirat": "The promotion code is invalid or has expired.",
   "Șterge codul": "Remove code",
   "Selectează o metodă de plată": "Select a payment method",

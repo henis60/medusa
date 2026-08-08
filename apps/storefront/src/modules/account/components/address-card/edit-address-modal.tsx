@@ -32,6 +32,9 @@ const EditAddress: React.FC<EditAddressProps> = ({
   const [actionError, setActionError] = useState<string | null>(null)
   const [successState, setSuccessState] = useState(false)
   const { state, open, close: closeModal } = useToggleState(false)
+  // See add-address.tsx: forces the form (and its Inputs' inline error
+  // state) to remount fresh on reopen instead of surviving a native reset.
+  const [formKey, setFormKey] = useState(0)
 
   const [formState, formAction] = useActionState(updateCustomerAddress, {
     success: false,
@@ -40,6 +43,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
 
   const close = () => {
     setSuccessState(false)
+    setFormKey((k) => k + 1)
     closeModal()
   }
 
@@ -53,6 +57,8 @@ const EditAddress: React.FC<EditAddressProps> = ({
   }, [formState])
 
   const removeAddress = async () => {
+    if (removing) return
+    if (!window.confirm(t("Sigur vrei să ștergi această adresă"))) return
     setRemoving(true)
     setActionError(null)
     const result = await deleteCustomerAddress(address.id)
@@ -113,8 +119,9 @@ const EditAddress: React.FC<EditAddressProps> = ({
             {t("Editează")}
           </button>
           <button
-            className="small:ml-auto h-11 small:h-9 px-5 rounded-none border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-rose-500 hover:text-rose-500 transition-colors font-sans uppercase tracking-[3px] text-[10px] small:text-[9px] flex items-center justify-center gap-1.5"
+            className="small:ml-auto h-11 small:h-9 px-5 rounded-none border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-rose-500 hover:text-rose-500 transition-colors font-sans uppercase tracking-[3px] text-[10px] small:text-[9px] flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-[var(--theme-border)] disabled:hover:text-[var(--theme-text-muted)]"
             onClick={removeAddress}
+            disabled={removing}
             data-testid="address-delete-button"
           >
             {removing ? (
@@ -141,7 +148,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
             {t("Editează adresa")}
           </span>
         </Modal.Title>
-        <form action={formAction} className="flex flex-col flex-1 min-h-0">
+        <form key={formKey} action={formAction} className="flex flex-col flex-1 min-h-0">
           <input type="hidden" name="addressId" value={address.id} />
           <Modal.Body>
             <div className="grid grid-cols-1 gap-y-2 w-full">
@@ -195,6 +202,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
                 name="postal_code"
                 autoComplete="postal-code"
                 defaultValue={address.postal_code || undefined}
+                required
                 enterKeyHint="next"
                 data-testid="postal-code-input"
               />
@@ -214,7 +222,11 @@ const EditAddress: React.FC<EditAddressProps> = ({
               <Input
                 label={t("Telefon")}
                 name="phone"
-                autoComplete="phone"
+                type="tel"
+                autoComplete="tel"
+                pattern="^\+?[0-9][0-9\s\-.()]{6,16}[0-9]$"
+                title={t("Introdu un număr de telefon valid")}
+                required
                 defaultValue={address.phone || undefined}
                 data-testid="phone-input"
               />

@@ -19,6 +19,19 @@ import { useSetStoreFacets } from "@modules/store/context/store-facets-context"
 import { useStoreCatalog } from "@modules/store/context/store-catalog-context"
 import SkeletonProductPreview from "@modules/skeletons/components/skeleton-product-preview"
 
+const VIEW_MODE_STORAGE_KEY = "store-view-mode"
+
+// Category/collection navigation on /ready-to-wear remounts this component
+// (dynamic route segment change), which would otherwise reset the view
+// toggle back to its default — persist it so it survives across the whole
+// shop section instead.
+function readStoredViewMode(): ViewMode {
+  if (typeof window === "undefined") return "grid"
+  return window.localStorage.getItem(VIEW_MODE_STORAGE_KEY) === "list"
+    ? "list"
+    : "grid"
+}
+
 function SkeletonCard() {
   return (
     <li>
@@ -94,7 +107,17 @@ export default function InfiniteProducts({
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const router = useRouter()
-  const [view, setView] = useState<ViewMode>("grid")
+  // Starts at "grid" to match the server-rendered markup, then syncs from
+  // localStorage once mounted — reading it in the initializer instead would
+  // mismatch the SSR'd HTML whenever the stored preference is "list".
+  const [view, setViewState] = useState<ViewMode>("grid")
+  useEffect(() => {
+    setViewState(readStoredViewMode())
+  }, [])
+  const setView = useCallback((next: ViewMode) => {
+    setViewState(next)
+    window.localStorage.setItem(VIEW_MODE_STORAGE_KEY, next)
+  }, [])
   const sortBy = (searchParams.get("sortBy") as SortOptions) || "created_at"
   // On /ready-to-wear, collection/category come from the path
   // (/ready-to-wear/<handle> or /ready-to-wear/<collection>/<category>) and

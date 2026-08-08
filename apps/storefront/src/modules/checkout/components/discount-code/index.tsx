@@ -20,25 +20,46 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
   const t = useTranslations("checkout")
   const [isOpen, setIsOpen] = React.useState(false)
   const [errorMessage, setErrorMessage] = React.useState("")
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [removingCode, setRemovingCode] = React.useState<string | null>(null)
 
   const { promotions = [] } = cart
 
+  const toggleOpen = () => {
+    setErrorMessage("")
+    setIsOpen((o) => !o)
+  }
+
   const removePromotionCode = async (code: string) => {
-    const remaining = promotions
-      .filter((p) => p.code !== code && p.code !== undefined)
-      .map((p) => p.code!)
-    const updatedCart = await applyPromotions(remaining)
-    emitCartUpdated(updatedCart)
+    if (removingCode) return
+    setRemovingCode(code)
+    try {
+      const remaining = promotions
+        .filter((p) => p.code !== code && p.code !== undefined)
+        .map((p) => p.code!)
+      const updatedCart = await applyPromotions(remaining)
+      emitCartUpdated(updatedCart)
+    } catch {
+      setErrorMessage(t("A apărut o eroare Reîncearcă"))
+    } finally {
+      setRemovingCode(null)
+    }
   }
 
   const addPromotionCode = async (formData: FormData) => {
+    if (isSubmitting) return
     setErrorMessage("")
     const code = formData.get("code")
-    if (!code) return
+    const codeStr = code?.toString().trim()
+    if (!codeStr) return
     const input = document.getElementById("promotion-input") as HTMLInputElement
-    const codeStr = code.toString().trim()
-    const codes = promotions.filter((p) => p.code).map((p) => p.code!)
-    codes.push(codeStr)
+    const existing = promotions.filter((p) => p.code).map((p) => p.code!)
+    if (existing.some((c) => c.toLowerCase() === codeStr.toLowerCase())) {
+      setErrorMessage(t("Codul promoțional este deja aplicat"))
+      return
+    }
+    const codes = [...existing, codeStr]
+    setIsSubmitting(true)
     try {
       const updatedCart = await applyPromotions(codes)
       const applied = updatedCart?.promotions?.some(
@@ -68,6 +89,8 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
       } else {
         setErrorMessage(t("Codul promoțional nu este valid sau a expirat"))
       }
+    } finally {
+      setIsSubmitting(false)
     }
     if (input) input.value = ""
   }
@@ -76,7 +99,7 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
     <div className="flex flex-col gap-3">
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={toggleOpen}
         data-testid="add-discount-button"
         className="flex items-center gap-2 font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors w-fit"
       >
@@ -94,15 +117,17 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
             name="code"
             type="text"
             autoFocus={false}
+            disabled={isSubmitting}
             data-testid="discount-input"
-            className="flex-1 min-w-0 h-9 bg-transparent border border-[var(--theme-border)] px-3 font-sans text-[11px] uppercase tracking-[2px] text-[var(--theme-text)] placeholder:text-[var(--theme-text-muted)] focus:outline-none focus:border-hunter-gold/50 transition-colors"
+            className="flex-1 min-w-0 h-9 bg-transparent border border-[var(--theme-border)] px-3 font-sans text-[11px] uppercase tracking-[2px] text-[var(--theme-text)] placeholder:text-[var(--theme-text-muted)] focus:outline-none focus:border-hunter-gold/50 transition-colors disabled:opacity-50"
           />
           <button
             type="submit"
+            disabled={isSubmitting}
             data-testid="discount-apply-button"
-            className="shrink-0 h-9 font-sans text-[9px] uppercase tracking-[3px] px-4 border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-hunter-gold/50 hover:text-hunter-gold transition-colors whitespace-nowrap"
+            className="shrink-0 h-9 font-sans text-[9px] uppercase tracking-[3px] px-4 border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-hunter-gold/50 hover:text-hunter-gold transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {t("Aplică")}
+            {isSubmitting ? t("Se aplică…") : t("Aplică")}
           </button>
         </form>
       )}
@@ -140,9 +165,10 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
               {!promotion.is_automatic && (
                 <button
                   onClick={() => promotion.code && removePromotionCode(promotion.code)}
+                  disabled={removingCode === promotion.code}
                   data-testid="remove-discount-button"
                   aria-label={t("Șterge codul")}
-                  className="text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
+                  className="text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
                     <line x1="1" y1="1" x2="9" y2="9" />

@@ -3,6 +3,7 @@ import { useTranslations } from "next-intl"
 import { createTransferRequest } from "@lib/data/orders"
 import { CheckCircleMiniSolid, XCircleSolid } from "@medusajs/icons"
 import Input from "@modules/common/components/input"
+import { SubmitButton } from "@modules/checkout/components/submit-button"
 import { useActionState } from "react"
 import { useEffect, useState } from "react"
 
@@ -19,8 +20,12 @@ export default function TransferRequestForm() {
   useEffect(() => {
     if (state.success && state.order) {
       setShowSuccess(true)
+    } else if (state.error) {
+      // A later failed submission must not leave the earlier success banner
+      // showing alongside the new error — they'd both render at once.
+      setShowSuccess(false)
     }
-  }, [state.success, state.order])
+  }, [state.success, state.order, state.error])
 
   return (
     <div className="flex flex-col gap-y-6 w-full">
@@ -41,16 +46,14 @@ export default function TransferRequestForm() {
           <Input
             className="w-full"
             name="order_id"
+            required
             placeholder="order_01ABC..."
             label={t("ID comandă")}
           />
         </div>
-        <button
-          type="submit"
-          className="h-10 px-6 font-sans text-[10px] uppercase tracking-[3px] border border-[var(--theme-border)] text-[var(--theme-text-muted)] hover:border-hunter-gold hover:text-hunter-gold transition-colors whitespace-nowrap self-end small:self-auto"
-        >
+        <SubmitButton className="!w-auto h-10 px-6 !py-0 !bg-transparent !text-[var(--theme-text-muted)] border border-[var(--theme-border)] hover:!opacity-100 hover:border-hunter-gold hover:!text-hunter-gold font-sans text-[10px] uppercase tracking-[3px] whitespace-nowrap self-end small:self-auto">
           {t("Trimite cerere")}
-        </button>
+        </SubmitButton>
       </form>
 
       {!state.success && state.error && (

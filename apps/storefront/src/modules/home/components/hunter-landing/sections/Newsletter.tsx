@@ -161,7 +161,7 @@ const Newsletter = () => {
                           opacity: status === "loading" ? 0.55 : 1,
                         }}
                       >
-                        {status === "loading" ? t("") : t("Înscrie-mă")}
+                        {status === "loading" ? t("Se înscrie…") : t("Înscrie-mă")}
                       </button>
                     </div>
 

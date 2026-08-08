@@ -47,10 +47,12 @@ const BillingAddress = ({
       HTMLInputElement | HTMLInputElement | HTMLSelectElement
     >
   ) => {
-    setFormData({
-      ...formData,
+    // Functional update — see shipping-address/index.tsx for why (races
+    // with LocalitySelect's own functional setter on the same state).
+    setFormData((prev) => ({
+      ...prev,
       [e.target.name]: e.target.value,
-    })
+    }))
   }
 
   return (
@@ -97,6 +99,7 @@ const BillingAddress = ({
           autoComplete="postal-code"
           value={formData["billing_address.postal_code"]}
           onChange={handleChange}
+          required
           data-testid="billing-postal-input"
         />
         <CountrySelect

@@ -15,6 +15,25 @@ type InputProps = Omit<
   topLabel?: string
 }
 
+// Mobile keyboards show a "next" arrow (via enterKeyHint="next") but tapping
+// it still fires a plain Enter keypress, which browsers treat as implicit
+// form submission — the visual hint alone doesn't change that behavior. This
+// moves focus to the next field instead, so "next" actually advances rather
+// than submitting the whole form.
+function focusNextField(current: HTMLInputElement) {
+  const form = current.form
+  if (!form) return
+
+  const fields = Array.from(
+    form.querySelectorAll<HTMLElement>("input, select, textarea, button")
+  ).filter((el) => !el.hasAttribute("disabled") && el.offsetParent !== null)
+
+  const index = fields.indexOf(current)
+  if (index === -1 || index === fields.length - 1) return
+
+  fields[index + 1].focus()
+}
+
 // Localized validation messages derived from the browser's ValidityState, so we
 // can replace the generic native bubble with a styled inline message.
 function getValidationMessage(
@@ -28,7 +47,10 @@ function getValidationMessage(
     if (el.type === "url") return t("Introdu un link valid")
     return t("Valoare invalidă")
   }
-  if (v.patternMismatch) return t("Formatul nu este valid")
+  // `title` is where callers put a field-specific hint for a `pattern`
+  // (e.g. phone format) — falling back to the generic message here would
+  // silently discard it, since the browser's own bubble is suppressed.
+  if (v.patternMismatch) return el.title || t("Formatul nu este valid")
   if (v.tooShort) return t("Minim {min} caractere", { min: el.minLength })
   if (v.tooLong) return t("Maxim {max} caractere", { max: el.maxLength })
   if (v.rangeUnderflow || v.rangeOverflow || v.stepMismatch)
@@ -49,6 +71,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       className,
       onChange,
       onInvalid,
+      onKeyDown,
+      enterKeyHint,
       ...props
     },
     ref
@@ -79,6 +103,14 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       onChange?.(e)
     }
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter" && enterKeyHint === "next") {
+        e.preventDefault()
+        focusNextField(e.currentTarget)
+      }
+      onKeyDown?.(e)
+    }
+
     return (
       <div className="flex flex-col w-full gap-1">
         {(topLabel || label) && (
@@ -96,7 +128,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             type={inputType}
             name={name}
             required={required}
+            enterKeyHint={enterKeyHint}
             onChange={handleChange}
+            onKeyDown={handleKeyDown}
             onInvalid={handleInvalid}
             aria-invalid={error ? true : undefined}
             className={`w-full h-10 px-3 bg-transparent border text-[var(--theme-text)] font-sans text-base placeholder:text-[var(--theme-text-muted)] placeholder:text-[14px] focus:outline-none transition-colors ${

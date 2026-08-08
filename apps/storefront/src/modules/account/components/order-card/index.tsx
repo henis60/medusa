@@ -11,6 +11,8 @@ const STATUS_KEYS: Record<string, string> = {
   not_fulfilled: "not_fulfilled",
   partially_fulfilled: "partially_fulfilled",
   fulfilled: "fulfilled",
+  shipped: "shipped",
+  partially_shipped: "partially_shipped",
   canceled: "canceled",
   returned: "returned",
   partially_returned: "partially_returned",
@@ -59,12 +61,20 @@ const OrderCard = ({ order }: OrderCardProps) => {
             currency_code: order.currency_code,
           })}
         </span>
-        <span
-          aria-hidden
-          className="font-serif text-[18px] text-hunter-gold/40 group-hover:text-hunter-gold group-active:text-hunter-gold group-active:translate-x-0.5 transition-all"
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+          className="shrink-0 text-hunter-gold/40 group-hover:text-hunter-gold group-active:text-hunter-gold group-active:translate-x-0.5 transition-all"
         >
-          ›
-        </span>
+          <polyline points="9 6 15 12 9 18" />
+        </svg>
       </div>
     </LocalizedClientLink>
   )

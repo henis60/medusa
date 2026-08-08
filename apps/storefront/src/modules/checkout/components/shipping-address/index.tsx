@@ -3,7 +3,7 @@ import { Container } from "@modules/common/components/ui"
 import Checkbox from "@modules/common/components/checkbox"
 import Input from "@modules/common/components/input"
 import mapKeys from "lodash/mapKeys"
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 import AddressSelect from "../address-select"
 import CountrySelect from "../country-select"
@@ -83,26 +83,37 @@ const ShippingAddress = ({
     }
   }
 
+  // Hydrates the form from the cart exactly once, on the first snapshot that
+  // has data. Re-running this on every `cart` change (its identity changes
+  // on every server refetch — applying a discount, changing a quantity,
+  // CartRefreshOnUpdate polling, etc.) would overwrite whatever the customer
+  // is actively typing with the last server-saved values.
+  const hydrated = useRef(false)
   useEffect(() => {
-    // Ensure cart is not null and has a shipping_address before setting form data
-    if (cart && cart.shipping_address) {
-      setFormAddress(cart?.shipping_address, cart?.email)
-    }
+    if (hydrated.current || !cart) return
 
-    if (cart && !cart.email && customer?.email) {
+    if (cart.shipping_address) {
+      setFormAddress(cart.shipping_address, cart.email)
+      hydrated.current = true
+    } else if (!cart.email && customer?.email) {
       setFormAddress(undefined, customer.email)
+      hydrated.current = true
     }
-  }, [cart]) // Add cart as a dependency
+  }, [cart])
 
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLInputElement | HTMLSelectElement
     >
   ) => {
-    setFormData({
-      ...formData,
+    // Functional update — LocalitySelect's onChange (county/city) also
+    // updates this same state via its own functional setter, and a keystroke
+    // batched in the same tick as a locality selection must not silently
+    // drop one of the two updates by closing over a stale `formData`.
+    setFormData((prev) => ({
+      ...prev,
       [e.target.name]: e.target.value,
-    })
+    }))
   }
 
   return (
@@ -160,6 +171,7 @@ const ShippingAddress = ({
           autoComplete="postal-code"
           value={formData["shipping_address.postal_code"]}
           onChange={handleChange}
+          required
           enterKeyHint="next"
           data-testid="shipping-postal-code-input"
         />
@@ -212,7 +224,10 @@ const ShippingAddress = ({
         <Input
           label={t("Telefon")}
           name="shipping_address.phone"
+          type="tel"
           autoComplete="tel"
+          pattern="^\+?[0-9][0-9\s\-.()]{6,16}[0-9]$"
+          title={t("Introdu un număr de telefon valid")}
           value={formData["shipping_address.phone"]}
           onChange={handleChange}
           required

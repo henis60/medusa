@@ -1,7 +1,7 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import { startTransition, useActionState } from "react"
+import { startTransition, useActionState, useState } from "react"
 import Input from "@modules/common/components/input"
 import { LOGIN_VIEW } from "@modules/account/templates/login-template"
 import ErrorMessage from "@modules/checkout/components/error-message"
@@ -15,18 +15,35 @@ type Props = {
 
 const ForgotPassword = ({ setCurrentView }: Props) => {
   const t = useTranslations("account")
-  const [message, formAction] = useActionState(requestPasswordReset, null)
+  const [message, formAction, isPending] = useActionState(requestPasswordReset, null)
   const { preload, getToken } = useRecaptcha()
+  const [awaitingToken, setAwaitingToken] = useState(false)
+  const [recaptchaError, setRecaptchaError] = useState<string | null>(null)
+  const pending = awaitingToken || isPending
 
   const isSuccess = message === "success"
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (pending) return
+
     const formData = new FormData(e.currentTarget)
+
+    setAwaitingToken(true)
+    setRecaptchaError(null)
     const token = await getToken("password_reset")
-    if (token) {
-      formData.set("recaptchaToken", token)
+    setAwaitingToken(false)
+
+    if (!token) {
+      setRecaptchaError(
+        t(
+          "Verificarea de securitate a eșuat Reîncearcă sau dezactivează temporar blocantele de reclame"
+        )
+      )
+      return
     }
+
+    formData.set("recaptchaToken", token)
     startTransition(() => formAction(formData))
   }
 
@@ -48,7 +65,7 @@ const ForgotPassword = ({ setCurrentView }: Props) => {
           </div>
           <button
             onClick={() => setCurrentView(LOGIN_VIEW.SIGN_IN)}
-            className="inline-flex items-center gap-2 text-[var(--theme-text-muted)] hover:text-[var(--theme-gold)] transition-colors font-sans text-[11px] uppercase tracking-[3px]"
+            className="w-full h-12 flex items-center justify-center gap-2 bg-hunter-gold text-hunter-dark hover:opacity-90 transition-opacity font-sans uppercase tracking-[3px] text-[13px]"
           >
             <span>←</span>
             <span>{t("Înapoi")}</span>
@@ -67,8 +84,11 @@ const ForgotPassword = ({ setCurrentView }: Props) => {
             autoComplete="email"
             required
           />
-          <ErrorMessage error={isSuccess ? null : message} />
-          <SubmitButton className="w-full mt-6 h-12 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent font-sans uppercase tracking-[3px] text-[13px]">
+          <ErrorMessage error={isSuccess ? null : recaptchaError || message} />
+          <SubmitButton
+            pending={pending}
+            className="w-full mt-6 h-12 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent font-sans uppercase tracking-[3px] text-[13px]"
+          >
             {t("Trimite Link")}
           </SubmitButton>
           <p className="font-sans text-[11px] text-[var(--theme-text-muted)] mt-4 text-center leading-relaxed">
