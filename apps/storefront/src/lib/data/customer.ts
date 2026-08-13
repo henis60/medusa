@@ -130,6 +130,18 @@ export async function signup(_currentState: unknown, formData: FormData) {
   }
 }
 
+/**
+ * Only same-origin paths may be used as a post-login destination.
+ *
+ * `redirectTo` arrives from the query string, so without this an attacker can
+ * send `?redirectTo=https://evil.tld/login`: the victim signs in on the real
+ * site and is handed straight to a lookalike page, carrying a trusted referrer.
+ * Protocol-relative URLs (`//evil.tld`) are rejected too — they look like paths
+ * but resolve to a foreign origin.
+ */
+const isSafeRedirect = (href: string): boolean =>
+  href.startsWith("/") && !href.startsWith("//") && !href.startsWith("/\\")
+
 export async function login(_currentState: unknown, formData: FormData) {
   const recaptchaOk = await verifyRecaptcha(formData.get("recaptchaToken") as string | null)
   if (!recaptchaOk) return "Verificare anti-spam eșuată. Încearcă din nou."
@@ -157,7 +169,7 @@ export async function login(_currentState: unknown, formData: FormData) {
   await transferCart().catch(() => {})
 
   const redirectTo = formData.get("redirectTo") as string | null
-  if (redirectTo) {
+  if (redirectTo && isSafeRedirect(redirectTo)) {
     redirect({ href: redirectTo, locale: (await getLocale()) ?? routing.defaultLocale })
   }
 }

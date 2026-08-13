@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Accordion from "@modules/products/components/product-tabs/accordion"
+import { serializeJsonLd } from "@lib/util/json-ld"
 
 type FaqItem = { q: string; a: string }
 type FaqGroup = { title: string; items: FaqItem[] }
@@ -112,7 +113,7 @@ const FAQTemplate = () => {
     <div className="bg-[var(--theme-bg)] w-full min-h-screen">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(faqSchema) }}
       />
       {/* Header */}
       <div className="page-container pt-6 pb-5">

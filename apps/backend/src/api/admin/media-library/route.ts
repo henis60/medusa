@@ -3,6 +3,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { MEDIA_LIBRARY_MODULE } from "../../../modules/media-library"
 import MediaLibraryModuleService from "../../../modules/media-library/service"
 import { listR2Objects } from "../../../modules/media-library/lib/r2-client"
+import { detectImageType } from "../../../modules/media-library/lib/image-type"
 import uploadMediaAssetWorkflow from "../../../workflows/upload-media-asset"
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
@@ -102,14 +103,36 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         .join("/") + "/"
     : ""
 
-  const uploaded: { key: string; url: string }[] = []
+  // Validate everything before writing anything, so a bad file in the batch
+  // doesn't leave half the upload committed to the bucket.
+  const validated: { key: string; buffer: Buffer; mimeType: string }[] = []
   for (const file of files) {
-    const key = `${folderPrefix}${sanitizeSegment(file.originalname)}`
+    // The declared mimetype is client-supplied; the bytes are not. Storing the
+    // detected type is what stops an HTML/SVG payload being served back from
+    // the media origin with an executable content type.
+    const detected = detectImageType(file.buffer)
+    if (!detected) {
+      return res.status(415).json({
+        message:
+          `"${file.originalname}" nu este o imagine acceptată. ` +
+          `Sunt permise JPEG, PNG, GIF, WebP și AVIF.`,
+      })
+    }
+
+    validated.push({
+      key: `${folderPrefix}${sanitizeSegment(file.originalname)}`,
+      buffer: file.buffer,
+      mimeType: detected,
+    })
+  }
+
+  const uploaded: { key: string; url: string }[] = []
+  for (const file of validated) {
     const { result } = await uploadMediaAssetWorkflow(req.scope).run({
       input: {
-        key,
+        key: file.key,
         content: file.buffer.toString("base64"),
-        mimeType: file.mimetype,
+        mimeType: file.mimeType,
       },
     })
     uploaded.push({ key: result.key, url: result.url })

@@ -408,7 +408,7 @@ export default function VariantAwareGallery({
                   priority
                   draggable={false}
                   className="object-contain object-center pointer-events-none"
-                  sizes="(max-width: 1024px) 100vw, 55vw"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) calc(100vw - 88px), 55vw"
                 />
               </motion.div>
             )}

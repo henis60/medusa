@@ -1,7 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 import { generateTestInvoicePdf } from "../../../../lib/generate-test-invoice-pdf"
-import { createOblioInvoiceWorkflow } from "../../../../workflows/create-oblio-invoice"
+import { runCreateOblioInvoice } from "../../../../workflows/create-oblio-invoice"
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const { id } = req.params
@@ -100,9 +100,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const { id } = req.params
 
-  const { result } = await createOblioInvoiceWorkflow(req.scope).run({
-    input: { order_id: id },
-  })
+  const result = await runCreateOblioInvoice(req.scope, id)
 
   return res.json({
     invoice_series: result.series,

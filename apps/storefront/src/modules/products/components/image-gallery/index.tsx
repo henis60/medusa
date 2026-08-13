@@ -44,7 +44,7 @@ export const ImageGallery = async ({ images }: ImageGalleryProps) => {
             fill
             priority
             className="object-contain object-center"
-            sizes="(max-width: 1024px) 100vw, 55vw"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) calc(100vw - 88px), 55vw"
           />
         )}
       </div>

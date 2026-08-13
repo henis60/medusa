@@ -1,6 +1,6 @@
 import { SubscriberArgs, type SubscriberConfig } from "@medusajs/framework";
 import { capturePaymentWorkflow } from "@medusajs/core-flows";
-import { createOblioInvoiceWorkflow } from "../workflows/create-oblio-invoice";
+import { runCreateOblioInvoice } from "../workflows/create-oblio-invoice";
 
 export default async function sendOrderConfirmationEmail({
   event: { data, name: eventName },
@@ -63,9 +63,7 @@ export default async function sendOrderConfirmationEmail({
     // Generare factură Oblio (cu idempotență internă)
     let invoiceAttachment: { name: string; content: string } | null = null
     try {
-      const { result } = await createOblioInvoiceWorkflow(container).run({
-        input: { order_id: data.id },
-      })
+      const result = await runCreateOblioInvoice(container, data.id)
       invoiceAttachment = {
         name: `factura-${order.display_id}.pdf`,
         content: result.pdf_base64,

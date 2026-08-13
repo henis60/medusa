@@ -36,6 +36,18 @@ export const listCartShippingMethods = async (cartId: string) => {
     })
 }
 
+// Identifies this server as the storefront to the backend's /store/eawb/*
+// routes. Those routes expose a cart's delivery address and can't be gated on
+// customer auth (guest checkout has no session), so they're restricted to
+// callers holding this shared secret instead. Server-only — deliberately not
+// NEXT_PUBLIC, since these run in server actions and the browser must never
+// see it. When unset, the backend leaves the routes open, so checkout keeps
+// working either way.
+const internalHeaders = (): Record<string, string> => {
+  const secret = process.env.EAWB_INTERNAL_SECRET
+  return secret ? { "x-internal-secret": secret } : {}
+}
+
 // Fetches live courier prices for ALL eAWB calculated options in one request
 // (the backend queries Europarcel once), keyed by shipping_option id.
 export const listEawbShippingPrices = async (
@@ -43,6 +55,7 @@ export const listEawbShippingPrices = async (
 ): Promise<Record<string, number>> => {
   const headers = {
     ...(await getAuthHeaders()),
+    ...internalHeaders(),
   }
 
   // Deliberately no .catch(() => ({})) here — an empty object is
@@ -79,6 +92,7 @@ export const listEawbLockers = async (
 ): Promise<EawbLocker[]> => {
   const headers = {
     ...(await getAuthHeaders()),
+    ...internalHeaders(),
   }
 
   return sdk.client
@@ -99,6 +113,7 @@ export const listEawbLockers = async (
 export const getEawbOrigin = async (cartId: string): Promise<EawbLockerOrigin> => {
   const headers = {
     ...(await getAuthHeaders()),
+    ...internalHeaders(),
   }
 
   return sdk.client

@@ -28,21 +28,27 @@ function FitToLockers({
 }) {
   const map = useMap()
   const hasFitLockersOnce = useRef(false)
-  // A selected locker restored from the cart (on returning to this step)
-  // doesn't carry coordinates — only a locker picked just now in this session
-  // does. Only the latter should block centering on the selected pin/origin.
-  const hasSelectedCoords = selectedLocker?.lat != null && selectedLocker?.lng != null
+  // A selected locker restored from the cart (on returning to this step, or
+  // preselected on initial load) doesn't carry coordinates on its own object
+  // — only a locker picked just now in this session does. Resolve it against
+  // the full locker list (which does have coordinates for every locker) by
+  // id so a restored/preselected locker still gets focused, not just one
+  // picked live.
+  const resolvedSelected = selectedLocker
+    ? lockers.find((l) => l.id === selectedLocker.id) ?? selectedLocker
+    : null
+  const hasSelectedCoords = resolvedSelected?.lat != null && resolvedSelected?.lng != null
 
-  // A manually selected locker always takes precedence. Always zoom in to a
-  // focused level — not just "at most MAX_FIT_ZOOM" — since the bounds-fit
-  // fallback below can leave the map zoomed way out (e.g. fit to every locker
-  // in a whole city), and capping against that stale zoom would leave a
-  // selected locker looking un-zoomed.
+  // A selected locker always takes precedence. Always zoom in to a focused
+  // level — not just "at most MAX_FIT_ZOOM" — since the bounds-fit fallback
+  // below can leave the map zoomed way out (e.g. fit to every locker in a
+  // whole city), and capping against that stale zoom would leave a selected
+  // locker looking un-zoomed.
   useEffect(() => {
     if (hasSelectedCoords) {
-      map.setView([selectedLocker!.lat as number, selectedLocker!.lng as number], ORIGIN_ZOOM)
+      map.setView([resolvedSelected!.lat as number, resolvedSelected!.lng as number], ORIGIN_ZOOM)
     }
-  }, [selectedLocker])
+  }, [selectedLocker, lockers])
 
   // The geocoded address is fetched separately from the locker list (it can
   // arrive later, since it's a slower external lookup) — re-center on it the

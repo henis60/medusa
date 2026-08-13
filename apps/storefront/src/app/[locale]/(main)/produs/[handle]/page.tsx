@@ -5,6 +5,7 @@ import { getRegionStatic } from "@lib/data/regions"
 import { setRequestLocaleValue } from "@lib/util/request-locale"
 import { getBaseURL } from "@lib/util/env"
 import { getProductPrice } from "@lib/util/get-product-price"
+import { serializeJsonLd } from "@lib/util/json-ld"
 import ProductTemplate from "@modules/products/templates"
 
 const SITE_NAME = "The Hunter House"
@@ -121,7 +122,7 @@ export default async function ProductPage(props: Props) {
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
       <ProductTemplate
         product={pricedProduct}

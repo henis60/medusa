@@ -7,6 +7,7 @@ import { NextIntlClientProvider } from "next-intl"
 import { getMessages, setRequestLocale } from "next-intl/server"
 import { routing } from "@i18n/routing"
 import { setRequestLocaleValue } from "@lib/util/request-locale"
+import { serializeJsonLd } from "@lib/util/json-ld"
 import { ThemeProvider } from "../../providers/theme-provider"
 import { FavoritesProvider } from "@lib/context/favorites-context"
 import { ConsentProvider } from "@lib/context/consent-context"
@@ -151,7 +152,7 @@ export default async function RootLayout({ children, params }: Props) {
           type="application/ld+json"
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(ORGANIZATION_JSON_LD),
+            __html: serializeJsonLd(ORGANIZATION_JSON_LD),
           }}
         />
       </head>

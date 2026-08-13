@@ -3,9 +3,10 @@
 import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { HttpTypes } from "@medusajs/types"
-
-const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL
-const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ""
+import {
+  subscribeToNewsletter,
+  unsubscribeFromNewsletter,
+} from "@lib/data/newsletter"
 
 export default function NewsletterStatus({
   customer,
@@ -28,23 +29,13 @@ export default function NewsletterStatus({
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`${BACKEND}/store/newsletter?account=true`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-publishable-api-key": PUBLISHABLE_KEY,
-        },
-        body: JSON.stringify({ email }),
-      })
-      if (res.status === 429) {
-        setError(t("Prea multe încercări Te rugăm să revii peste câteva minute"))
-        return
-      }
-      const data = await res.json()
-      if (data.success) {
+      // Runs server-side, where the address comes from the session — the
+      // browser never gets to say whose subscription it is changing.
+      const result = await subscribeToNewsletter()
+      if (result.success) {
         setSubscribed(true)
       } else {
-        setError(data.error ?? t("Eroare necunoscută"))
+        setError(result.error ?? t("Eroare necunoscută"))
       }
     } catch {
       setError(t("Eroare de rețea"))
@@ -58,26 +49,14 @@ export default function NewsletterStatus({
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`${BACKEND}/store/newsletter`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          "x-publishable-api-key": PUBLISHABLE_KEY,
-        },
-        body: JSON.stringify({ email }),
-      })
-      if (res.status === 429) {
-        setError("Prea multe încercări. Te rugăm să revii peste câteva minute.")
-        return
-      }
-      const data = await res.json()
-      if (data.success) {
+      const result = await unsubscribeFromNewsletter()
+      if (result.success) {
         setSubscribed(false)
       } else {
-        setError(data.error ?? "Eroare necunoscută")
+        setError(result.error ?? t("Eroare necunoscută"))
       }
     } catch {
-      setError("Eroare de rețea")
+      setError(t("Eroare de rețea"))
     } finally {
       setLoading(false)
     }

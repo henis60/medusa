@@ -23,6 +23,9 @@ export default async function Addresses() {
   // profil/layout.tsx) rather than a dead-end 404.
   if (!customer) {
     redirect({ href: "/profil", locale: await getLocale() })
+    // `redirect` throws, so this is unreachable — it is here so the compiler
+    // can narrow `customer` to non-null for the render below.
+    return null
   }
 
   const region = await getRegion("ro")

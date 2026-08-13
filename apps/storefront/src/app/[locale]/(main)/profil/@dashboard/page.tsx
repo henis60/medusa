@@ -16,7 +16,7 @@ export default async function OverviewTemplate() {
 
   const [orders, newsletterSubscribed] = await Promise.all([
     listOrders().catch(() => null),
-    getNewsletterSubscription(customer.email),
+    getNewsletterSubscription(),
   ])
 
   return (

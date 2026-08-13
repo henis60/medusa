@@ -1,12 +1,19 @@
-import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
+import {
+  AuthenticatedMedusaRequest,
+  MedusaRequest,
+  MedusaResponse,
+} from "@medusajs/framework/http";
+import { Modules } from "@medusajs/framework/utils";
 import { BrevoClient } from "@getbrevo/brevo";
 import { z } from "zod";
 
 const client = new BrevoClient({ apiKey: process.env.BREVO_API_KEY! });
 const LIST_ID = parseInt(process.env.BREVO_NEWSLETTER_LIST_ID || "0", 10);
 
+// `email` is only read for anonymous subscribes — a logged-in caller's address
+// comes from their session, so the body is allowed to omit it.
 const NewsletterSchema = z.object({
-  email: z.string().email("Email invalid"),
+  email: z.string().email("Email invalid").optional(),
   recaptchaToken: z.string().optional(),
 });
 
@@ -29,9 +36,39 @@ async function verifyRecaptcha(token: string, logger?: any): Promise<boolean> {
   return data.success && data.score >= 0.5;
 }
 
+/**
+ * Email of the logged-in customer, or null when the caller is anonymous.
+ *
+ * Subscription state is per-address, so every operation that reads or changes
+ * it must act on an address the caller has proven they own. Taking the address
+ * from the session rather than the request body is what stops one visitor
+ * checking or cancelling another person's subscription.
+ */
+async function getAuthenticatedEmail(
+  req: MedusaRequest | AuthenticatedMedusaRequest
+): Promise<string | null> {
+  // `allowUnauthenticated` means auth_context is absent for anonymous callers.
+  const customerId = (req as AuthenticatedMedusaRequest).auth_context?.actor_id;
+  if (!customerId) return null;
+
+  try {
+    const customerModule = req.scope.resolve(Modules.CUSTOMER);
+    const customer = await customerModule.retrieveCustomer(customerId, {
+      select: ["email"],
+    });
+    return customer?.email ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
-  const email = req.query.email as string;
-  if (!email) return res.status(400).json({ error: "Email required" });
+  // Always the caller's own address — passing ?email= used to let anyone probe
+  // whether an arbitrary address was on the list.
+  const email = await getAuthenticatedEmail(req);
+  if (!email) {
+    return res.status(401).json({ error: "Autentificare necesară" });
+  }
 
   try {
     const response = await client.contacts.getContactInfo({
@@ -61,11 +98,19 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return res.status(400).json({ error: parsed.error.errors[0].message });
   }
 
-  const { email, recaptchaToken } = parsed.data;
   const logger = req.scope.resolve("logger");
-  const fromAccount = (req.query as any).account === "true";
 
-  if (!fromAccount) {
+  // A logged-in customer subscribing their own address is already vouched for
+  // by their session, so they skip the challenge. This used to key off
+  // `?account=true`, which is attacker-controlled query input rather than proof
+  // of anything — appending it bypassed the anti-spam gate entirely.
+  const authenticatedEmail = await getAuthenticatedEmail(req);
+
+  let email: string;
+  if (authenticatedEmail) {
+    email = authenticatedEmail;
+  } else {
+    const { recaptchaToken } = parsed.data;
     if (!recaptchaToken) {
       return res.status(400).json({ error: "Token reCAPTCHA lipsă" });
     }
@@ -75,6 +120,10 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         .status(400)
         .json({ error: "Verificare anti-spam eșuată. Încearcă din nou." });
     }
+    if (!parsed.data.email) {
+      return res.status(400).json({ error: "Email invalid" });
+    }
+    email = parsed.data.email;
   }
 
   try {
@@ -102,8 +151,12 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 }
 
 export async function DELETE(req: MedusaRequest, res: MedusaResponse) {
-  const { email } = req.body as { email: string };
-  if (!email) return res.status(400).json({ error: "Email required" });
+  // Own address only: this previously accepted any email in the body with no
+  // authentication, so anyone could unsubscribe anyone.
+  const email = await getAuthenticatedEmail(req);
+  if (!email) {
+    return res.status(401).json({ error: "Autentificare necesară" });
+  }
 
   try {
     await client.contacts.removeContactFromList({

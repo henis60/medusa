@@ -49,7 +49,7 @@ export default async function sendOrderShippedEmail({
 
     await notificationService.createNotifications({
       to: order.email,
-      template: "5",
+      template: "6",
       channel: "email",
       data: {
         order_id: order.display_id,
