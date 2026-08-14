@@ -144,11 +144,12 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     }
 
     // Eveniment custom — subscriber-ul completează coșul după ce sesiunea e autorizată.
-    // orderID e generat de noi la initiatePayment (= payment session id), deci
-    // filtrăm formatul ca să nu declanșăm workflow-uri pe input arbitrar.
-    // `sess_` acoperă fallback-ul din initiatePayment când lipsește idempotency_key.
+    // orderID e payment session id-ul generat la initiatePayment. Verificăm doar
+    // FORMA, nu prefixul: o versiune anterioară cerea `ps_`/`sess_`, dar Medusa
+    // emite id-uri cu prefixul `payses_`, deci condiția nu se potrivea niciodată
+    // și evenimentul de finalizare nu se emitea pentru nicio plată reală.
     const isSessionId =
-      typeof orderID === "string" && /^(ps|sess)_[A-Za-z0-9_-]{1,64}$/.test(orderID)
+      typeof orderID === "string" && /^[A-Za-z0-9_-]{1,80}$/.test(orderID)
 
     if ((ipnStatus === 3 || ipnStatus === 5) && isSessionId) {
       try {
