@@ -3,7 +3,6 @@
 import { HttpTypes } from "@medusajs/types"
 import { useState, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
-import { AnimatePresence, motion } from "framer-motion"
 import Image from "next/image"
 import { useTranslations } from "next-intl"
 import {
@@ -272,15 +271,6 @@ export default function VariantAwareGallery({
   const thumbsRef = useRef<HTMLDivElement>(null)
   const mainImageRef = useRef<HTMLDivElement>(null)
   const thumbDragStart = useRef<{ y: number; scrollTop: number } | null>(null)
-  // The very first image is server-rendered and already visible in the
-  // initial HTML — fading it in from opacity:0 on hydration only delays
-  // its paint until framer-motion runs. Skip the enter animation for that
-  // one render; every later switch (variant change, arrow/dot/drag) still
-  // gets the fade, since it's genuinely replacing on-screen content.
-  const isFirstRender = useRef(true)
-  useEffect(() => {
-    isFirstRender.current = false
-  }, [])
 
   useEffect(() => {
     if (!mainImageRef.current) return
@@ -391,28 +381,19 @@ export default function VariantAwareGallery({
           onMouseDown={onMouseDown}
           onMouseUp={onMouseUp}
         >
-          <AnimatePresence mode="sync">
-            {selected?.url && (
-              <motion.div
-                key={selected.url}
-                initial={isFirstRender.current ? false : { opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.35, ease: "easeInOut" }}
-                className="absolute inset-0"
-              >
-                <Image
-                  src={selected.url}
-                  alt={t("Imagine produs")}
-                  fill
-                  priority
-                  draggable={false}
-                  className="object-contain object-center pointer-events-none"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) calc(100vw - 88px), 55vw"
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {selected?.url && (
+            <div className="absolute inset-0">
+              <Image
+                src={selected.url}
+                alt={t("Imagine produs")}
+                fill
+                priority
+                draggable={false}
+                className="object-contain object-center pointer-events-none"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) calc(100vw - 88px), 55vw"
+              />
+            </div>
+          )}
 
           <button
             onClick={() => setLightboxOpen(true)}
