@@ -10,9 +10,14 @@ type Props = {
   onClick?: () => void
 }
 
-// Where the user last dragged the button to, in pixels applied on top of
-// its default docked position — persists across visits on this device.
-const POSITION_KEY = "hunter_appt_btn_pos"
+// Legacy key for the dragged position, which used to persist across visits.
+// It deliberately isn't written any more — the button now resets to its
+// default docked position (right edge, default border sides) on every
+// refresh, so a position dragged in one session can't carry over and leave
+// the button somewhere unexpected with its border omitted on the wrong side.
+// Still read once on mount purely to delete stale values from devices that
+// saved one under the old behaviour.
+const LEGACY_POSITION_KEY = "hunter_appt_btn_pos"
 // Vertical-only: keeps the button clear of the header/footer edges of the
 // screen. Horizontal snapping is deliberately flush (0) — the button's
 // border is drawn with one side omitted (see dockSide below), on the
@@ -47,23 +52,14 @@ export default function AppointmentButton({ transparent, hideOnTop, onClick }: P
     return () => mq.removeEventListener("change", update)
   }, [])
 
+  // Drop any position saved by the previous (persisting) behaviour, so it
+  // can't be resurrected later. Nothing is restored — the button starts from
+  // its default dock/border state on every load, by design.
   useEffect(() => {
-    if (!isMobile) return
     try {
-      const saved = localStorage.getItem(POSITION_KEY)
-      if (saved) {
-        const pos = JSON.parse(saved)
-        if (typeof pos?.x === "number" && typeof pos?.y === "number") {
-          dragX.set(pos.x)
-          dragY.set(pos.y)
-        }
-        if (pos?.dockSide === "left" || pos?.dockSide === "right") {
-          setDockSide(pos.dockSide)
-        }
-      }
+      localStorage.removeItem(LEGACY_POSITION_KEY)
     } catch {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMobile])
+  }, [])
 
   // Snaps the button to whichever screen edge (left/right) it's closest to
   // once dropped, and clamps its vertical position to stay fully on-screen —
@@ -94,14 +90,7 @@ export default function AppointmentButton({ transparent, hideOnTop, onClick }: P
 
     animate(dragX, nextX, { type: "spring", stiffness: 420, damping: 34 })
     animate(dragY, nextY, { type: "spring", stiffness: 420, damping: 34 })
-    const nextDockSide = goRight ? "right" : "left"
-    setDockSide(nextDockSide)
-    try {
-      localStorage.setItem(
-        POSITION_KEY,
-        JSON.stringify({ x: nextX, y: nextY, dockSide: nextDockSide })
-      )
-    } catch {}
+    setDockSide(goRight ? "right" : "left")
   }
 
   useEffect(() => {

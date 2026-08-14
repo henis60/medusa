@@ -63,6 +63,10 @@ export default function Space() {
   const zonesRef = useRef<HTMLDivElement>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
   const tapRef = useRef<{ x: number; y: number } | null>(null)
+  // The swipe hint must only ever play once per page load, but inView's
+  // callback re-fires every time the section re-enters the viewport.
+  const hasHintedRef = useRef(false)
+  const hintTimerRef = useRef<number | null>(null)
 
   // Recompute which zone is most visible in the scroll container. Desktop
   // doesn't scroll this container horizontally at all (flex layout, no
@@ -143,6 +147,13 @@ export default function Space() {
                 el.style.transform = ""
               })
             })
+
+            // Swipe affordance: the peek strips alone don't tell anyone the
+            // row scrolls, so nudge it a little to the right and let it
+            // settle back — the standard "there's more over here" cue. Runs
+            // after the label stagger above (~0.95s) so the two don't
+            // overlap and read as one confused motion.
+            hintSwipe(animate)
           }
         },
         { amount: 0.4 }
@@ -152,8 +163,75 @@ export default function Space() {
     return () => {
       cancelled = true
       stopInView?.()
+      if (hintTimerRef.current !== null) {
+        window.clearTimeout(hintTimerRef.current)
+      }
     }
   }, [])
+
+  // Nudges the zones row right and back to advertise that it swipes.
+  //
+  // Animates scrollLeft rather than a transform: a transform would slide the
+  // whole row (peek strips included) without the container's scroll position
+  // actually changing, so it wouldn't reveal that there's more content to
+  // reach — which is the entire point of the cue.
+  //
+  // scroll-snap-type is mandatory on this container (see globals.css), and
+  // mandatory snapping fights any partial programmatic scroll — it yanks the
+  // position back to the nearest snap point mid-animation. It's switched off
+  // for the duration and restored afterwards.
+  const hintSwipe = useCallback(
+    (animate: typeof import("framer-motion").animate) => {
+      const el = zonesRef.current
+      if (!el || hasHintedRef.current) return
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+      hasHintedRef.current = true
+
+      const timer = window.setTimeout(() => {
+        // Someone already started scrolling — they've clearly found it, so
+        // hinting now would just fight them for control of the container.
+        if (el.scrollLeft > 2) return
+
+        const maxScroll = el.scrollWidth - el.clientWidth
+        if (maxScroll <= 8) return
+        const distance = Math.min(52, maxScroll)
+
+        const prevSnapType = el.style.scrollSnapType
+        el.style.scrollSnapType = "none"
+
+        const restore = () => {
+          el.style.scrollSnapType = prevSnapType
+          el.removeEventListener("pointerdown", cancel)
+          el.removeEventListener("touchstart", cancel)
+        }
+
+        const controls = animate(0, 1, {
+          duration: 1.15,
+          ease: "easeInOut",
+          // Half a sine wave: 0 → distance → 0, so it drifts out and eases
+          // back to exactly where it started with no snap-back jolt.
+          onUpdate: (progress: number) => {
+            el.scrollLeft = Math.sin(progress * Math.PI) * distance
+          },
+          onComplete: () => {
+            el.scrollLeft = 0
+            restore()
+          },
+        })
+
+        // Hand control straight back the instant the visitor touches it.
+        function cancel() {
+          controls.stop()
+          restore()
+        }
+        el.addEventListener("pointerdown", cancel, { once: true })
+        el.addEventListener("touchstart", cancel, { once: true, passive: true })
+      }, 950)
+
+      hintTimerRef.current = timer
+    },
+    []
+  )
 
   function handlePointerDown(e: React.PointerEvent) {
     tapRef.current = { x: e.clientX, y: e.clientY }
