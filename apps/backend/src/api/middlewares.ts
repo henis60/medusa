@@ -105,14 +105,19 @@ const requireInternalSecret = (
   if (!eawbInternalSecret) return next();
 
   const provided = req.headers["x-internal-secret"];
-  const expected = eawbInternalSecret;
 
-  // Length is compared first because timingSafeEqual throws on a mismatch, and
-  // length alone is not the secret.
+  // Compare BYTE lengths, not string lengths: timingSafeEqual throws a
+  // RangeError on differing byte lengths, and a multi-byte secret can have
+  // equal string length but different byte length — which would turn a wrong
+  // guess into an unauthenticated 500 instead of a clean 401.
+  const providedBuf =
+    typeof provided === "string" ? Buffer.from(provided) : null;
+  const expectedBuf = Buffer.from(eawbInternalSecret);
+
   const valid =
-    typeof provided === "string" &&
-    provided.length === expected.length &&
-    timingSafeEqual(Buffer.from(provided), Buffer.from(expected));
+    providedBuf !== null &&
+    providedBuf.length === expectedBuf.length &&
+    timingSafeEqual(providedBuf, expectedBuf);
 
   if (!valid) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -143,6 +148,31 @@ const publicFormLimiter = rateLimit({
   // submission, login, or AI generation.
   passOnStoreError: true,
   store: redisStore("rl:form:"),
+  handler: rateLimited("Prea multe încercări. Te rugăm să revii peste câteva minute."),
+});
+
+// Newsletter needs its own limiter because, unlike the contact form, its
+// authenticated calls arrive from the storefront's SERVER (they're server
+// actions — the JWT lives in an httpOnly cookie the browser can't read). Every
+// logged-in customer therefore shares the storefront's single IP, so a plain
+// per-IP limit would put the whole site in one bucket: the account page fires a
+// no-store subscription lookup on every render, which would 429 for everyone
+// after a handful of page views.
+//
+// Skipping authenticated callers keeps the per-IP budget where it's meaningful
+// — the anonymous, browser-submitted signup form — while a logged-in customer
+// is rate-limited by having an account at all. `authenticate` must run BEFORE
+// this in the chain for `auth_context` to be populated here.
+const newsletterLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  passOnStoreError: true,
+  store: redisStore("rl:newsletter:"),
+  skip: (req) =>
+    Boolean((req as unknown as { auth_context?: { actor_id?: string } })
+      .auth_context?.actor_id),
   handler: rateLimited("Prea multe încercări. Te rugăm să revii peste câteva minute."),
 });
 
@@ -195,29 +225,27 @@ export default defineMiddlewares({
       middlewares: [publicFormLimiter],
     },
     {
+      // NOTE: the key is `methods` (plural). `method` is deprecated and is
+      // silently ignored by the middleware loader, which then registers the
+      // handler with app.use() for EVERY verb — so a singular `method` here
+      // would both widen the scope and, because this matcher is declared once,
+      // run the limiter twice per request if it were split across entries.
+      // Kept as a single entry per matcher for that reason.
       matcher: "/store/newsletter",
-      method: ["POST"],
-      middlewares: [publicFormLimiter],
-    },
-    {
-      // Populates `req.auth_context` when the caller is a logged-in customer
-      // without rejecting anonymous ones — the route itself decides what each
-      // caller may do. Subscribing from the account page is authorised by this
-      // session; anonymous subscribes still have to solve the reCAPTCHA.
-      matcher: "/store/newsletter",
-      method: ["GET", "POST", "DELETE"],
+      methods: ["GET", "POST", "DELETE"],
       middlewares: [
+        // Populates `req.auth_context` for a logged-in customer without
+        // rejecting anonymous callers — the route decides what each may do.
+        // Subscribing from the account page is authorised by that session;
+        // anonymous subscribes still have to solve the reCAPTCHA.
+        //
+        // Must precede the limiter, which skips authenticated callers and so
+        // needs `auth_context` already set.
         authenticate("customer", ["session", "bearer"], {
           allowUnauthenticated: true,
         }),
+        newsletterLimiter,
       ],
-    },
-    {
-      // Reading and removing a subscription are cheap but enumerable, so they
-      // get the same per-IP budget as the public form.
-      matcher: "/store/newsletter",
-      method: ["GET", "DELETE"],
-      middlewares: [publicFormLimiter],
     },
     // Medusa's emailpass provider registers these four routes directly
     // (see @medusajs/medusa/dist/api/auth/middlewares.js) — matched
@@ -254,17 +282,17 @@ export default defineMiddlewares({
     // as a sub-path wildcard.
     {
       matcher: "/store/eawb/shipping-prices",
-      method: ["GET"],
+      methods: ["GET"],
       middlewares: [requireInternalSecret],
     },
     {
       matcher: "/store/eawb/lockers",
-      method: ["GET"],
+      methods: ["GET"],
       middlewares: [requireInternalSecret],
     },
     {
       matcher: "/store/eawb/geocode",
-      method: ["GET"],
+      methods: ["GET"],
       middlewares: [requireInternalSecret],
     },
   ],

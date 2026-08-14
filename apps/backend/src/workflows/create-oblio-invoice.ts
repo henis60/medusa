@@ -98,18 +98,27 @@ export async function runCreateOblioInvoice(
   try {
     locking = container.resolve(Modules.LOCKING)
   } catch {
-    // The Locking Module is registered alongside the other Redis-backed
-    // modules, so a local setup without REDIS_URL has none. A single dev
-    // process has no concurrent delivery to protect against, so run unlocked
-    // rather than failing the invoice outright.
+    // Defensive only: Medusa registers the Locking Module by default with an
+    // in-memory provider, and medusa-config.ts's REDIS_URL block merely swaps
+    // that provider for the Redis one. So this should never be reached. It
+    // stays because losing invoicing entirely would be a worse failure than
+    // running without the lock — but note the in-memory provider only
+    // serialises within a single process, so cross-instance protection depends
+    // on REDIS_URL being set in production.
     return run()
   }
 
   return locking.execute(`oblio-invoice:${orderId}`, run, {
-    // Seconds to wait for the lock before giving up. The default of 5 is too
-    // short here — the holder is doing a token exchange, an invoice create and
-    // a PDF download, and a waiter that times out early would fall through to
-    // creating a second invoice, which is exactly what this prevents.
-    timeout: 60,
+    // The Redis provider uses this single value for BOTH how long a waiter
+    // blocks AND the lock key's TTL, and it never renews mid-job. So it has to
+    // comfortably exceed the worst case for three sequential Oblio calls
+    // (token, create, PDF): if the key expired first, a waiter would acquire
+    // and create a second invoice — the exact outcome this prevents. The
+    // default of 5 seconds is far too short for that.
+    //
+    // The cost of erring high is only that a crashed holder blocks the next
+    // caller for this long; the cost of erring low is a duplicate fiscal
+    // document, so it is deliberately generous.
+    timeout: 120,
   })
 }

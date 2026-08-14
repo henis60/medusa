@@ -115,7 +115,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       return res.status(415).json({
         message:
           `"${file.originalname}" nu este o imagine acceptată. ` +
-          `Sunt permise JPEG, PNG, GIF, WebP și AVIF.`,
+          `Sunt permise JPEG, PNG, GIF, WebP, AVIF, HEIC/HEIF, BMP, TIFF și ICO. ` +
+          `SVG nu este acceptat.`,
       })
     }
 

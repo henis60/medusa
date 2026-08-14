@@ -44,11 +44,22 @@ function FitToLockers({
   // below can leave the map zoomed way out (e.g. fit to every locker in a
   // whole city), and capping against that stale zoom would leave a selected
   // locker looking un-zoomed.
+  //
+  // Keyed on the resolved locker's identity and coordinates rather than on the
+  // `lockers` array: that array is the SEARCH-FILTERED list, rebuilt on every
+  // keystroke, so depending on it re-centred the map while the customer was
+  // typing and threw away the pan/zoom they were in the middle of. Depending on
+  // the coordinates still covers the restore case — a locker preselected from
+  // the cart arrives without lat/lng and only gains them once the list loads,
+  // and that transition re-runs this effect and focuses it.
+  const selectedLat = resolvedSelected?.lat ?? null
+  const selectedLng = resolvedSelected?.lng ?? null
+
   useEffect(() => {
-    if (hasSelectedCoords) {
-      map.setView([resolvedSelected!.lat as number, resolvedSelected!.lng as number], ORIGIN_ZOOM)
+    if (selectedLat != null && selectedLng != null) {
+      map.setView([selectedLat, selectedLng], ORIGIN_ZOOM)
     }
-  }, [selectedLocker, lockers])
+  }, [resolvedSelected?.id, selectedLat, selectedLng])
 
   // The geocoded address is fetched separately from the locker list (it can
   // arrive later, since it's a slower external lookup) — re-center on it the

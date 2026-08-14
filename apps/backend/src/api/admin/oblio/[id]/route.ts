@@ -100,10 +100,26 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const { id } = req.params
 
-  const result = await runCreateOblioInvoice(req.scope, id)
+  try {
+    const result = await runCreateOblioInvoice(req.scope, id)
 
-  return res.json({
-    invoice_series: result.series,
-    invoice_number: result.number,
-  })
+    return res.json({
+      invoice_series: result.series,
+      invoice_number: result.number,
+    })
+  } catch (error) {
+    // Invoice creation is serialised per order. If another run (the order.placed
+    // subscriber, or an impatient second click) still holds the lock when the
+    // wait budget runs out, say so plainly — a bare 500 reads as "invoicing is
+    // broken" when the right action is simply to reload and check.
+    const message = String((error as Error)?.message ?? error)
+    if (/lock/i.test(message)) {
+      return res.status(409).json({
+        message:
+          "Se generează deja o factură pentru această comandă. " +
+          "Reîncarcă pagina în câteva momente.",
+      })
+    }
+    throw error
+  }
 }

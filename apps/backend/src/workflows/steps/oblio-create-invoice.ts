@@ -29,6 +29,8 @@ export const oblioCreateInvoiceStep = createStep(
         "email",
         "currency_code",
         "shipping_total",
+        "total",
+        "discount_total",
         "metadata",
         "customer.first_name",
         "customer.last_name",
@@ -44,6 +46,9 @@ export const oblioCreateInvoiceStep = createStep(
         "items.title",
         "items.quantity",
         "items.unit_price",
+        "items.total",
+        "items.subtotal",
+        "items.discount_total",
       ],
       filters: { id: order_id },
     })
@@ -78,10 +83,34 @@ export const oblioCreateInvoiceStep = createStep(
       `${(billing as any).first_name ?? order.customer?.first_name ?? ""} ${(billing as any).last_name ?? order.customer?.last_name ?? ""}`.trim() ||
       order.email
 
+    // Unit price AFTER any promotion applied to the line.
+    //
+    // `unit_price` is the pre-discount price, so invoicing it directly billed
+    // the customer more than they actually paid whenever a promotion was
+    // active — a real problem on a fiscal document. `item.total` is the final
+    // amount for the line (tax inclusive, matching `vatIncluded: true` below),
+    // so dividing it by the quantity gives the effective unit price.
+    //
+    // The discount is folded into the unit price rather than sent as a separate
+    // Oblio discount line: that keeps the invoice total equal to the order
+    // total by construction. Itemising it instead would mean relying on Oblio's
+    // discount-line semantics, which are not verifiable from here.
+    const effectiveUnitPrice = (item: any): number => {
+      const quantity = Number(item.quantity ?? 1) || 1
+
+      const lineTotal = Number(item.total)
+      if (Number.isFinite(lineTotal)) return lineTotal / quantity
+
+      // Fallback if `total` isn't populated: subtract the line's discount.
+      const unitPrice = Number(item.unit_price ?? 0)
+      const discountTotal = Number(item.discount_total ?? 0)
+      return unitPrice - (Number.isFinite(discountTotal) ? discountTotal : 0) / quantity
+    }
+
     const products = (order.items ?? []).map((item: any) => ({
       name: item.title,
       code: item.id,
-      price: Number(item.unit_price ?? 0),
+      price: effectiveUnitPrice(item),
       measuringUnit: "buc",
       currency,
       vatName: "Normala",
@@ -109,6 +138,27 @@ export const oblioCreateInvoiceStep = createStep(
         isDiscount: false,
         saveToDb: false,
       })
+    }
+
+    // An invoice that disagrees with what was charged is a fiscal problem that
+    // can only be undone with a storno, so check the arithmetic before sending
+    // rather than discovering it from a customer complaint. Rounding to two
+    // decimals per unit can legitimately drift a bani or two on quantities that
+    // don't divide evenly, hence the tolerance.
+    const invoiceTotal = products.reduce(
+      (sum, product) => sum + product.price * Number(product.quantity ?? 1),
+      0
+    )
+    const orderTotal = Number((order as any).total ?? 0)
+    if (Number.isFinite(orderTotal) && orderTotal > 0) {
+      const drift = Math.abs(invoiceTotal - orderTotal)
+      if (drift > 0.05) {
+        logger.warn(
+          `Oblio: totalul facturii (${invoiceTotal.toFixed(2)} ${currency}) diferă de ` +
+          `totalul comenzii ${order_id} (${orderTotal.toFixed(2)} ${currency}). ` +
+          `Verifică reducerile și transportul înainte de a trimite factura clientului.`
+        )
+      }
     }
 
     const response = await fetch("https://www.oblio.eu/business/api/docs", {

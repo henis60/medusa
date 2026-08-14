@@ -68,10 +68,15 @@ export const unsubscribeFromNewsletter = async (): Promise<{
   }
 }
 
-const resolveError = (error: unknown): string => {
+// The SDK's FetchError carries `.status` and folds the response body into
+// `.message`. These routes answer with `{ error }` rather than `{ message }`,
+// so the backend's own text doesn't survive the SDK — the caller falls back to
+// its own translated string when this returns undefined, which keeps the
+// message in the user's locale instead of hardcoding Romanian here.
+const resolveError = (error: unknown): string | undefined => {
   const status = (error as { status?: number })?.status
   if (status === 429) {
     return "Prea multe încercări. Te rugăm să revii peste câteva minute."
   }
-  return "Eroare necunoscută"
+  return undefined
 }
