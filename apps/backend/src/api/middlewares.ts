@@ -6,7 +6,7 @@ import {
 } from "@medusajs/framework/http";
 import { timingSafeEqual } from "crypto";
 import multer from "multer";
-import { rateLimit } from "express-rate-limit";
+import { ipKeyGenerator, rateLimit } from "express-rate-limit";
 import { RedisStore } from "rate-limit-redis";
 import Redis from "ioredis";
 
@@ -189,8 +189,10 @@ const authLimiter = rateLimit({
   handler: rateLimited("Prea multe încercări. Te rugăm să revii peste câteva minute."),
 });
 
-// Admin-gated but Anthropic-metered: caps spend/abuse per admin session
-// rather than guarding against anonymous traffic.
+// Admin-gated but Anthropic-metered: caps spend/abuse per admin USER rather
+// than guarding against anonymous traffic. Keyed on the authenticated actor id,
+// not the IP — several admins in one office (or behind one VPN egress) share a
+// single IP and would otherwise share one 20/hour budget between them.
 const aiGenerateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: 20,
@@ -198,7 +200,96 @@ const aiGenerateLimiter = rateLimit({
   legacyHeaders: false,
   passOnStoreError: true,
   store: redisStore("rl:ai:"),
+  // Falls back to IP only if auth_context is somehow missing (the route is
+  // behind admin auth, so in practice it never is). ipKeyGenerator normalises
+  // IPv6 to its /56 subnet — express-rate-limit rejects a raw req.ip key.
+  keyGenerator: (req) => {
+    const actorId = (req as unknown as {
+      auth_context?: { actor_id?: string }
+    }).auth_context?.actor_id
+    return actorId ? `user:${actorId}` : `ip:${ipKeyGenerator(req.ip ?? "")}`
+  },
   handler: rateLimited("Prea multe cereri către AI. Te rugăm să revii peste câteva minute."),
+});
+
+// /store/netopia/session-cart is polled by the return page while a payment
+// settles (every 2.5s, up to 20 times — see the storefront's return-client.tsx).
+// It cannot require auth: a guest comes back from Netopia with no session.
+//
+// Keyed on the payment session id, NOT the IP. The poll is a server action
+// (lib/data/cart.ts → completeNetopiaBySession), so every customer's polling
+// arrives from the storefront server's single IP — exactly the trap documented
+// on newsletterLimiter above; a per-IP budget would be consumed by whoever
+// checked out first and would leave everyone else unable to complete an order.
+// A session id belongs to one checkout, so it is the natural per-customer key.
+//
+// 60 = three full 20-poll runs for the same session (reloads, back button),
+// well above one legitimate return flow but far below anything worth using to
+// enumerate sessions.
+const netopiaSessionCartLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  passOnStoreError: true,
+  store: redisStore("rl:netopia-session:"),
+  keyGenerator: (req) => {
+    const sessionId = req.query?.session_id;
+    return typeof sessionId === "string" && sessionId
+      ? `session:${sessionId}`
+      : `ip:${ipKeyGenerator(req.ip ?? "")}`;
+  },
+  handler: rateLimited("Prea multe cereri. Te rugăm să reîncarci pagina peste câteva momente."),
+});
+
+// The Netopia IPN webhook is unauthenticated (signature verification can't be
+// fully enforced yet) and each call triggers a workflow run plus an outbound
+// status call to Netopia — so it needs a ceiling. But throttling it wrongly
+// means an order silently never completes, which is worse than the abuse it
+// prevents. Two consequences:
+//
+//  - NOT keyed by IP. Every IPN in existence arrives from Netopia's own small
+//    set of IPs, so a per-IP limit would put all customers in one bucket and a
+//    busy hour (or a retry storm after an outage) would drop real payments.
+//    Keyed on the orderID in the body instead: one order's notifications are
+//    the only thing that can exhaust one order's budget.
+//  - Deliberately generous. Netopia retries an unacknowledged IPN, and a single
+//    order legitimately produces a handful of notifications (authorized →
+//    confirmed, plus retries). 30 per 15 minutes for ONE order is far more than
+//    any real payment needs, while still capping forced workflow runs.
+//
+// Requests without a parseable orderID fall back to the IP bucket: those can't
+// correspond to a real notification, so bucketing them together is the point.
+const netopiaIpnLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  passOnStoreError: true,
+  store: redisStore("rl:netopia-ipn:"),
+  keyGenerator: (req) => {
+    // The IPN is sent as text/plain and parsed by the route itself, so the body
+    // here may still be a raw string — try both shapes rather than assuming.
+    const body = (req as unknown as { body?: unknown }).body;
+    let orderId: unknown;
+    if (body && typeof body === "object") {
+      orderId = (body as any).order?.orderID ?? (body as any).orderID;
+    } else if (typeof body === "string") {
+      try {
+        const parsed = JSON.parse(body);
+        orderId = parsed?.order?.orderID ?? parsed?.orderID;
+      } catch {
+        // Unparseable body — falls through to the IP bucket below.
+      }
+    }
+    return typeof orderId === "string" && orderId
+      ? `order:${orderId}`
+      : `ip:${ipKeyGenerator(req.ip ?? "")}`;
+  },
+  // Netopia only treats a 200 as an acknowledgement; anything else is retried.
+  // A 429 is therefore the correct signal here — it tells Netopia to come back
+  // later rather than dropping the notification.
+  handler: rateLimited("Prea multe notificări. Reîncearcă mai târziu."),
 });
 
 export default defineMiddlewares({
@@ -206,22 +297,31 @@ export default defineMiddlewares({
     {
       // Netopia IPN: preserve raw body for JSON parsing (sent as text/plain)
       matcher: "/hooks/netopia",
-      method: ["POST"],
+      methods: ["POST"],
       bodyParser: { preserveRawBody: true },
+      // Same single-entry-per-matcher rule as /store/newsletter below: the
+      // limiter goes here rather than in a second entry, so the bodyParser
+      // config isn't split away from it.
+      middlewares: [netopiaIpnLimiter],
+    },
+    {
+      matcher: "/store/netopia/session-cart",
+      methods: ["GET"],
+      middlewares: [netopiaSessionCartLimiter],
     },
     {
       matcher: "/store/orders/:id/invoice",
-      method: ["GET"],
+      methods: ["GET"],
       middlewares: [authenticate("customer", ["session", "bearer"])],
     },
     {
       matcher: "/admin/media-library",
-      method: ["POST"],
+      methods: ["POST"],
       middlewares: [mediaUploadWithLimits],
     },
     {
       matcher: "/store/contact",
-      method: ["POST"],
+      methods: ["POST"],
       middlewares: [publicFormLimiter],
     },
     {
@@ -254,27 +354,27 @@ export default defineMiddlewares({
     // would.
     {
       matcher: "/auth/customer/emailpass",
-      method: ["POST"],
+      methods: ["POST"],
       middlewares: [authLimiter],
     },
     {
       matcher: "/auth/customer/emailpass/register",
-      method: ["POST"],
+      methods: ["POST"],
       middlewares: [authLimiter],
     },
     {
       matcher: "/auth/customer/emailpass/reset-password",
-      method: ["POST"],
+      methods: ["POST"],
       middlewares: [authLimiter],
     },
     {
       matcher: "/auth/customer/emailpass/update",
-      method: ["POST"],
+      methods: ["POST"],
       middlewares: [authLimiter],
     },
     {
       matcher: "/admin/ai/generate-product",
-      method: ["POST"],
+      methods: ["POST"],
       middlewares: [aiGenerateLimiter],
     },
     // Matched individually rather than with "/store/eawb/*" — see the note on

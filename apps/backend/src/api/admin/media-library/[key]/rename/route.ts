@@ -1,6 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { MedusaError } from "@medusajs/framework/utils"
 import renameMediaAssetWorkflow from "../../../../../workflows/rename-media-asset"
+import { assertDeletableMediaKey } from "../../../../../modules/media-library/lib/keys"
 
 function decodeKey(encoded: string): string {
   return Buffer.from(encoded, "base64url").toString("utf-8")
@@ -15,7 +16,10 @@ type RenameBody = {
 }
 
 export async function POST(req: MedusaRequest<RenameBody>, res: MedusaResponse) {
-  const oldKey = decodeKey(req.params.key)
+  // A rename is a copy + delete of the source (see renameR2Object), so it is
+  // destructive and gets the same namespace guard as a permanent delete —
+  // otherwise an arbitrary key could be moved out from under the core.
+  const oldKey = assertDeletableMediaKey(decodeKey(req.params.key))
   const { filename } = req.body as RenameBody
 
   const sanitized = sanitizeSegment(filename ?? "")

@@ -1,6 +1,7 @@
 import {
   AbstractPaymentProvider,
   MedusaError,
+  Modules,
 } from "@medusajs/framework/utils";
 import {
   AuthorizePaymentInput,
@@ -42,6 +43,7 @@ import { NetopiaStatus } from "./lib/status";
 
 type InjectedDependencies = {
   logger: Logger;
+  [key: string]: unknown;
 };
 
 // PaymentSessionStatus string literals
@@ -53,15 +55,28 @@ const PS = {
   canceled: "canceled" as const,
 };
 
-function mapStatus(code: number | undefined): (typeof PS)[keyof typeof PS] {
+// Why the extra "reason": pending is the right conservative status for both
+// "3DS still running" and "code we've never seen", but collapsing them loses
+// the signal that something is wrong. The status stays identical; only the
+// diagnostics differ.
+type StatusReason = "settled" | "rejected" | "pending_3ds" | "initiated" | "unknown";
+
+function classifyStatus(code: number | undefined): {
+  status: (typeof PS)[keyof typeof PS];
+  reason: StatusReason;
+} {
   switch (code) {
     case NetopiaStatus.CONFIRMED:
     case NetopiaStatus.PAID:
-      return PS.authorized;
+      return { status: PS.authorized, reason: "settled" };
     case NetopiaStatus.REJECTED:
-      return PS.error;
+      return { status: PS.error, reason: "rejected" };
+    case NetopiaStatus.PENDING_3DS:
+      return { status: PS.pending, reason: "pending_3ds" };
+    case NetopiaStatus.INITIATED:
+      return { status: PS.pending, reason: "initiated" };
     default:
-      return PS.pending;
+      return { status: PS.pending, reason: "unknown" };
   }
 }
 
@@ -87,12 +102,14 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
   private readonly client: NetopiaClient;
   private readonly options: NetopiaOptions;
   private readonly logger: Logger;
+  private readonly deps: InjectedDependencies;
 
   constructor(container: InjectedDependencies, options: NetopiaOptions) {
     super(container, options);
     this.options = options;
     this.client = new NetopiaClient(options);
     this.logger = container.logger;
+    this.deps = container;
   }
 
   static validateOptions(options: Record<string, unknown>): void {
@@ -221,16 +238,35 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
     const ntpID = getNtpID(data);
 
     if (!ntpID) {
+      this.logger.warn(
+        `Netopia getPaymentStatus: missing ntpID (orderID=${String(data.orderID ?? "?")}) — returning pending`,
+      );
       return { status: PS.pending, data };
     }
 
     try {
       const res = await this.client.getStatus(ntpID);
-      const status = mapStatus(res.payment?.status);
-      return { status, data: { ...data, status: res.payment?.status } };
+      const code = res.payment?.status;
+      const { status, reason } = classifyStatus(code);
+
+      if (reason === "unknown") {
+        this.logger.warn(
+          `Netopia getPaymentStatus: unknown status code ${String(code)} for ntpID=${ntpID} ` +
+            `(orderID=${String(data.orderID ?? "?")}) — treating as pending`,
+        );
+      }
+
+      return { status, data: { ...data, status: code, status_reason: reason } };
     } catch (err) {
-      this.logger.warn(`Netopia getStatus error: ${(err as Error).message}`);
-      return { status: PS.pending, data };
+      // Pending is still the correct conservative answer (a transport failure
+      // is not evidence the payment failed), but it must be alertable: without
+      // this, a gateway outage looks exactly like a slow customer.
+      this.logger.error(
+        `Netopia getPaymentStatus API failure — ntpID=${ntpID} ` +
+          `orderID=${String(data.orderID ?? "?")} err=${(err as Error).name}: ` +
+          `${(err as Error).message} — returning pending (status unknown)`,
+      );
+      return { status: PS.pending, data: { ...data, status_reason: "api_error" } };
     }
   }
 
@@ -349,16 +385,127 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
     const status = ipn?.payment?.status;
     const orderID = ipn?.order?.orderID ?? "";
     const amount = ipn?.payment?.amount ?? 0;
+    const currency = (
+      ipn?.payment?.currency ??
+      ipn?.order?.currency ??
+      ""
+    ).toUpperCase();
 
-    if (status === NetopiaStatus.CONFIRMED || status === NetopiaStatus.PAID) {
+    const { status: mapped, reason } = classifyStatus(status);
+
+    if (reason === "unknown") {
+      this.logger.warn(
+        `Netopia IPN: unknown payment status code ${String(status)} for orderID=${orderID} — ignored`,
+      );
+      return { action: "not_supported" };
+    }
+
+    if (reason === "pending_3ds" || reason === "initiated") {
+      // Deliberately still "not_supported" (no session transition), but now
+      // distinguishable from a malformed/unknown code in the logs.
+      this.logger.info(
+        `Netopia IPN: orderID=${orderID} still ${reason} (code ${String(status)}) — no action`,
+      );
+      return { action: "not_supported" };
+    }
+
+    if (mapped === PS.authorized) {
+      const check = await this.matchesSessionAmount(orderID, amount, currency);
+      if (!check.ok) {
+        // An IPN claiming success for a different amount/currency than the one
+        // we asked Netopia to charge must never authorize the session.
+        this.logger.error(
+          `Netopia IPN amount/currency mismatch for orderID=${orderID}: ` +
+            `IPN=${amount} ${currency || "?"} vs session=${check.expectedAmount ?? "?"} ` +
+            `${check.expectedCurrency ?? "?"} — refusing to authorize`,
+        );
+        return { action: "not_supported" };
+      }
       return { action: "authorized", data: { session_id: orderID, amount } };
     }
 
-    if (status === NetopiaStatus.REJECTED) {
+    if (mapped === PS.error) {
       return { action: "failed", data: { session_id: orderID, amount } };
     }
 
     return { action: "not_supported" };
+  }
+
+  /**
+   * Compares the IPN's amount/currency against the values stored on the payment
+   * session at initiatePayment time (data.amountRON / data.currency).
+   *
+   * If the payment module cannot be resolved from the provider container we
+   * cannot compare, so we log and allow — the session is still independently
+   * re-verified server-to-server by authorizePaymentSessionStep -> getPaymentStatus.
+   */
+  private async matchesSessionAmount(
+    sessionId: string,
+    ipnAmount: number,
+    ipnCurrency: string,
+  ): Promise<{
+    ok: boolean;
+    expectedAmount?: number;
+    expectedCurrency?: string;
+  }> {
+    if (!sessionId) return { ok: false };
+
+    // Resolution is attempted separately from the query: an Awilix cradle throws
+    // on unregistered names, and "cannot look it up" must not become "reject the
+    // payment" — only a failed lookup of an existing session does.
+    let paymentModule:
+      | { retrievePaymentSession?: (id: string) => Promise<any> }
+      | undefined;
+    try {
+      // Registration name differs by Medusa version/loading path; probe both.
+      paymentModule =
+        (this.deps["paymentModuleService"] as typeof paymentModule) ??
+        (this.deps[Modules.PAYMENT] as typeof paymentModule);
+    } catch {
+      paymentModule = undefined;
+    }
+
+    if (!paymentModule?.retrievePaymentSession) {
+      this.logger.warn(
+        "Netopia IPN: payment module unavailable in provider container — " +
+          "amount/currency cross-check skipped (status still re-verified via getPaymentStatus)",
+      );
+      return { ok: true };
+    }
+
+    let session: any;
+    try {
+      session = await paymentModule.retrievePaymentSession(sessionId);
+    } catch (err) {
+      this.logger.warn(
+        `Netopia IPN: could not load payment session ${sessionId} for amount check ` +
+          `(${(err as Error).message}) — refusing to authorize on unverifiable data`,
+      );
+      return { ok: false };
+    }
+
+    const stored = (session?.data ?? {}) as Record<string, unknown>;
+    const expectedAmount =
+      stored.amountRON !== undefined ? toNumber(stored.amountRON) : undefined;
+    const expectedCurrency = (stored.currency as string | undefined)?.toUpperCase();
+
+    if (expectedAmount === undefined || Number.isNaN(expectedAmount)) {
+      this.logger.warn(
+        `Netopia IPN: session ${sessionId} has no stored amountRON — amount check skipped`,
+      );
+      return { ok: true, expectedCurrency };
+    }
+
+    // Netopia reports RON with 2 decimals; tolerate float representation only.
+    const amountOk = Math.abs(expectedAmount - ipnAmount) < 0.01;
+    const currencyOk =
+      !ipnCurrency || !expectedCurrency || ipnCurrency === expectedCurrency;
+
+    return {
+      ok: amountOk && currencyOk,
+      expectedAmount,
+      expectedCurrency,
+    };
   }
 
   // `ctx` (PaymentProviderContext) nu conține billing_address în Medusa —

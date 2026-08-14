@@ -11,20 +11,47 @@ export default async function sendOrderConfirmationEmail({
 
   // Auto-capture plată la plasarea comenzii
   if (eventName === "order.placed") {
-    try {
-      const query = container.resolve("query")
-      const { data: orders } = await query.graph({
-        entity: "order",
-        fields: ["payment_collections.id", "payment_collections.payments.id"],
-        filters: { id: data.id },
-      })
-      const payments = orders?.[0]?.payment_collections?.flatMap((pc: any) => pc.payments ?? []) ?? []
-      for (const payment of payments) {
+    const query = container.resolve("query")
+    const { data: orders } = await query.graph({
+      entity: "order",
+      fields: [
+        "payment_collections.id",
+        "payment_collections.payments.id",
+        "payment_collections.payments.captured_at",
+        "payment_collections.payments.canceled_at",
+      ],
+      filters: { id: data.id },
+    })
+    const payments = orders?.[0]?.payment_collections?.flatMap((pc: any) => pc.payments ?? []) ?? []
+
+    for (const payment of payments) {
+      // `order.placed` can be redelivered (event-bus retry, replay), and a
+      // second capture on an already-captured payment is an error rather than
+      // a no-op — skip anything already captured or canceled.
+      if (payment.captured_at) {
+        logger.info(`Plată ${payment.id} deja capturată, se omite (comanda ${data.id})`)
+        continue
+      }
+      if (payment.canceled_at) {
+        logger.warn(`Plată ${payment.id} anulată, nu se capturează (comanda ${data.id})`)
+        continue
+      }
+
+      try {
         await capturePaymentWorkflow(container).run({ input: { payment_id: payment.id } })
         logger.info(`Plată ${payment.id} capturată automat pentru comanda ${data.id}`)
+      } catch (err) {
+        // Deliberately rethrown: money not captured is worse than a delayed
+        // confirmation email, and this runs *before* the email is sent, so a
+        // event-bus retry re-runs cleanly (the guard above makes the capture
+        // idempotent) without any risk of a duplicate email. A permanently
+        // failing capture surfaces as a failed job that needs a human.
+        logger.error(
+          `CAPTURE FAILED: plata ${payment.id} pentru comanda ${data.id} nu a putut fi capturată — ` +
+          String((err as Error)?.message ?? err)
+        )
+        throw err
       }
-    } catch (err) {
-      logger.error(`Auto-capture eșuat pentru comanda ${data.id}: ${(err as Error).message}`)
     }
   }
 
@@ -108,8 +135,11 @@ export default async function sendOrderConfirmationEmail({
       },
     });
 
-    logger.info(`Email confirmare trimis la ${order.email}`);
+    logger.info(`Email confirmare trimis pentru comanda ${order.id}`);
   } catch (error) {
+    // Not rethrown on purpose: `createNotifications` can fail after the
+    // provider already accepted the message, so retrying would risk sending a
+    // second confirmation (with a second invoice attachment) to the customer.
     logger.error(
       `Eroare la trimiterea emailului de confirmare pentru ${data.id}: ${String((error as Error)?.message ?? error)}`,
     );

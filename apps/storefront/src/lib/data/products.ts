@@ -169,7 +169,7 @@ export const listProductsWithSort = async ({
   }
 
   const {
-    response: { products, count },
+    response: { products },
   } = await listProducts({
     pageParam: 0,
     queryParams: {
@@ -182,11 +182,16 @@ export const listProductsWithSort = async ({
 
   const sortedProducts = sortProducts(products, sortBy)
 
-  const pageParam = (page - 1) * limit
+  const _page = Math.max(page, 1)
+  const offset = (_page - 1) * limit
+  const paginatedProducts = sortedProducts.slice(offset, offset + limit)
 
-  const nextPage = count > pageParam + limit ? pageParam + limit : null
-
-  const paginatedProducts = sortedProducts.slice(pageParam, pageParam + limit)
+  // Report the size of the set we actually sorted, NOT the API's total: only
+  // the first 100 products are fetched for price sorts, so an API count of
+  // e.g. 240 made pagination advertise pages that slice() can never fill,
+  // rendering empty grids past the first few pages.
+  const count = sortedProducts.length
+  const nextPage = count > offset + limit ? _page + 1 : null
 
   return {
     response: {
@@ -215,12 +220,23 @@ export const getProductByHandle = async (
         handle,
         region_id: regionId,
         fields:
-          "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags,*categories",
+          // *variants.options / *options must match listProducts — without
+          // them the first render can't map a selection back to a variant,
+          // so the picker always resolves to variants[0].
+          "*variants.calculated_price,+variants.inventory_quantity,*variants.images,*variants.options,*options,*options.values,+metadata,+tags,*categories",
       },
       next: { tags: ["products"], revalidate: 3600 },
       cache: "force-cache",
     })
-    .then(({ products }) => products[0] ?? undefined)
+    .then(({ products }) => {
+      const product = products[0]
+      // Mirrors listProducts' filter: a draft must not be reachable (or
+      // prerendered) on the public PDP. Unpublished previews go through the
+      // backend's token-gated /store/preview/products route, not this one,
+      // so the preview flow is unaffected.
+      if (!product || (product as any).status === "draft") return undefined
+      return product
+    })
 }
 
 /**

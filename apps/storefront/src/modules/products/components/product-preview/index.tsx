@@ -1,6 +1,7 @@
 import { getProductPrice } from "@lib/util/get-product-price"
 import { getProductColors } from "@lib/util/product-colors"
 import { HttpTypes } from "@medusajs/types"
+import { useTranslations } from "next-intl"
 import PreviewPrice from "./price"
 import CardWrapper from "./card-wrapper"
 import ProductCardLink from "./product-card-link"
@@ -39,7 +40,28 @@ export default function ProductPreview({
   region: HttpTypes.StoreRegion
   forceDark?: boolean
 }) {
+  const t = useTranslations("products")
   const { cheapestPrice } = getProductPrice({ product })
+
+  // inventory_quantity is already fetched for every listed variant — surface
+  // it, so a sold-out product is obvious from the grid instead of only after
+  // opening the PDP.
+  const outOfStock =
+    (product.variants?.length ?? 0) > 0 &&
+    !product.variants!.some((v) => {
+      if (!v.manage_inventory) return true
+      if (v.allow_backorder) return true
+      return (v.inventory_quantity || 0) > 0
+    })
+
+  const StockOrPrice = () =>
+    outOfStock ? (
+      <span className="font-sans text-[10px] uppercase tracking-[2px] text-[var(--theme-text-muted)] whitespace-nowrap">
+        {t("Stoc epuizat")}
+      </span>
+    ) : cheapestPrice ? (
+      <PreviewPrice price={cheapestPrice} />
+    ) : null
 
   return (
     <ProductCardLink
@@ -77,7 +99,7 @@ export default function ProductPreview({
         </p>
         <div className="flex items-center justify-between gap-2 [&_*]:!text-[10px]">
           <ColorSwatches product={product} />
-          {cheapestPrice && <PreviewPrice price={cheapestPrice} />}
+          <StockOrPrice />
         </div>
       </div>
 
@@ -95,7 +117,7 @@ export default function ProductPreview({
         </p>
         <div className="flex items-center justify-between gap-2">
           <ColorSwatches product={product} />
-          {cheapestPrice && <PreviewPrice price={cheapestPrice} />}
+          <StockOrPrice />
         </div>
       </div>
     </ProductCardLink>

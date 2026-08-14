@@ -8,6 +8,33 @@ type Input = {
   number: string
 }
 
+/**
+ * Plain-function download shared with the admin/store PDF routes, which run
+ * outside a workflow and would otherwise duplicate the URL construction.
+ */
+export async function downloadOblioPdf(
+  token: string,
+  series: string,
+  number: string
+): Promise<Buffer> {
+  const cui = process.env.OBLIO_CUI ?? ""
+  const url = new URL("https://www.oblio.eu/business/api/docs/download")
+  url.searchParams.set("cif", cui)
+  url.searchParams.set("type", "pdf")
+  url.searchParams.set("seriesName", series)
+  url.searchParams.set("number", number)
+
+  const response = await fetch(url.toString(), {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  if (!response.ok) {
+    throw new Error(`Oblio download PDF eșuat: ${response.status}`)
+  }
+
+  return Buffer.from(await response.arrayBuffer())
+}
+
 export const oblioDownloadPdfStep = createStep(
   "oblio-download-pdf",
   async ({ order_id, token, series, number }: Input, { container }) => {
@@ -47,22 +74,7 @@ export const oblioDownloadPdfStep = createStep(
       return new StepResponse(pdfBuffer.toString("base64"))
     }
 
-    const cui = process.env.OBLIO_CUI ?? ""
-    const url = new URL("https://www.oblio.eu/business/api/docs/download")
-    url.searchParams.set("cif", cui)
-    url.searchParams.set("type", "pdf")
-    url.searchParams.set("seriesName", series)
-    url.searchParams.set("number", number)
-
-    const response = await fetch(url.toString(), {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-
-    if (!response.ok) {
-      throw new Error(`Oblio download PDF eșuat: ${response.status}`)
-    }
-
-    const buffer = await response.arrayBuffer()
-    return new StepResponse(Buffer.from(buffer).toString("base64"))
+    const buffer = await downloadOblioPdf(token, series, number)
+    return new StepResponse(buffer.toString("base64"))
   }
 )

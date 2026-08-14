@@ -2,6 +2,8 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 import { generateTestInvoicePdf } from "../../../../lib/generate-test-invoice-pdf"
 import { runCreateOblioInvoice } from "../../../../workflows/create-oblio-invoice"
+import { fetchOblioToken } from "../../../../workflows/steps/oblio-get-token"
+import { downloadOblioPdf } from "../../../../workflows/steps/oblio-download-pdf"
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const { id } = req.params
@@ -44,43 +46,17 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     const pdfBuffer = await generateTestInvoicePdf(order, invoiceSeries, invoiceNumber)
     pdfBase64 = pdfBuffer.toString("base64")
   } else {
-    const tokenRes = await fetch("https://www.oblio.eu/business/api/authorize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        client_id: process.env.OBLIO_CLIENT_ID,
-        client_secret: process.env.OBLIO_CLIENT_SECRET,
-        grant_type: "client_credentials",
-      }),
-    })
-
-    if (!tokenRes.ok) {
+    // Same token exchange + download the invoice workflow uses, shared rather
+    // than re-implemented so credential handling stays in one place.
+    try {
+      const token = await fetchOblioToken()
+      pdfBase64 = (await downloadOblioPdf(token, invoiceSeries, invoiceNumber)).toString("base64")
+    } catch (error) {
       throw new MedusaError(
         MedusaError.Types.UNEXPECTED_STATE,
-        "Eroare la autentificarea cu Oblio"
+        `Eroare la descărcarea facturii din Oblio: ${String((error as Error)?.message ?? error)}`
       )
     }
-
-    const { access_token } = await tokenRes.json()
-    const cui = process.env.OBLIO_CUI ?? ""
-    const url = new URL("https://www.oblio.eu/business/api/docs/download")
-    url.searchParams.set("cif", cui)
-    url.searchParams.set("type", "pdf")
-    url.searchParams.set("seriesName", invoiceSeries)
-    url.searchParams.set("number", invoiceNumber)
-
-    const pdfRes = await fetch(url.toString(), {
-      headers: { Authorization: `Bearer ${access_token}` },
-    })
-
-    if (!pdfRes.ok) {
-      throw new MedusaError(
-        MedusaError.Types.UNEXPECTED_STATE,
-        "Eroare la descărcarea PDF-ului din Oblio"
-      )
-    }
-
-    pdfBase64 = Buffer.from(await pdfRes.arrayBuffer()).toString("base64")
   }
 
   return res.json({

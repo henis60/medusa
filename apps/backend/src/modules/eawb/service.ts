@@ -13,6 +13,7 @@ import {
 import { EuroparcelClient } from "./lib/client"
 import { EawbOptions, EpPriceAddress, EpPriceContent } from "./lib/types"
 import { buildContent, roundShippingPrice, toEpAddress } from "./lib/pricing"
+import { EuroparcelApiError } from "./lib/errors"
 
 type InjectedDependencies = {
   logger: Logger
@@ -22,6 +23,20 @@ type InjectedDependencies = {
 // on every checkout price calculation.
 const FROM_ADDRESS_TTL_MS = 5 * 60 * 1000
 
+// Same bound for the billing address: it is edited in the Europarcel dashboard,
+// so an unbounded cache would keep invoicing to a deleted address until the
+// process restarts.
+const BILLING_ADDRESS_TTL_MS = 5 * 60 * 1000
+
+// Failures Europarcel reports for an order that is already gone / already
+// cancelled — cancellation must be idempotent so retrying an order cancel does
+// not blow up on the second pass.
+function isAlreadyCancelled(err: unknown): boolean {
+  if (!(err instanceof EuroparcelApiError)) return false
+  if (err.status === 404 || err.status === 410) return true
+  return /already\s+(cancel|anulat)|deja\s+anulat|not\s+found/i.test(err.detail)
+}
+
 export default class EawbFulfillmentProviderService extends AbstractFulfillmentProviderService {
   static identifier = "eawb"
 
@@ -29,6 +44,7 @@ export default class EawbFulfillmentProviderService extends AbstractFulfillmentP
   protected readonly options_: EawbOptions
   protected readonly client_: EuroparcelClient
   private billingAddressId_: number | null = null
+  private billingAddressIdAt_ = 0
   private fromAddressId_: number | null = null
   private fromAddressIdAt_ = 0
 
@@ -77,7 +93,11 @@ export default class EawbFulfillmentProviderService extends AbstractFulfillmentP
       const def = res.list?.find((a) => a.is_default) ?? res.list?.[0]
       if (def) id = def.id
     } catch (err) {
-      this.logger_.warn(`eAWB: could not fetch shipping addresses: ${(err as Error).message}`)
+      const summary =
+        err instanceof EuroparcelApiError
+          ? `${err.kind} (${err.status})`
+          : (err as Error).message
+      this.logger_.warn(`eAWB: could not fetch shipping addresses: ${summary}`)
     }
 
     if (id) {
@@ -96,7 +116,13 @@ export default class EawbFulfillmentProviderService extends AbstractFulfillmentP
   }
 
   private async getBillingAddressId(): Promise<number> {
-    if (this.billingAddressId_) return this.billingAddressId_
+    const now = Date.now()
+    if (
+      this.billingAddressId_ &&
+      now - this.billingAddressIdAt_ < BILLING_ADDRESS_TTL_MS
+    ) {
+      return this.billingAddressId_
+    }
 
     const res = await this.client_.getBillingAddresses({ all: true })
     if (!res.list?.length) {
@@ -106,6 +132,7 @@ export default class EawbFulfillmentProviderService extends AbstractFulfillmentP
       )
     }
     this.billingAddressId_ = res.list[0].id
+    this.billingAddressIdAt_ = now
     return this.billingAddressId_!
   }
 
@@ -203,7 +230,14 @@ export default class EawbFulfillmentProviderService extends AbstractFulfillmentP
         is_calculated_price_tax_inclusive: false,
       }
     } catch (err) {
-      this.logger_.warn(`eAWB calculatePrice failed: ${(err as Error).message}`)
+      // Pricing still degrades to 0 (checkout must not break), but log the kind
+      // and status only — Europarcel echoes the submitted recipient address back
+      // in its error bodies, which we must not write to logs.
+      const summary =
+        err instanceof EuroparcelApiError
+          ? `${err.kind} (${err.status}) on ${err.method} ${err.path}`
+          : (err as Error).message
+      this.logger_.warn(`eAWB calculatePrice failed: ${summary}`)
       return { calculated_amount: 0, is_calculated_price_tax_inclusive: false }
     }
   }
@@ -272,13 +306,52 @@ export default class EawbFulfillmentProviderService extends AbstractFulfillmentP
       },
     }
 
-    const created = await this.client_.createOrder(orderRequest as Record<string, unknown>)
+    let created: Awaited<ReturnType<EuroparcelClient["createOrder"]>>
+    try {
+      created = await this.client_.createOrder(orderRequest as Record<string, unknown>)
+    } catch (err) {
+      // Nothing was created (or we never learned an id), so there is no charge
+      // to strand — just make the cause actionable for the admin retrying.
+      if (err instanceof EuroparcelApiError) {
+        throw new MedusaError(
+          err.retryable ? MedusaError.Types.UNEXPECTED_STATE : MedusaError.Types.INVALID_DATA,
+          err.userMessage
+        )
+      }
+      throw err
+    }
 
     if (!created?.awb) {
-      throw new MedusaError(
-        MedusaError.Types.UNEXPECTED_STATE,
-        `eAWB: order created but no AWB returned by Europarcel (response: ${JSON.stringify(created)}).`
+      // The Europarcel order EXISTS and the wallet was already charged. Throwing
+      // here would roll the fulfillment back and lose the only reference to that
+      // charge, leaving an unrecoverable orphan. So we persist the created order
+      // id as a normal fulfillment instead and flag it: the AWB can be pulled
+      // later via order-status, or the order cancelled (refunding the wallet)
+      // through the same europarcel_id.
+      this.logger_.error(
+        `eAWB: Europarcel order ${created?.id ?? "unknown"} created without an AWB ` +
+          `(order ${order?.id ?? "unknown"}) — persisting id so the charge stays recoverable.`
       )
+
+      if (!created?.id) {
+        // No id came back either; nothing is recoverable, so fail loudly.
+        throw new MedusaError(
+          MedusaError.Types.UNEXPECTED_STATE,
+          "eAWB: Europarcel a răspuns fără id de comandă și fără AWB. Verifică manual contul Europarcel înainte de a reîncerca."
+        )
+      }
+
+      return {
+        data: {
+          europarcel_id: created.id,
+          awb: "",
+          awb_missing: true,
+          carrier_name: created.carrier_name ?? "",
+          service_name: created.service_name ?? "",
+          track_url: created.track_url ?? "",
+        },
+        labels: [],
+      }
     }
 
     return {
@@ -300,8 +373,39 @@ export default class EawbFulfillmentProviderService extends AbstractFulfillmentP
   }
 
   async cancelFulfillment(data: Record<string, unknown>): Promise<void> {
-    if (data.dry_run || !data.europarcel_id) return
-    await this.client_.cancelOrder(data.europarcel_id as number, "wallet")
+    if (data.dry_run) {
+      this.logger_.warn("eAWB: DRY_RUN — skipping real AWB cancellation.")
+      return
+    }
+
+    const europarcelId = Number(data.europarcel_id)
+    if (!europarcelId || Number.isNaN(europarcelId)) {
+      // Fulfillment never reached Europarcel — nothing to cancel there.
+      return
+    }
+
+    try {
+      await this.client_.cancelOrder(europarcelId, "wallet")
+      this.logger_.info(`eAWB: cancelled Europarcel order ${europarcelId}.`)
+    } catch (err) {
+      // Idempotent: an order Europarcel no longer knows about is already in the
+      // state we want, so a repeated cancel must not block the Medusa cancel.
+      if (isAlreadyCancelled(err)) {
+        this.logger_.info(
+          `eAWB: Europarcel order ${europarcelId} already cancelled/unknown — treating as cancelled.`
+        )
+        return
+      }
+      if (err instanceof EuroparcelApiError) {
+        // Surfaced with the kind so an admin can tell "retry" from "call them" —
+        // the parcel may still be picked up until this succeeds.
+        this.logger_.error(
+          `eAWB: failed to cancel Europarcel order ${europarcelId} [${err.kind}/${err.status}]: ${err.detail}`
+        )
+        throw new MedusaError(MedusaError.Types.UNEXPECTED_STATE, err.userMessage)
+      }
+      throw err
+    }
   }
 
   async createReturnFulfillment(_fulfillment: Record<string, unknown>): Promise<CreateFulfillmentResult> {

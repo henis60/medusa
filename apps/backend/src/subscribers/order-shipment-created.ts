@@ -61,8 +61,10 @@ export default async function sendOrderShippedEmail({
       },
     });
 
-    logger.info(`Shipment email sent to ${order.email}`);
+    logger.info(`Shipment email sent for order ${order.id}`);
   } catch (error) {
+    // Not rethrown: a notification failure can happen after the provider
+    // accepted the message, so an event-bus retry risks a duplicate email.
     logger.error(
       `Failed to send shipment email for order ${data.order_id}: ${error.message}`,
     );

@@ -26,6 +26,11 @@ export async function POST(req: NextRequest) {
   revalidateTag("products")
   revalidateTag("collections")
   revalidateTag("categories")
+  // Regions and payment providers are cached for an hour too, and had no
+  // on-demand path at all — a currency, tax-inclusive or country change in
+  // admin was invisible to the storefront until the TTL lapsed.
+  revalidateTag("regions")
+  revalidateTag("payment_providers")
 
   return NextResponse.json({ ok: true, revalidated: true })
 }

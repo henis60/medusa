@@ -53,26 +53,30 @@ export const getRegionStatic = async (countryCode: string) => {
   return null
 }
 
-const regionMap = new Map<string, HttpTypes.StoreRegion>()
-
+/**
+ * Country -> region lookup.
+ *
+ * Deliberately holds no module-level cache: one used to live here and, being
+ * process-lifetime with no TTL and no revalidateTag hook, it pinned currency,
+ * tax-inclusive pricing and country lists to whatever the first request saw —
+ * an admin region change only landed on redeploy. listRegions() is already
+ * cached under the shared "regions" tag with a 1h TTL (getGlobalCacheOptions),
+ * so leaning on Next's cache gives both a bounded staleness window and an
+ * on-demand path via revalidateTag("regions") (see /api/revalidate).
+ */
 export const getRegion = async (countryCode: string) => {
-  if (regionMap.has(countryCode)) {
-    return regionMap.get(countryCode)
-  }
-
   const regions = await listRegions()
 
   if (!regions) {
     return null
   }
 
+  const regionMap = new Map<string, HttpTypes.StoreRegion>()
   regions.forEach((region) => {
     region.countries?.forEach((c) => {
       regionMap.set(c?.iso_2 ?? "", region)
     })
   })
 
-  const region = countryCode ? regionMap.get(countryCode) : regionMap.get("us")
-
-  return region
+  return countryCode ? regionMap.get(countryCode) : regionMap.get("us")
 }

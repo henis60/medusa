@@ -5,6 +5,8 @@ import {
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { MedusaError } from "@medusajs/framework/utils"
 import { generateTestInvoicePdf } from "../../../../../lib/generate-test-invoice-pdf"
+import { fetchOblioToken } from "../../../../../workflows/steps/oblio-get-token"
+import { downloadOblioPdf } from "../../../../../workflows/steps/oblio-download-pdf"
 
 export async function GET(
   req: AuthenticatedMedusaRequest,
@@ -54,45 +56,16 @@ export async function GET(
   if (process.env.OBLIO_DRY_RUN === "true") {
     pdfBuffer = await generateTestInvoicePdf(order, invoiceSeries, invoiceNumber)
   } else {
-    // Obține token Oblio
-    const tokenResponse = await fetch("https://www.oblio.eu/business/api/authorize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        client_id: process.env.OBLIO_CLIENT_ID,
-        client_secret: process.env.OBLIO_CLIENT_SECRET,
-        grant_type: "client_credentials",
-      }),
-    })
-
-    if (!tokenResponse.ok) {
+    // Shared with the invoice workflow so the Oblio call lives in one place.
+    try {
+      const token = await fetchOblioToken()
+      pdfBuffer = await downloadOblioPdf(token, invoiceSeries, invoiceNumber)
+    } catch (error) {
       throw new MedusaError(
         MedusaError.Types.UNEXPECTED_STATE,
-        "Eroare la autentificarea cu Oblio"
+        `Eroare la descărcarea facturii din Oblio: ${String((error as Error)?.message ?? error)}`
       )
     }
-
-    const { access_token } = await tokenResponse.json()
-    const cui = process.env.OBLIO_CUI ?? ""
-
-    const url = new URL("https://www.oblio.eu/business/api/docs/download")
-    url.searchParams.set("cif", cui)
-    url.searchParams.set("type", "pdf")
-    url.searchParams.set("seriesName", invoiceSeries)
-    url.searchParams.set("number", invoiceNumber)
-
-    const pdfResponse = await fetch(url.toString(), {
-      headers: { Authorization: `Bearer ${access_token}` },
-    })
-
-    if (!pdfResponse.ok) {
-      throw new MedusaError(
-        MedusaError.Types.UNEXPECTED_STATE,
-        "Eroare la descărcarea facturii din Oblio"
-      )
-    }
-
-    pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer())
   }
 
   const filename = `factura-${order.display_id ?? id}.pdf`

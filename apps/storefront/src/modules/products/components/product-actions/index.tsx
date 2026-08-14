@@ -42,6 +42,12 @@ const optionsAsKeymap = (
   )
 }
 
+const isVariantInStock = (v: HttpTypes.StoreProductVariant) => {
+  if (!v.manage_inventory) return true
+  if (v.allow_backorder) return true
+  return (v.inventory_quantity || 0) > 0
+}
+
 export default function ProductActions({
   product,
   disabled,
@@ -54,7 +60,12 @@ export default function ProductActions({
   const [options, setOptions] = useState<Record<string, string | undefined>>(
     () => {
       if (product.variants?.length) {
-        return optionsAsKeymap(product.variants[0].options) ?? {}
+        // Prefer the first purchasable variant — auto-selecting variants[0]
+        // when it happens to be sold out made a partly-available product
+        // load looking entirely unbuyable.
+        const initial =
+          product.variants.find(isVariantInStock) ?? product.variants[0]
+        return optionsAsKeymap(initial.options) ?? {}
       }
       return {}
     }
@@ -100,11 +111,7 @@ export default function ProductActions({
       return acc
     }, {} as Record<string, string>) ?? {}
 
-  const variantInStock = (v: HttpTypes.StoreProductVariant) => {
-    if (!v.manage_inventory) return true
-    if (v.allow_backorder) return true
-    return (v.inventory_quantity || 0) > 0
-  }
+  const variantInStock = isVariantInStock
 
   // update the options when a variant is selected
   const setOptionValue = (optionId: string, value: string) => {
@@ -209,7 +216,9 @@ export default function ProductActions({
     const others = Object.entries(options).filter(
       ([id, val]) => id !== optionId && !!val
     ) as [string, string][]
-    if (others.length === 0) return new Set()
+    // No `others` (single-option product) is not a reason to skip the stock
+    // check — with an empty list `every` is vacuously true, so every variant
+    // is considered and sold-out sizes still get marked unavailable.
     const available = new Set<string>()
     product.variants?.forEach((v) => {
       const map = variantMap(v)
@@ -296,32 +305,37 @@ export default function ProductActions({
     <>
       <div className="flex flex-col gap-y-2" ref={actionsRef}>
         <div>
-          {(product.variants?.length ?? 0) > 1 && (
-            <div className="flex flex-col gap-y-4">
-              {product.material && (
-                <div
-                  className="flex flex-col gap-y-3"
-                  data-testid="product-material"
-                >
-                  <span className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
-                    {t("Material")}
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {product.material.split(",").map((m) => {
-                      const value = m.trim()
-                      if (!value) return null
-                      return (
-                        <span
-                          key={value}
-                          className="inline-flex items-center justify-center h-8 px-3 bg-[var(--theme-surface)] font-serif text-sm text-[var(--theme-text)] cursor-default select-none"
-                        >
-                          {value}
-                        </span>
-                      )
-                    })}
-                  </div>
+          {/* Material is a property of the product, not of its variants —
+              keep it outside the multi-variant guard so single-variant
+              products don't silently lose the block. */}
+          <div className="flex flex-col gap-y-4">
+            {product.material && (
+              <div
+                className="flex flex-col gap-y-3"
+                data-testid="product-material"
+              >
+                <span className="font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)]">
+                  {t("Material")}
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {product.material.split(",").map((m) => {
+                    const value = m.trim()
+                    if (!value) return null
+                    return (
+                      <span
+                        key={value}
+                        className="inline-flex items-center justify-center h-8 px-3 bg-[var(--theme-surface)] font-serif text-sm text-[var(--theme-text)] cursor-default select-none"
+                      >
+                        {value}
+                      </span>
+                    )
+                  })}
                 </div>
-              )}
+              </div>
+            )}
+          </div>
+          {(product.variants?.length ?? 0) > 1 && (
+            <div className="flex flex-col gap-y-4 mt-4">
               {/* Options with only one value have nothing to actually
                   choose — don't render a picker row for them at all. */}
               {(product.options || [])
@@ -371,9 +385,12 @@ export default function ProductActions({
             >
               {productOutOfStock
                 ? t("Indisponibil")
-                : !selectedVariant && !options
-                ? t("Alege varianta")
-                : !inStock || !isValidVariant
+                : !selectedVariant || !isValidVariant
+                ? // Mirrors the mobile sheet: an unresolved selection is a
+                  // prompt to pick, not a sold-out product. (The old
+                  // `!options` test was dead — options is always an object.)
+                  t("Alege varianta")
+                : !inStock
                 ? t("Indisponibil")
                 : t("Adaugă în coș")}
             </Button>

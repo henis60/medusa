@@ -73,7 +73,9 @@ export const oblioCreateInvoiceStep = createStep(
     const cui = process.env.OBLIO_CUI
     const seriesName = process.env.OBLIO_INVOICE_SERIES ?? "FCT"
     const documentType = process.env.OBLIO_DOCUMENT_TYPE ?? "Factura"
-    const vatPercentage = parseInt(process.env.OBLIO_VAT_PERCENTAGE ?? "19", 10)
+    // Romania's standard VAT rate is 21% (the previous 19% default silently
+    // under-declared VAT on every invoice issued without the env var set).
+    const vatPercentage = parseInt(process.env.OBLIO_VAT_PERCENTAGE ?? "21", 10)
     const currency = (order.currency_code ?? "RON").toUpperCase()
     const today = new Date().toISOString().split("T")[0]
 

@@ -14,7 +14,10 @@ type VariantWithPrice = HttpTypes.StoreProductVariant & {
 }
 
 export const getPricesForVariant = (variant: VariantWithPrice) => {
-  if (!variant?.calculated_price?.calculated_amount) {
+  // Explicit null/undefined check, not a falsy one — a legitimately free
+  // item (amount 0) would otherwise be reported as "no price", leaving
+  // ProductPrice stuck on its loading skeleton forever.
+  if (variant?.calculated_price?.calculated_amount == null) {
     return null
   }
 

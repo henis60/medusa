@@ -4,6 +4,7 @@ import { getRegionStatic } from "@lib/data/regions"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import AnimatedGrid from "@modules/store/components/animated-grid"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import InfiniteProducts from "@modules/store/components/infinite-products"
 
 const PRODUCT_LIMIT = 6
@@ -131,12 +132,12 @@ export default async function PaginatedProducts({
             ? t("Nu există produse în această categorie momentan")
             : t("Combinația de filtre selectată nu returnează rezultate")}
         </p>
-        <a
+        <LocalizedClientLink
           href="/ready-to-wear"
           className="mt-2 px-8 py-3 font-sans text-[10px] uppercase tracking-[4px] border border-hunter-gold text-hunter-gold hover:bg-hunter-gold hover:text-hunter-dark transition-colors"
         >
           {isFixedContext ? t("Vezi toate produsele") : t("Resetează filtrele")}
-        </a>
+        </LocalizedClientLink>
       </div>
     )
   }

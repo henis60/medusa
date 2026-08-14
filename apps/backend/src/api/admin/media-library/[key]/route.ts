@@ -1,6 +1,10 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import upsertMediaAssetMetadataWorkflow from "../../../../workflows/upsert-media-asset-metadata"
 import deleteMediaAssetPermanentWorkflow from "../../../../workflows/delete-media-asset-permanent"
+import {
+  assertDeletableMediaKey,
+  assertValidMediaKey,
+} from "../../../../modules/media-library/lib/keys"
 
 // The key (an R2 object path, e.g. "products/foo.webp") arrives base64url
 // encoded since it contains slashes and can't be a plain route param.
@@ -14,7 +18,7 @@ type UpdateBody = {
 }
 
 export async function POST(req: MedusaRequest<UpdateBody>, res: MedusaResponse) {
-  const key = decodeKey(req.params.key)
+  const key = assertValidMediaKey(decodeKey(req.params.key))
   const { alt_text, tags } = req.body as UpdateBody
 
   const { result } = await upsertMediaAssetMetadataWorkflow(req.scope).run({
@@ -25,10 +29,14 @@ export async function POST(req: MedusaRequest<UpdateBody>, res: MedusaResponse) 
 }
 
 export async function DELETE(req: MedusaRequest, res: MedusaResponse) {
-  const key = decodeKey(req.params.key)
+  const key = assertValidMediaKey(decodeKey(req.params.key))
   const permanent = req.query.permanent === "true"
 
   if (permanent) {
+    // The key is caller-supplied, so without this the route would delete ANY
+    // object in the shared bucket — including core Medusa uploads.
+    assertDeletableMediaKey(key)
+
     await deleteMediaAssetPermanentWorkflow(req.scope).run({
       input: { key },
     })

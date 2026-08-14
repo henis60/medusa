@@ -82,6 +82,20 @@ const MobileActions: React.FC<MobileActionsProps> = ({
     return price.variantPrice || price.cheapestPrice || null
   }, [price])
 
+  const variantInStock = (v: HttpTypes.StoreProductVariant) => {
+    if (!v.manage_inventory) return true
+    if (v.allow_backorder) return true
+    return (v.inventory_quantity || 0) > 0
+  }
+
+  // Whole product unpurchasable — the sticky bar must not invite a tap into
+  // a sheet where nothing can be selected.
+  const productOutOfStock = useMemo(() => {
+    if (!product.variants?.length) return false
+    return !product.variants.some(variantInStock)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.variants])
+
   const isColorOpt = (optId: string) =>
     COLOR_TITLES.includes(
       product.options?.find((o) => o.id === optId)?.title?.toLowerCase() ?? ""
@@ -106,11 +120,17 @@ const MobileActions: React.FC<MobileActionsProps> = ({
     const others = Object.entries(options).filter(
       ([id, val]) => id !== optionId && !!val
     ) as [string, string][]
-    if (others.length === 0) return new Set()
+    // Same rule as the desktop picker: a value is only selectable if some
+    // matching variant is actually purchasable. Stock was ignored here, so
+    // the sheet happily offered sold-out sizes.
     const available = new Set<string>()
     product.variants?.forEach((v) => {
       const map = vmap(v)
-      if (others.every(([id, val]) => map[id] === val) && map[optionId])
+      if (
+        others.every(([id, val]) => map[id] === val) &&
+        map[optionId] &&
+        variantInStock(v)
+      )
         available.add(map[optionId])
     })
     return new Set(allValues.filter((v) => !available.has(v)))
@@ -153,13 +173,17 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                 onClick={() =>
                   hasPickableOptions ? setOpen(true) : handleAddToCart()
                 }
-                disabled={hasPickableOptions ? false : !inStock || isAdding}
+                disabled={
+                  isAdding ||
+                  productOutOfStock ||
+                  (!hasPickableOptions && !inStock)
+                }
                 variant="primary"
                 className="w-full h-12 rounded-none !bg-hunter-gold !text-hunter-dark !border-transparent hover:!bg-hunter-gold-b font-sans uppercase tracking-[3px] text-[11px] transition-colors"
               >
-                {!hasPickableOptions && isAdding
+                {isAdding
                   ? t("Se adaugă…")
-                  : !hasPickableOptions && !inStock
+                  : productOutOfStock || (!hasPickableOptions && !inStock)
                   ? t("Stoc epuizat")
                   : t("Adaugă în coș")}
               </Button>

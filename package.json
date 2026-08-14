@@ -22,15 +22,13 @@
     }
   },
   "devDependencies": {
-    "turbo": "^2.0.14",
-    "prettier": "^3.2.5"
+    "prettier": "^3.2.5",
+    "turbo": "^2.0.14"
   },
   "workspaces": [
     "apps/**",
     "!apps/backend/.medusa/**",
     "!apps/storefront/.next/**"
   ],
-  "overrides": {
-    "ajv": "^8.0.0"
-  }
+  "comment:overrides": "A blanket `ajv: ^8.0.0` override used to live here. It forced ajv 8 onto packages that require ajv 6 — eslint, @eslint/eslintrc, and schema-utils/ajv-keywords under babel-loader — which broke ESLint entirely ('Cannot set properties of undefined (setting defaultMeta)'), so `npm run lint` was a silent no-op. Scoped overrides don't help: npm's top-level rule wins over nested ones. Removed so npm resolves each consumer correctly (patched 6.12.6 for the ESLint chain, 8.x for ajv-formats/ajv-draft-04, which declare it themselves)."
 }

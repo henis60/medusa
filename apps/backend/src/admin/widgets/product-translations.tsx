@@ -14,7 +14,10 @@ import { sdk } from "../lib/client"
 // color/size option values and variant titles can be translated without
 // going through the AI product-generation flow (the only other place
 // that writes these rows, via /admin/translations/batch).
-const LOCALE = "en-GB"
+// Single non-default storefront locale. Configurable so a second market
+// doesn't require a code change; the fallback keeps existing installs (and
+// the AI product flow, which writes the same locale) working untouched.
+const LOCALE = import.meta.env.VITE_TRANSLATION_LOCALE || "en-GB"
 
 type Row = {
   key: string
@@ -147,10 +150,25 @@ const ProductTranslationsWidget = ({
 
       return sdk.admin.translation.batch({ create, update })
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ["product-translations-existing", product.id] })
       setDraft({})
-      toast.success("Traduceri salvate")
+
+      // Invalidating the admin query cache only refreshes this widget — the
+      // storefront caches translated product data for an hour, so without an
+      // explicit revalidation call a saved translation stays invisible to
+      // shoppers. Failure here is non-fatal: the rows *are* saved, so report
+      // it as a warning rather than turning the save into an error.
+      try {
+        await sdk.client.fetch("/admin/translations/revalidate", {
+          method: "POST",
+        })
+        toast.success("Traduceri salvate")
+      } catch {
+        toast.warning(
+          "Traduceri salvate, dar reîmprospătarea storefront-ului a eșuat"
+        )
+      }
     },
     onError: (err: any) => {
       toast.error(err?.message || "Salvarea traducerilor a eșuat")

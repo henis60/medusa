@@ -2,6 +2,7 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import Anthropic from "@anthropic-ai/sdk"
 import sharp from "sharp"
+import { safeFetchImage } from "./safe-fetch"
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -83,7 +84,17 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const urlsToFetch = (allImageUrls?.length ?? 0) > 1 ? allImageUrls! : [imageUrl]
   const fetchedImages: Anthropic.ImageBlockParam[] = []
   for (const url of urlsToFetch) {
-    const resp = await fetch(url)
+    // safeFetchImage rejects non-https schemes and any host that resolves to a
+    // private/loopback/link-local address (see ./safe-fetch). A rejected or
+    // failed URL is skipped like any other unfetchable image — the 400 below
+    // covers the case where nothing could be fetched at all.
+    let resp: Response
+    try {
+      resp = await safeFetchImage(url)
+    } catch (err: any) {
+      console.warn("[AI] skipping image URL:", err?.message)
+      continue
+    }
     if (!resp.ok) continue
     const buffer = await resp.arrayBuffer()
     const ct = resp.headers.get("content-type") || "image/webp"

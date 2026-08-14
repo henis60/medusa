@@ -6,8 +6,8 @@ import PaymentWrapper from "@modules/checkout/components/payment-wrapper"
 import CheckoutForm from "@modules/checkout/templates/checkout-form"
 import CheckoutSummary from "@modules/checkout/templates/checkout-summary"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { redirect } from "@i18n/navigation"
 import { Metadata } from "next"
-import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 
 export async function generateMetadata({
@@ -45,8 +45,14 @@ export default async function Checkout({
     getTranslations("checkout"),
   ])
 
+  // No cart means it expired, was cleared, or the customer came back to an
+  // already-completed order. A 404 is a dead end for all three, so send them
+  // to the cart page, which renders its own "empty cart" state.
   if (!cart) {
-    return notFound()
+    redirect({ href: "/cos", locale })
+    // redirect() throws, but next-intl types it as void — the explicit return
+    // is what lets TS narrow `cart` to non-null below.
+    return null
   }
 
   return (

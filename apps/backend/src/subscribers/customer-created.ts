@@ -40,8 +40,10 @@ export default async function sendWelcomeEmail({
       },
     });
 
-    logger.info(`Welcome email sent to ${customer.email}`);
+    logger.info(`Welcome email sent for customer ${customer.id}`);
   } catch (error) {
+    // Not rethrown: a retry could deliver a second welcome email when the
+    // failure happened after the provider accepted the first one.
     logger.error(
       `Failed to send welcome email for customer ${data.id}: ${String(error?.message ?? error)}`,
     );

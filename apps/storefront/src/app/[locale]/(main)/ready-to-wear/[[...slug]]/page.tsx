@@ -1,4 +1,5 @@
 import { Metadata } from "next"
+import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { getTranslations } from "next-intl/server"
 
@@ -121,6 +122,13 @@ export default async function StorePage({ params }: Props) {
       categoryId = categories.find(
         (c) => c.handle === slug.slice(1).join("/")
       )?.id
+    }
+
+    // An unknown slug used to fall through to the unfiltered catalog with a
+    // 200 and a self-referencing canonical, so /ready-to-wear/<anything>
+    // became an indexable duplicate of the whole shop. 404 instead.
+    if (!categoryId && !collectionId) {
+      notFound()
     }
   }
 

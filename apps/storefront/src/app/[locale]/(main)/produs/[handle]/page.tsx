@@ -93,6 +93,15 @@ export default async function ProductPage(props: Props) {
   }
 
   const { cheapestPrice } = getProductPrice({ product: pricedProduct })
+
+  // Derive availability from real inventory — a hardcoded InStock contradicted
+  // the "Indisponibil" the page itself renders, which Google flags as a
+  // structured-data/content mismatch.
+  const hasPurchasableVariant = (pricedProduct.variants ?? []).some((v) => {
+    if (!v.manage_inventory) return true
+    if (v.allow_backorder) return true
+    return (v.inventory_quantity || 0) > 0
+  })
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -110,7 +119,9 @@ export default async function ProductPage(props: Props) {
             "@type": "Offer",
             priceCurrency: cheapestPrice.currency_code.toUpperCase(),
             price: cheapestPrice.calculated_price_number.toFixed(2),
-            availability: "https://schema.org/InStock",
+            availability: hasPurchasableVariant
+              ? "https://schema.org/InStock"
+              : "https://schema.org/OutOfStock",
             url: `${getBaseURL()}/produs/${handle}`,
           },
         }

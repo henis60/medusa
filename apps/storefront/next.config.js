@@ -12,6 +12,23 @@ const S3_HOSTNAME = process.env.MEDUSA_CLOUD_S3_HOSTNAME
 const S3_PATHNAME = process.env.MEDUSA_CLOUD_S3_PATHNAME
 
 /**
+ * Public base URL of this environment's media bucket — set it to the same value
+ * as the backend's S3_FILE_URL, since that is what the API embeds in product
+ * image URLs. Each environment has its own R2 bucket, so this is configured per
+ * environment rather than hardcoded.
+ *
+ * It replaces a `*.r2.dev` wildcard, which matched EVERY Cloudflare R2 public
+ * bucket in the world: as an image remotePattern that turned /_next/image into
+ * an open proxy serving attacker-hosted content from our own origin, and as a
+ * CSP img-src it defeated the point of the allowlist.
+ *
+ * If unset, only the media.thehunter.ro custom domain and the backend host are
+ * allowed — which is correct for production but will blank out images on any
+ * environment serving them straight from a bucket URL.
+ */
+const MEDIA_URL = process.env.NEXT_PUBLIC_MEDIA_URL
+
+/**
  * Turn a URL env var into a remotePattern { protocol, hostname } entry so
  * next/image can optimize images served from that host.
  */
@@ -84,11 +101,8 @@ const nextConfig = {
         protocol: "https",
         hostname: "*.s3.amazonaws.com",
       },
-      // Cloudflare R2 public dev URLs (product images) — used on staging
-      {
-        protocol: "https",
-        hostname: "*.r2.dev",
-      },
+      // This environment's own media bucket (product images).
+      ...urlToRemotePattern(MEDIA_URL),
       // Cloudflare R2 custom domain (production product images)
       {
         protocol: "https",
@@ -114,13 +128,17 @@ const nextConfig = {
     // Origin of the Medusa backend, which the browser calls directly (SDK
     // requests, the public newsletter form). Derived from the same env var
     // next/image uses so the two can't drift apart.
-    const backendOrigin = (() => {
+    const toOrigin = (value) => {
       try {
-        return new URL(process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL).origin
+        return new URL(value).origin
       } catch {
         return null
       }
-    })()
+    }
+
+    const backendOrigin = toOrigin(process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL)
+    // Same source as the media remotePattern above, so the two can't drift.
+    const mediaOrigin = toOrigin(MEDIA_URL)
 
     // Every third-party origin the BROWSER contacts. Server-side calls
     // (Europarcel, Nominatim, Oblio, Brevo) are deliberately absent — CSP only
@@ -171,7 +189,9 @@ const nextConfig = {
         "data:",
         "blob:",
         "https://media.thehunter.ro",
-        "https://*.r2.dev",
+        // Mirrors the remotePattern above — this environment's bucket only,
+        // never a wildcard across every R2 account.
+        ...(mediaOrigin ? [mediaOrigin] : []),
         "https://*.s3.*.amazonaws.com",
         "https://*.s3.amazonaws.com",
         MAP_TILES,

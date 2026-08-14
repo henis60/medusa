@@ -11,6 +11,7 @@ import {
   EpShippingAddress,
   PaginatedResponse,
 } from "./types"
+import { EuroparcelApiError, classifyEuroparcelError } from "./errors"
 
 const BASE = "https://api.europarcel.com/api/public"
 
@@ -18,22 +19,40 @@ export class EuroparcelClient {
   constructor(private readonly apiKey: string) {}
 
   private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
-    const res = await fetch(`${BASE}${path}`, {
-      method,
-      headers: {
-        "X-API-Key": this.apiKey,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    })
+    let res: Response
+    try {
+      res = await fetch(`${BASE}${path}`, {
+        method,
+        headers: {
+          "X-API-Key": this.apiKey,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      })
+    } catch (err) {
+      // No response at all (DNS, TLS, timeout) — retryable, unlike a 4xx.
+      throw new EuroparcelApiError({
+        kind: "network",
+        status: 0,
+        detail: (err as Error).message,
+        method,
+        path,
+      })
+    }
 
     if (!res.ok) {
       let detail = ""
       try {
         detail = await res.text()
       } catch {}
-      throw new Error(`Europarcel API ${method} ${path} failed (${res.status}): ${detail}`)
+      throw new EuroparcelApiError({
+        kind: classifyEuroparcelError(res.status, detail),
+        status: res.status,
+        detail,
+        method,
+        path,
+      })
     }
 
     return res.json() as Promise<T>

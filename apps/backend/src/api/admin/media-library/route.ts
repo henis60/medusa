@@ -4,6 +4,10 @@ import { MEDIA_LIBRARY_MODULE } from "../../../modules/media-library"
 import MediaLibraryModuleService from "../../../modules/media-library/service"
 import { listR2Objects } from "../../../modules/media-library/lib/r2-client"
 import { detectImageType } from "../../../modules/media-library/lib/image-type"
+import {
+  MEDIA_LIBRARY_DEFAULT_FOLDER,
+  MEDIA_LIBRARY_PREFIX,
+} from "../../../modules/media-library/lib/keys"
 import uploadMediaAssetWorkflow from "../../../workflows/upload-media-asset"
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
@@ -95,13 +99,23 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   }
 
   const folder = ((req.body as any)?.folder ?? "") as string
-  const folderPrefix = folder
-    ? folder
-        .split("/")
-        .map(sanitizeSegment)
-        .filter(Boolean)
-        .join("/") + "/"
-    : ""
+  const sanitizedFolder = folder
+    .split("/")
+    .map(sanitizeSegment)
+    .filter(Boolean)
+    .join("/")
+
+  // Never write to the bucket root: that is where core Medusa uploads live, and
+  // keys outside a folder are excluded from the library's own namespace (see
+  // lib/keys.ts), so a root upload could never be renamed or deleted from here.
+  // When MEDIA_LIBRARY_PREFIX is configured, every key must sit under it or it
+  // falls outside the deletable namespace — so re-add it if the caller's folder
+  // doesn't already carry it.
+  const folderPrefix = sanitizedFolder
+    ? sanitizedFolder.startsWith(MEDIA_LIBRARY_PREFIX)
+      ? `${sanitizedFolder}/`
+      : `${MEDIA_LIBRARY_PREFIX}${sanitizedFolder}/`
+    : MEDIA_LIBRARY_DEFAULT_FOLDER
 
   // Validate everything before writing anything, so a bad file in the batch
   // doesn't leave half the upload committed to the bucket.

@@ -2,6 +2,7 @@ import {
   S3Client,
   ListObjectsV2Command,
   DeleteObjectCommand,
+  HeadObjectCommand,
   PutObjectCommand,
   CopyObjectCommand,
   type _Object,
@@ -92,18 +93,66 @@ export async function deleteR2Object(key: string): Promise<void> {
   )
 }
 
+async function objectExists(key: string): Promise<boolean> {
+  try {
+    await getClient().send(
+      new HeadObjectCommand({ Bucket: process.env.S3_BUCKET, Key: key })
+    )
+    return true
+  } catch (err: any) {
+    // R2/S3 answer a HEAD on a missing key with 404 (NotFound / NoSuchKey).
+    // Anything else (403, network) must not be read as "free to overwrite".
+    const status = err?.$metadata?.httpStatusCode
+    if (status === 404 || err?.name === "NotFound" || err?.name === "NoSuchKey") {
+      return false
+    }
+    throw err
+  }
+}
+
+// Because keys keep the original filename (no ulid — see uploadR2Object below),
+// re-uploading the same name would silently replace an asset that is already
+// live on the storefront and served with a 1-year immutable cache. Suffix
+// "-1", "-2", … before the extension until the key is free instead.
+//
+// Best-effort against a concurrent upload of the same name (HEAD-then-PUT is
+// not atomic, and R2 has no If-None-Match on PutObject), but it removes the
+// deterministic overwrite, which is the case that actually happens.
+async function resolveAvailableKey(key: string): Promise<string> {
+  if (!(await objectExists(key))) return key
+
+  const dot = key.lastIndexOf(".")
+  const slash = key.lastIndexOf("/")
+  const hasExt = dot > slash + 1
+  const base = hasExt ? key.slice(0, dot) : key
+  const ext = hasExt ? key.slice(dot) : ""
+
+  for (let i = 1; i <= 100; i++) {
+    const candidate = `${base}-${i}${ext}`
+    if (!(await objectExists(candidate))) return candidate
+  }
+
+  // 100 collisions on one name means something is wrong upstream; a
+  // timestamped key is still better than clobbering the original.
+  return `${base}-${Date.now()}${ext}`
+}
+
 // Uploads directly (unlike the core uploadFilesWorkflow, which strips any
 // directory from the filename via path.parse and always mangles the name
 // with a ulid) so a chosen folder prefix is actually preserved in the key.
+// The returned key may differ from the requested one when the name was already
+// taken — callers must use `result.key`/`result.url`, not what they passed in.
 export async function uploadR2Object(opts: {
   key: string
   content: Buffer
   mimeType: string
 }): Promise<R2Object> {
+  const key = await resolveAvailableKey(opts.key)
+
   await getClient().send(
     new PutObjectCommand({
       Bucket: process.env.S3_BUCKET,
-      Key: opts.key,
+      Key: key,
       Body: opts.content,
       ContentType: opts.mimeType,
       ACL: "public-read",
@@ -111,8 +160,8 @@ export async function uploadR2Object(opts: {
     })
   )
   return {
-    key: opts.key,
-    url: toPublicUrl(opts.key),
+    key,
+    url: toPublicUrl(key),
     size: opts.content.byteLength,
     last_modified: new Date().toISOString(),
   }
@@ -126,19 +175,29 @@ export async function renameR2Object(opts: {
   oldKey: string
   newKey: string
 }): Promise<R2Object> {
+  // Same non-destructive rule as upload: renaming onto an existing name must
+  // not silently replace that object. A no-op rename (same key) is left alone,
+  // otherwise it would suffix the file against itself.
+  const newKey =
+    opts.newKey === opts.oldKey
+      ? opts.newKey
+      : await resolveAvailableKey(opts.newKey)
+
   await getClient().send(
     new CopyObjectCommand({
       Bucket: process.env.S3_BUCKET,
       CopySource: `${process.env.S3_BUCKET}/${encodeURIComponent(opts.oldKey)}`,
-      Key: opts.newKey,
+      Key: newKey,
       ACL: "public-read",
       CacheControl: "public, max-age=31536000",
     })
   )
-  await deleteR2Object(opts.oldKey)
+  if (newKey !== opts.oldKey) {
+    await deleteR2Object(opts.oldKey)
+  }
   return {
-    key: opts.newKey,
-    url: toPublicUrl(opts.newKey),
+    key: newKey,
+    url: toPublicUrl(newKey),
     size: 0,
     last_modified: new Date().toISOString(),
   }

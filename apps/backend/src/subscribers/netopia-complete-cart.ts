@@ -33,8 +33,12 @@ export default async function netopiaCompleteCart({
     })
     cartId = links?.[0]?.cart_id ?? null
   } catch (err) {
+    // A failed lookup here is transient (DB/query error), not a business
+    // outcome — swallowing it left an authorized payment with no order. Rethrow
+    // so the event bus retries; completing the cart is idempotent (a second run
+    // just hits the "already completed" branch below).
     logger.error(`Netopia subscriber: eroare la rezolvarea cart_id — ${(err as Error).message}`)
-    return
+    throw err
   }
 
   if (!cartId) {

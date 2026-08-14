@@ -1,9 +1,8 @@
 "use client"
 
-import { isManual, isNetopia, isStripeLike } from "@lib/constants"
+import { isManual, isNetopia } from "@lib/constants"
 import { initiateNetopiaPayment, placeOrder } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
-import { useElements, useStripe } from "@stripe/react-stripe-js"
 import React, { useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import ErrorMessage from "../error-message"
@@ -30,14 +29,6 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
   const paymentSession = cart.payment_collection?.payment_sessions?.[0]
 
   switch (true) {
-    case isStripeLike(paymentSession?.provider_id):
-      return (
-        <StripePaymentButton
-          notReady={notReady}
-          cart={cart}
-          data-testid={dataTestId}
-        />
-      )
     case isManual(paymentSession?.provider_id):
       return (
         <ManualTestPaymentButton notReady={notReady} data-testid={dataTestId} />
@@ -61,138 +52,6 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
         </button>
       )
   }
-}
-
-const StripePaymentButton = ({
-  cart,
-  notReady,
-  "data-testid": dataTestId,
-}: {
-  cart: HttpTypes.StoreCart
-  notReady: boolean
-  "data-testid"?: string
-}) => {
-  const t = useTranslations("checkout")
-  const [submitting, setSubmitting] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-
-  const onPaymentCompleted = async () => {
-    await placeOrder()
-      .catch((err) => {
-        setErrorMessage(getDisplayableErrorMessage(err, t("A apărut o eroare Reîncearcă")))
-      })
-      .finally(() => {
-        setSubmitting(false)
-      })
-  }
-
-  const stripe = useStripe()
-  const elements = useElements()
-  const card = elements?.getElement("card")
-
-  const session = cart.payment_collection?.payment_sessions?.find(
-    (s) => s.status === "pending"
-  )
-
-  const disabled = !stripe || !elements ? true : false
-
-  const handlePayment = async () => {
-    setSubmitting(true)
-
-    if (!stripe || !elements || !card || !cart) {
-      setSubmitting(false)
-      return
-    }
-
-    await stripe
-      .confirmCardPayment(session?.data.client_secret as string, {
-        payment_method: {
-          card: card,
-          billing_details: {
-            name:
-              cart.billing_address?.first_name +
-              " " +
-              cart.billing_address?.last_name,
-            address: {
-              city: cart.billing_address?.city ?? undefined,
-              country: cart.billing_address?.country_code ?? undefined,
-              line1: cart.billing_address?.address_1 ?? undefined,
-              line2: cart.billing_address?.address_2 ?? undefined,
-              postal_code: cart.billing_address?.postal_code ?? undefined,
-              state: cart.billing_address?.province ?? undefined,
-            },
-            email: cart.email,
-            phone: cart.billing_address?.phone ?? undefined,
-          },
-        },
-      })
-      .then(({ error, paymentIntent }) => {
-        if (error) {
-          const pi = error.payment_intent
-
-          if (
-            (pi && pi.status === "requires_capture") ||
-            (pi && pi.status === "succeeded")
-          ) {
-            return onPaymentCompleted()
-          }
-
-          setErrorMessage(error.message || null)
-          setSubmitting(false)
-          return
-        }
-
-        if (
-          paymentIntent &&
-          (paymentIntent.status === "requires_capture" ||
-            paymentIntent.status === "succeeded")
-        ) {
-          return onPaymentCompleted()
-        }
-
-        // Any other non-terminal status (requires_action, processing, ...)
-        // never reaches onPaymentCompleted, whose .finally() is otherwise the
-        // only place submitting gets reset — without this the button stays
-        // disabled/spinning forever and the customer can't retry.
-        setErrorMessage(t("A apărut o eroare Reîncearcă"))
-        setSubmitting(false)
-      })
-      .catch((err) => {
-        setErrorMessage(getDisplayableErrorMessage(err, t("A apărut o eroare Reîncearcă")))
-        setSubmitting(false)
-      })
-  }
-
-  return (
-    <>
-      <button
-        disabled={disabled || notReady || submitting}
-        onClick={handlePayment}
-        data-testid={dataTestId}
-        className={`relative w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:cursor-not-allowed overflow-hidden ${
-          disabled || notReady ? "opacity-40" : ""
-        }`}
-      >
-        <span
-          className={`flex items-center justify-center gap-2 transition-opacity duration-150 ${
-            submitting ? "opacity-0" : "opacity-100"
-          }`}
-        >
-          {t("Plasează comanda")}
-        </span>
-        {submitting && (
-          <span className="absolute inset-0 flex items-center justify-center gap-2">
-            <Spinner size="14" />
-            {t("Se procesează…")}
-          </span>
-        )}
-      </button>
-      <ErrorMessage
-        error={errorMessage}
-        data-testid="stripe-payment-error-message"
-      />
-    </>
-  )
 }
 
 const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {

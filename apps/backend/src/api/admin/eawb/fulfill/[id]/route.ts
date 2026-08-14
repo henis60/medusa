@@ -55,6 +55,20 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     },
   })
 
+  const fulfillmentData = (fulfillment as { data?: Record<string, unknown> }).data ?? {}
+
+  // The provider persists the Europarcel order id even when no AWB came back,
+  // so the wallet charge stays recoverable. Don't mark such a fulfillment as
+  // shipped — that would email the customer a tracking-less "expediat".
+  if (fulfillmentData.awb_missing) {
+    return res.status(502).json({
+      error:
+        "eAWB: comanda a fost creată la Europarcel, dar fără AWB. Verifică statusul comenzii înainte de a marca expedierea.",
+      fulfillment_id: (fulfillment as { id: string }).id,
+      europarcel_id: fulfillmentData.europarcel_id,
+    })
+  }
+
   // Mark the fulfillment as shipped right away — the AWB is generated and the
   // parcel is handed to the courier, so the order is effectively shipped. This
   // fires `order.shipment_created`, which sends the shipped email.

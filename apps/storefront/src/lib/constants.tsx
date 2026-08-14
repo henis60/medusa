@@ -1,6 +1,4 @@
 import { CreditCard } from "@medusajs/icons"
-import Bancontact from "@modules/common/icons/bancontact"
-import Ideal from "@modules/common/icons/ideal"
 import PayPal from "@modules/common/icons/paypal"
 import React from "react"
 
@@ -9,21 +7,9 @@ export const paymentInfoMap: Record<
   string,
   { title: string; icon: React.JSX.Element }
 > = {
-  pp_stripe_stripe: {
-    title: "Credit card",
-    icon: <CreditCard />,
-  },
   "pp_medusa-payments_default": {
     title: "Credit card",
     icon: <CreditCard />,
-  },
-  "pp_stripe-ideal_stripe": {
-    title: "iDeal",
-    icon: <Ideal />,
-  },
-  "pp_stripe-bancontact_stripe": {
-    title: "Bancontact",
-    icon: <Bancontact />,
   },
   pp_paypal_paypal: {
     title: "PayPal",
@@ -40,7 +26,11 @@ export const paymentInfoMap: Record<
   // Add more payment providers here
 }
 
-// This only checks if it is native stripe or medusa payments for card payments, it ignores the other stripe-based providers
+// The Stripe checkout integration is gone (medusa-config registers only
+// Netopia + the built-in manual provider), but historical orders can still
+// carry a Stripe/medusa-payments payment record whose `data.card_last4` the
+// order confirmation renders — so the provider check survives for display
+// only, never for routing a live payment.
 export const isStripeLike = (providerId?: string) => {
   return (
     providerId?.startsWith("pp_stripe_") || providerId?.startsWith("pp_medusa-")

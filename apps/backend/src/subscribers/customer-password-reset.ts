@@ -9,6 +9,15 @@ function decodeJwtPayload(token: string): Record<string, any> {
   }
 }
 
+// The reset event only carries the email (as the token's entity_id), so there
+// is no id to log instead — mask the local part so logs stay debuggable
+// (which domain, which shape) without storing the address itself.
+function maskEmail(email: string): string {
+  const [local = "", domain = ""] = email.split("@")
+  const head = local.slice(0, 1)
+  return `${head}${"*".repeat(Math.max(local.length - 1, 1))}@${domain}`
+}
+
 function formatExpiry(exp: number): string {
   const d = new Date(exp * 1000);
   return d.toLocaleString("ro-RO", {
@@ -35,7 +44,8 @@ export default async function sendPasswordResetEmail({
     return;
   }
 
-  logger.info(`Sending password reset email to: ${email}`);
+  const maskedEmail = maskEmail(email);
+  logger.info(`Sending password reset email to: ${maskedEmail}`);
 
   try {
     const notificationService = container.resolve("notification");
@@ -52,10 +62,12 @@ export default async function sendPasswordResetEmail({
       },
     });
 
-    logger.info(`Password reset email sent to ${email}`);
+    logger.info(`Password reset email sent to ${maskedEmail}`);
   } catch (error) {
+    // Not rethrown: the user can request a new link, and a retry could deliver
+    // a duplicate email when the failure happened after the provider accepted.
     logger.error(
-      `Failed to send password reset email to ${email}: ${String(error?.message ?? error)}`,
+      `Failed to send password reset email to ${maskedEmail}: ${String(error?.message ?? error)}`,
     );
   }
 }
