@@ -1,4 +1,4 @@
-﻿@import "tailwindcss/base";
+@import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
@@ -79,7 +79,9 @@
   }
 
   /* iOS: allow fast tap handling without 300ms delay */
-  a, button, [role="button"] {
+  a,
+  button,
+  [role="button"] {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
@@ -1034,7 +1036,10 @@ body.hunter-landing-active::before {
 
 /* Reduce motion preference — prefers-reduced-motion settings disable animations */
 @media (prefers-reduced-motion: reduce) {
-  .rv, .rv-group > *, .line-draw, .kicker {
+  .rv,
+  .rv-group > *,
+  .line-draw,
+  .kicker {
     animation: none !important;
     transition: none !important;
   }
@@ -3273,8 +3278,7 @@ a.cb-value:hover {
     rgba(184, 149, 90, 0.5) 10%,
     transparent 22%
   );
-  -webkit-mask: linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -3937,5 +3941,319 @@ html {
     letter-spacing: 1.5px !important;
     padding: 14px 6px !important;
     margin-top: 4px !important;
+  }
+}
+
+/* ==========================================================================
+   The Hunter Meridian landing page (/meridian)
+   ========================================================================== */
+
+.thm-root {
+  --gold-b: #e8d5a3;
+  --gold-d: #8b6914;
+  --pad: clamp(20px, 6vw, 80px);
+  background: #0d1f17;
+  color: var(--ivory);
+  font-family: var(--cg);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  text-wrap: pretty;
+}
+
+.thm-root a {
+  color: #c9a84c;
+  text-decoration: none;
+}
+
+.thm-root a:hover {
+  color: #e8d5a3;
+}
+
+.thm-root ::selection {
+  background: rgba(201, 168, 76, 0.25);
+}
+
+.thm-root :focus-visible {
+  outline: 2px solid #c9a84c;
+  outline-offset: 2px;
+}
+
+.thm-btn-solid:hover {
+  background: #e8d5a3 !important;
+  color: #0d1f17 !important;
+}
+
+.thm-btn-outline:hover {
+  border-color: rgba(201, 168, 76, 0.8) !important;
+  background: rgba(201, 168, 76, 0.07) !important;
+  color: #c9a84c !important;
+}
+
+.thm-social {
+  color: rgba(232, 213, 163, 0.78);
+  transition: color 0.3s;
+}
+
+.thm-social:hover {
+  color: #c9a84c;
+}
+
+.thm-concept-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  grid-template-areas: "text canvas" "quote canvas";
+  gap: clamp(32px, 5vw, 72px);
+  align-items: center;
+}
+
+.thm-piesa-grid {
+  max-width: 1360px;
+  margin: clamp(56px, 7vw, 88px) auto 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: clamp(28px, 4vw, 72px);
+  align-items: center;
+  padding-top: clamp(44px, 6vw, 72px);
+}
+
+.thm-program-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  min-height: 130px;
+  padding: 20px var(--pad);
+  overflow: hidden;
+  transition: min-height 0.5s ease, padding 0.5s ease;
+}
+
+.thm-program-row:hover,
+.thm-program-row.thm-expanded {
+  min-height: 280px;
+  padding: 32px var(--pad);
+}
+
+.thm-map-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(13, 31, 23, 0);
+  opacity: 0;
+  transition: opacity 0.3s, background 0.3s;
+  font-family: var(--rl);
+  font-size: 10px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: #e8d5a3;
+}
+
+.thm-map-link:hover .thm-map-overlay {
+  opacity: 1;
+  background: rgba(13, 31, 23, 0.55);
+}
+
+@media (max-width: 860px) {
+  .thm-concept-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "text" "canvas" "quote";
+  }
+}
+
+/* --- Meridian: header (moved from inline so it can be overridden per breakpoint) --- */
+.thm-header {
+  height: 74px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 24px;
+  padding: 0 var(--pad);
+}
+
+.thm-header-title {
+  font-size: 15px;
+  letter-spacing: 0.24em;
+}
+
+.thm-header-cta {
+  padding: 12px 26px;
+  letter-spacing: 0.3em;
+  font-size: 10px;
+}
+
+/* --- Meridian: contact section — title/WhatsApp stack in the left column,
+   phone/email/socials span both rows on the right; on mobile the WhatsApp
+   button drops to the very bottom, after the socials row. --- */
+.thm-contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas: "title contact" "wa contact";
+  gap: clamp(28px, 4vw, 72px);
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .thm-contact-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas: "title" "contact" "wa";
+  }
+}
+
+@media (max-width: 640px) {
+  .thm-header {
+    height: 62px;
+    gap: 10px;
+  }
+  .thm-header-title {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+  }
+  .thm-header-cta {
+    padding: 6px 11px;
+    letter-spacing: 0.12em;
+    font-size: 8px;
+  }
+}
+
+/* --- Meridian: CTAs and eyebrows shrink their tracking before they wrap oddly --- */
+@media (max-width: 480px) {
+  .thm-btn-solid,
+  .thm-btn-outline {
+    letter-spacing: 0.3em !important;
+    padding: 13px 24px !important;
+  }
+}
+
+/* --- Meridian: theme timeline — a 7-column grid can't survive a phone width
+   without crushing the car names, so it becomes horizontally scrollable
+   instead of shrinking. The animated line/dot measure real rendered
+   positions, so they stay correct regardless of scroll offset. --- */
+.thm-timeline-scroll {
+  position: relative;
+  margin: 72px 0 0;
+}
+
+.thm-timeline-inner {
+  position: relative;
+}
+
+.thm-timeline-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto repeat(5, minmax(0, 1fr)) auto;
+  align-items: start;
+  gap: clamp(10px, 1.6vw, 26px);
+}
+
+@media (max-width: 640px) {
+  .thm-timeline-scroll {
+    overflow-x: auto;
+    padding-bottom: 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .thm-timeline-inner {
+    width: max-content;
+    min-width: 100%;
+  }
+  .thm-timeline-grid {
+    grid-template-columns: auto repeat(5, minmax(84px, 1fr)) auto;
+    min-width: 680px;
+  }
+}
+
+/* --- Meridian: Google Maps embed styled dark to match the page instead of
+   the default light basemap (the embed API doesn't expose custom map
+   styles, so this is an invert-based approximation). --- */
+.thm-map-dark {
+  filter: invert(90%) grayscale(0.55) hue-rotate(180deg) brightness(0.95)
+    contrast(0.9);
+}
+
+/* --- Meridian: general mobile/tablet tightening --- */
+@media (max-width: 640px) {
+  .thm-root {
+    --pad: 20px;
+  }
+  .thm-piesa-grid,
+  .thm-concept-grid {
+    gap: 32px;
+  }
+}
+
+/* --- Meridian: header + hero + sponsor strip always fill exactly one
+   viewport, matching the original single-screen landing pattern. --- */
+.thm-hero-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* --- Meridian: hero CTAs stack full-width on phones instead of wrapping
+   into two uneven-width pills. --- */
+@media (max-width: 480px) {
+  .thm-hero-cta-row {
+    flex-direction: column;
+  }
+  .thm-hero-cta {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+/* --- Meridian: "Scrie-ne pe WhatsApp" is only full-width on phones — on
+   larger screens it stays a normal centered pill. --- */
+@media (max-width: 640px) {
+  .thm-whatsapp-cta {
+    display: flex !important;
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+/* --- Meridian: the locația banner is a fixed 21:8 strip with overlaid
+   text — on phones that strip is too short for the heading + paragraph,
+   hiding the photo entirely. Taller ratio + smaller type fixes both. --- */
+@media (max-width: 640px) {
+  .thm-locatia-media {
+    aspect-ratio: 3 / 4;
+  }
+  .thm-locatia-heading {
+    font-size: 26px !important;
+  }
+}
+
+@media (min-width: 641px) {
+  .thm-locatia-media {
+    aspect-ratio: 21 / 8;
+  }
+}
+
+/* --- Meridian: hero content centers on phones (eyebrow rule, heading,
+   copy, and CTA row all switch from left-aligned to centered). --- */
+@media (max-width: 640px) {
+  .thm-hero-content {
+    text-align: center;
+  }
+  .thm-hero-content h1,
+  .thm-hero-content p {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .thm-hero-content > div:first-child {
+    justify-content: center;
+  }
+  .thm-hero-cta-row {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .thm-hero-section {
+    justify-content: center !important;
+    padding-top: clamp(64px, 14vw, 100px) !important;
+    padding-bottom: clamp(72px, 16vw, 110px) !important;
   }
 }
