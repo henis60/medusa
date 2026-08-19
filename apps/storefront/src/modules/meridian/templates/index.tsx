@@ -7,6 +7,7 @@ import HashScrollFix from "../components/hash-scroll-fix"
 import MeridianCanvas from "../components/meridian-canvas"
 import ProgramRows from "../components/program-rows"
 import Reveal from "../components/reveal"
+import SmoothAnchorLink from "../components/smooth-anchor-link"
 import SponsorMarquee from "../components/sponsor-marquee"
 import ThemeTimeline from "../components/theme-timeline"
 import { montigny } from "../fonts"
@@ -179,7 +180,7 @@ export default function MeridianTemplate() {
                   Cumpără bilete{" "}
                   <span style={{ fontSize: 15, color: "#0d1f17" }}>→</span>
                 </a>
-                <a
+                <SmoothAnchorLink
                   href="#program"
                   className="thm-btn-outline thm-hero-cta"
                   style={{
@@ -196,7 +197,7 @@ export default function MeridianTemplate() {
                   >
                     →
                   </span>
-                </a>
+                </SmoothAnchorLink>
               </div>
             </div>
           </Reveal>
