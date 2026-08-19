@@ -39,18 +39,33 @@ const ROWS = [
   },
 ]
 
-const COLLAPSED = { minHeight: 130, padding: "20px var(--pad)" }
-const EXPANDED = { minHeight: 280, padding: "32px var(--pad)" }
+const COLLAPSED_MOBILE = { minHeight: "130px", padding: "20px var(--pad)" }
+const EXPANDED_MOBILE = { minHeight: "280px", padding: "32px var(--pad)" }
+const COLLAPSED_DESKTOP = { minHeight: "190px", padding: "28px var(--pad)" }
+const EXPANDED_DESKTOP = { minHeight: "420px", padding: "44px var(--pad)" }
 
 export default function ProgramRows() {
   const reduceMotion = useReducedMotion()
   // Touch devices have no hover, so rows expand as they scroll into view
   // instead — whileHover never fires there.
   const [hoverCapable, setHoverCapable] = useState(true)
+  const [isDesktop, setIsDesktop] = useState(true)
 
   useEffect(() => {
-    setHoverCapable(window.matchMedia("(hover: hover)").matches)
+    // (hover: hover) reflects only the PRIMARY input — on touchscreen
+    // laptops that reports false even with a mouse/trackpad attached,
+    // wrongly switching desktop users to the scroll-triggered mobile
+    // behavior. (any-hover: hover) checks every available input instead.
+    setHoverCapable(window.matchMedia("(any-hover: hover)").matches)
+    const mq = window.matchMedia("(min-width: 861px)")
+    const update = () => setIsDesktop(mq.matches)
+    update()
+    mq.addEventListener("change", update)
+    return () => mq.removeEventListener("change", update)
   }, [])
+
+  const COLLAPSED = isDesktop ? COLLAPSED_DESKTOP : COLLAPSED_MOBILE
+  const EXPANDED = isDesktop ? EXPANDED_DESKTOP : EXPANDED_MOBILE
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
@@ -65,6 +80,7 @@ export default function ProgramRows() {
           style={{
             position: "relative",
             display: "flex",
+            flexShrink: 0,
             alignItems: "center",
             gap: 32,
             overflow: "hidden",
@@ -97,7 +113,8 @@ export default function ProgramRows() {
               pointerEvents: "none",
             }}
           />
-          <div style={{ position: "relative", zIndex: 2, maxWidth: "52ch" }}>
+          <div style={{ position: "relative", zIndex: 2, width: "100%", maxWidth: 1360, margin: "0 auto" }}>
+          <div style={{ maxWidth: "52ch" }}>
             <p
               style={{
                 fontFamily: "var(--rl)",
@@ -140,6 +157,7 @@ export default function ProgramRows() {
             >
               {row.body}
             </p>
+          </div>
           </div>
         </motion.div>
       ))}

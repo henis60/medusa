@@ -3952,7 +3952,12 @@ html {
   --gold-b: #e8d5a3;
   --gold-d: #8b6914;
   --pad: clamp(20px, 6vw, 80px);
-  background: #0d1f17;
+  /* Matches the hero gradient's top stop — the sticky nav sits above the
+     hero in normal flow (not overlaying it), so this is what actually
+     shows through the transparent header at the top of the page. Using
+     the darker #0d1f17 here left a visible seam/band across the header
+     strip, distinct from the hero gradient just below it. */
+  background: #12291f;
   color: var(--ivory);
   font-family: var(--cg);
   display: flex;
@@ -4000,12 +4005,27 @@ html {
   color: #c9a84c;
 }
 
+/* --- Meridian: concept — the canvas centers against the FULL text+quote
+   column as one flex item (not a grid row-span, which let the canvas's
+   height inflate the rows and space the paragraph and quote apart). On
+   mobile the wrapper unwraps (display: contents) so the quote can be
+   reordered to sit after the canvas instead of right under the paragraph. */
 .thm-concept-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-  grid-template-areas: "text canvas" "quote canvas";
-  gap: clamp(32px, 5vw, 72px);
+  display: flex;
   align-items: center;
+  gap: clamp(32px, 5vw, 72px);
+}
+
+.thm-concept-textwrap {
+  flex: 1.15 1 0%;
+  min-width: 0;
+  order: 1;
+}
+
+.thm-concept-canvas {
+  flex: 0.85 1 0%;
+  min-width: 0;
+  order: 2;
 }
 
 .thm-piesa-grid {
@@ -4016,23 +4036,6 @@ html {
   gap: clamp(28px, 4vw, 72px);
   align-items: center;
   padding-top: clamp(44px, 6vw, 72px);
-}
-
-.thm-program-row {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 32px;
-  min-height: 130px;
-  padding: 20px var(--pad);
-  overflow: hidden;
-  transition: min-height 0.5s ease, padding 0.5s ease;
-}
-
-.thm-program-row:hover,
-.thm-program-row.thm-expanded {
-  min-height: 280px;
-  padding: 32px var(--pad);
 }
 
 .thm-map-overlay {
@@ -4058,29 +4061,34 @@ html {
 
 @media (max-width: 860px) {
   .thm-concept-grid {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "text" "canvas" "quote";
+    flex-direction: column;
+    align-items: stretch;
+    --concept-gap: clamp(32px, 5vw, 72px);
+    gap: var(--concept-gap);
   }
-}
-
-/* --- Meridian: header (moved from inline so it can be overridden per breakpoint) --- */
-.thm-header {
-  height: 74px;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 24px;
-  padding: 0 var(--pad);
-}
-
-.thm-header-title {
-  font-size: 15px;
-  letter-spacing: 0.24em;
-}
-
-.thm-header-cta {
-  padding: 12px 26px;
-  letter-spacing: 0.3em;
-  font-size: 10px;
+  /* Unwrap the paragraph+quote grouping so the quote can be reordered
+     to appear after the canvas instead of right under the paragraph. */
+  .thm-concept-textwrap {
+    display: contents;
+  }
+  .thm-concept-lead,
+  .thm-concept-para {
+    order: 1;
+  }
+  .thm-concept-heading {
+    margin-bottom: 0 !important;
+    /* Cancels the flex gap between the eyebrow and the heading — they
+       should sit close together, only the eyebrow's own 14px margin apart —
+       while every other pair keeps the full gap. */
+    margin-top: calc(-1 * var(--concept-gap)) !important;
+  }
+  .thm-concept-canvas {
+    order: 2;
+  }
+  .thm-concept-quote {
+    order: 3;
+    margin-top: 0 !important;
+  }
 }
 
 /* --- Meridian: contact section — title/WhatsApp stack in the left column,
@@ -4090,7 +4098,8 @@ html {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-areas: "title contact" "wa contact";
-  gap: clamp(28px, 4vw, 72px);
+  column-gap: clamp(48px, 8vw, 140px);
+  row-gap: 0;
   align-items: center;
 }
 
@@ -4098,22 +4107,7 @@ html {
   .thm-contact-grid {
     grid-template-columns: 1fr;
     grid-template-areas: "title" "contact" "wa";
-  }
-}
-
-@media (max-width: 640px) {
-  .thm-header {
-    height: 62px;
-    gap: 10px;
-  }
-  .thm-header-title {
-    font-size: 11px;
-    letter-spacing: 0.14em;
-  }
-  .thm-header-cta {
-    padding: 6px 11px;
-    letter-spacing: 0.12em;
-    font-size: 8px;
+    row-gap: clamp(28px, 4vw, 72px);
   }
 }
 
@@ -4176,19 +4170,34 @@ html {
   .thm-root {
     --pad: 20px;
   }
-  .thm-piesa-grid,
-  .thm-concept-grid {
+  .thm-piesa-grid {
     gap: 32px;
   }
 }
 
 /* --- Meridian: header + hero + sponsor strip always fill exactly one
    viewport, matching the original single-screen landing pattern. --- */
+/* The site's shared Nav is sticky (not fixed) and occupies real flow height
+   (h-16 = 64px) above this shell, so the shell only needs to fill the rest
+   of the screen, not the whole viewport. */
 .thm-hero-shell {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
+  height: calc(100vh - 64px);
+  height: calc(100dvh - 64px);
+}
+
+/* On short phones, vertically-centered hero copy plus its generous mobile
+   spacing can exceed one screen — since the section centers its content,
+   any overflow pushes the top (the "Ediția I" eyebrow) up and out, behind
+   the sticky nav. Letting the shell grow past one screen there keeps
+   everything visible instead of clipping/overlapping. */
+@media (max-width: 640px) {
+  .thm-hero-shell {
+    height: auto;
+    min-height: calc(100vh - 64px);
+    min-height: calc(100dvh - 64px);
+  }
 }
 
 /* --- Meridian: hero CTAs stack full-width on phones instead of wrapping
@@ -4252,8 +4261,91 @@ html {
 
 @media (max-width: 640px) {
   .thm-hero-section {
-    justify-content: center !important;
     padding-top: clamp(64px, 14vw, 100px) !important;
     padding-bottom: clamp(72px, 16vw, 110px) !important;
   }
+}
+
+/* --- Meridian: locația — on desktop the photo and the map sit side by
+   side (photo ~70%, map ~30%); on mobile they stack as before. --- */
+.thm-locatia-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.thm-map-link {
+  height: clamp(140px, 16vh, 180px);
+}
+
+@media (min-width: 861px) {
+  .thm-locatia-row {
+    flex-direction: row;
+    align-items: stretch;
+  }
+  .thm-locatia-row .thm-locatia-media {
+    flex: 0 0 70%;
+    border-bottom: none !important;
+    border-right: 1px solid rgba(201, 168, 76, 0.25);
+  }
+  .thm-locatia-row .thm-map-link {
+    flex: 1 1 30%;
+    height: auto;
+  }
+}
+
+/* --- Meridian: hero eyebrow date drops the separator and stacks into two
+   rows on narrow phones instead of squeezing onto one line. --- */
+@media (max-width: 480px) {
+  .thm-eyebrow-date {
+    flex-direction: column;
+    align-items: center !important;
+    white-space: normal !important;
+    gap: 4px;
+  }
+  .thm-eyebrow-sep {
+    display: none;
+  }
+  /* The right rule is normally a flexible gradient tail while the left one
+     is a fixed short dash — fine for a single-line label, but once the date
+     wraps to two centered lines that asymmetry visibly pushes it off-center. */
+  .thm-eyebrow-rule-left,
+  .thm-eyebrow-rule-right {
+    flex: 0 0 32px !important;
+  }
+  .thm-eyebrow-rule-right {
+    background: #8b6914 !important;
+  }
+}
+
+/* --- Meridian: #program and #bilete are jump-link targets; without this
+   the shared site nav (h-16 = 64px, same at every breakpoint) lands on top
+   of the section's first content instead of scrolling just below it. --- */
+.thm-anchor-target {
+  scroll-margin-top: 64px;
+}
+
+/* --- Meridian: hero content breathes more on phones — spacing scales with
+   viewport height so short and tall screens both feel proportionate. --- */
+@media (max-width: 640px) {
+  .thm-eyebrow-row {
+    margin-bottom: 16px !important;
+  }
+  .thm-hero-title {
+    margin-bottom: 0;
+  }
+  .thm-hero-copy {
+    margin-top: clamp(24px, 5vh, 44px) !important;
+  }
+  .thm-hero-cta-row {
+    margin-top: clamp(32px, 6vh, 56px) !important;
+  }
+}
+
+
+
+/* --- Meridian: the shared Nav's logo text should stay white here, matching
+   the transparent-over-hero header treatment (scoped to this page only —
+   the shared Nav's default text color still adapts per-theme elsewhere). --- */
+.thm-root [data-nav-logo] .uppercase {
+  color: #fff !important;
 }

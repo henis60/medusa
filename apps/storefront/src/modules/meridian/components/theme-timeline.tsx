@@ -62,6 +62,9 @@ export default function ThemeTimeline() {
 
     let stopped = false
     let fracs = [0.1, 0.3, 0.5, 0.7, 0.9]
+    const prevFilled = [false, false, false, false, false]
+    const arrivalAt = [-Infinity, -Infinity, -Infinity, -Infinity, -Infinity]
+    const IGNITE_MS = 550
 
     const measure = () => {
       const lr = line.getBoundingClientRect()
@@ -109,13 +112,32 @@ export default function ThemeTimeline() {
       if (vertical) dot.style.top = pos * 100 + "%"
       else dot.style.left = pos * 100 + "%"
       diamonds.forEach((d, idx) => {
+        const base = d.dataset.baseTransform || ""
         if (filled[idx]) {
-          d.style.background = "#c9a84c"
-          d.style.boxShadow = "0 0 0 4px rgba(201,168,76,0.15)"
+          if (!prevFilled[idx]) arrivalAt[idx] = now
+          const elapsed = now - arrivalAt[idx]
+          if (elapsed < IGNITE_MS) {
+            // Ease-out burst: the diamond flares bright and slightly
+            // oversized right as the light reaches it, then settles into
+            // its steady lit state — selling the light actually striking it.
+            const p = 1 - Math.pow(1 - elapsed / IGNITE_MS, 3)
+            const scale = 1.3 - 0.3 * p
+            const spread = 11 - 7 * p
+            const alpha = 0.75 - 0.6 * p
+            d.style.background = p < 0.6 ? "#fff6e0" : "#c9a84c"
+            d.style.boxShadow = `0 0 ${spread}px 2px rgba(255,246,224,${alpha}), 0 0 0 4px rgba(201,168,76,0.15)`
+            d.style.transform = `${base} scale(${scale})`
+          } else {
+            d.style.background = "#c9a84c"
+            d.style.boxShadow = "0 0 0 4px rgba(201,168,76,0.15)"
+            d.style.transform = base
+          }
         } else {
           d.style.background = "#0d1f17"
           d.style.boxShadow = "none"
+          d.style.transform = base
         }
+        prevFilled[idx] = filled[idx]
       })
     }
     raf = requestAnimationFrame(frame)
@@ -166,12 +188,13 @@ export default function ThemeTimeline() {
           variants={containerVariants}
           style={{ display: "flex", flexDirection: "column", gap: 30 }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 16 }}>
             <span
               aria-hidden="true"
               style={{
                 position: "absolute",
-                left: 13,
+                left: -33,
+                top: -3,
                 width: 6,
                 height: 6,
                 borderRadius: "50%",
@@ -194,21 +217,23 @@ export default function ThemeTimeline() {
           {CARS.map((car, i) => (
             <div
               key={car.year}
-              style={{ display: "flex", alignItems: "center", gap: 16 }}
+              style={{ position: "relative", display: "flex", alignItems: "center", gap: 16 }}
             >
               <span
                 ref={(el) => {
                   diamondRefs.current[i] = el
                 }}
+                data-base-transform="translateY(-50%) rotate(45deg)"
                 aria-hidden="true"
                 style={{
                   position: "absolute",
-                  left: 11,
+                  left: -35,
+                  top: "50%",
                   width: 8,
                   height: 8,
                   border: "1.5px solid #c9a84c",
                   background: "#0d1f17",
-                  transform: "rotate(45deg)",
+                  transform: "translateY(-50%) rotate(45deg)",
                 }}
               />
               <motion.div
@@ -247,12 +272,13 @@ export default function ThemeTimeline() {
             </div>
           ))}
 
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 16 }}>
             <span
               aria-hidden="true"
               style={{
                 position: "absolute",
-                left: 13,
+                left: -33,
+                bottom: -3,
                 width: 6,
                 height: 6,
                 borderRadius: "50%",
@@ -382,6 +408,7 @@ export default function ThemeTimeline() {
               ref={(el) => {
                 diamondRefs.current[i] = el
               }}
+              data-base-transform="rotate(45deg)"
               aria-hidden="true"
               style={{
                 position: "absolute",

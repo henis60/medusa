@@ -23,12 +23,12 @@ function SponsorStrip({ hidden, innerRef }: { hidden?: boolean; innerRef?: React
           key={n}
           src={`/meridian/thm-sponsor-${n}.webp`}
           alt={hidden ? "" : `Logo sponsor ${n}`}
-          width={100}
-          height={36}
+          width={72}
+          height={26}
           style={{
             flex: "0 0 auto",
-            width: 100,
-            height: 36,
+            width: 72,
+            height: 26,
             objectFit: "contain",
             opacity: 0.8,
           }}

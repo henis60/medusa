@@ -587,6 +587,16 @@ const SideMenu = ({
                                         {t("Made to Measure")}
                                       </LocalizedClientLink>
                                     </li>
+
+                                    <li>
+                                      <LocalizedClientLink
+                                        href="/meridian"
+                                        className="flex items-center py-2 small:py-2.5 font-display text-[20px] small:text-[22px] leading-[1] tracking-[0.02em] text-[var(--theme-text)] transition-colors duration-200 hover:text-hunter-gold"
+                                        onClick={handleNavigate}
+                                      >
+                                        {t("The Hunter Meridian")}
+                                      </LocalizedClientLink>
+                                    </li>
                                   </ul>
 
                                   {/* Secondary links — bottom */}

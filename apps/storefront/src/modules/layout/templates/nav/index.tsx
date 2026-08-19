@@ -12,7 +12,15 @@ import CartButton from "@modules/layout/components/cart-button"
 import SideMenu from "@modules/layout/components/side-menu"
 import NavShell from "@modules/layout/components/nav-shell"
 
-export default async function Nav() {
+export default async function Nav({
+  rightAction,
+  logoSuffix,
+  logoHref = "/",
+}: {
+  rightAction?: React.ReactNode
+  logoSuffix?: React.ReactNode
+  logoHref?: string
+} = {}) {
   // No cookie reads here — the nav is part of the static/ISR shell.
   // SideMenu resolves the current locale client-side from the cookie.
   const [regions, locales, { collections }, categories] = await Promise.all([
@@ -56,16 +64,17 @@ export default async function Nav() {
 
       <div className="flex items-center h-full" data-nav-logo>
         <LocalizedClientLink
-          href="/"
+          href={logoHref}
           className="font-display text-xl tracking-[0.12em] hover:opacity-70 transition-opacity flex items-baseline gap-1.5"
           data-testid="nav-store-link"
         >
           <span className="uppercase">The Hunter</span>
+          {logoSuffix}
         </LocalizedClientLink>
       </div>
 
       <div className="flex items-center gap-x-6 h-full flex-1 basis-0 justify-end opacity-80">
-        <CartButton />
+        {rightAction ?? <CartButton />}
       </div>
     </NavShell>
   )
