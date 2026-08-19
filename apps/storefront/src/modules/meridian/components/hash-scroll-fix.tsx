@@ -7,7 +7,17 @@ import { useEffect } from "react"
 // already interactive, not that first positioning. This re-does the scroll
 // smoothly on mount, then strips the hash so a refresh lands at the top
 // instead of re-jumping to the same section every time.
+//
+// Also marks <body> as always-dark for this page (see body.thm-active in
+// globals.css) — otherwise iOS Safari's overscroll bounce past the top/
+// bottom edge reveals the plain <body> background, which follows the
+// site's light/dark theme toggle and defaults to white.
 export default function HashScrollFix() {
+  useEffect(() => {
+    document.body.classList.add("thm-active")
+    return () => document.body.classList.remove("thm-active")
+  }, [])
+
   useEffect(() => {
     const hash = window.location.hash
     if (!hash) return

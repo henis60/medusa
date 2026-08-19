@@ -231,6 +231,13 @@ body.hunter-landing-active {
   font-family: var(--cg);
   cursor: none;
 }
+/* Without this, iOS Safari's overscroll/rubber-band bounce past the top or
+   bottom edge reveals the plain <body> background — which follows the
+   site's light/dark theme toggle and defaults to white — instead of this
+   page's always-dark background. */
+body.thm-active {
+  background: #12291f;
+}
 .hunter-landing {
   overflow-x: clip;
 }
