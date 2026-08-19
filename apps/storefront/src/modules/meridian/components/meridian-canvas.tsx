@@ -3,9 +3,11 @@
 import { useEffect, useRef } from "react"
 
 /**
- * Globe with the meridian through Baia Mare. Bucharest anchors the south end
- * of the latitude range so Baia Mare reads at its true position (north of the
- * Balkans) — it is only used to normalize the scale, never drawn.
+ * Globe with the meridian through Baia Mare. The orthographic view is
+ * centered well south of the whole cluster (VIEW_CENTER_LAT) so all 4
+ * cities read in the globe's northern half instead of clustering near the
+ * equator. Bucharest is not drawn — it's only a reference point for scale,
+ * chosen because it's further from the view center than any labeled city.
  */
 export default function MeridianCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -117,23 +119,44 @@ export default function MeridianCanvas() {
         },
       ].map((c) => ({ ...c, ox: 0, oy: 0, ex: 0, ey: 0 }))
 
-      const refSet = [...cities, { ...BUCURESTI_REF }]
-      const lats = refSet.map((c) => c.lat)
-      const lons = refSet.map((c) => c.lon)
-      const latMid = (Math.max(...lats) + Math.min(...lats)) / 2
+      // Orthographic projection (view of the sphere from directly above the
+      // center point) — matches the meridian/parallel ellipses already drawn
+      // for the globe, so cities land where they'd actually appear on a
+      // globe centered here instead of a flat lat/lon grid stretched to fit.
+      // The camera's latitude sits well south of the whole cluster (roughly
+      // the Mediterranean) so all 4 cities — Baia Mare included — read
+      // clearly in the globe's northern half, rather than centering on the
+      // cluster itself, which put Baia Mare (its southernmost point)
+      // ambiguously close to dead-center.
+      const VIEW_CENTER_LAT = 44
+      const lons = cities.map((c) => c.lon)
       const lonMid = (Math.max(...lons) + Math.min(...lons)) / 2
-      const cosMid = Math.cos((latMid * Math.PI) / 180)
+      const lat0 = (VIEW_CENTER_LAT * Math.PI) / 180
+      const lon0 = (lonMid * Math.PI) / 180
+
+      const project = (latDeg: number, lonDeg: number) => {
+        const lat = (latDeg * Math.PI) / 180
+        const lon = (lonDeg * Math.PI) / 180
+        const dLon = lon - lon0
+        return {
+          x: Math.cos(lat) * Math.sin(dLon),
+          y: -(
+            Math.cos(lat0) * Math.sin(lat) -
+            Math.sin(lat0) * Math.cos(lat) * Math.cos(dLon)
+          ),
+        }
+      }
 
       cities.forEach((c) => {
-        c.ox = (c.lon - lonMid) * cosMid
-        c.oy = -(c.lat - latMid)
+        const p = project(c.lat, c.lon)
+        c.ox = p.x
+        c.oy = p.y
       })
-      const refOx = (BUCURESTI_REF.lon - lonMid) * cosMid
-      const refOy = -(BUCURESTI_REF.lat - latMid)
+      const refP = project(BUCURESTI_REF.lat, BUCURESTI_REF.lon)
       const maxMag = Math.max(
         ...cities.map((c) => Math.max(Math.abs(c.ox), Math.abs(c.oy))),
-        Math.abs(refOx),
-        Math.abs(refOy)
+        Math.abs(refP.x),
+        Math.abs(refP.y)
       )
       const scale = (R * 0.78) / maxMag
       cities.forEach((c) => {
@@ -142,14 +165,29 @@ export default function MeridianCanvas() {
       })
       const hub = cities.find((c) => c.hub)!
 
-      const meridianHalfW = Math.max(Math.abs(hub.ex - cx), 0.001)
+      // Decorative meridian arc, matching the same style as the faded
+      // background meridian lines below (an ellipse spanning the full
+      // pole-to-pole height, semi-height R) — solved so it actually passes
+      // through Baia Mare's real, off-center position instead of assuming
+      // the hub sits at the vertical middle.
+      const side = hub.ex >= cx ? 1 : -1
+      const vFrac = Math.min(Math.max((hub.ey - cy) / R, -0.999), 0.999)
+      const meridianHalfW =
+        Math.abs(hub.ex - cx) / Math.sqrt(Math.max(1 - vFrac * vFrac, 0.0001))
+      const onMeridian = (t: number) => {
+        const theta = -Math.PI / 2 + t * Math.PI
+        return {
+          x: cx + side * meridianHalfW * Math.cos(theta),
+          y: cy + R * Math.sin(theta),
+        }
+      }
+
       const grad = ctx!.createLinearGradient(cx, cy - R, cx, cy + R)
       grad.addColorStop(0, "rgba(201,168,76,0.15)")
       grad.addColorStop(0.5, "rgba(201,168,76,0.9)")
       grad.addColorStop(1, "rgba(201,168,76,0.15)")
       ctx!.strokeStyle = grad
       ctx!.lineWidth = 1.8
-      const side = hub.ex >= cx ? 1 : -1
       ctx!.beginPath()
       ctx!.ellipse(
         cx,
@@ -161,18 +199,6 @@ export default function MeridianCanvas() {
         side >= 0 ? Math.PI / 2 : (3 * Math.PI) / 2
       )
       ctx!.stroke()
-
-      ctx!.strokeStyle = "rgba(232,213,163,0.3)"
-      ctx!.lineWidth = 1
-      for (let k = -3; k <= 3; k++) {
-        const theta = (k / 3.5) * (Math.PI / 2)
-        const tx = cx + side * meridianHalfW * Math.cos(theta)
-        const ty = cy + R * Math.sin(theta)
-        ctx!.beginPath()
-        ctx!.moveTo(tx - 5, ty)
-        ctx!.lineTo(tx + 5, ty)
-        ctx!.stroke()
-      }
 
       cities
         .filter((c) => !c.hub)
@@ -232,9 +258,9 @@ export default function MeridianCanvas() {
       ctx!.fillText("E", rx + rr + 4, ry + 3)
 
       const t = (Math.sin(phase) + 1) / 2
-      const sunTheta = -Math.PI / 2 + t * Math.PI
-      const sunX = cx + side * meridianHalfW * Math.cos(sunTheta)
-      const sunY = cy + R * Math.sin(sunTheta)
+      const sunPoint = onMeridian(t)
+      const sunX = sunPoint.x
+      const sunY = sunPoint.y
       const glow = ctx!.createRadialGradient(sunX, sunY, 0, sunX, sunY, 11)
       glow.addColorStop(0, "rgba(232,213,163,0.95)")
       glow.addColorStop(1, "rgba(232,213,163,0)")
