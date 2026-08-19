@@ -108,35 +108,49 @@ export default function MeridianTemplate() {
                 style={{
                   fontFamily: "var(--pd)",
                   fontWeight: 400,
-                  fontSize: "clamp(38px,6vw,86px)",
+                  fontSize: "clamp(46px,6vw,86px)",
                   lineHeight: 1.06,
                   color: "var(--ivory)",
                   margin: 0,
                   maxWidth: "20ch",
                 }}
               >
-                Meridianul pe care eleganța Vestului își găsește{" "}
+                The Hunter{" "}
                 <em style={{ fontStyle: "italic", color: "#c9a84c" }}>
-                  rădăcini în Est
+                  Meridian
                 </em>
               </h1>
               <p
                 className="thm-hero-copy"
                 style={{
                   fontFamily: "var(--cg)",
-                  fontSize: "clamp(17px,1.6vw,21px)",
+                  fontSize: "clamp(20px,2vw,26px)",
                   fontWeight: 300,
                   fontStyle: "italic",
-                  lineHeight: 1.75,
-                  color: "rgba(232,213,163,0.72)",
-                  maxWidth: "62ch",
+                  lineHeight: 1.6,
+                  color: "rgba(245,240,232,0.9)",
+                  maxWidth: "48ch",
                   margin: "34px 0 0",
                 }}
               >
+                Meridianul pe care eleganța Vestului își găsește rădăcini în
+                Est.
+              </p>
+              <p
+                style={{
+                  fontFamily: "var(--cg)",
+                  fontSize: "clamp(15px,1.3vw,17px)",
+                  fontWeight: 300,
+                  lineHeight: 1.7,
+                  color: "rgba(232,213,163,0.6)",
+                  maxWidth: "56ch",
+                  margin: "22px 0 0",
+                }}
+              >
                 Douăsprezece automobile în șase perechi clasic–contemporan, un
-                concert de blues &amp; jazz în aer liber, o expoziție de pictură
-                și sculptură și trei colecții Made to Measure The Hunter House.
-                O zi, la Colonia Pictorilor.
+                concert de blues &amp; jazz în aer liber, o expoziție de
+                pictură și sculptură și trei colecții noi The Hunter House,
+                într-o singură zi, la Colonia Pictorilor.
               </p>
               <div
                 className="thm-hero-cta-row"
@@ -461,9 +475,10 @@ export default function MeridianTemplate() {
             </div>
             <div style={{ margin: "0 0 40px" }}>
               <div
+                className="thm-ticket-grid"
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
                   gap: "14px 40px",
                 }}
               >
@@ -553,57 +568,60 @@ export default function MeridianTemplate() {
               }}
             />
             <div
+              className="thm-locatia-overlay"
               style={{
                 position: "absolute",
                 left: 0,
-                right: 0,
                 bottom: 0,
                 padding: "clamp(20px,3.5vw,40px) var(--pad)",
+                pointerEvents: "none",
               }}
             >
-            <div style={{ maxWidth: 1360, margin: "0 auto" }}>
-              <div style={{ ...eyebrowRow, marginBottom: 12 }}>
-                <span style={eyebrowRule} />
-                <span
-                  style={{ ...eyebrowLabel, color: "rgba(201,168,76,0.85)" }}
-                >
-                  Locația
-                </span>
+              <div style={{ maxWidth: 1360, margin: "0 auto" }}>
+                <div style={{ maxWidth: 640, pointerEvents: "auto" }}>
+                  <div style={{ ...eyebrowRow, marginBottom: 12 }}>
+                    <span style={eyebrowRule} />
+                    <span
+                      style={{ ...eyebrowLabel, color: "rgba(201,168,76,0.85)" }}
+                    >
+                      Locația
+                    </span>
+                  </div>
+                  <h2
+                    className="thm-locatia-heading"
+                    style={{
+                      fontFamily: "var(--pd)",
+                      fontSize: "clamp(28px,3.6vw,50px)",
+                      fontWeight: 400,
+                      lineHeight: 1.05,
+                      color: "var(--ivory)",
+                      margin: 0,
+                      maxWidth: "22ch",
+                    }}
+                  >
+                    Colonia Pictorilor,{" "}
+                    <em style={{ fontStyle: "italic", color: "#c9a84c" }}>
+                      Baia Mare
+                    </em>
+                  </h2>
+                  <p
+                    style={{
+                      fontFamily: "var(--cg)",
+                      fontSize: 17,
+                      fontWeight: 300,
+                      lineHeight: 1.7,
+                      color: "rgba(245,240,232,0.8)",
+                      margin: "14px 0 0",
+                      maxWidth: "58ch",
+                    }}
+                  >
+                    O locație cu tradiție în artă, la 20 de minute de centrul
+                    Băii Mari: verde, clădiri de epocă, ateliere care
+                    funcționează și astăzi. Spațiu generos în aer liber, cu
+                    zonă acoperită, scenă pentru concert și parcare amplă.
+                  </p>
+                </div>
               </div>
-              <h2
-                className="thm-locatia-heading"
-                style={{
-                  fontFamily: "var(--pd)",
-                  fontSize: "clamp(28px,3.6vw,50px)",
-                  fontWeight: 400,
-                  lineHeight: 1.05,
-                  color: "var(--ivory)",
-                  margin: 0,
-                  maxWidth: "22ch",
-                }}
-              >
-                Colonia Pictorilor,{" "}
-                <em style={{ fontStyle: "italic", color: "#c9a84c" }}>
-                  Baia Mare
-                </em>
-              </h2>
-              <p
-                style={{
-                  fontFamily: "var(--cg)",
-                  fontSize: 17,
-                  fontWeight: 300,
-                  lineHeight: 1.7,
-                  color: "rgba(245,240,232,0.8)",
-                  margin: "14px 0 0",
-                  maxWidth: "58ch",
-                }}
-              >
-                O locație cu tradiție în artă, la 20 de minute de centrul Băii
-                Mari: verde, clădiri de epocă, ateliere care funcționează și
-                astăzi. Spațiu generos în aer liber, cu zonă acoperită, scenă
-                pentru concert și parcare amplă.
-              </p>
-            </div>
             </div>
           </div>
           <a
@@ -698,47 +716,23 @@ export default function MeridianTemplate() {
                   colaborare?
                 </em>
               </h2>
-            </div>
-            <div style={{ gridArea: "wa" }}>
-              <a
-                href="https://wa.me/40765080667"
-                target="_blank"
-                rel="noopener"
-                className="thm-btn-outline thm-whatsapp-cta"
+              <p
                 style={{
-                  marginTop: 28,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 14,
-                  border: "1px solid rgba(201,168,76,0.45)",
-                  padding: "15px 32px",
-                  fontFamily: "var(--rl)",
-                  fontSize: 10,
-                  letterSpacing: "0.5em",
-                  textTransform: "uppercase",
-                  color: "rgba(232,213,163,0.78)",
-                  transition: "border-color .3s, background .3s, color .3s",
+                  fontFamily: "var(--cg)",
+                  fontSize: 17,
+                  fontWeight: 300,
+                  lineHeight: 1.7,
+                  color: "rgba(245,240,232,0.7)",
+                  maxWidth: "42ch",
+                  margin: "18px 0 0",
                 }}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                  style={{ flex: "0 0 auto" }}
-                >
-                  <path d="M12 3a9 9 0 0 0-7.75 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3Z" />
-                  <path d="M8.6 8.7c-.15.5.1 1.1.6 1.9.6 1 1.4 1.8 2.4 2.4.8.5 1.4.7 1.9.6.4-.1.9-.5 1-.9l.1-.4" />
-                </svg>
-                Scrie-ne pe WhatsApp
-              </a>
+                Ești interesat de mai multe detalii sau de un parteneriat cu
+                The Hunter Meridian? Scrie-ne și îți răspundem în cel mai
+                scurt timp.
+              </p>
             </div>
-            <div style={{ gridArea: "contact" }}>
+            <div style={{ gridArea: "contact", alignSelf: "end" }}>
               <div
                 style={{
                   display: "flex",
@@ -821,6 +815,18 @@ export default function MeridianTemplate() {
                   marginTop: 24,
                 }}
               >
+                <span
+                  style={{
+                    fontFamily: "var(--rl)",
+                    fontSize: 9,
+                    letterSpacing: "0.5em",
+                    textTransform: "uppercase",
+                    color: "#8b6914",
+                    flex: "0 0 90px",
+                  }}
+                >
+                  Socials
+                </span>
                 <a
                   href="https://facebook.com/thehunterhouse"
                   target="_blank"
@@ -883,6 +889,47 @@ export default function MeridianTemplate() {
                   </svg>
                 </a>
               </div>
+              <a
+                href="https://wa.me/40765080667"
+                target="_blank"
+                rel="noopener"
+                className="thm-btn-outline thm-whatsapp-cta"
+                style={{
+                  marginTop: 28,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 14,
+                  height: 50,
+                  minWidth: 260,
+                  boxSizing: "border-box",
+                  border: "1px solid rgba(201,168,76,0.45)",
+                  padding: "0 32px",
+                  fontFamily: "var(--rl)",
+                  fontSize: 10,
+                  letterSpacing: "0.5em",
+                  textTransform: "uppercase",
+                  color: "rgba(232,213,163,0.78)",
+                  transition: "border-color .3s, background .3s, color .3s",
+                }}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                  style={{ flex: "0 0 auto" }}
+                >
+                  <path d="M12 3a9 9 0 0 0-7.75 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3Z" />
+                  <path d="M8.6 8.7c-.15.5.1 1.1.6 1.9.6 1 1.4 1.8 2.4 2.4.8.5 1.4.7 1.9.6.4-.1.9-.5 1-.9l.1-.4" />
+                </svg>
+                WhatsApp
+              </a>
             </div>
           </div>
         </div>
@@ -921,7 +968,15 @@ export default function MeridianTemplate() {
           }}
         >
           The Hunter{" "}
-          <em style={{ fontStyle: "italic", color: "var(--gold)" }}>
+          <em
+            className={montigny.className}
+            style={{
+              fontStyle: "normal",
+              textTransform: "none",
+              color: "var(--gold)",
+              fontSize: 20,
+            }}
+          >
             Meridian
           </em>
         </span>

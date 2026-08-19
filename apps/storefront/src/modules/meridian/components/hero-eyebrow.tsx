@@ -35,9 +35,9 @@ export default function HeroEyebrow() {
         viewport={{ once: true }}
         transition={textTransition}
       >
-        <span>Ediția I</span>
+        <span style={{ fontWeight: 700 }}>Ediția I</span>
         <span className="thm-eyebrow-sep">&nbsp;·&nbsp;</span>
-        <span>26 septembrie 2026</span>
+        <span style={{ fontWeight: 700 }}>26 septembrie 2026</span>
       </motion.span>
       <motion.span
         className="thm-eyebrow-rule-right"
