@@ -4317,9 +4317,9 @@ html {
   }
 }
 
-/* --- Meridian: #program and #bilete are jump-link targets; without this
-   the shared site nav (h-16 = 64px, same at every breakpoint) lands on top
-   of the section's first content instead of scrolling just below it. --- */
+/* --- Meridian: #program is a jump-link target; without this the shared
+   site nav (h-16 = 64px, same at every breakpoint) lands on top of the
+   section's first content instead of scrolling just below it. --- */
 .thm-anchor-target {
   scroll-margin-top: 64px;
 }

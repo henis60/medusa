@@ -1,6 +1,12 @@
 export default function BileteNavLink() {
   return (
-    <a href="#bilete" aria-label="Bilete" className="h-full flex items-center">
+    <a
+      href="https://www.iabilet.ro"
+      target="_blank"
+      rel="noopener"
+      aria-label="Bilete"
+      className="h-full flex items-center"
+    >
       {/* Mobile: icon only */}
       <span className="flex small:hidden items-center justify-center text-white hover:opacity-60 transition-opacity">
         <svg
@@ -14,8 +20,8 @@ export default function BileteNavLink() {
           strokeLinejoin="round"
           aria-hidden="true"
         >
-          <path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1.5a1.5 1.5 0 0 0 0 3V15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1.5a1.5 1.5 0 0 0 0-3Z" />
-          <line x1="10" y1="7.5" x2="10" y2="16.5" strokeDasharray="1.6 2.2" />
+          <path d="M20.5 8.5 15.5 3.5a1.5 1.5 0 0 0-2.12 0l-9.88 9.88a1.5 1.5 0 0 0 0 2.12l5 5a1.5 1.5 0 0 0 2.12 0l9.88-9.88a1.5 1.5 0 0 0 0-2.12Z" />
+          <circle cx="15" cy="9" r="1.2" fill="currentColor" stroke="none" />
         </svg>
       </span>
 

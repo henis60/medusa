@@ -3,6 +3,7 @@ import Image from "next/image"
 import Nav from "@modules/layout/templates/nav"
 import HeroEyebrow from "../components/hero-eyebrow"
 import BileteNavLink from "../components/bilete-nav-link"
+import HashScrollFix from "../components/hash-scroll-fix"
 import MeridianCanvas from "../components/meridian-canvas"
 import ProgramRows from "../components/program-rows"
 import Reveal from "../components/reveal"
@@ -59,6 +60,7 @@ const ctaBase = {
 export default function MeridianTemplate() {
   return (
     <div className="thm-root">
+      <HashScrollFix />
       <Nav
         rightAction={<BileteNavLink />}
         logoHref="/meridian"
@@ -162,7 +164,9 @@ export default function MeridianTemplate() {
                 }}
               >
                 <a
-                  href="#bilete"
+                  href="https://www.iabilet.ro"
+                  target="_blank"
+                  rel="noopener"
                   className="thm-btn-solid thm-hero-cta"
                   style={{
                     ...ctaBase,
@@ -424,8 +428,6 @@ export default function MeridianTemplate() {
 
       {/* Bilete */}
       <section
-        id="bilete"
-        className="thm-anchor-target"
         style={{
           padding: "clamp(56px,9vw,96px) var(--pad)",
           background: "var(--dark2)",
@@ -520,7 +522,9 @@ export default function MeridianTemplate() {
             </div>
             <div className="thm-hero-cta-row" style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
               <a
-                href="mailto:contact@thehunter.ro"
+                href="https://www.iabilet.ro"
+                target="_blank"
+                rel="noopener"
                 className="thm-btn-solid thm-hero-cta"
                 style={{
                   ...ctaBase,
