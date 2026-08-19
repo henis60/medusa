@@ -77,7 +77,7 @@ export default function ProgramRows() {
           whileInView={!hoverCapable ? EXPANDED : undefined}
           viewport={{ amount: 0.55, once: true }}
           transition={
-            reduceMotion || !hoverCapable
+            reduceMotion
               ? { duration: 0 }
               : { duration: 0.5, ease: "easeOut" }
           }
