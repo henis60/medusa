@@ -9,7 +9,7 @@ const ROWS = [
     kicker: "Expoziție auto",
     title: "Automobile ",
     titleEm: "de colecție",
-    body: "Douăsprezece automobile de excepție, expuse în perechi clasic-contemporan. Piesa centrală: Lamborghini Centenario Tractor.",
+    body: "Zece automobile de excepție, expuse în perechi clasic-contemporan. Piesa centrală: Lamborghini Centenario Tractor.",
     src: "/meridian/thm-program-1.webp",
     objectPositionY: "78%",
   },

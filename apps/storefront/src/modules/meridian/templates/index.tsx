@@ -13,7 +13,7 @@ import ThemeTimeline from "../components/theme-timeline"
 import { montigny } from "../fonts"
 
 const TICKET_INCLUDES = [
-  "Acces la expoziția celor douăsprezece automobile",
+  "Acces la expoziția celor zece automobile",
   "Concertul live de blues & jazz, în aer liber",
   "Expoziția de pictură și sculptură",
   "Prezentarea celor trei colecții The Hunter House",
@@ -68,7 +68,9 @@ export default function MeridianTemplate() {
         logoSuffix={
           <>
             {" "}
-            <em className={`not-italic normal-case text-hunter-gold tracking-tight text-[28px] ${montigny.className}`}>
+            <em
+              className={`not-italic normal-case text-hunter-gold tracking-tight text-[28px] ${montigny.className}`}
+            >
               Meridian
             </em>
           </>
@@ -150,10 +152,10 @@ export default function MeridianTemplate() {
                   margin: "22px 0 0",
                 }}
               >
-                Douăsprezece automobile în șase perechi clasic–contemporan, un
-                concert de blues &amp; jazz în aer liber, o expoziție de
-                pictură și sculptură și trei colecții noi The Hunter House,
-                într-o singură zi, la Colonia Pictorilor.
+                Zece automobile în cinci perechi clasic–contemporan, un concert
+                de blues &amp; jazz în aer liber, o expoziție de pictură și
+                sculptură și trei colecții noi The Hunter House, într-o singură
+                zi, la Colonia Pictorilor.
               </p>
               <div
                 className="thm-hero-cta-row"
@@ -241,9 +243,9 @@ export default function MeridianTemplate() {
                     maxWidth: "24ch",
                   }}
                 >
-                  Nu un eveniment.{" "}
+                  O tradiție{" "}
                   <em style={{ fontStyle: "italic", color: "#c9a84c" }}>
-                    O tradiție.
+                    în devenire.
                   </em>
                 </h2>
                 <p
@@ -257,12 +259,30 @@ export default function MeridianTemplate() {
                     margin: 0,
                   }}
                 >
-                  Europa are un circuit al eleganței contemporane — Ascot,
-                  Gstaad, Pebble Beach, Saint-Tropez. The Hunter Meridian aduce
-                  acest standard în Maramureș, tradus autentic, nu copiat.
-                  Devine un reper anual, cu temă și piese noi la fiecare ediție.
-                  Ediția I: evoluția automobilului, de la clasic la contemporan
-                  — iar partenerii ei intră în istoria brandului.
+                  Hunter vine din vechea engleză huntian — a urmări cu un scop
+                  anume. Meridian, din latinescul meridies, e linia care setează
+                  un punct comun între emisfere. Împreună, devin linia de ochire
+                  a unui standard occidental de gust, urmărit pe traseul dintre
+                  Est și Vest — cel pe care Londra, Parisul și Viena îl trasau
+                  acum un secol, cu accent local la fiecare curte care îl purta.
+                </p>
+                <p
+                  className="thm-concept-para"
+                  style={{
+                    fontFamily: "var(--cg)",
+                    fontSize: 17,
+                    fontWeight: 300,
+                    lineHeight: 1.7,
+                    color: "rgba(245,240,232,0.7)",
+                    margin: "20px 0 0",
+                  }}
+                >
+                  Legătura aceea nu s-a rupt, doar s-a subțiat pentru o vreme.
+                  The Hunter Meridian o reia: un reper anual, cu temă și piese
+                  noi la fiecare ediție — Ediția I, evoluția automobilului de la
+                  clasic la contemporan. Fiecare invitat, fie om de succes care
+                  a văzut deja Ascot sau Saint-Tropez, fie om de cultură care
+                  recunoaște o operă, aduce cu el o bucată din același meridian.
                 </p>
                 <blockquote
                   className="thm-concept-quote"
@@ -279,7 +299,7 @@ export default function MeridianTemplate() {
                     maxWidth: "40ch",
                   }}
                 >
-                  Un meridian nu desparte lumile. Le conectează.
+                  Un meridian unește lumile, chiar le conectează.
                 </blockquote>
               </div>
               <div
@@ -333,8 +353,8 @@ export default function MeridianTemplate() {
                 margin: "20px 0 0",
               }}
             >
-              Douăsprezece automobile. Șase perechi. Aceleași mărci, la șaizeci
-              de ani distanță — expuse față în față.
+              Zece automobile. Cinci perechi. Aceleași mărci, la șaizeci de ani
+              distanță — expuse față în față.
             </p>
           </Reveal>
           <ThemeTimeline />
@@ -371,9 +391,10 @@ export default function MeridianTemplate() {
                   maxWidth: "54ch",
                 }}
               >
-                Operă de artă unicat, atestată oficial de Lamborghini. Prima
-                expunere publică în România. Înaintea supercar-urilor, Ferruccio
-                Lamborghini construia tractoare. Aici a început totul.
+                Operă de artă unicat, din doar 5 exemplare existente în lume,
+                atestată oficial de Lamborghini.** Prima expunere publică în
+                România. Cu mult înaintea supercar-urilor, Ferruccio Lamborghini
+                construia tractoare. Aici a început totul.
               </p>
               <p
                 style={{
@@ -386,10 +407,12 @@ export default function MeridianTemplate() {
                   maxWidth: "54ch",
                 }}
               >
-                Lângă el așezăm un Lamborghini nou, care spune cealaltă parte a
-                aceleiași povești: ce a crescut în șaizeci de ani din tractorul
-                acela. Tractorul e acolo să amintească ce anume susține valoarea
-                mașinii de lângă el.
+                Lângă el așezăm un Lamborghini Aventador SVJ, care spune
+                cealaltă parte a aceleiași povești: ce a crescut în șaizeci de
+                ani din tractorul acela — Old Money și New Rich, două momente
+                ale aceleiași istorii. Clasicismul se poate finanța, nu se poate
+                cumpăra: ține de timp, nu de bani. Tractorul e acolo să
+                amintească ce anume susține valoarea mașinii de lângă el.
               </p>
             </div>
             <figure
@@ -423,7 +446,11 @@ export default function MeridianTemplate() {
       </section>
 
       {/* Program */}
-      <section id="program" className="thm-anchor-target" style={{ background: "var(--dark2)" }}>
+      <section
+        id="program"
+        className="thm-anchor-target"
+        style={{ background: "var(--dark2)" }}
+      >
         <ProgramRows />
       </section>
 
@@ -521,7 +548,10 @@ export default function MeridianTemplate() {
                 ))}
               </div>
             </div>
-            <div className="thm-hero-cta-row" style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+            <div
+              className="thm-hero-cta-row"
+              style={{ display: "flex", gap: 16, flexWrap: "wrap" }}
+            >
               <a
                 href="https://www.iabilet.ro"
                 target="_blank"
@@ -587,7 +617,10 @@ export default function MeridianTemplate() {
                   <div style={{ ...eyebrowRow, marginBottom: 12 }}>
                     <span style={eyebrowRule} />
                     <span
-                      style={{ ...eyebrowLabel, color: "rgba(201,168,76,0.85)" }}
+                      style={{
+                        ...eyebrowLabel,
+                        color: "rgba(201,168,76,0.85)",
+                      }}
                     >
                       Locația
                     </span>
@@ -622,8 +655,8 @@ export default function MeridianTemplate() {
                   >
                     O locație cu tradiție în artă, la 20 de minute de centrul
                     Băii Mari: verde, clădiri de epocă, ateliere care
-                    funcționează și astăzi. Spațiu generos în aer liber, cu
-                    zonă acoperită, scenă pentru concert și parcare amplă.
+                    funcționează și astăzi. Spațiu generos în aer liber, cu zonă
+                    acoperită, scenă pentru concert și parcare amplă.
                   </p>
                 </div>
               </div>
@@ -732,9 +765,9 @@ export default function MeridianTemplate() {
                   margin: "18px 0 0",
                 }}
               >
-                Ești interesat de mai multe detalii sau de un parteneriat cu
-                The Hunter Meridian? Scrie-ne și îți răspundem în cel mai
-                scurt timp.
+                Ești interesat de mai multe detalii sau de un parteneriat cu The
+                Hunter Meridian? Scrie-ne și îți răspundem în cel mai scurt
+                timp.
               </p>
             </div>
             <div style={{ gridArea: "contact", alignSelf: "end" }}>
@@ -963,39 +996,39 @@ export default function MeridianTemplate() {
             color: "rgba(245,240,232,0.45)",
           }}
         >
-        <span
-          style={{
-            fontFamily: "var(--pd)",
-            fontSize: 14,
-            letterSpacing: "0.2em",
-            textTransform: "uppercase",
-            color: "var(--ivory)",
-          }}
-        >
-          The Hunter{" "}
-          <em
-            className={montigny.className}
+          <span
             style={{
-              fontStyle: "normal",
-              textTransform: "none",
-              color: "var(--gold)",
-              fontSize: 20,
+              fontFamily: "var(--pd)",
+              fontSize: 14,
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: "var(--ivory)",
             }}
           >
-            Meridian
-          </em>
-        </span>
-        <span
-          style={{
-            width: "auto",
-            color: "rgba(245,240,232,0.35)",
-            letterSpacing: "0.15em",
-            textTransform: "none",
-            fontSize: 11,
-          }}
-        >
-          © 2026 The Hunter. Toate drepturile rezervate.
-        </span>
+            The Hunter{" "}
+            <em
+              className={montigny.className}
+              style={{
+                fontStyle: "normal",
+                textTransform: "none",
+                color: "var(--gold)",
+                fontSize: 20,
+              }}
+            >
+              Meridian
+            </em>
+          </span>
+          <span
+            style={{
+              width: "auto",
+              color: "rgba(245,240,232,0.35)",
+              letterSpacing: "0.15em",
+              textTransform: "none",
+              fontSize: 11,
+            }}
+          >
+            © 2026 The Hunter. Toate drepturile rezervate.
+          </span>
         </div>
       </footer>
     </div>
