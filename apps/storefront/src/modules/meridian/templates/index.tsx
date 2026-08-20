@@ -392,7 +392,7 @@ export default function MeridianTemplate() {
                 }}
               >
                 Operă de artă unicat, din doar 5 exemplare existente în lume,
-                atestată oficial de Lamborghini.** Prima expunere publică în
+                atestată oficial de Lamborghini.Prima expunere publică în
                 România. Cu mult înaintea supercar-urilor, Ferruccio Lamborghini
                 construia tractoare. Aici a început totul.
               </p>
