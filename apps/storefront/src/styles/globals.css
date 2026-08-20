@@ -71,6 +71,7 @@
   }
 
   body {
+    min-width: 320px;
     background-color: var(--theme-bg);
     color: var(--theme-text);
     font-family: var(--rl);

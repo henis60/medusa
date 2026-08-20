@@ -171,6 +171,7 @@ function setTravelDotIntensity(dot: HTMLDivElement, intensity: number) {
 export default function ThemeTimeline() {
   const reduceMotion = useReducedMotion()
   const [vertical, setVertical] = useState(false)
+  const [tablet, setTablet] = useState(false)
   const lineRef = useRef<HTMLDivElement>(null)
   const dotRef = useRef<HTMLDivElement>(null)
   const mobilePathRef = useRef<SVGPathElement>(null)
@@ -180,6 +181,14 @@ export default function ThemeTimeline() {
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 640px)")
     const update = () => setVertical(mq.matches)
+    update()
+    mq.addEventListener("change", update)
+    return () => mq.removeEventListener("change", update)
+  }, [])
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 641px) and (max-width: 1024px)")
+    const update = () => setTablet(mq.matches)
     update()
     mq.addEventListener("change", update)
     return () => mq.removeEventListener("change", update)
@@ -249,16 +258,18 @@ export default function ThemeTimeline() {
         const container = line.parentElement
         if (!container) return
         const cr = container.getBoundingClientRect()
-        const xLeft =
+        const xLeftRaw =
           diamonds.reduce((sum, d) => {
             const dr = d.getBoundingClientRect()
             return sum + (dr.left + dr.width / 2 - cr.left)
           }, 0) / diamonds.length
-        const xRight =
+        const xRightRaw =
           modernDiamonds.reduce((sum, d) => {
             const dr = d.getBoundingClientRect()
             return sum + (dr.left + dr.width / 2 - cr.left)
           }, 0) / modernDiamonds.length
+        const xLeft = Math.round(xLeftRaw * 2) / 2
+        const xRight = Math.round(xRightRaw * 2) / 2
         railWidth = Math.max(12, xRight - xLeft)
         line.style.left = `${xLeft}px`
         const yTop = 0
@@ -277,22 +288,27 @@ export default function ThemeTimeline() {
     measure()
     const ro = new ResizeObserver(measure)
     ro.observe(line)
+    if (line.parentElement) ro.observe(line.parentElement)
+    window.addEventListener("resize", measure)
 
     const start = performance.now()
     let raf = 0
     const frame = (now: number) => {
       if (stopped) return
       raf = requestAnimationFrame(frame)
-      const leftTotal = 6 * TRAVEL_DUR + 5 * PAUSE_DUR
-      const bottomTurnDur = TURN_DUR
-      const rightTotal = 6 * TRAVEL_DUR + 5 * PAUSE_DUR
-      const total = leftTotal + bottomTurnDur + rightTotal
-      const t = ((now - start) / 1000) % total
       const points = [0, ...fracs, 1]
       const rightStops = modernFracs
         .map((f, idx) => ({ p: 1 - f, idx }))
         .sort((a, b) => a.p - b.p)
       const rightPoints = [0, ...rightStops.map((s) => s.p), 1]
+      const leftTotal = 6 * TRAVEL_DUR + 5 * PAUSE_DUR
+      const rightTotal = 6 * TRAVEL_DUR + 5 * PAUSE_DUR
+      const lastLeftLen = Math.max(0.0001, (1 - points[5]) * lineSize)
+      const firstRightLen = Math.max(0.0001, rightPoints[1] * lineSize)
+      const edgeSpeed = (lastLeftLen + firstRightLen) / 2 / TRAVEL_DUR
+      const bottomTurnDur = edgeSpeed > 0 ? bendLen / edgeSpeed : TURN_DUR
+      const total = leftTotal + bottomTurnDur + rightTotal
+      const t = ((now - start) / 1000) % total
       const classicFilled = [false, false, false, false, false]
       const modernFilled = [false, false, false, false, false]
       let currLen = 0
@@ -392,6 +408,7 @@ export default function ThemeTimeline() {
     return () => {
       stopped = true
       ro.disconnect()
+      window.removeEventListener("resize", measure)
       cancelAnimationFrame(raf)
     }
   }, [vertical])
@@ -1092,16 +1109,26 @@ export default function ThemeTimeline() {
                         fontWeight: isHighlighted ? 700 : 400,
                         lineHeight: 1.3,
                         color: isHighlighted ? "#f5e6b8" : "var(--ivory)",
-                        whiteSpace: isPhantomI ? "nowrap" : "normal",
+                        whiteSpace: isPhantomI && !tablet ? "nowrap" : "normal",
                       }}
                     >
-                      {isPhantomI ? (
+                      {isPhantomI && !tablet ? (
                         <>
                           <span style={{ color: "var(--ivory)" }}>
                             Rolls-Royce
                           </span>
                           <span style={{ color: "rgba(245,240,232,0.6)" }}>
                             &nbsp;Phantom I
+                          </span>
+                        </>
+                      ) : isPhantomI && tablet ? (
+                        <>
+                          <span style={{ color: "var(--ivory)" }}>
+                            Rolls-Royce
+                          </span>
+                          <br />
+                          <span style={{ color: "rgba(245,240,232,0.6)" }}>
+                            Phantom I
                           </span>
                         </>
                       ) : (
