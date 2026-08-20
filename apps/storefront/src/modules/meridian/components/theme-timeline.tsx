@@ -11,7 +11,6 @@ const CARS = [
     modernYear: "2026",
     modernBrand: "Bentley",
     modernModel: "Continental GT",
-    gapLabel: "74 de ani",
   },
   {
     year: "1958",
@@ -19,17 +18,15 @@ const CARS = [
     model: "S-Class",
     modernYear: "2026",
     modernBrand: "Mercedes",
-    modernModel: "S-Class",
-    gapLabel: "68 de ani",
+    modernModel: "S-Class Maybach",
   },
   {
-    year: "Anii '60",
+    year: "",
     brand: "Lamborghini",
     model: "Centenario Tractor",
     modernYear: "2026",
     modernBrand: "Lamborghini",
-    modernModel: "SVJ",
-    gapLabel: "peste 60 de ani",
+    modernModel: "Aventador SVJ",
     highlight: true,
   },
   {
@@ -38,8 +35,7 @@ const CARS = [
     model: "911",
     modernYear: "2026",
     modernBrand: "Porsche",
-    modernModel: "911",
-    gapLabel: "50 de ani",
+    modernModel: "911 Turbo S",
   },
   {
     year: "1972",
@@ -47,8 +43,7 @@ const CARS = [
     model: "Phantom I",
     modernYear: "2026",
     modernBrand: "Rolls-Royce",
-    modernModel: "Phantom",
-    gapLabel: "54 de ani",
+    modernModel: "Spectre",
   },
 ]
 
@@ -88,35 +83,39 @@ const TOP_Y = 3
 const LINE_GAP = 64
 const BOTTOM_Y = TOP_Y + LINE_GAP
 const RIGHT_X = 92
+const MARKER_ROW_H = TOP_Y * 2
+const MARKER_SPACER_H = LINE_GAP - MARKER_ROW_H
 
 // Point graph the traveling light walks: out along the top (classic),
 // around the turn, back along the bottom (modern) in reverse car order.
 // null entries are plain corners/edges with no diamond to light.
-const POINT_META: ({ group: "classic" | "modern"; carIndex: number } | null)[] = [
-  null,
-  { group: "classic", carIndex: 0 },
-  { group: "classic", carIndex: 1 },
-  { group: "classic", carIndex: 2 },
-  { group: "classic", carIndex: 3 },
-  { group: "classic", carIndex: 4 },
-  null,
-  null,
-  { group: "modern", carIndex: 4 },
-  { group: "modern", carIndex: 3 },
-  { group: "modern", carIndex: 2 },
-  { group: "modern", carIndex: 1 },
-  { group: "modern", carIndex: 0 },
-  null,
-]
+const POINT_META: ({ group: "classic" | "modern"; carIndex: number } | null)[] =
+  [
+    null,
+    { group: "classic", carIndex: 0 },
+    { group: "classic", carIndex: 1 },
+    { group: "classic", carIndex: 2 },
+    { group: "classic", carIndex: 3 },
+    { group: "classic", carIndex: 4 },
+    null,
+    null,
+    { group: "modern", carIndex: 4 },
+    { group: "modern", carIndex: 3 },
+    { group: "modern", carIndex: 2 },
+    { group: "modern", carIndex: 1 },
+    { group: "modern", carIndex: 0 },
+    null,
+  ]
 const SEGMENT_COUNT = POINT_META.length - 1
-const SEGMENT_DUR = Array.from({ length: SEGMENT_COUNT }, (_, j) =>
+const SEGMENT_DUR: number[] = Array.from({ length: SEGMENT_COUNT }, (_, j) =>
   j === 6 ? TURN_DUR : TRAVEL_DUR
 )
-const SEGMENT_PAUSE = Array.from({ length: SEGMENT_COUNT }, (_, j) =>
+const SEGMENT_PAUSE: number[] = Array.from({ length: SEGMENT_COUNT }, (_, j) =>
   POINT_META[j + 1] ? PAUSE_DUR : 0
 )
 const LOOP_TOTAL =
-  SEGMENT_DUR.reduce((a, b) => a + b, 0) + SEGMENT_PAUSE.reduce((a, b) => a + b, 0)
+  SEGMENT_DUR.reduce((a, b) => a + b, 0) +
+  SEGMENT_PAUSE.reduce((a, b) => a + b, 0)
 
 function igniteStyle(
   d: HTMLSpanElement,
@@ -128,6 +127,8 @@ function igniteStyle(
   const base = d.dataset.baseTransform || ""
   const IGNITE_MS = 550
   if (lit) {
+    // Keep the hit/ignite response snappy while the marker is being lit.
+    d.style.transition = "none"
     if (!wasLit) arrivalAt.current = now
     const elapsed = now - arrivalAt.current
     if (elapsed < IGNITE_MS) {
@@ -147,10 +148,24 @@ function igniteStyle(
       d.style.transform = base
     }
   } else {
+    // On loop reset, fade all light energy out instead of hard cutting to dark.
+    d.style.transition =
+      "background-color 420ms ease-out, box-shadow 420ms ease-out, transform 420ms ease-out"
     d.style.background = "#0d1f17"
     d.style.boxShadow = "none"
     d.style.transform = base
   }
+}
+
+function setTravelDotIntensity(dot: HTMLDivElement, intensity: number) {
+  const v = Math.max(0.12, Math.min(1, intensity))
+  dot.style.opacity = `${0.35 + 0.65 * v}`
+  dot.style.background = `rgba(255,246,224,${0.25 + 0.75 * v})`
+  dot.style.boxShadow = `0 0 4px 1px rgba(255,246,224,${
+    0.12 + 0.88 * v
+  }), 0 0 18px 6px rgba(232,213,163,${
+    0.08 + 0.82 * v
+  }), 0 0 34px 12px rgba(201,168,76,${0.03 + 0.47 * v})`
 }
 
 export default function ThemeTimeline() {
@@ -158,6 +173,7 @@ export default function ThemeTimeline() {
   const [vertical, setVertical] = useState(false)
   const lineRef = useRef<HTMLDivElement>(null)
   const dotRef = useRef<HTMLDivElement>(null)
+  const mobilePathRef = useRef<SVGPathElement>(null)
   const diamondRefs = useRef<(HTMLSpanElement | null)[]>([])
   const modernDiamondRefs = useRef<(HTMLSpanElement | null)[]>([])
 
@@ -175,22 +191,88 @@ export default function ThemeTimeline() {
     if (!vertical) return
     const line = lineRef.current
     const dot = dotRef.current
+    const path = mobilePathRef.current
     const diamonds = diamondRefs.current.filter(Boolean) as HTMLSpanElement[]
-    if (!line || !dot || diamonds.length !== CARS.length) return
+    const modernDiamonds = modernDiamondRefs.current.filter(
+      Boolean
+    ) as HTMLSpanElement[]
+    if (
+      !line ||
+      !dot ||
+      !path ||
+      diamonds.length !== CARS.length ||
+      modernDiamonds.length !== CARS.length
+    )
+      return
 
     let stopped = false
     let fracs = [0.1, 0.3, 0.5, 0.7, 0.9]
-    const prevFilled = [false, false, false, false, false]
-    const arrivalAt = [-Infinity, -Infinity, -Infinity, -Infinity, -Infinity]
+    let modernFracs = [0.1, 0.3, 0.5, 0.7, 0.9]
+    const MOBILE_U_WIDTH = 28
+    const MOBILE_U_BEND = 20
+    const classicPrev = [false, false, false, false, false]
+    const modernPrev = [false, false, false, false, false]
+    const classicArrival = [
+      -Infinity,
+      -Infinity,
+      -Infinity,
+      -Infinity,
+      -Infinity,
+    ]
+    const modernArrival = [
+      -Infinity,
+      -Infinity,
+      -Infinity,
+      -Infinity,
+      -Infinity,
+    ]
+    let lineSize = 0
+    let railWidth = MOBILE_U_WIDTH
+    let pathLen = 0
+    let bendLen = 0
 
     const measure = () => {
       const lr = line.getBoundingClientRect()
       const size = lr.height
       if (!size) return
+      lineSize = size
       fracs = diamonds.map((d) => {
         const dr = d.getBoundingClientRect()
         return (dr.top + dr.height / 2 - lr.top) / size
       })
+      modernFracs = modernDiamonds.map((d) => {
+        const dr = d.getBoundingClientRect()
+        return (dr.top + dr.height / 2 - lr.top) / size
+      })
+
+      if (path) {
+        const container = line.parentElement
+        if (!container) return
+        const cr = container.getBoundingClientRect()
+        const xLeft =
+          diamonds.reduce((sum, d) => {
+            const dr = d.getBoundingClientRect()
+            return sum + (dr.left + dr.width / 2 - cr.left)
+          }, 0) / diamonds.length
+        const xRight =
+          modernDiamonds.reduce((sum, d) => {
+            const dr = d.getBoundingClientRect()
+            return sum + (dr.left + dr.width / 2 - cr.left)
+          }, 0) / modernDiamonds.length
+        railWidth = Math.max(12, xRight - xLeft)
+        line.style.left = `${xLeft}px`
+        const yTop = 0
+        const yBottom = size
+        const xMid = (xLeft + xRight) / 2
+        path.setAttribute(
+          "d",
+          `M ${xLeft},${yTop} L ${xLeft},${yBottom} Q ${xMid},${
+            yBottom + MOBILE_U_BEND
+          } ${xRight},${yBottom} L ${xRight},${yTop}`
+        )
+        pathLen = path.getTotalLength()
+        bendLen = Math.max(0, pathLen - 2 * size)
+      }
     }
     measure()
     const ro = new ResizeObserver(measure)
@@ -201,40 +283,108 @@ export default function ThemeTimeline() {
     const frame = (now: number) => {
       if (stopped) return
       raf = requestAnimationFrame(frame)
-      const total = 6 * TRAVEL_DUR + 5 * PAUSE_DUR
+      const leftTotal = 6 * TRAVEL_DUR + 5 * PAUSE_DUR
+      const bottomTurnDur = TURN_DUR
+      const rightTotal = 6 * TRAVEL_DUR + 5 * PAUSE_DUR
+      const total = leftTotal + bottomTurnDur + rightTotal
       const t = ((now - start) / 1000) % total
       const points = [0, ...fracs, 1]
-      const filled = [false, false, false, false, false]
-      let pos = 0
-      let acc = 0
-      for (let i = 0; i < 6; i++) {
-        if (t < acc + TRAVEL_DUR) {
-          const p = (t - acc) / TRAVEL_DUR
-          pos = points[i] + (points[i + 1] - points[i]) * p
-          for (let k = 0; k < i; k++) filled[k] = true
-          break
-        }
-        acc += TRAVEL_DUR
-        if (i < 5) {
-          if (t < acc + PAUSE_DUR) {
-            pos = points[i + 1]
-            for (let k = 0; k <= i; k++) filled[k] = true
+      const rightStops = modernFracs
+        .map((f, idx) => ({ p: 1 - f, idx }))
+        .sort((a, b) => a.p - b.p)
+      const rightPoints = [0, ...rightStops.map((s) => s.p), 1]
+      const classicFilled = [false, false, false, false, false]
+      const modernFilled = [false, false, false, false, false]
+      let currLen = 0
+      let dotIntensity = 1
+      if (t < leftTotal) {
+        let acc = 0
+        for (let i = 0; i < 6; i++) {
+          if (t < acc + TRAVEL_DUR) {
+            const p = (t - acc) / TRAVEL_DUR
+            currLen = (points[i] + (points[i + 1] - points[i]) * p) * lineSize
+            if (i < 5 && p > 0.94) {
+              const hitEase = (p - 0.94) / 0.06
+              dotIntensity = 1 - 0.75 * hitEase
+            }
+            for (let k = 0; k < i; k++) classicFilled[k] = true
             break
           }
-          acc += PAUSE_DUR
+          acc += TRAVEL_DUR
+          if (i < 5) {
+            if (t < acc + PAUSE_DUR) {
+              currLen = points[i + 1] * lineSize
+              dotIntensity = 0.18
+              for (let k = 0; k <= i; k++) classicFilled[k] = true
+              break
+            }
+            acc += PAUSE_DUR
+          }
+        }
+      } else if (t < leftTotal + bottomTurnDur) {
+        const p = (t - leftTotal) / bottomTurnDur
+        currLen = lineSize + p * bendLen
+        dotIntensity = 1
+        classicFilled.fill(true)
+      } else {
+        let acc = leftTotal + bottomTurnDur
+        classicFilled.fill(true)
+
+        for (let i = 0; i < 6; i++) {
+          if (t < acc + TRAVEL_DUR) {
+            const p = (t - acc) / TRAVEL_DUR
+            const rp =
+              rightPoints[i] + (rightPoints[i + 1] - rightPoints[i]) * p
+            currLen = lineSize + bendLen + rp * lineSize
+            if (i < 5 && p > 0.94) {
+              const hitEase = (p - 0.94) / 0.06
+              dotIntensity = 1 - 0.75 * hitEase
+            }
+            for (let k = 0; k < i; k++) modernFilled[rightStops[k].idx] = true
+            break
+          }
+          acc += TRAVEL_DUR
+          if (i < 5) {
+            if (t < acc + PAUSE_DUR) {
+              currLen = lineSize + bendLen + rightPoints[i + 1] * lineSize
+              dotIntensity = 0.18
+              for (let k = 0; k <= i; k++)
+                modernFilled[rightStops[k].idx] = true
+              break
+            }
+            acc += PAUSE_DUR
+          }
         }
       }
-      dot.style.top = pos * 100 + "%"
+
+      const pt = path.getPointAtLength(Math.max(0, Math.min(pathLen, currLen)))
+      const lineLeft = line.offsetLeft
+      dot.style.top = `${pt.y - 5.5}px`
+      dot.style.left = `${pt.x - lineLeft - 5.5}px`
+      dot.style.transform = "none"
+      setTravelDotIntensity(dot, dotIntensity)
       diamonds.forEach((d, idx) => {
-        igniteStyle(d, filled[idx], prevFilled[idx], now, {
+        igniteStyle(d, classicFilled[idx], classicPrev[idx], now, {
           get current() {
-            return arrivalAt[idx]
+            return classicArrival[idx]
           },
           set current(v) {
-            arrivalAt[idx] = v
+            classicArrival[idx] = v
           },
         })
-        prevFilled[idx] = filled[idx]
+        classicPrev[idx] = classicFilled[idx]
+      })
+
+      modernDiamonds.forEach((d, idx) => {
+        igniteStyle(d, modernFilled[idx], modernPrev[idx], now, {
+          get current() {
+            return modernArrival[idx]
+          },
+          set current(v) {
+            modernArrival[idx] = v
+          },
+        })
+        modernPrev[idx] = modernFilled[idx]
       })
     }
     raf = requestAnimationFrame(frame)
@@ -252,8 +402,12 @@ export default function ThemeTimeline() {
     if (vertical) return
     const line = lineRef.current
     const dot = dotRef.current
-    const classicDiamonds = diamondRefs.current.filter(Boolean) as HTMLSpanElement[]
-    const modernDiamonds = modernDiamondRefs.current.filter(Boolean) as HTMLSpanElement[]
+    const classicDiamonds = diamondRefs.current.filter(
+      Boolean
+    ) as HTMLSpanElement[]
+    const modernDiamonds = modernDiamondRefs.current.filter(
+      Boolean
+    ) as HTMLSpanElement[]
     if (
       !line ||
       !dot ||
@@ -266,16 +420,94 @@ export default function ThemeTimeline() {
     let fracs = [0.1, 0.3, 0.5, 0.7, 0.9]
     const classicPrev = [false, false, false, false, false]
     const modernPrev = [false, false, false, false, false]
-    const classicArrival = [-Infinity, -Infinity, -Infinity, -Infinity, -Infinity]
-    const modernArrival = [-Infinity, -Infinity, -Infinity, -Infinity, -Infinity]
+    const classicArrival = [
+      -Infinity,
+      -Infinity,
+      -Infinity,
+      -Infinity,
+      -Infinity,
+    ]
+    const modernArrival = [
+      -Infinity,
+      -Infinity,
+      -Infinity,
+      -Infinity,
+      -Infinity,
+    ]
+    const TARGET_TRAVEL_TOTAL = SEGMENT_DUR.reduce((a, b) => a + b, 0)
+    const rightEdge = RIGHT_X / 100
+    const turnMidY = (TOP_Y + BOTTOM_Y) / 2
+    const TURN_SAMPLE_COUNT = 120
+    let turnLookup: { s: number; x: number; y: number }[] = []
+    let turnLengthPx = 0
+    let lineWidth = 0
+
+    const turnPointAt = (q: number) => {
+      if (q <= 0.5) {
+        const u = q * 2
+        const inv = 1 - u
+        return {
+          x: inv * inv * rightEdge + 2 * inv * u * 1 + u * u * 1,
+          y: inv * inv * TOP_Y + 2 * inv * u * TOP_Y + u * u * turnMidY,
+        }
+      }
+      const u = (q - 0.5) * 2
+      const inv = 1 - u
+      return {
+        x: inv * inv * 1 + 2 * inv * u * 1 + u * u * rightEdge,
+        y: inv * inv * turnMidY + 2 * inv * u * BOTTOM_Y + u * u * BOTTOM_Y,
+      }
+    }
+
+    const buildTurnLookup = (lineWidthPx: number) => {
+      const pts: { s: number; x: number; y: number }[] = []
+      let total = 0
+      let prev = turnPointAt(0)
+      pts.push({ s: 0, x: prev.x, y: prev.y })
+
+      for (let n = 1; n <= TURN_SAMPLE_COUNT; n++) {
+        const q = n / TURN_SAMPLE_COUNT
+        const curr = turnPointAt(q)
+        total += Math.hypot((curr.x - prev.x) * lineWidthPx, curr.y - prev.y)
+        pts.push({ s: total, x: curr.x, y: curr.y })
+        prev = curr
+      }
+
+      if (total > 0) {
+        for (const p of pts) p.s /= total
+      }
+      return { pts, total }
+    }
+
+    const pointOnTurnByArc = (sNorm: number) => {
+      if (!turnLookup.length) return turnPointAt(sNorm)
+      if (sNorm <= 0) return turnLookup[0]
+      if (sNorm >= 1) return turnLookup[turnLookup.length - 1]
+
+      let hi = 1
+      while (hi < turnLookup.length && turnLookup[hi].s < sNorm) hi++
+      const lo = hi - 1
+      const a = turnLookup[lo]
+      const b = turnLookup[hi]
+      const span = b.s - a.s || 1
+      const u = (sNorm - a.s) / span
+      return {
+        x: a.x + (b.x - a.x) * u,
+        y: a.y + (b.y - a.y) * u,
+      }
+    }
 
     const measure = () => {
       const lr = line.getBoundingClientRect()
       if (!lr.width) return
+      lineWidth = lr.width
       fracs = classicDiamonds.map((d) => {
         const dr = d.getBoundingClientRect()
         return (dr.left + dr.width / 2 - lr.left) / lr.width
       })
+      const turnData = buildTurnLookup(lr.width)
+      turnLookup = turnData.pts
+      turnLengthPx = turnData.total
     }
     measure()
     const ro = new ResizeObserver(measure)
@@ -288,7 +520,30 @@ export default function ThemeTimeline() {
       raf = requestAnimationFrame(frame)
       const t = ((now - start) / 1000) % LOOP_TOTAL
       const [f0, f1, f2, f3, f4] = fracs
-      const xs = [0, f0, f1, f2, f3, f4, 1, 1, f4, f3, f2, f1, f0, 0]
+      const xs = [
+        0,
+        f0,
+        f1,
+        f2,
+        f3,
+        f4,
+        rightEdge,
+        rightEdge,
+        f4,
+        f3,
+        f2,
+        f1,
+        f0,
+        0,
+      ]
+      const segLenPx = Array.from({ length: SEGMENT_COUNT }, (_, j) =>
+        j === 6 ? turnLengthPx : Math.abs(xs[j + 1] - xs[j]) * lineWidth
+      )
+      const totalLenPx = segLenPx.reduce((a, b) => a + b, 0)
+      const segDur =
+        totalLenPx > 0
+          ? segLenPx.map((len) => (len / totalLenPx) * TARGET_TRAVEL_TOTAL)
+          : SEGMENT_DUR
       const classicFilled = [false, false, false, false, false]
       const modernFilled = [false, false, false, false, false]
 
@@ -303,15 +558,24 @@ export default function ThemeTimeline() {
 
       let x = xs[0]
       let y = TOP_Y
+      let dotIntensity = 1
       let acc = 0
       for (let j = 0; j < SEGMENT_COUNT; j++) {
-        const dur = SEGMENT_DUR[j]
-        const y0 = j <= 6 ? TOP_Y : BOTTOM_Y
-        const y1 = j + 1 <= 6 ? TOP_Y : BOTTOM_Y
+        const dur = segDur[j]
         if (t < acc + dur) {
-          const p = (t - acc) / dur
-          x = xs[j] + (xs[j + 1] - xs[j]) * p
-          y = y0 + (y1 - y0) * p
+          const p = dur > 0 ? (t - acc) / dur : 0
+          if (j === 6) {
+            const pt = pointOnTurnByArc(p)
+            x = pt.x
+            y = pt.y
+          } else {
+            x = xs[j] + (xs[j + 1] - xs[j]) * p
+            y = j <= 5 ? TOP_Y : BOTTOM_Y
+          }
+          if (POINT_META[j + 1] && p > 0.94) {
+            const hitEase = (p - 0.94) / 0.06
+            dotIntensity = 1 - 0.75 * hitEase
+          }
           markUpTo(j)
           break
         }
@@ -320,7 +584,8 @@ export default function ThemeTimeline() {
         if (pause > 0) {
           if (t < acc + pause) {
             x = xs[j + 1]
-            y = y1
+            y = j + 1 <= 6 ? TOP_Y : BOTTOM_Y
+            if (POINT_META[j + 1]) dotIntensity = 0.18
             markUpTo(j + 1)
             break
           }
@@ -330,6 +595,7 @@ export default function ThemeTimeline() {
 
       dot.style.left = x * 100 + "%"
       dot.style.top = `${y - 5.5}px`
+      setTravelDotIntensity(dot, dotIntensity)
 
       classicDiamonds.forEach((d, idx) => {
         igniteStyle(d, classicFilled[idx], classicPrev[idx], now, {
@@ -363,21 +629,59 @@ export default function ThemeTimeline() {
     }
   }, [vertical])
 
-  const LINE_X = 96
-
   if (vertical) {
     return (
-      <div style={{ position: "relative", margin: "56px 0 0" }}>
+      <div
+        style={{
+          position: "relative",
+          margin: "56px auto 0",
+          width: "100%",
+          maxWidth: 640,
+        }}
+      >
+        <svg
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+            width: "100%",
+            height: "100%",
+            overflow: "visible",
+            pointerEvents: "none",
+          }}
+        >
+          <defs>
+            <linearGradient
+              id="thm-mobile-curve-grad"
+              x1="0"
+              y1="0"
+              x2="0"
+              y2="1"
+            >
+              <stop offset="0%" stopColor="rgba(201,168,76,0.25)" />
+              <stop offset="100%" stopColor="rgba(201,168,76,0.85)" />
+            </linearGradient>
+          </defs>
+          <path
+            ref={mobilePathRef}
+            d=""
+            fill="none"
+            stroke="url(#thm-mobile-curve-grad)"
+            strokeWidth={1}
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
         <div
           ref={lineRef}
           style={{
             position: "absolute",
-            left: LINE_X,
+            left: "calc(50% - 18px)",
             top: 0,
             bottom: 0,
             width: 1,
-            background:
-              "linear-gradient(180deg, rgba(201,168,76,0.25), rgba(201,168,76,0.85))",
           }}
         >
           <div
@@ -407,9 +711,10 @@ export default function ThemeTimeline() {
           <div style={{ display: "flex", alignItems: "center" }}>
             <span
               style={{
-                width: LINE_X - 10,
-                flexShrink: 0,
-                textAlign: "right",
+                flex: "1 1 0",
+                minWidth: 0,
+                paddingRight: 24,
+                textAlign: "center",
                 fontFamily: "var(--rl)",
                 fontSize: 10,
                 letterSpacing: "0.4em",
@@ -420,10 +725,13 @@ export default function ThemeTimeline() {
               Clasic
             </span>
             <div style={{ width: 20, flexShrink: 0 }} />
+            <div style={{ width: 36, flexShrink: 0 }} />
             <span
               style={{
-                flex: 1,
-                paddingLeft: 10,
+                flex: "1 1 0",
+                minWidth: 0,
+                paddingLeft: 8,
+                textAlign: "center",
                 fontFamily: "var(--rl)",
                 fontSize: 10,
                 letterSpacing: "0.4em",
@@ -435,129 +743,197 @@ export default function ThemeTimeline() {
             </span>
           </div>
 
-          {CARS.map((car, i) => (
-            <div key={car.year} style={{ display: "flex", alignItems: "center" }}>
-              <div
-                style={{
-                  width: LINE_X - 10,
-                  flexShrink: 0,
-                  textAlign: "right",
-                }}
-              >
-                <motion.div variants={textVariantsV}>
+          {CARS.map((car, i) =>
+            (() => {
+              const isHighlighted =
+                car.brand === "Lamborghini" &&
+                car.model === "Centenario Tractor"
+              const isRollsRoyce = car.brand === "Rolls-Royce"
+              const isPhantomI =
+                car.brand === "Rolls-Royce" && car.model === "Phantom I"
+              return (
+                <div
+                  key={`${car.brand}-${car.year || i}`}
+                  style={{ display: "flex", alignItems: "center" }}
+                >
                   <div
                     style={{
+                      flex: "1 1 0",
+                      minWidth: 0,
+                      paddingRight: 24,
+                      textAlign: "center",
+                    }}
+                  >
+                    <motion.div variants={textVariantsV}>
+                      {car.year ? (
+                        <span
+                          style={{
+                            display: "block",
+                            fontFamily: "var(--rl)",
+                            fontSize: 10,
+                            letterSpacing: "0.3em",
+                            color: isHighlighted
+                              ? "#f5e6b8"
+                              : "rgba(201,168,76,0.75)",
+                            fontFeatureSettings: "'tnum' 1",
+                            marginBottom: 3,
+                          }}
+                        >
+                          {car.year}
+                        </span>
+                      ) : null}
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontFamily: "var(--pd)",
+                            fontSize: isHighlighted
+                              ? "clamp(16px,4vw,19px)"
+                              : "clamp(14px,3.6vw,17px)",
+                            fontWeight: isHighlighted ? 700 : 400,
+                            lineHeight: 1.25,
+                            color: isHighlighted ? "#f5e6b8" : "var(--ivory)",
+                            whiteSpace: isRollsRoyce ? "nowrap" : "normal",
+                          }}
+                        >
+                          {car.brand}
+                        </span>
+                        {car.model ? (
+                          <span
+                            style={{
+                              marginTop: 1,
+                              fontFamily: "var(--pd)",
+                              fontSize: isPhantomI
+                                ? "clamp(13px,3.3vw,16px)"
+                                : "clamp(14px,3.6vw,17px)",
+                              fontWeight: isHighlighted ? 700 : 400,
+                              lineHeight: 1.25,
+                              color: "rgba(245,240,232,0.55)",
+                              whiteSpace: isPhantomI ? "nowrap" : "normal",
+                            }}
+                          >
+                            {car.model}
+                          </span>
+                        ) : null}
+                      </div>
+                    </motion.div>
+                  </div>
+                  <div
+                    style={{
+                      width: 20,
+                      flexShrink: 0,
                       display: "flex",
-                      alignItems: "baseline",
-                      justifyContent: "flex-end",
-                      gap: 8,
-                      flexWrap: "wrap",
+                      justifyContent: "center",
                     }}
                   >
                     <span
-                      style={{
-                        fontFamily: "var(--pd)",
-                        fontSize: car.highlight
-                          ? "clamp(16px,4vw,19px)"
-                          : "clamp(14px,3.6vw,17px)",
-                        fontWeight: car.highlight ? 500 : 400,
-                        lineHeight: 1.25,
-                        color: car.highlight ? "#f5e6b8" : "var(--ivory)",
+                      ref={(el) => {
+                        diamondRefs.current[i] = el
                       }}
-                    >
-                      {car.brand}
-                      {car.model ? (
-                        <span style={{ color: "rgba(245,240,232,0.55)" }}>
-                          {" "}
-                          {car.model}
+                      data-base-transform="rotate(45deg)"
+                      aria-hidden="true"
+                      style={{
+                        width: isHighlighted ? 11 : 8,
+                        height: isHighlighted ? 11 : 8,
+                        border: isHighlighted
+                          ? "1.5px solid #f5e6b8"
+                          : "1.5px solid #c9a84c",
+                        background: "#0d1f17",
+                        boxShadow: isHighlighted
+                          ? "0 0 10px 2px rgba(245,230,184,0.45)"
+                          : undefined,
+                        transform: "rotate(45deg)",
+                      }}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      width: 36,
+                      flexShrink: 0,
+                      display: "flex",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <span
+                      ref={(el) => {
+                        modernDiamondRefs.current[i] = el
+                      }}
+                      data-base-transform="rotate(45deg)"
+                      aria-hidden="true"
+                      style={{
+                        width: 8,
+                        height: 8,
+                        border: "1.5px solid #c9a84c",
+                        background: "#0d1f17",
+                        transform: "rotate(45deg)",
+                      }}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      flex: "1 1 0",
+                      minWidth: 0,
+                      textAlign: "center",
+                    }}
+                  >
+                    <motion.div variants={textVariantsV}>
+                      <span
+                        style={{
+                          display: "block",
+                          marginBottom: 3,
+                          fontFamily: "var(--rl)",
+                          fontSize: 10,
+                          letterSpacing: "0.3em",
+                          color: "rgba(201,168,76,0.75)",
+                          fontFeatureSettings: "'tnum' 1",
+                        }}
+                      >
+                        {car.modernYear}
+                      </span>
+                      <span
+                        style={{
+                          display: "block",
+                          fontFamily: "var(--pd)",
+                          fontSize: "clamp(14px,3.6vw,17px)",
+                          fontWeight: 400,
+                          lineHeight: 1.25,
+                          color: "var(--ivory)",
+                        }}
+                      >
+                        {car.modernBrand}
+                      </span>
+                      {car.modernModel ? (
+                        <span
+                          style={{
+                            display: "block",
+                            marginTop: 1,
+                            fontFamily: "var(--pd)",
+                            fontSize: "clamp(14px,3.6vw,17px)",
+                            fontWeight: 400,
+                            lineHeight: 1.25,
+                            color: "rgba(245,240,232,0.55)",
+                          }}
+                        >
+                          {car.modernModel}
                         </span>
                       ) : null}
-                    </span>
+                    </motion.div>
                   </div>
-                  <span
-                    style={{
-                      display: "block",
-                      fontFamily: "var(--rl)",
-                      fontSize: 10,
-                      letterSpacing: "0.3em",
-                      color: car.highlight ? "#f5e6b8" : "rgba(201,168,76,0.75)",
-                      fontFeatureSettings: "'tnum' 1",
-                      marginTop: 3,
-                    }}
-                  >
-                    {car.year}
-                  </span>
-                </motion.div>
-              </div>
-              <div
-                style={{
-                  width: 20,
-                  flexShrink: 0,
-                  display: "flex",
-                  justifyContent: "center",
-                }}
-              >
-                <span
-                  ref={(el) => {
-                    diamondRefs.current[i] = el
-                  }}
-                  data-base-transform="rotate(45deg)"
-                  aria-hidden="true"
-                  style={{
-                    width: car.highlight ? 11 : 8,
-                    height: car.highlight ? 11 : 8,
-                    border: car.highlight
-                      ? "1.5px solid #f5e6b8"
-                      : "1.5px solid #c9a84c",
-                    background: "#0d1f17",
-                    boxShadow: car.highlight
-                      ? "0 0 10px 2px rgba(245,230,184,0.45)"
-                      : undefined,
-                    transform: "rotate(45deg)",
-                  }}
-                />
-              </div>
-              <div style={{ flex: 1, paddingLeft: 10 }}>
-                <motion.div variants={textVariantsV}>
-                  <span
-                    style={{
-                      display: "block",
-                      fontFamily: "var(--cg)",
-                      fontSize: 13,
-                      fontStyle: "italic",
-                      color: car.highlight
-                        ? "rgba(245,230,184,0.9)"
-                        : "rgba(201,168,76,0.6)",
-                    }}
-                  >
-                    {car.modernYear} {car.modernBrand} {car.modernModel}
-                  </span>
-                  <span
-                    style={{
-                      display: "block",
-                      fontFamily: "var(--rl)",
-                      fontSize: 9,
-                      letterSpacing: "0.1em",
-                      textTransform: "uppercase",
-                      color: car.highlight
-                        ? "rgba(245,230,184,0.7)"
-                        : "rgba(232,213,163,0.45)",
-                      marginTop: 3,
-                    }}
-                  >
-                    {car.gapLabel}
-                  </span>
-                </motion.div>
-              </div>
-            </div>
-          ))}
+                </div>
+              )
+            })()
+          )}
         </motion.div>
       </div>
     )
   }
 
   const SVG_H = BOTTOM_Y + 20
-  const spacerH = LINE_GAP - 14
 
   return (
     <div className="thm-timeline-scroll">
@@ -627,199 +1003,234 @@ export default function ThemeTimeline() {
           viewport={{ once: true, amount: 0.4 }}
           variants={containerVariants}
         >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-start",
-          }}
-        >
           <div
-            style={{
-              height: ANCHOR_TOP,
-              display: "flex",
-              alignItems: "flex-end",
-            }}
-          >
-            <span
-              style={{
-                fontFamily: "var(--rl)",
-                fontSize: 10,
-                letterSpacing: "0.4em",
-                textTransform: "uppercase",
-                color: "rgba(201,168,76,0.75)",
-              }}
-            >
-              Clasic
-            </span>
-          </div>
-          <div style={{ height: 14 }} />
-          <div style={{ height: spacerH }} />
-          <div style={{ height: 14, display: "flex", alignItems: "center" }}>
-            <span
-              style={{
-                marginTop: 8,
-                fontFamily: "var(--rl)",
-                fontSize: 10,
-                letterSpacing: "0.4em",
-                textTransform: "uppercase",
-                color: "rgba(201,168,76,0.75)",
-              }}
-            >
-              Contemporan
-            </span>
-          </div>
-        </div>
-
-        {CARS.map((car, i) => (
-          <div
-            key={car.year}
             style={{
               display: "flex",
               flexDirection: "column",
-              alignItems: "center",
-              textAlign: "center",
+              alignItems: "flex-start",
             }}
           >
             <div
               style={{
                 height: ANCHOR_TOP,
                 display: "flex",
-                flexDirection: "column",
-                justifyContent: "flex-end",
-                alignItems: "center",
+                alignItems: "flex-end",
               }}
             >
-              <motion.span
-                variants={textVariants}
+              <span
                 style={{
                   fontFamily: "var(--rl)",
                   fontSize: 10,
-                  letterSpacing: "0.35em",
-                  color: car.highlight ? "#f5e6b8" : "rgba(201,168,76,0.85)",
-                  fontFeatureSettings: "'tnum' 1",
+                  letterSpacing: "0.4em",
+                  textTransform: "uppercase",
+                  color: "rgba(201,168,76,0.75)",
                 }}
               >
-                {car.year}
-              </motion.span>
-              <motion.span
-                variants={textVariants}
-                style={{
-                  fontFamily: "var(--pd)",
-                  fontSize: car.highlight
-                    ? "clamp(17px,1.7vw,22px)"
-                    : "clamp(16px,1.5vw,20px)",
-                  fontWeight: car.highlight ? 500 : 400,
-                  lineHeight: 1.3,
-                  marginTop: 2,
-                  color: car.highlight ? "#f5e6b8" : "var(--ivory)",
-                }}
-              >
-                {car.brand}
-                {car.model ? (
-                  <span style={{ color: "rgba(245,240,232,0.6)" }}>
-                    {" "}
-                    {car.model}
-                  </span>
-                ) : null}
-              </motion.span>
+                Clasic
+              </span>
             </div>
+            <div style={{ height: MARKER_ROW_H }} />
+            <div style={{ height: MARKER_SPACER_H }} />
             <div
               style={{
-                height: 14,
+                height: MARKER_ROW_H,
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
               }}
             >
               <span
-                ref={(el) => {
-                  diamondRefs.current[i] = el
-                }}
-                data-base-transform="rotate(45deg)"
-                aria-hidden="true"
-                style={{
-                  width: car.highlight ? 11 : 8,
-                  height: car.highlight ? 11 : 8,
-                  border: car.highlight
-                    ? "1.5px solid #f5e6b8"
-                    : "1.5px solid #c9a84c",
-                  background: "#0d1f17",
-                  boxShadow: car.highlight
-                    ? "0 0 10px 2px rgba(245,230,184,0.45)"
-                    : undefined,
-                  transform: "rotate(45deg)",
-                }}
-              />
-            </div>
-            <div style={{ height: spacerH }} />
-            <div
-              style={{
-                height: 14,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <span
-                ref={(el) => {
-                  modernDiamondRefs.current[i] = el
-                }}
-                data-base-transform="rotate(45deg)"
-                aria-hidden="true"
-                style={{
-                  width: car.highlight ? 11 : 8,
-                  height: car.highlight ? 11 : 8,
-                  border: car.highlight
-                    ? "1.5px solid #f5e6b8"
-                    : "1.5px solid #c9a84c",
-                  background: "#0d1f17",
-                  boxShadow: car.highlight
-                    ? "0 0 10px 2px rgba(245,230,184,0.45)"
-                    : undefined,
-                  transform: "rotate(45deg)",
-                }}
-              />
-            </div>
-            <div
-              style={{
-                marginTop: 8,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-              }}
-            >
-              <motion.span
-                variants={textVariants}
-                style={{
-                  fontFamily: "var(--cg)",
-                  fontSize: 12,
-                  fontStyle: "italic",
-                  color: car.highlight
-                    ? "rgba(245,230,184,0.9)"
-                    : "rgba(201,168,76,0.6)",
-                }}
-              >
-                {car.modernYear} {car.modernBrand} {car.modernModel}
-              </motion.span>
-              <motion.span
-                variants={textVariants}
                 style={{
                   fontFamily: "var(--rl)",
-                  fontSize: 9,
-                  letterSpacing: "0.1em",
+                  fontSize: 10,
+                  letterSpacing: "0.4em",
                   textTransform: "uppercase",
-                  color: car.highlight
-                    ? "rgba(245,230,184,0.7)"
-                    : "rgba(232,213,163,0.45)",
-                  marginTop: 2,
+                  color: "rgba(201,168,76,0.75)",
+                  marginTop: "25px",
                 }}
               >
-                {car.gapLabel}
-              </motion.span>
+                Contemporan
+              </span>
             </div>
           </div>
-        ))}
+
+          {CARS.map((car, i) =>
+            (() => {
+              const isHighlighted =
+                car.brand === "Lamborghini" &&
+                car.model === "Centenario Tractor"
+              const isPhantomI =
+                car.brand === "Rolls-Royce" && car.model === "Phantom I"
+              return (
+                <div
+                  key={`${car.brand}-${car.year || i}`}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    textAlign: "center",
+                  }}
+                >
+                  <div
+                    style={{
+                      height: ANCHOR_TOP,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "flex-end",
+                      alignItems: "center",
+                      paddingBottom: "10px",
+                    }}
+                  >
+                    <motion.span
+                      variants={textVariants}
+                      style={{
+                        fontFamily: "var(--pd)",
+                        fontSize: isHighlighted
+                          ? "clamp(17px,1.7vw,22px)"
+                          : isPhantomI
+                          ? "clamp(15px,1.35vw,18px)"
+                          : "clamp(16px,1.5vw,20px)",
+                        fontWeight: isHighlighted ? 700 : 400,
+                        lineHeight: 1.3,
+                        color: isHighlighted ? "#f5e6b8" : "var(--ivory)",
+                        whiteSpace: isPhantomI ? "nowrap" : "normal",
+                      }}
+                    >
+                      {isPhantomI ? (
+                        <>
+                          <span style={{ color: "var(--ivory)" }}>
+                            Rolls-Royce
+                          </span>
+                          <span style={{ color: "rgba(245,240,232,0.6)" }}>
+                            &nbsp;Phantom I
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          {car.brand}
+                          {car.model ? (
+                            <span style={{ color: "rgba(245,240,232,0.6)" }}>
+                              {" "}
+                              {car.model}
+                            </span>
+                          ) : null}
+                        </>
+                      )}
+                    </motion.span>
+                    <motion.span
+                      variants={textVariants}
+                      style={{
+                        marginTop: 3,
+                        fontFamily: "var(--rl)",
+                        fontSize: 10,
+                        letterSpacing: "0.35em",
+                        color: isHighlighted
+                          ? "#f5e6b8"
+                          : "rgba(201,168,76,0.85)",
+                        fontFeatureSettings: "'tnum' 1",
+                      }}
+                    >
+                      {car.year || "\u00A0"}
+                    </motion.span>
+                  </div>
+                  <div
+                    style={{
+                      height: MARKER_ROW_H,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <span
+                      ref={(el) => {
+                        diamondRefs.current[i] = el
+                      }}
+                      data-base-transform="rotate(45deg)"
+                      aria-hidden="true"
+                      style={{
+                        width: isHighlighted ? 11 : 8,
+                        height: isHighlighted ? 11 : 8,
+                        border: isHighlighted
+                          ? "1.5px solid #f5e6b8"
+                          : "1.5px solid #c9a84c",
+                        background: "#0d1f17",
+                        boxShadow: isHighlighted
+                          ? "0 0 10px 2px rgba(245,230,184,0.45)"
+                          : undefined,
+                        transform: "rotate(45deg)",
+                      }}
+                    />
+                  </div>
+                  <div style={{ height: MARKER_SPACER_H }} />
+                  <div
+                    style={{
+                      height: MARKER_ROW_H,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <span
+                      ref={(el) => {
+                        modernDiamondRefs.current[i] = el
+                      }}
+                      data-base-transform="rotate(45deg)"
+                      aria-hidden="true"
+                      style={{
+                        width: 8,
+                        height: 8,
+                        border: "1.5px solid #c9a84c",
+                        background: "#0d1f17",
+                        boxShadow: undefined,
+                        transform: "rotate(45deg)",
+                      }}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 8,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                    }}
+                  >
+                    <motion.span
+                      variants={textVariants}
+                      style={{
+                        display: "block",
+                        fontFamily: "var(--rl)",
+                        fontSize: 10,
+                        letterSpacing: "0.35em",
+                        color: "rgba(201,168,76,0.85)",
+                        fontFeatureSettings: "'tnum' 1",
+                      }}
+                    >
+                      {car.modernYear}
+                    </motion.span>
+                    <motion.span
+                      variants={textVariants}
+                      style={{
+                        display: "block",
+                        marginTop: 2,
+                        fontFamily: "var(--pd)",
+                        fontSize: "clamp(16px,1.5vw,20px)",
+                        fontWeight: 400,
+                        lineHeight: 1.3,
+                        color: "var(--ivory)",
+                      }}
+                    >
+                      {car.modernBrand}
+                      {car.modernModel ? (
+                        <span style={{ color: "rgba(245,240,232,0.6)" }}>
+                          {" "}
+                          {car.modernModel}
+                        </span>
+                      ) : null}
+                    </motion.span>
+                  </div>
+                </div>
+              )
+            })()
+          )}
         </motion.div>
       </div>
     </div>

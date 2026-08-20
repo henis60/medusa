@@ -353,8 +353,8 @@ export default function MeridianTemplate() {
                 margin: "20px 0 0",
               }}
             >
-              Zece automobile. Cinci perechi. Aceleași mărci, la șaizeci de ani
-              distanță — expuse față în față.
+              Zece automobile, cinci perechi: aceleași mărci, separate de șase
+              decenii, expuse față în față.
             </p>
           </Reveal>
           <ThemeTimeline />

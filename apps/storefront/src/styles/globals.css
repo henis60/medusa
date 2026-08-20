@@ -4177,6 +4177,8 @@ html {
     --pad: 20px;
   }
   .thm-piesa-grid {
+    margin-top: 28px;
+    padding-top: 20px;
     gap: 32px;
   }
 }
@@ -4347,8 +4349,6 @@ html {
     margin-top: clamp(32px, 6vh, 56px) !important;
   }
 }
-
-
 
 /* --- Meridian: the shared Nav's logo text should stay white here, matching
    the transparent-over-hero header treatment (scoped to this page only —
