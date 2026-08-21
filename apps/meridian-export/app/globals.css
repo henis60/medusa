@@ -236,6 +236,10 @@ body.thm-active {
     --pad: 20px;
   }
   .thm-piesa-grid {
+    /* auto-fit's 300px floor can exceed the available width on narrow
+       phones (viewport minus --pad on each side) and overflow the figure —
+       force a single full-width column instead of relying on that floor. */
+    grid-template-columns: 1fr;
     margin-top: 28px;
     padding-top: 20px;
     gap: 32px;

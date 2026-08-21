@@ -20,9 +20,6 @@ export default function SiteHeader({
         right: 0,
         zIndex: 100,
         height: 64,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
         padding: "0 var(--pad)",
         background: "rgba(11,18,14,0.55)",
         backdropFilter: "blur(8px)",
@@ -30,57 +27,68 @@ export default function SiteHeader({
         borderBottom: "1px solid rgba(201,168,76,0.14)",
       }}
     >
-      <a
-        href={homeHref}
-        className="site-header-logo"
+      <div
         style={{
-          fontFamily: "var(--pd)",
-          fontSize: 20,
-          letterSpacing: "0.12em",
-          color: "var(--ivory)",
-          textDecoration: "none",
+          maxWidth: 1360,
+          margin: "0 auto",
+          height: "100%",
           display: "flex",
-          alignItems: "baseline",
-          gap: 6,
-        }}
-      >
-        <span style={{ textTransform: "uppercase" }}>The Hunter</span>
-        {showMeridianSuffix ? (
-          <em
-            className={montigny.className}
-            style={{
-              fontStyle: "normal",
-              fontWeight: 500,
-              textTransform: "none",
-              color: "var(--gold)",
-              fontSize: 24,
-            }}
-          >
-            Meridian
-          </em>
-        ) : null}
-      </a>
-      <a
-        href={ctaHref}
-        target={ctaHref.startsWith("http") ? "_blank" : undefined}
-        rel={ctaHref.startsWith("http") ? "noopener" : undefined}
-        style={{
-          display: "inline-flex",
           alignItems: "center",
-          height: 36,
-          padding: "0 20px",
-          border: "1px solid rgba(201,168,76,0.45)",
-          fontFamily: "var(--rl)",
-          fontSize: 9,
-          letterSpacing: "0.3em",
-          textTransform: "uppercase",
-          color: "rgba(232,213,163,0.85)",
-          textDecoration: "none",
-          transition: "border-color .3s, background .3s, color .3s",
+          justifyContent: "space-between",
         }}
       >
-        {ctaLabel}
-      </a>
+        <a
+          href={homeHref}
+          className="site-header-logo"
+          style={{
+            fontFamily: "var(--pd)",
+            fontSize: 20,
+            letterSpacing: "0.12em",
+            color: "var(--ivory)",
+            textDecoration: "none",
+            display: "flex",
+            alignItems: "baseline",
+            gap: 6,
+          }}
+        >
+          <span style={{ textTransform: "uppercase" }}>The Hunter</span>
+          {showMeridianSuffix ? (
+            <em
+              className={montigny.className}
+              style={{
+                fontStyle: "normal",
+                fontWeight: 500,
+                textTransform: "none",
+                color: "var(--gold)",
+                fontSize: 24,
+              }}
+            >
+              Meridian
+            </em>
+          ) : null}
+        </a>
+        <a
+          href={ctaHref}
+          target={ctaHref.startsWith("http") ? "_blank" : undefined}
+          rel={ctaHref.startsWith("http") ? "noopener" : undefined}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            height: 36,
+            padding: "0 20px",
+            border: "1px solid rgba(201,168,76,0.45)",
+            fontFamily: "var(--rl)",
+            fontSize: 9,
+            letterSpacing: "0.3em",
+            textTransform: "uppercase",
+            color: "rgba(232,213,163,0.85)",
+            textDecoration: "none",
+            transition: "border-color .3s, background .3s, color .3s",
+          }}
+        >
+          {ctaLabel}
+        </a>
+      </div>
     </header>
   )
 }
