@@ -495,8 +495,8 @@ export default function MeridianTemplate() {
                 display: "grid",
                 gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
                 alignItems: "start",
-                columnGap: 48,
-                rowGap: 40,
+                columnGap: "clamp(80px, 16vw, 280px)",
+                rowGap: "clamp(28px, 4vw, 72px)",
                 margin: "0 0 40px",
               }}
             >
@@ -959,58 +959,83 @@ export default function MeridianTemplate() {
               <div
                 style={{
                   display: "flex",
-                  alignItems: "center",
-                  gap: 18,
+                  gap: 16,
                   flexWrap: "wrap",
-                  marginTop: 24,
+                  marginTop: 28,
                 }}
               >
-                <span
-                  style={{
-                    fontFamily: "var(--rl)",
-                    fontSize: 9,
-                    letterSpacing: "0.5em",
-                    textTransform: "uppercase",
-                    color: "#8b6914",
-                    flex: "0 0 90px",
-                  }}
-                >
-                  Socials
-                </span>
-                {/*
                 <a
-                  href="https://facebook.com/thehunterhouse"
+                  href="https://wa.me/40765080667"
                   target="_blank"
                   rel="noopener"
-                  aria-label="Facebook"
-                  className="thm-social"
+                  className="thm-btn-outline thm-whatsapp-cta"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 14,
+                    height: 50,
+                    minWidth: 260,
+                    boxSizing: "border-box",
+                    border: "1px solid rgba(201,168,76,0.45)",
+                    padding: "0 32px",
+                    fontFamily: "var(--rl)",
+                    fontSize: 10,
+                    letterSpacing: "0.5em",
+                    textTransform: "uppercase",
+                    color: "rgba(232,213,163,0.78)",
+                    transition: "border-color .3s, background .3s, color .3s",
+                  }}
                 >
                   <svg
                     viewBox="0 0 24 24"
-                    width="24"
-                    height="24"
-                    fill="currentColor"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                     aria-hidden="true"
+                    style={{ flex: "0 0 auto" }}
                   >
-                    <path d="M13.5 21v-7.5h2.5l.5-3h-3V8.5c0-.9.3-1.5 1.6-1.5H16.5V4.3C16.1 4.2 15.1 4 14 4c-2.4 0-4 1.5-4 4.2v2.3H7.5v3H10V21h3.5z" />
+                    <path d="M12 3a9 9 0 0 0-7.75 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3Z" />
+                    <path d="M8.6 8.7c-.15.5.1 1.1.6 1.9.6 1 1.4 1.8 2.4 2.4.8.5 1.4.7 1.9.6.4-.1.9-.5 1-.9l.1-.4" />
                   </svg>
+                  WhatsApp
                 </a>
-                */}
                 <a
                   href="https://instagram.com/thehuntermeridian"
                   target="_blank"
                   rel="noopener"
-                  aria-label="Instagram"
-                  className="thm-social"
+                  className="thm-btn-outline thm-whatsapp-cta"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 14,
+                    height: 50,
+                    minWidth: 260,
+                    boxSizing: "border-box",
+                    border: "1px solid rgba(201,168,76,0.45)",
+                    padding: "0 32px",
+                    fontFamily: "var(--rl)",
+                    fontSize: 10,
+                    letterSpacing: "0.5em",
+                    textTransform: "uppercase",
+                    color: "rgba(232,213,163,0.78)",
+                    transition: "border-color .3s, background .3s, color .3s",
+                  }}
                 >
                   <svg
                     viewBox="0 0 24 24"
-                    width="24"
-                    height="24"
+                    width="16"
+                    height="16"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="1.6"
                     aria-hidden="true"
+                    style={{ flex: "0 0 auto" }}
                   >
                     <rect x="3" y="3" width="18" height="18" rx="5" />
                     <circle cx="12" cy="12" r="4" />
@@ -1022,68 +1047,9 @@ export default function MeridianTemplate() {
                       stroke="none"
                     />
                   </svg>
+                  Instagram
                 </a>
-                {/*
-                <a
-                  href="https://tiktok.com/@thehunterhouse"
-                  target="_blank"
-                  rel="noopener"
-                  aria-label="TikTok"
-                  className="thm-social"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    width="24"
-                    height="24"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path d="M16.5 3c.4 2 1.8 3.6 3.8 4v3c-1.5 0-2.9-.4-4.1-1.2v6.4c0 3.2-2.6 5.8-5.8 5.8S4.6 18.4 4.6 15.2 7.2 9.4 10.4 9.4c.3 0 .6 0 .9.1v3.1c-.3-.1-.6-.2-.9-.2-1.5 0-2.7 1.2-2.7 2.7s1.2 2.7 2.7 2.7 2.7-1.2 2.7-2.7V3h3.4z" />
-                  </svg>
-                </a>
-                */}
               </div>
-              <a
-                href="https://wa.me/40765080667"
-                target="_blank"
-                rel="noopener"
-                className="thm-btn-outline thm-whatsapp-cta"
-                style={{
-                  marginTop: 28,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 14,
-                  height: 50,
-                  minWidth: 260,
-                  boxSizing: "border-box",
-                  border: "1px solid rgba(201,168,76,0.45)",
-                  padding: "0 32px",
-                  fontFamily: "var(--rl)",
-                  fontSize: 10,
-                  letterSpacing: "0.5em",
-                  textTransform: "uppercase",
-                  color: "rgba(232,213,163,0.78)",
-                  transition: "border-color .3s, background .3s, color .3s",
-                }}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                  style={{ flex: "0 0 auto" }}
-                >
-                  <path d="M12 3a9 9 0 0 0-7.75 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3Z" />
-                  <path d="M8.6 8.7c-.15.5.1 1.1.6 1.9.6 1 1.4 1.8 2.4 2.4.8.5 1.4.7 1.9.6.4-.1.9-.5 1-.9l.1-.4" />
-                </svg>
-                WhatsApp
-              </a>
             </div>
           </div>
         </div>

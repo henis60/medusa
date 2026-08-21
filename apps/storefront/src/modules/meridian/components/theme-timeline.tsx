@@ -1088,6 +1088,7 @@ export default function ThemeTimeline() {
                   <div
                     style={{
                       height: ANCHOR_TOP,
+                      boxSizing: "border-box",
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "flex-end",
