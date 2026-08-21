@@ -9,10 +9,11 @@ const NavShell = ({ children }: { children: React.ReactNode }) => {
   const isMeridian = segments[0] === "meridian"
   // The Meridian landing page gets the same transparent-over-hero treatment
   // as the true homepage — it has its own full-bleed dark hero directly
-  // under the nav, so an opaque chrome background would clash with it. Like
-  // the true homepage, the logo stays hidden until scrolled past the hero,
-  // since the hero itself already carries "The Hunter Meridian" branding.
+  // under the nav, so an opaque chrome background would clash with it.
   const isLanding = segments.length === 0 || isMeridian
+  // Unlike the true homepage, Meridian keeps its logo visible immediately —
+  // only the homepage hides it until scrolled past the hero.
+  const hideLogoUntilScroll = segments.length === 0
 
   const [scrolled, setScrolled] = useState(false)
 
@@ -31,7 +32,8 @@ const NavShell = ({ children }: { children: React.ReactNode }) => {
           (isLanding
             ? scrolled
               ? "bg-black/30 backdrop-blur-md border-white/10 text-white"
-              : "bg-transparent border-transparent text-white nav-at-hero"
+              : "bg-transparent border-transparent text-white" +
+                (hideLogoUntilScroll ? " nav-at-hero" : "")
             : "bg-[var(--theme-chrome)] border-[var(--theme-border)] dark:border-hunter-gold/20 text-[var(--theme-text)]")
         }
       >

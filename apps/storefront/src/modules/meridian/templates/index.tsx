@@ -12,13 +12,34 @@ import SponsorMarquee from "../components/sponsor-marquee"
 import ThemeTimeline from "../components/theme-timeline"
 import { montigny } from "../fonts"
 
-const TICKET_INCLUDES = [
-  "Acces la expoziția celor zece automobile",
-  "Concertul live de blues & jazz, în aer liber",
-  "Expoziția de pictură și sculptură",
-  "Prezentarea celor trei colecții The Hunter House",
-  "Șampanie și gastronomie premium",
-  "Parcare la locație",
+const TICKET_TIERS = [
+  {
+    name: "Pre Sale",
+    price: "100 RON",
+    note: "",
+    extraNote: "Opțional: pahar de prosecco și apă la intrare — 25 RON",
+    stages: [] as { name: string; price: string }[],
+    includes: [
+      "Acces la expoziția celor zece automobile",
+      "Concertul live de blues & jazz, în aer liber",
+      "Expoziția de pictură și sculptură",
+      "Prezentarea celor trei colecții The Hunter House",
+    ],
+  },
+  {
+    name: "VIP",
+    price: "2.800 RON",
+    note: "Număr limitat",
+    extraNote: "",
+    stages: [] as { name: string; price: string }[],
+    includes: [
+      "Acces complet la întregul eveniment",
+      "Champagne Grand Cru Blanc de Blancs",
+      "Selecție de caviar & stridii proaspete",
+      "Bar dedicat de whiskey, cognac și vinuri",
+      "Catering coordonat de un sommelier cu 3 stele Michelin",
+    ],
+  },
 ]
 
 const eyebrowRow = {
@@ -205,7 +226,7 @@ export default function MeridianTemplate() {
           </Reveal>
         </section>
 
-        {/* Sponsors marquee */}
+        {/* Sponsors marquee
         <section
           aria-label="Sponsori și parteneri"
           style={{
@@ -217,6 +238,7 @@ export default function MeridianTemplate() {
         >
           <SponsorMarquee />
         </section>
+        */}
       </div>
 
       {/* Concept */}
@@ -468,85 +490,174 @@ export default function MeridianTemplate() {
               <span style={eyebrowLabel}>Bilete</span>
             </div>
             <div
+              className="thm-ticket-tiers"
               style={{
-                display: "flex",
-                alignItems: "baseline",
-                gap: 16,
-                flexWrap: "wrap",
-                marginBottom: 24,
+                display: "grid",
+                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                alignItems: "start",
+                columnGap: 48,
+                rowGap: 40,
+                margin: "0 0 40px",
               }}
             >
-              <span
-                style={{
-                  fontFamily: "var(--pd)",
-                  fontSize: "clamp(24px,2.4vw,32px)",
-                  fontWeight: 400,
-                  lineHeight: 1.2,
-                  color: "var(--ivory)",
-                  maxWidth: "18ch",
-                }}
-              >
-                Acces{" "}
-                <em style={{ fontStyle: "italic", color: "#c9a84c" }}>
-                  General Pass
-                </em>
-              </span>
-              <span
-                style={{
-                  fontFamily: "var(--rl)",
-                  fontSize: 9,
-                  letterSpacing: "0.5em",
-                  textTransform: "uppercase",
-                  color: "#8b6914",
-                }}
-              >
-                Ce include
-              </span>
-            </div>
-            <div style={{ margin: "0 0 40px" }}>
-              <div
-                className="thm-ticket-grid"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                  gap: "14px 40px",
-                }}
-              >
-                {TICKET_INCLUDES.map((item) => (
+              {TICKET_TIERS.map((tier) => (
+                <div key={tier.name}>
                   <div
-                    key={item}
                     style={{
                       display: "flex",
-                      alignItems: "flex-start",
-                      gap: 10,
+                      alignItems: "baseline",
+                      gap: 16,
+                      flexWrap: "wrap",
+                      marginBottom: 8,
+                      minHeight: 40,
                     }}
                   >
                     <span
-                      aria-hidden="true"
                       style={{
-                        flex: "0 0 auto",
-                        fontSize: 5,
-                        color: "#8b6914",
-                        marginTop: 6,
+                        fontFamily: "var(--pd)",
+                        fontSize: "clamp(22px,2.2vw,28px)",
+                        fontWeight: 400,
+                        lineHeight: 1.2,
+                        color: "var(--ivory)",
                       }}
                     >
-                      ◆
+                      {tier.name}
                     </span>
                     <span
+                      style={{
+                        fontFamily: "var(--pd)",
+                        fontSize: "clamp(18px,1.8vw,22px)",
+                        fontStyle: "italic",
+                        color: "#c9a84c",
+                      }}
+                    >
+                      {tier.price}
+                    </span>
+                    {tier.note ? (
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          alignSelf: "center",
+                          fontFamily: "var(--rl)",
+                          fontSize: 9,
+                          lineHeight: 1,
+                          letterSpacing: "0.15em",
+                          textTransform: "uppercase",
+                          color: "rgba(201,168,76,0.6)",
+                          border: "1px solid rgba(201,168,76,0.35)",
+                          borderRadius: 2,
+                          padding: "4px 6px 3px",
+                        }}
+                      >
+                        {tier.note}
+                      </span>
+                    ) : null}
+                  </div>
+                  {tier.extraNote ? (
+                    <p
                       style={{
                         fontFamily: "var(--cg)",
                         fontSize: 13,
                         fontStyle: "italic",
                         fontWeight: 300,
-                        lineHeight: 1.6,
-                        color: "rgba(245,240,232,0.6)",
+                        color: "rgba(245,240,232,0.5)",
+                        margin: "0 0 12px",
                       }}
                     >
-                      {item}
-                    </span>
+                      {tier.extraNote}
+                    </p>
+                  ) : null}
+                  {tier.stages.length > 0 ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 8,
+                        margin: "0 0 16px",
+                      }}
+                    >
+                      {tier.stages.map((stage) => (
+                        <div
+                          key={stage.name}
+                          style={{
+                            display: "flex",
+                            alignItems: "baseline",
+                            gap: 10,
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontFamily: "var(--cg)",
+                              fontSize: 12,
+                              fontStyle: "italic",
+                              fontWeight: 300,
+                              color: "rgba(245,240,232,0.4)",
+                            }}
+                          >
+                            {stage.name}
+                          </span>
+                          <span
+                            style={{
+                              fontFamily: "var(--cg)",
+                              fontSize: 12,
+                              fontStyle: "italic",
+                              fontWeight: 300,
+                              color: "rgba(201,168,76,0.45)",
+                            }}
+                          >
+                            {stage.price}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      marginTop: !tier.extraNote && tier.stages.length === 0 ? 8 : 0,
+                      gap: 10,
+                    }}
+                  >
+                    {tier.includes.map((item) => (
+                      <div
+                        key={item}
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: 10,
+                        }}
+                      >
+                        <span
+                          aria-hidden="true"
+                          style={{
+                            flex: "0 0 auto",
+                            fontSize: 5,
+                            color: "#8b6914",
+                            marginTop: 6,
+                          }}
+                        >
+                          ◆
+                        </span>
+                        <span
+                          style={{
+                            fontFamily: "var(--cg)",
+                            fontSize: 13,
+                            fontStyle: "italic",
+                            fontWeight: 300,
+                            lineHeight: 1.6,
+                            color: "rgba(245,240,232,0.6)",
+                          }}
+                        >
+                          {item}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
             <div
               className="thm-hero-cta-row"

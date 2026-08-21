@@ -4358,16 +4358,10 @@ html {
   color: #fff !important;
 }
 
-/* --- Meridian: Bilete "ce include" list — capped at 3 columns max,
-   narrowing on smaller screens instead of auto-fitting unboundedly. --- */
-@media (max-width: 900px) {
-  .thm-ticket-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
-}
-
-@media (max-width: 560px) {
-  .thm-ticket-grid {
+/* --- Meridian: Bilete tiers — Pre Sale / VIP side by side, stacking to
+   one column on narrower screens. --- */
+@media (max-width: 700px) {
+  .thm-ticket-tiers {
     grid-template-columns: minmax(0, 1fr) !important;
   }
 }

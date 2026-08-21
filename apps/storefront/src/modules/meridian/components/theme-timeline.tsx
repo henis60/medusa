@@ -291,6 +291,11 @@ export default function ThemeTimeline() {
     if (line.parentElement) ro.observe(line.parentElement)
     window.addEventListener("resize", measure)
 
+    // One global speed for the whole path (top run + bend + bottom run) so
+    // the dot doesn't appear to slow down while it's on the curved part —
+    // every segment's duration is proportional to its real pixel length.
+    const TARGET_TRAVEL_TOTAL = SEGMENT_DUR.reduce((a, b) => a + b, 0)
+
     const start = performance.now()
     let raf = 0
     const frame = (now: number) => {
@@ -301,75 +306,68 @@ export default function ThemeTimeline() {
         .map((f, idx) => ({ p: 1 - f, idx }))
         .sort((a, b) => a.p - b.p)
       const rightPoints = [0, ...rightStops.map((s) => s.p), 1]
-      const leftTotal = 6 * TRAVEL_DUR + 5 * PAUSE_DUR
-      const rightTotal = 6 * TRAVEL_DUR + 5 * PAUSE_DUR
-      const lastLeftLen = Math.max(0.0001, (1 - points[5]) * lineSize)
-      const firstRightLen = Math.max(0.0001, rightPoints[1] * lineSize)
-      const edgeSpeed = (lastLeftLen + firstRightLen) / 2 / TRAVEL_DUR
-      const bottomTurnDur = edgeSpeed > 0 ? bendLen / edgeSpeed : TURN_DUR
-      const total = leftTotal + bottomTurnDur + rightTotal
+
+      const segLenPx = Array.from({ length: SEGMENT_COUNT }, (_, j) => {
+        if (j === 6) return bendLen
+        if (j < 6) return Math.abs(points[j + 1] - points[j]) * lineSize
+        const k = j - 7
+        return Math.abs(rightPoints[k + 1] - rightPoints[k]) * lineSize
+      })
+      const totalLenPx = segLenPx.reduce((a, b) => a + b, 0)
+      const segDur =
+        totalLenPx > 0
+          ? segLenPx.map((len) => (len / totalLenPx) * TARGET_TRAVEL_TOTAL)
+          : SEGMENT_DUR
+
+      const total =
+        segDur.reduce((a, b) => a + b, 0) +
+        SEGMENT_PAUSE.reduce((a, b) => a + b, 0)
       const t = ((now - start) / 1000) % total
       const classicFilled = [false, false, false, false, false]
       const modernFilled = [false, false, false, false, false]
       let currLen = 0
       let dotIntensity = 1
-      if (t < leftTotal) {
-        let acc = 0
-        for (let i = 0; i < 6; i++) {
-          if (t < acc + TRAVEL_DUR) {
-            const p = (t - acc) / TRAVEL_DUR
-            currLen = (points[i] + (points[i + 1] - points[i]) * p) * lineSize
-            if (i < 5 && p > 0.94) {
-              const hitEase = (p - 0.94) / 0.06
-              dotIntensity = 1 - 0.75 * hitEase
-            }
-            for (let k = 0; k < i; k++) classicFilled[k] = true
-            break
-          }
-          acc += TRAVEL_DUR
-          if (i < 5) {
-            if (t < acc + PAUSE_DUR) {
-              currLen = points[i + 1] * lineSize
-              dotIntensity = 0.18
-              for (let k = 0; k <= i; k++) classicFilled[k] = true
-              break
-            }
-            acc += PAUSE_DUR
+      // POINT_META's modern carIndex assumes fracs ascending with car order
+      // (true on desktop by construction); on mobile the real car index at
+      // each modern stop comes from rightStops' own sort instead.
+      const modernCarAt = (pointIdx: number) => rightStops[pointIdx - 8]?.idx
+      const markUpTo = (pointIdx: number) => {
+        for (let k = 1; k <= pointIdx; k++) {
+          const meta = POINT_META[k]
+          if (!meta) continue
+          if (meta.group === "classic") classicFilled[meta.carIndex] = true
+          else {
+            const carIdx = modernCarAt(k)
+            if (carIdx !== undefined) modernFilled[carIdx] = true
           }
         }
-      } else if (t < leftTotal + bottomTurnDur) {
-        const p = (t - leftTotal) / bottomTurnDur
-        currLen = lineSize + p * bendLen
-        dotIntensity = 1
-        classicFilled.fill(true)
-      } else {
-        let acc = leftTotal + bottomTurnDur
-        classicFilled.fill(true)
+      }
 
-        for (let i = 0; i < 6; i++) {
-          if (t < acc + TRAVEL_DUR) {
-            const p = (t - acc) / TRAVEL_DUR
-            const rp =
-              rightPoints[i] + (rightPoints[i + 1] - rightPoints[i]) * p
-            currLen = lineSize + bendLen + rp * lineSize
-            if (i < 5 && p > 0.94) {
-              const hitEase = (p - 0.94) / 0.06
-              dotIntensity = 1 - 0.75 * hitEase
-            }
-            for (let k = 0; k < i; k++) modernFilled[rightStops[k].idx] = true
+      let acc = 0
+      let lenAcc = 0
+      for (let j = 0; j < SEGMENT_COUNT; j++) {
+        const dur = segDur[j]
+        if (t < acc + dur) {
+          const p = dur > 0 ? (t - acc) / dur : 0
+          currLen = lenAcc + segLenPx[j] * p
+          if (POINT_META[j + 1] && p > 0.94) {
+            const hitEase = (p - 0.94) / 0.06
+            dotIntensity = 1 - 0.75 * hitEase
+          }
+          markUpTo(j)
+          break
+        }
+        acc += dur
+        lenAcc += segLenPx[j]
+        const pause = SEGMENT_PAUSE[j]
+        if (pause > 0) {
+          if (t < acc + pause) {
+            currLen = lenAcc
+            dotIntensity = 0.18
+            markUpTo(j + 1)
             break
           }
-          acc += TRAVEL_DUR
-          if (i < 5) {
-            if (t < acc + PAUSE_DUR) {
-              currLen = lineSize + bendLen + rightPoints[i + 1] * lineSize
-              dotIntensity = 0.18
-              for (let k = 0; k <= i; k++)
-                modernFilled[rightStops[k].idx] = true
-              break
-            }
-            acc += PAUSE_DUR
-          }
+          acc += pause
         }
       }
 
