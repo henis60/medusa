@@ -339,6 +339,7 @@
         right: 0;
         z-index: 100;
         height: 64px;
+        box-sizing: border-box;
         padding: 0 clamp(20px, 6vw, 80px);
         background: rgba(11, 18, 14, 0.55);
         -webkit-backdrop-filter: blur(8px);
@@ -1532,6 +1533,10 @@
       .ev-title em {
         font-style: italic;
         color: var(--gold);
+      }
+      .ev-title .ev-meridian-font {
+        font-family: var(--ci);
+        letter-spacing: 0.04em;
       }
       .ev-when {
         font-family: var(--rl);
@@ -3464,7 +3469,7 @@
         }
         .zone {
           flex: none !important;
-          width: 82vw;
+          width: min(82vw, calc(100% - 44px));
           height: 100%;
           scroll-snap-align: start;
           border-right: 2px solid rgba(0, 0, 0, 0.25);
@@ -4687,7 +4692,9 @@
           </div>
           <div class="ev rv" style="transition-delay: 0.24s">
             <div class="ev-freq">Anual</div>
-            <div class="ev-title">The Hunter<br /><em>Annual</em></div>
+            <div class="ev-title">
+              The Hunter<br /><em class="ev-meridian-font">Meridian</em>
+            </div>
             <div class="ev-when">Toamnă · Invitație exclusivă · Național</div>
             <p class="ev-desc">
               Lansarea colecției de vânătoare și ecvestru. Invitați selectați
@@ -5375,38 +5382,28 @@
         // scroll-based active detection — always picks the most visible zone,
         // avoids IntersectionObserver race when two zones are simultaneously >55% visible
         var _rafPending = false;
-        var _cw = 0,
-          _zw = 0;
-        function _cacheWidths() {
-          _cw = zonesEl.offsetWidth;
-          _zw = zoneEls[0] ? zoneEls[0].offsetWidth : 0;
-        }
         function updateActive() {
           if (window.innerWidth > 768) return;
-          var cw = _cw;
-          var sl = zonesEl.scrollLeft;
-          var zw = _zw;
-          var bestRatio = -1,
-            bestZone = null;
-          zoneEls.forEach(function (z, i) {
-            var zStart = i * zw;
-            var zEnd = zStart + zw;
-            var vis = Math.max(
+          const cw = zonesEl.offsetWidth;
+          const sl = zonesEl.scrollLeft;
+          let bestZone = zoneEls[0];
+          let bestRatio = -1;
+          zoneEls.forEach(function (z) {
+            const zStart = z.offsetLeft;
+            const zw = z.offsetWidth;
+            const vis = Math.max(
               0,
-              Math.min(zEnd, sl + cw) - Math.max(zStart, sl),
+              Math.min(zStart + zw, sl + cw) - Math.max(zStart, sl),
             );
-            var ratio = vis / zw;
-            if (ratio > bestRatio) {
-              bestRatio = ratio;
+            if (vis / zw > bestRatio) {
+              bestRatio = vis / zw;
               bestZone = z;
             }
           });
-          if (bestZone) {
-            zoneEls.forEach(function (z) {
-              z.classList.remove("is-active");
-            });
-            bestZone.classList.add("is-active");
-          }
+          zoneEls.forEach(function (z) {
+            z.classList.remove("is-active");
+          });
+          bestZone.classList.add("is-active");
         }
 
         function onScroll() {
@@ -5420,7 +5417,6 @@
 
         function initCarousel() {
           if (window.innerWidth <= 768) {
-            _cacheWidths();
             zonesEl.addEventListener("scroll", onScroll, { passive: true });
             updateActive();
           } else {
@@ -5433,7 +5429,6 @@
 
         initCarousel();
         window.addEventListener("resize", function () {
-          _cacheWidths();
           initCarousel();
         });
 
@@ -5458,10 +5453,17 @@
             return;
           // ignore taps on the active zone — it's already expanded
           if (e.target.closest(".zone.is-active")) return;
-          const zoneWidth = zoneEls[0].offsetWidth;
-          const currentIndex = Math.round(zonesEl.scrollLeft / zoneWidth);
+          const currentIndex = Math.max(
+            0,
+            zoneEls.findIndex(function (z) {
+              return z.classList.contains("is-active");
+            }),
+          );
           const nextIndex = (currentIndex + 1) % zoneEls.length;
-          zonesEl.scrollTo({ left: nextIndex * zoneWidth, behavior: "smooth" });
+          zonesEl.scrollTo({
+            left: zoneEls[nextIndex].offsetLeft,
+            behavior: "smooth",
+          });
         });
       })();
 
