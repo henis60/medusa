@@ -32,20 +32,19 @@ export default function SiteHeader({
     >
       <a
         href={homeHref}
+        className="site-header-logo"
         style={{
           fontFamily: "var(--pd)",
-          fontSize: 18,
-          fontWeight: 700,
-          letterSpacing: "0.06em",
-          textTransform: "uppercase",
+          fontSize: 20,
+          letterSpacing: "0.12em",
           color: "var(--ivory)",
           textDecoration: "none",
-          display: "inline-flex",
+          display: "flex",
           alignItems: "baseline",
           gap: 6,
         }}
       >
-        The Hunter
+        <span style={{ textTransform: "uppercase" }}>The Hunter</span>
         {showMeridianSuffix ? (
           <em
             className={montigny.className}

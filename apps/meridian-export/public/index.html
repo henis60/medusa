@@ -91,7 +91,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="preload"
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Raleway:wght@300;400;600;700&family=Cinzel:wght@400&display=optional"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Raleway:wght@300;400;600;700&family=Cinzel:wght@400&family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400&display=optional"
       as="style"
       onload="
         this.onload = null;
@@ -100,7 +100,7 @@
     />
     <noscript>
       <link
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Raleway:wght@300;400;600;700&family=Cinzel:wght@400&display=optional"
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Raleway:wght@300;400;600;700&family=Cinzel:wght@400&family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400&display=optional"
         rel="stylesheet"
       />
     </noscript>
@@ -252,6 +252,8 @@
         --cg: "Cormorant Garamond", serif;
         --rl: "Raleway", sans-serif;
         --ci: "Cinzel", serif;
+        /* Matches the /meridian page's brand font for "The Hunter" wordmark. */
+        --pd: "Playfair Display", serif;
       }
       *,
       *::before,
@@ -347,14 +349,17 @@
         border-bottom: 1px solid rgba(201, 168, 76, 0.14);
       }
       .site-header-logo {
-        font-family: "Times New Roman", Times, serif;
-        font-size: 18px;
-        font-weight: 700;
-        letter-spacing: 0.08em;
+        font-family: var(--pd);
+        font-size: 20px;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
         color: var(--ivory);
         text-decoration: none;
         cursor: none;
+        transition: opacity 0.3s;
+      }
+      .site-header-logo:hover {
+        opacity: 0.7;
       }
       .site-header-cta {
         display: inline-flex;
@@ -3489,31 +3494,12 @@
         .zone.is-active .zone-tex {
           background: rgba(6, 10, 8, 0.25);
         }
-        /* iOS keeps :hover state after tap — override all hover effects so only
-           is-active controls what's visible; prevents "ghost" expanded text */
-        .zone:hover .zone-expanded {
-          opacity: 0;
-          transform: translateY(6px);
-          pointer-events: none;
-        }
-        .zone:hover .zone-collapsed {
-          opacity: 1;
-          pointer-events: auto;
-        }
-        .zone:hover::before {
-          transform: scaleX(0);
-        }
-        .zone.is-active:hover .zone-expanded {
-          opacity: 1;
-          transform: translateY(0);
-          pointer-events: all;
-        }
-        .zone.is-active:hover .zone-collapsed {
-          display: none;
-        }
-        .zone.is-active:hover::before {
-          transform: scaleX(1);
-        }
+        /* :hover is unreliable on touch (iOS sticks it after a tap, and a
+           swipe can leave it set on whichever zone the finger last crossed
+           mid-gesture) — no :hover rule targets zone-expanded/collapsed on
+           mobile at all now, so `is-active` above is the ONLY thing that
+           can ever control visibility here; it can't race against a stray
+           hover state and leave the expanded content hidden after a swipe. */
         /* non-active: pin collapsed strip to left edge so it's visible in peek */
         .zone-collapsed {
           inset: 0 auto 0 0;
@@ -3609,8 +3595,17 @@
           display: none;
         }
         .coll-sub {
-          font-size: 14px;
+          font-size: 15px;
           line-height: 1.5;
+        }
+        .zone-desc {
+          font-size: 15px;
+        }
+        .mem-perk {
+          font-size: 15px;
+        }
+        .ms-desc {
+          font-size: 15px;
         }
         #cur,
         #curR {

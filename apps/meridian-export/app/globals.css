@@ -261,6 +261,13 @@ body.thm-active {
   scroll-margin-top: 64px;
 }
 
+.site-header-logo {
+  transition: opacity 0.3s;
+}
+.site-header-logo:hover {
+  opacity: 0.7;
+}
+
 @media (max-width: 480px) {
   .thm-hero-cta-row {
     flex-direction: column;
