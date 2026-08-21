@@ -34,11 +34,35 @@ npm run build
 `next build` (configured with `output: "export"`) produces a static `out/`
 directory containing both routes.
 
-## Deploy to Cloudflare Pages
+## Deploy to Cloudflare
+
+Cloudflare has folded Pages into Workers, and the newer Workers flow has no
+dashboard field for the build output directory — it's configured in
+`wrangler.jsonc` instead (`assets.directory: "./out"`).
+
+Dashboard settings (Workers & Pages → Create → connect this repo):
 
 - Root directory: `apps/meridian-export`
 - Build command: `npm run build`
-- Output directory: `out`
+- Deploy command: `npx wrangler deploy`
+
+There is no "output directory" field to fill in — `wrangler.jsonc` supplies
+it. To verify the config locally without publishing:
+
+```bash
+npm run build
+npx wrangler deploy --dry-run
+```
+
+Note: this package is deliberately excluded from the root `package.json`
+`workspaces` globs (`!apps/meridian-export/**`) so it installs and builds
+standalone with its own `package-lock.json`. Without that exclusion npm
+would resolve it as a workspace member and install the whole monorepo
+(backend + storefront) just to build this static site.
+
+If you prefer the classic Pages flow instead (build output directory set in
+the dashboard, no `wrangler.jsonc` needed), use build command
+`npm run build` and output directory `out`.
 
 ## What's included for `/meridian`
 
