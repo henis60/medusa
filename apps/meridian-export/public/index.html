@@ -5483,8 +5483,20 @@
                 updateActive();
               } else if (zoneEls[0]) {
                 // Desktop has no scroll ratio to compute from — just expand
-                // the first zone; hover continues to drive everything else.
+                // the first zone. It stays expanded only until the first
+                // hover anywhere in the carousel, after which :hover alone
+                // drives everything (otherwise is-active would keep the
+                // first zone expanded while hovering a different one).
                 zoneEls[0].classList.add("is-active");
+                zonesEl.addEventListener(
+                  "pointerenter",
+                  function () {
+                    zoneEls.forEach(function (z) {
+                      z.classList.remove("is-active");
+                    });
+                  },
+                  { once: true }
+                );
               }
             });
           });
