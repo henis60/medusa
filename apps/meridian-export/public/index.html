@@ -1603,15 +1603,6 @@
       .zone:hover {
         flex: 3.2;
       }
-      /* is-active mirrors :hover so the reveal-on-scroll can pre-expand the
-         first zone on load — additive with hover, never fights it, since
-         both push toward the same expanded visual state. */
-      .zones:has(.zone.is-active) .zone:not(.is-active):not(:hover) {
-        flex: 0.28;
-      }
-      .zone.is-active {
-        flex: 3.2;
-      }
 
       /* colored backgrounds per zone — real images */
       .zone-bg {
@@ -1624,8 +1615,7 @@
         transform: translateZ(0);
         transition: transform 0.42s cubic-bezier(0.23, 1, 0.32, 1);
       }
-      .zone:hover .zone-bg,
-      .zone.is-active .zone-bg {
+      .zone:hover .zone-bg {
         transform: scale(1.02);
       }
 
@@ -1652,8 +1642,7 @@
         background: rgba(6, 10, 8, 0.45);
         transition: background 0.5s;
       }
-      .zone:hover .zone-tex,
-      .zone.is-active .zone-tex {
+      .zone:hover .zone-tex {
         background: rgba(6, 10, 8, 0.25);
       }
 
@@ -1671,8 +1660,7 @@
         transform-origin: left;
         transition: transform 0.55s 0.1s cubic-bezier(0.23, 1, 0.32, 1);
       }
-      .zone:hover::before,
-      .zone.is-active::before {
+      .zone:hover::before {
         transform: scaleX(1);
       }
 
@@ -1688,8 +1676,7 @@
         z-index: 2;
         transition: opacity 0.3s;
       }
-      .zone:hover .zone-collapsed,
-      .zone.is-active .zone-collapsed {
+      .zone:hover .zone-collapsed {
         opacity: 0;
         pointer-events: none;
       }
@@ -1729,8 +1716,7 @@
           transform 0.4s 0.2s cubic-bezier(0.23, 1, 0.32, 1);
         pointer-events: none;
       }
-      .zone:hover .zone-expanded,
-      .zone.is-active .zone-expanded {
+      .zone:hover .zone-expanded {
         opacity: 1;
         transform: translateY(0);
         pointer-events: all;
@@ -3536,12 +3522,6 @@
         }
         .mtm-steps {
           grid-template-columns: 1fr;
-          /* break out of .section's side padding to span the full viewport
-             width, regardless of how many padded/centered ancestors it's
-             nested inside */
-          width: 100vw;
-          margin-left: calc(50% - 50vw);
-          margin-right: calc(50% - 50vw);
         }
         .mtm-inline {
           margin-top: 32px;
@@ -5442,16 +5422,12 @@
           if (window.innerWidth <= 768) {
             _cacheWidths();
             zonesEl.addEventListener("scroll", onScroll, { passive: true });
-            // Don't call updateActive() here — on mobile all zones start
-            // collapsed; the first one only expands once the section is
-            // scrolled into view (see the reveal hook below), not on load.
+            updateActive();
           } else {
-            // Desktop has no horizontal scroll to track — hover alone drives
-            // interaction — so just stop listening; is-active (if the reveal
-            // below already set it) is left alone rather than cleared, so
-            // the first zone stays the "default expanded" one until hovered
-            // away from.
             zonesEl.removeEventListener("scroll", onScroll);
+            zoneEls.forEach(function (z) {
+              z.classList.remove("is-active");
+            });
           }
         }
 
@@ -5460,61 +5436,6 @@
           _cacheWidths();
           initCarousel();
         });
-
-        // Reveal-on-scroll: expand the first zone the moment the carousel
-        // scrolls into view — on mobile AND desktop. Piggybacks directly on
-        // the page's main .rv reveal system (`.zones` already carries the
-        // "rv" class) instead of a second bespoke IntersectionObserver —
-        // that system already reliably fires exactly once per page load
-        // for every other .rv section, on every load, regardless of
-        // scroll-restore timing, so reusing it here guarantees the same
-        // reliability.
-        var revealFired = false;
-        function fireReveal() {
-          if (revealFired) return;
-          revealFired = true;
-          // Force the collapsed state to actually paint before flipping to
-          // is-active — without this, if this fires very soon after load
-          // the browser can coalesce both states into one paint and the
-          // opacity/transform transition never shows.
-          requestAnimationFrame(function () {
-            requestAnimationFrame(function () {
-              if (window.innerWidth <= 768) {
-                updateActive();
-              } else if (zoneEls[0]) {
-                // Desktop has no scroll ratio to compute from — just expand
-                // the first zone. It stays expanded only until the first
-                // hover anywhere in the carousel, after which :hover alone
-                // drives everything (otherwise is-active would keep the
-                // first zone expanded while hovering a different one).
-                zoneEls[0].classList.add("is-active");
-                zonesEl.addEventListener(
-                  "pointerenter",
-                  function () {
-                    zoneEls.forEach(function (z) {
-                      z.classList.remove("is-active");
-                    });
-                  },
-                  { once: true }
-                );
-              }
-            });
-          });
-        }
-        if (zonesEl.classList.contains("visible")) {
-          fireReveal();
-        } else {
-          var revealMo = new MutationObserver(function () {
-            if (zonesEl.classList.contains("visible")) {
-              fireReveal();
-              revealMo.disconnect();
-            }
-          });
-          revealMo.observe(zonesEl, {
-            attributes: true,
-            attributeFilter: ["class"],
-          });
-        }
 
         // tap to advance — ignores vertical scroll gestures
         var _tapStartX = 0,
