@@ -1,25 +1,25 @@
-import { Metadata } from "next"
+import type { Metadata } from "next"
 
-import MeridianTemplate from "@modules/meridian/templates"
+import MeridianTemplate from "../../components/meridian-template"
 
+const SITE_URL = "https://thehunter.ro"
 const TITLE = "The Hunter Meridian — Ediția I, 26 septembrie 2026"
 const DESCRIPTION =
   "Zece automobile în cinci perechi clasic–contemporan, cu Lamborghini Centenario Tractor în premieră în România, concert live de blues & jazz, expoziție de pictură și sculptură și trei colecții noi The Hunter House. 26 septembrie 2026, Colonia Pictorilor, Baia Mare."
 const OG_DESCRIPTION =
   "26 septembrie 2026, Colonia Pictorilor, Baia Mare. O zi de automobile de colecție, blues & jazz, artă și Made to Measure."
-const URL = "https://thehunter.ro/meridian"
+const PAGE_URL = `${SITE_URL}/meridian`
 // Brand lockup used as the social-share card. Not 1.91:1, so Facebook/X
 // crop it vertically — the logo is centred with generous whitespace, so it
 // survives the crop intact.
-const IMAGE = "https://thehunter.ro/meridian/thm-og.png"
+const IMAGE = `${SITE_URL}/meridian/thm-og.png`
 const IMAGE_W = 1772
 const IMAGE_H = 1181
 const IMAGE_ALT = "The Hunter Meridian"
 
 export const metadata: Metadata = {
-  // .absolute bypasses the root layout's "%s | The Hunter House" template —
-  // this string is already the full title, brand included.
-  title: { absolute: TITLE },
+  metadataBase: new URL(SITE_URL),
+  title: TITLE,
   description: DESCRIPTION,
   keywords: [
     "The Hunter Meridian",
@@ -33,14 +33,14 @@ export const metadata: Metadata = {
     "made to measure",
     "septembrie 2026",
   ],
-  alternates: { canonical: URL },
+  alternates: { canonical: PAGE_URL },
   openGraph: {
     type: "website",
     locale: "ro_RO",
     siteName: "The Hunter House",
     title: TITLE,
     description: OG_DESCRIPTION,
-    url: URL,
+    url: PAGE_URL,
     images: [
       {
         url: IMAGE,
@@ -71,7 +71,7 @@ const eventSchema = {
   eventStatus: "https://schema.org/EventScheduled",
   eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
   image: [IMAGE],
-  url: URL,
+  url: PAGE_URL,
   location: {
     "@type": "Place",
     name: "Colonia Pictorilor",
@@ -85,7 +85,7 @@ const eventSchema = {
   organizer: {
     "@type": "Organization",
     name: "The Hunter House",
-    url: "https://thehunter.ro/",
+    url: `${SITE_URL}/`,
   },
   offers: [
     {
@@ -111,7 +111,7 @@ const eventSchema = {
   },
 }
 
-export default function MeridianPage() {
+export default function Page() {
   return (
     <>
       <script

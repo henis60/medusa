@@ -1,0 +1,16 @@
+{
+  // Assets-only Worker (no server code): Cloudflare serves the static files
+  // produced by `next build` with output: "export". This is where the build
+  // output directory is configured — the newer Workers flow has no dashboard
+  // field for it, unlike the older Pages flow.
+  "name": "the-hunter-meridian",
+  "compatibility_date": "2025-01-01",
+  "assets": {
+    "directory": "./out",
+    // Serves /meridian from out/meridian.html and / from out/index.html.
+    "html_handling": "auto-trailing-slash",
+    // Static export has no catch-all route, so unknown paths return the
+    // exported 404 page rather than falling back to index.html.
+    "not_found_handling": "404-page"
+  }
+}

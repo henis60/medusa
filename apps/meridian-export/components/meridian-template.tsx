@@ -1,16 +1,14 @@
 import Image from "next/image"
 
-import Nav from "@modules/layout/templates/nav"
-import HeroEyebrow from "../components/hero-eyebrow"
-import BileteNavLink from "../components/bilete-nav-link"
-import HashScrollFix from "../components/hash-scroll-fix"
-import MeridianCanvas from "../components/meridian-canvas"
-import ProgramRows from "../components/program-rows"
-import Reveal from "../components/reveal"
-import SmoothAnchorLink from "../components/smooth-anchor-link"
-import SponsorMarquee from "../components/sponsor-marquee"
-import ThemeTimeline from "../components/theme-timeline"
-import { montigny } from "../fonts"
+import HeroEyebrow from "./hero-eyebrow"
+import HashScrollFix from "./hash-scroll-fix"
+import MeridianCanvas from "./meridian-canvas"
+import ProgramRows from "./program-rows"
+import Reveal from "./reveal"
+import SmoothAnchorLink from "./smooth-anchor-link"
+import SponsorMarquee from "./sponsor-marquee"
+import ThemeTimeline from "./theme-timeline"
+import { montigny } from "./fonts"
 
 const TICKET_TIERS = [
   {
@@ -83,20 +81,6 @@ export default function MeridianTemplate() {
   return (
     <div className="thm-root">
       <HashScrollFix />
-      <Nav
-        rightAction={<BileteNavLink />}
-        logoHref="/meridian"
-        logoSuffix={
-          <>
-            {" "}
-            <em
-              className={`not-italic normal-case text-hunter-gold tracking-tight text-[28px] ${montigny.className}`}
-            >
-              Meridian
-            </em>
-          </>
-        }
-      />
       <div className="thm-hero-shell">
         {/* Hero */}
         <section

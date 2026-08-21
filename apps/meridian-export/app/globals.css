@@ -1,0 +1,395 @@
+/* ═══════════════════════════════════════════════
+   The Hunter Meridian — standalone export
+   Design tokens + .thm- rules extracted from the main
+   storefront's styles/globals.css. Tailwind is not used —
+   this page has zero Tailwind utility classes once Nav is
+   removed.
+   ═══════════════════════════════════════════════ */
+:root {
+  /* Golds */
+  --gold: #c9a84c;
+  --gold-b: #e8d5a3;
+  --gold-d: #8b6914;
+  --gold-dd: #4a3608;
+
+  /* Neutrals */
+  --ivory: #f5f0e8;
+  --cream: #ede4d0;
+  --dark: #0d1f17;
+  --dark2: #111a14;
+
+  /* Typography — loaded via next/font in app/layout.tsx */
+  --pd: var(--font-playfair), Georgia, serif;
+  --cg: var(--font-cormorant), serif;
+  --rl: var(--font-raleway), sans-serif;
+  --ci: var(--font-cinzel), serif;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* Marks <body> as always-dark for this page (see HashScrollFix) —
+   otherwise iOS Safari's overscroll bounce past the top/bottom edge
+   reveals the plain <body> background. */
+body.thm-active {
+  background: #12291f;
+}
+
+.thm-root {
+  --gold-b: #e8d5a3;
+  --gold-d: #8b6914;
+  --pad: clamp(20px, 6vw, 80px);
+  /* Matches the hero gradient's top stop. */
+  background: #12291f;
+  color: var(--ivory);
+  font-family: var(--cg);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  text-wrap: pretty;
+}
+
+.thm-root a {
+  color: #c9a84c;
+  text-decoration: none;
+}
+
+.thm-root a:hover {
+  color: #e8d5a3;
+}
+
+.thm-root ::selection {
+  background: rgba(201, 168, 76, 0.25);
+}
+
+.thm-root :focus-visible {
+  outline: 2px solid #c9a84c;
+  outline-offset: 2px;
+}
+
+.thm-btn-solid:hover {
+  background: #e8d5a3 !important;
+  color: #0d1f17 !important;
+}
+
+.thm-btn-outline:hover {
+  border-color: rgba(201, 168, 76, 0.8) !important;
+  background: rgba(201, 168, 76, 0.07) !important;
+  color: #c9a84c !important;
+}
+
+.thm-social {
+  color: rgba(232, 213, 163, 0.78);
+  transition: color 0.3s;
+}
+
+.thm-social:hover {
+  color: #c9a84c;
+}
+
+.thm-concept-grid {
+  display: flex;
+  align-items: center;
+  gap: clamp(32px, 5vw, 72px);
+}
+
+.thm-concept-textwrap {
+  flex: 1.15 1 0%;
+  min-width: 0;
+  order: 1;
+}
+
+.thm-concept-canvas {
+  flex: 0.85 1 0%;
+  min-width: 0;
+  order: 2;
+}
+
+.thm-piesa-grid {
+  max-width: 1360px;
+  margin: clamp(56px, 7vw, 88px) auto 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: clamp(28px, 4vw, 72px);
+  align-items: center;
+  padding-top: clamp(44px, 6vw, 72px);
+}
+
+.thm-map-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(13, 31, 23, 0);
+  opacity: 0;
+  transition: opacity 0.3s, background 0.3s;
+  font-family: var(--rl);
+  font-size: 10px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: #e8d5a3;
+}
+
+.thm-map-link:hover .thm-map-overlay {
+  opacity: 1;
+  background: rgba(13, 31, 23, 0.55);
+}
+
+@media (max-width: 860px) {
+  .thm-concept-grid {
+    flex-direction: column;
+    align-items: stretch;
+    --concept-gap: clamp(32px, 5vw, 72px);
+    gap: var(--concept-gap);
+  }
+  /* Unwrap the paragraph+quote grouping so the quote can be reordered
+     to appear after the canvas instead of right under the paragraph. */
+  .thm-concept-textwrap {
+    display: contents;
+  }
+  .thm-concept-lead,
+  .thm-concept-para {
+    order: 1;
+  }
+  .thm-concept-heading {
+    margin-bottom: 0 !important;
+    margin-top: calc(-1 * var(--concept-gap)) !important;
+  }
+  .thm-concept-canvas {
+    order: 2;
+  }
+  .thm-concept-quote {
+    order: 3;
+    margin-top: 0 !important;
+  }
+}
+
+.thm-contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas: "title contact";
+  column-gap: clamp(80px, 16vw, 280px);
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .thm-contact-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas: "title" "contact";
+    row-gap: clamp(28px, 4vw, 72px);
+  }
+}
+
+@media (max-width: 480px) {
+  .thm-btn-solid,
+  .thm-btn-outline {
+    letter-spacing: 0.3em !important;
+    padding: 13px 24px !important;
+  }
+}
+
+.thm-timeline-scroll {
+  position: relative;
+  margin: 72px 0 0;
+}
+
+.thm-timeline-inner {
+  position: relative;
+}
+
+.thm-timeline-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto repeat(5, minmax(0, 1fr)) auto;
+  align-items: start;
+  gap: clamp(10px, 1.6vw, 26px);
+}
+
+@media (max-width: 640px) {
+  .thm-timeline-scroll {
+    overflow-x: auto;
+    padding-bottom: 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .thm-timeline-inner {
+    width: max-content;
+    min-width: 100%;
+  }
+  .thm-timeline-grid {
+    grid-template-columns: auto repeat(5, minmax(84px, 1fr)) auto;
+    min-width: 680px;
+  }
+}
+
+.thm-map-dark {
+  filter: invert(90%) grayscale(0.55) hue-rotate(180deg) brightness(0.95)
+    contrast(0.9);
+}
+
+@media (max-width: 640px) {
+  .thm-root {
+    --pad: 20px;
+  }
+  .thm-piesa-grid {
+    margin-top: 28px;
+    padding-top: 20px;
+    gap: 32px;
+  }
+}
+
+.thm-hero-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+}
+
+@media (max-width: 640px) {
+  .thm-hero-shell {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+}
+
+.thm-anchor-target {
+  scroll-margin-top: 0;
+}
+
+@media (max-width: 480px) {
+  .thm-hero-cta-row {
+    flex-direction: column;
+  }
+  .thm-hero-cta {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 640px) {
+  .thm-whatsapp-cta {
+    display: flex !important;
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 640px) {
+  .thm-locatia-media {
+    aspect-ratio: 3 / 4;
+  }
+  .thm-locatia-heading {
+    font-size: 26px !important;
+  }
+}
+
+@media (min-width: 641px) {
+  .thm-locatia-media {
+    aspect-ratio: 21 / 8;
+  }
+}
+
+@media (max-width: 640px) {
+  .thm-hero-content {
+    text-align: center;
+  }
+  .thm-hero-content h1,
+  .thm-hero-content p {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .thm-hero-content > div:first-child {
+    justify-content: center;
+  }
+  .thm-hero-cta-row {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .thm-hero-section {
+    padding-top: clamp(64px, 14vw, 100px) !important;
+    padding-bottom: clamp(72px, 16vw, 110px) !important;
+  }
+}
+
+.thm-locatia-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.thm-map-link {
+  height: clamp(140px, 16vh, 180px);
+}
+
+@media (min-width: 861px) {
+  .thm-locatia-row {
+    flex-direction: row;
+    align-items: stretch;
+  }
+  .thm-locatia-row .thm-locatia-media {
+    flex: 0 0 58%;
+    border-bottom: none !important;
+    border-right: 1px solid rgba(201, 168, 76, 0.25);
+  }
+  .thm-locatia-row .thm-map-link {
+    flex: 1 1 42%;
+    height: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .thm-eyebrow-date {
+    flex-direction: column;
+    align-items: center !important;
+    white-space: normal !important;
+    font-size: 9px !important;
+    gap: 4px;
+  }
+  .thm-eyebrow-sep {
+    display: none;
+  }
+  .thm-eyebrow-rule-left,
+  .thm-eyebrow-rule-right {
+    flex: 0 0 32px !important;
+  }
+  .thm-eyebrow-rule-right {
+    background: #8b6914 !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .thm-eyebrow-row {
+    margin-bottom: 16px !important;
+  }
+  .thm-hero-title {
+    margin-bottom: 0;
+  }
+  .thm-hero-copy {
+    margin-top: clamp(24px, 5vh, 44px) !important;
+  }
+  .thm-hero-cta-row {
+    margin-top: clamp(32px, 6vh, 56px) !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .thm-ticket-tiers {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+.thm-locatia-overlay {
+  width: 100%;
+}
+
+@media (min-width: 861px) {
+  .thm-locatia-overlay {
+    width: calc(100% / 0.58);
+  }
+}
