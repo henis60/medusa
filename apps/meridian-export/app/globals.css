@@ -31,6 +31,18 @@ body {
   padding: 0;
 }
 
+/* The main storefront gets this from Tailwind's preflight; extracting only
+   the .thm- rules dropped it, which silently flipped every element back to
+   content-box. That changes the box model for anything combining an explicit
+   width with padding or a border — e.g. .thm-locatia-overlay's
+   calc(100% / 0.58) width plus var(--pad) padding, which rendered 2×--pad
+   too wide and knocked its text out of alignment with every other section. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 /* Marks <body> as always-dark for this page (see HashScrollFix) —
    otherwise iOS Safari's overscroll bounce past the top/bottom edge
    reveals the plain <body> background. */
