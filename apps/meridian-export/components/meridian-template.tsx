@@ -1,15 +1,15 @@
-import Image from "next/image"
+import Image from "next/image";
 
-import HeroEyebrow from "./hero-eyebrow"
-import HashScrollFix from "./hash-scroll-fix"
-import SiteHeader from "./site-header"
-import MeridianCanvas from "./meridian-canvas"
-import ProgramRows from "./program-rows"
-import Reveal from "./reveal"
-import SmoothAnchorLink from "./smooth-anchor-link"
-import SponsorMarquee from "./sponsor-marquee"
-import ThemeTimeline from "./theme-timeline"
-import { montigny } from "./fonts"
+import HeroEyebrow from "./hero-eyebrow";
+import HashScrollFix from "./hash-scroll-fix";
+import SiteHeader from "./site-header";
+import MeridianCanvas from "./meridian-canvas";
+import ProgramRows from "./program-rows";
+import Reveal from "./reveal";
+import SmoothAnchorLink from "./smooth-anchor-link";
+import SponsorMarquee from "./sponsor-marquee";
+import ThemeTimeline from "./theme-timeline";
+import { montigny } from "./fonts";
 
 const TICKET_TIERS = [
   {
@@ -22,7 +22,6 @@ const TICKET_TIERS = [
       "Acces la expoziția celor zece automobile",
       "Concertul live de blues & jazz, în aer liber",
       "Expoziția de pictură și sculptură",
-      "Prezentarea celor trei colecții The Hunter House",
     ],
   },
   {
@@ -37,18 +36,19 @@ const TICKET_TIERS = [
       "Selecție de caviar & stridii proaspete",
       "Bar dedicat de whiskey, cognac și vinuri",
       "Catering coordonat de un sommelier cu 3 stele Michelin",
+      "Prezentarea celor trei colecții The Hunter House",
     ],
   },
-]
+];
 
 const eyebrowRow = {
   display: "flex",
   alignItems: "center",
   gap: 12,
   marginBottom: 14,
-} as const
+} as const;
 
-const eyebrowRule = { height: 1, width: 48, background: "#8b6914" } as const
+const eyebrowRule = { height: 1, width: 48, background: "#8b6914" } as const;
 
 const eyebrowLabel = {
   fontFamily: "var(--rl)",
@@ -56,7 +56,7 @@ const eyebrowLabel = {
   letterSpacing: "0.7em",
   textTransform: "uppercase",
   color: "#8b6914",
-} as const
+} as const;
 
 const sectionHeading = {
   fontFamily: "var(--pd)",
@@ -64,7 +64,7 @@ const sectionHeading = {
   fontWeight: 400,
   lineHeight: 1.06,
   color: "var(--ivory)",
-} as const
+} as const;
 
 const ctaBase = {
   display: "inline-flex",
@@ -76,7 +76,7 @@ const ctaBase = {
   fontSize: 10,
   letterSpacing: "0.6em",
   textTransform: "uppercase",
-} as const
+} as const;
 
 export default function MeridianTemplate() {
   return (
@@ -1105,5 +1105,5 @@ export default function MeridianTemplate() {
         </div>
       </footer>
     </div>
-  )
+  );
 }

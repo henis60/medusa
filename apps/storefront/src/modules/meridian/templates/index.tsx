@@ -23,7 +23,6 @@ const TICKET_TIERS = [
       "Acces la expoziția celor zece automobile",
       "Concertul live de blues & jazz, în aer liber",
       "Expoziția de pictură și sculptură",
-      "Prezentarea celor trei colecții The Hunter House",
     ],
   },
   {
@@ -38,6 +37,7 @@ const TICKET_TIERS = [
       "Selecție de caviar & stridii proaspete",
       "Bar dedicat de whiskey, cognac și vinuri",
       "Catering coordonat de un sommelier cu 3 stele Michelin",
+      "Prezentarea celor trei colecții The Hunter House",
     ],
   },
 ]
