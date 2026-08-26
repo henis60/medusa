@@ -1584,6 +1584,7 @@
          THE SPACE — expandable zone panels
       ════════════════════════════════════ */
       .space-sec {
+        position: relative;
         background: var(--dark2);
         overflow: hidden;
         height: 82dvh;
@@ -5403,6 +5404,76 @@
         if (!zonesEl) return;
         const zoneEls = [...zonesEl.querySelectorAll(".zone")];
         if (!zoneEls.length) return;
+
+        // Swipe affordance — the peek strips alone don't tell anyone this
+        // row scrolls, so nudge it right and let it settle back once, the
+        // first time the section comes into view on mobile. Animates
+        // scrollLeft (not a transform) so the container's own scroll
+        // position visibly moves — a transform would slide the row without
+        // revealing there's more content to reach.
+        var _hintFired = false;
+        function hintSwipe() {
+          if (
+            _hintFired ||
+            window.innerWidth > 768 ||
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ) {
+            return;
+          }
+          _hintFired = true;
+          setTimeout(function () {
+            // Someone already started scrolling — hinting now would just
+            // fight them for control of the container.
+            if (zonesEl.scrollLeft > 2) return;
+            const maxScroll = zonesEl.scrollWidth - zonesEl.clientWidth;
+            if (maxScroll <= 8) return;
+            const distance = Math.min(52, maxScroll);
+
+            const prevSnapType = zonesEl.style.scrollSnapType;
+            zonesEl.style.scrollSnapType = "none";
+
+            function restore() {
+              zonesEl.style.scrollSnapType = prevSnapType;
+              zonesEl.removeEventListener("pointerdown", cancel);
+              zonesEl.removeEventListener("touchstart", cancel);
+            }
+
+            const start = performance.now();
+            const duration = 1150;
+            let raf;
+            function step(now) {
+              const progress = Math.min(1, (now - start) / duration);
+              zonesEl.scrollLeft = Math.sin(progress * Math.PI) * distance;
+              if (progress < 1) {
+                raf = requestAnimationFrame(step);
+              } else {
+                zonesEl.scrollLeft = 0;
+                restore();
+              }
+            }
+            raf = requestAnimationFrame(step);
+
+            function cancel() {
+              cancelAnimationFrame(raf);
+              restore();
+            }
+            zonesEl.addEventListener("pointerdown", cancel, { once: true });
+            zonesEl.addEventListener("touchstart", cancel, {
+              once: true,
+              passive: true,
+            });
+          }, 950);
+        }
+        new IntersectionObserver(
+          function (entries, observer) {
+            entries.forEach(function (entry) {
+              if (!entry.isIntersecting) return;
+              hintSwipe();
+              observer.disconnect();
+            });
+          },
+          { threshold: 0.4 },
+        ).observe(zonesEl);
 
         // scroll-based active detection — always picks the most visible zone,
         // avoids IntersectionObserver race when two zones are simultaneously >55% visible
