@@ -23,7 +23,7 @@ const TICKET_TIERS = [
     stages: [] as { name: string; price: string }[],
     includes: [
       "Acces la expoziția celor zece automobile",
-      "Concertul Mihail și Gray Bliss Band din Cluj-Napoca",
+      "Concert Jazz & Blues cu Gray Bliss Band din Cluj-Napoca și invitatul special, Mihail",
       "Expoziția de pictură și sculptură",
     ],
   },
@@ -183,7 +183,8 @@ export default function MeridianTemplate() {
                 }}
               >
                 Zece automobile în cinci perechi clasic–contemporan, un concert
-                în aer liber cu Mihail și Gray Bliss Band din Cluj-Napoca, o
+                Jazz & Blues în aer liber cu Gray Bliss Band din Cluj-Napoca
+                și invitatul special, Mihail, o
                 expoziție de pictură și sculptură și trei colecții noi{" "}
                 <strong style={{ fontStyle: "italic", fontWeight: 600 }}>
                   The Hunter House

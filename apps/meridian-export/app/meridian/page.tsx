@@ -5,7 +5,7 @@ import MeridianTemplate from "../../components/meridian-template";
 const SITE_URL = "https://thehunter.ro";
 const TITLE = "The Hunter Meridian — Ediția I, 26 septembrie 2026";
 const DESCRIPTION =
-  "Zece automobile în cinci perechi clasic–contemporan, cu Lamborghini Centenario Tractor în premieră în România, concert Mihail și Gray Bliss Band din Cluj-Napoca, expoziție de pictură și sculptură și trei colecții noi The Hunter House. 26 septembrie 2026, Colonia Pictorilor, Baia Mare.";
+  "Zece automobile, concert Jazz & Blues cu Gray Bliss Band și invitatul special Mihail, artă și colecții noi. 26 septembrie 2026, Baia Mare.";
 const OG_DESCRIPTION =
   "26 septembrie 2026, Colonia Pictorilor, Baia Mare. O zi de automobile de colecție, blues & jazz, artă și Made to Measure.";
 const PAGE_URL = `${SITE_URL}/meridian`;
@@ -26,7 +26,8 @@ export const metadata: Metadata = {
     "automobile de colecție România",
     "Lamborghini Centenario Tractor",
     "Colonia Pictorilor Baia Mare",
-    "concert Mihail și Gray Bliss Band din Cluj-Napoca",
+    "concert Jazz & Blues Gray Bliss Band Cluj-Napoca",
+    "Mihail invitat special",
     "eveniment lifestyle Maramureș",
     "The Hunter House",
     "made to measure",

@@ -15,9 +15,9 @@ const ROWS = [
   },
   {
     kicker: "Concert live",
-    title: "Mihail ",
-    titleEm: "și Gray Bliss Band din Cluj-Napoca",
-    body: "Concert live, în aer liber. Blues-ul și jazz-ul, ca și automobilele de excepție, trăiesc din improvizație și din precizia execuției.",
+    title: "Gray Bliss Band și ",
+    titleEm: "invitatul special, Mihail",
+    body: "Concert Jazz & Blues susținut de Gray Bliss Band din Cluj-Napoca și de invitatul special, Mihail.",
     src: "/meridian/thm-program-2.webp",
     objectPositionY: "51%",
   },
