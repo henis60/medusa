@@ -5332,9 +5332,6 @@
                 () => e.target.classList.add("visible"),
                 parseFloat(delay) * 1000,
               );
-              // trigger kicker bar too
-              if (e.target.classList.contains("kicker"))
-                e.target.classList.add("visible");
               obs.unobserve(e.target);
             }
           });
@@ -5342,6 +5339,26 @@
         { threshold: 0.25, rootMargin: "0px 0px -80px 0px" },
       );
       rvEls.forEach((el) => obs.observe(el));
+
+      // Kicker bars get their own dedicated observer, isolated from the
+      // generic .rv reveal above — the bar's grow-in is gated behind
+      // .kicker.visible, and sharing one observer/callback across every
+      // .rv/.rv-group/.line-draw/.kicker type on the page made that class
+      // unreliable to land on kickers specifically. This one only ever
+      // does one thing: mark kickers visible as soon as they're on screen.
+      const kickerEls = document.querySelectorAll(".kicker");
+      const kickerObs = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              e.target.classList.add("visible");
+              kickerObs.unobserve(e.target);
+            }
+          });
+        },
+        { threshold: 0.25, rootMargin: "0px 0px -80px 0px" },
+      );
+      kickerEls.forEach((el) => kickerObs.observe(el));
 
       /* ═══════ COUNT-UP NUMBERS ═══════ */
       const counters = document.querySelectorAll(".count-num");
@@ -5439,7 +5456,7 @@
             }
 
             const start = performance.now();
-            const duration = 1150;
+            const duration = 480;
             let raf;
             function step(now) {
               const progress = Math.min(1, (now - start) / duration);
@@ -5462,7 +5479,7 @@
               once: true,
               passive: true,
             });
-          }, 950);
+          }, 300);
         }
         new IntersectionObserver(
           function (entries, observer) {

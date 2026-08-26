@@ -1,6 +1,7 @@
 import Image from "next/image";
 
 import HeroEyebrow from "./hero-eyebrow";
+import EyebrowLine from "./eyebrow-line";
 import HashScrollFix from "./hash-scroll-fix";
 import SiteHeader from "./site-header";
 import MeridianCanvas from "./meridian-canvas";
@@ -258,7 +259,7 @@ export default function MeridianTemplate() {
             <div className="thm-concept-grid">
               <div className="thm-concept-textwrap">
                 <div className="thm-concept-lead" style={eyebrowRow}>
-                  <span style={eyebrowRule} />
+                  <EyebrowLine style={eyebrowRule} />
                   <span style={eyebrowLabel}>Conceptul</span>
                 </div>
                 <h2
@@ -363,7 +364,7 @@ export default function MeridianTemplate() {
         <div style={{ maxWidth: 1360, margin: "0 auto", position: "relative" }}>
           <Reveal>
             <div style={eyebrowRow}>
-              <span style={eyebrowRule} />
+              <EyebrowLine style={eyebrowRule} />
               <span style={eyebrowLabel}>Tema Ediției I</span>
             </div>
             <h2 style={{ ...sectionHeading, margin: 0, maxWidth: "16ch" }}>
@@ -495,7 +496,7 @@ export default function MeridianTemplate() {
         <Reveal>
           <div style={{ maxWidth: 1360, margin: "0 auto" }}>
             <div style={eyebrowRow}>
-              <span style={eyebrowRule} />
+              <EyebrowLine style={eyebrowRule} />
               <span style={eyebrowLabel}>Bilete</span>
             </div>
             <div
@@ -780,7 +781,7 @@ export default function MeridianTemplate() {
               <div style={{ maxWidth: 1360, margin: "0 auto" }}>
                 <div style={{ maxWidth: 640, pointerEvents: "auto" }}>
                   <div style={{ ...eyebrowRow, marginBottom: 12 }}>
-                    <span style={eyebrowRule} />
+                    <EyebrowLine style={eyebrowRule} />
                     <span
                       style={{
                         ...eyebrowLabel,
@@ -897,7 +898,7 @@ export default function MeridianTemplate() {
           <div className="thm-contact-grid">
             <div style={{ gridArea: "title" }}>
               <div style={eyebrowRow}>
-                <span style={eyebrowRule} />
+                <EyebrowLine style={eyebrowRule} />
                 <span style={eyebrowLabel}>Contact</span>
               </div>
               <h2
