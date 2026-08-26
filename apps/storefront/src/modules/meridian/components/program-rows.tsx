@@ -11,12 +11,12 @@ const ROWS = [
     titleEm: "de colecție",
     body: "Zece automobile de excepție, expuse în perechi clasic-contemporan. Piesa centrală: Lamborghini Centenario Tractor.",
     src: "/meridian/thm-program-1.webp",
-    objectPositionY: "78%",
+    objectPositionY: "51%",
   },
   {
     kicker: "Concert live",
-    title: "Trupă de ",
-    titleEm: "blues & jazz",
+    title: "Mihail ",
+    titleEm: "și Gray Bliss Band din Cluj-Napoca",
     body: "Concert live, în aer liber. Blues-ul și jazz-ul, ca și automobilele de excepție, trăiesc din improvizație și din precizia execuției.",
     src: "/meridian/thm-program-2.webp",
     objectPositionY: "51%",
@@ -25,13 +25,13 @@ const ROWS = [
     kicker: "Artă vizuală",
     title: "Pictură și ",
     titleEm: "sculptură",
-    body: "La Colonia Pictorilor — o locație cu tradiție în artă. Lucrările sunt integrate în parcursul evenimentului.",
+    body: "Colonia Pictorilor este o locație cu tradiție în artă. Lucrările sunt integrate în parcursul evenimentului nostru.",
     src: "/meridian/thm-program-3.webp",
     objectPositionY: "50%",
   },
   {
     kicker: "Colecțiile noi",
-    title: "Colecțiile",
+    title: "Prezentarea ținutelor",
     titleEm: "",
     body: "Trei colecții prezentate în premieră: vânătoare, echitație și lifestyle feminin.",
     src: "/meridian/thm-program-4.webp",
@@ -41,7 +41,7 @@ const ROWS = [
 
 const COLLAPSED_MOBILE = { minHeight: "130px", padding: "20px var(--pad)" }
 const EXPANDED_MOBILE = { minHeight: "280px", padding: "32px var(--pad)" }
-const COLLAPSED_DESKTOP = { minHeight: "190px", padding: "28px var(--pad)" }
+const COLLAPSED_DESKTOP = { minHeight: "240px", padding: "28px var(--pad)" }
 const EXPANDED_DESKTOP = { minHeight: "420px", padding: "44px var(--pad)" }
 
 export default function ProgramRows() {
@@ -77,9 +77,7 @@ export default function ProgramRows() {
           whileInView={!hoverCapable ? EXPANDED : undefined}
           viewport={{ amount: 0.55, once: true }}
           transition={
-            reduceMotion
-              ? { duration: 0 }
-              : { duration: 0.5, ease: "easeOut" }
+            reduceMotion ? { duration: 0 } : { duration: 0.5, ease: "easeOut" }
           }
           style={{
             position: "relative",
@@ -100,6 +98,11 @@ export default function ProgramRows() {
             alt=""
             fill
             sizes="100vw"
+            className={
+              row.kicker === "Colecțiile noi"
+                ? "thm-program-img-collections"
+                : undefined
+            }
             style={{
               objectFit: "cover",
               objectPosition: `50% ${row.objectPositionY}`,
@@ -117,51 +120,59 @@ export default function ProgramRows() {
               pointerEvents: "none",
             }}
           />
-          <div style={{ position: "relative", zIndex: 2, width: "100%", maxWidth: 1360, margin: "0 auto" }}>
-          <div style={{ maxWidth: "52ch" }}>
-            <p
-              style={{
-                fontFamily: "var(--rl)",
-                fontSize: 9,
-                letterSpacing: "0.5em",
-                textTransform: "uppercase",
-                color: "var(--gold)",
-                margin: 0,
-              }}
-            >
-              {row.kicker}
-            </p>
-            <p
-              style={{
-                fontFamily: "var(--pd)",
-                fontSize: "clamp(22px,2.4vw,30px)",
-                fontWeight: 400,
-                lineHeight: 1.15,
-                color: "var(--ivory)",
-                margin: "10px 0 0",
-              }}
-            >
-              {row.title}
-              {row.titleEm ? (
-                <em style={{ fontStyle: "italic", color: "#c9a84c" }}>
-                  {row.titleEm}
-                </em>
-              ) : null}
-            </p>
-            <p
-              style={{
-                fontFamily: "var(--cg)",
-                fontSize: 16,
-                fontStyle: "italic",
-                fontWeight: 300,
-                lineHeight: 1.7,
-                color: "rgba(245,240,232,0.85)",
-                margin: "14px 0 0",
-              }}
-            >
-              {row.body}
-            </p>
-          </div>
+          <div
+            style={{
+              position: "relative",
+              zIndex: 2,
+              width: "100%",
+              maxWidth: 1360,
+              margin: "0 auto",
+            }}
+          >
+            <div style={{ maxWidth: "52ch" }}>
+              <p
+                style={{
+                  fontFamily: "var(--rl)",
+                  fontSize: 9,
+                  letterSpacing: "0.5em",
+                  textTransform: "uppercase",
+                  color: "var(--gold)",
+                  margin: 0,
+                }}
+              >
+                {row.kicker}
+              </p>
+              <p
+                style={{
+                  fontFamily: "var(--pd)",
+                  fontSize: "clamp(22px,2.4vw,30px)",
+                  fontWeight: 400,
+                  lineHeight: 1.15,
+                  color: "var(--ivory)",
+                  margin: "10px 0 0",
+                }}
+              >
+                {row.title}
+                {row.titleEm ? (
+                  <em style={{ fontStyle: "italic", color: "#c9a84c" }}>
+                    {row.titleEm}
+                  </em>
+                ) : null}
+              </p>
+              <p
+                style={{
+                  fontFamily: "var(--cg)",
+                  fontSize: 16,
+                  fontStyle: "italic",
+                  fontWeight: 300,
+                  lineHeight: 1.7,
+                  color: "rgba(245,240,232,0.85)",
+                  margin: "14px 0 0",
+                }}
+              >
+                {row.body}
+              </p>
+            </div>
           </div>
         </motion.div>
       ))}

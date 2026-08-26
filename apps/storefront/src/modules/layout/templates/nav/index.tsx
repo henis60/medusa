@@ -65,7 +65,7 @@ export default async function Nav({
       <div className="flex items-center h-full" data-nav-logo>
         <LocalizedClientLink
           href={logoHref}
-          className="font-display text-xl tracking-[0.12em] hover:opacity-70 transition-opacity flex items-baseline gap-1.5"
+          className="font-display text-xl tracking-[0.12em] hover:opacity-70 transition-opacity flex items-center gap-1.5"
           data-testid="nav-store-link"
         >
           <span className="uppercase">The Hunter</span>

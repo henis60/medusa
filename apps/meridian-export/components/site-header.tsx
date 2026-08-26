@@ -48,7 +48,7 @@ export default function SiteHeader({
             color: "var(--ivory)",
             textDecoration: "none",
             display: "flex",
-            alignItems: "baseline",
+            alignItems: "center",
             gap: 6,
           }}
         >
@@ -62,6 +62,7 @@ export default function SiteHeader({
                 textTransform: "none",
                 color: "var(--gold)",
                 fontSize: 24,
+                marginTop: 5,
               }}
             >
               Meridian

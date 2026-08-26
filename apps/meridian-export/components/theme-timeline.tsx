@@ -1,14 +1,22 @@
-"use client"
+"use client";
 
-import { motion, useReducedMotion } from "framer-motion"
-import { useEffect, useRef, useState } from "react"
+import { motion, useReducedMotion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 
 const CARS = [
+  {
+    year: "1936",
+    brand: "Rolls-Royce",
+    model: "Phantom I",
+    modernYear: "",
+    modernBrand: "Rolls-Royce",
+    modernModel: "Spectre",
+  },
   {
     year: "1952",
     brand: "Bentley",
     model: "",
-    modernYear: "2026",
+    modernYear: "",
     modernBrand: "Bentley",
     modernModel: "Continental GT",
   },
@@ -16,7 +24,7 @@ const CARS = [
     year: "1958",
     brand: "Mercedes",
     model: "S-Class",
-    modernYear: "2026",
+    modernYear: "",
     modernBrand: "Mercedes",
     modernModel: "S-Class Maybach",
   },
@@ -24,7 +32,7 @@ const CARS = [
     year: "",
     brand: "Lamborghini",
     model: "Centenario Tractor",
-    modernYear: "2026",
+    modernYear: "",
     modernBrand: "Lamborghini",
     modernModel: "Aventador SVJ",
     highlight: true,
@@ -33,24 +41,16 @@ const CARS = [
     year: "1976",
     brand: "Porsche",
     model: "911",
-    modernYear: "2026",
+    modernYear: "",
     modernBrand: "Porsche",
     modernModel: "911 Turbo S",
   },
-  {
-    year: "1972",
-    brand: "Rolls-Royce",
-    model: "Phantom I",
-    modernYear: "2026",
-    modernBrand: "Rolls-Royce",
-    modernModel: "Spectre",
-  },
-]
+];
 
 const containerVariants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } },
-}
+};
 
 // Only the text fades/slides in — the diamond markers stay static so they
 // never drift off the line during the entrance animation.
@@ -61,7 +61,7 @@ const textVariants = {
     y: 0,
     transition: { duration: 0.5, ease: [0.23, 1, 0.32, 1] as const },
   },
-}
+};
 
 const textVariantsV = {
   hidden: { opacity: 0, x: -10 },
@@ -70,21 +70,21 @@ const textVariantsV = {
     x: 0,
     transition: { duration: 0.5, ease: [0.23, 1, 0.32, 1] as const },
   },
-}
+};
 
-const TRAVEL_DUR = 1.3
-const TURN_DUR = 0.5
-const PAUSE_DUR = 0.12
-const ANCHOR_TOP = 40
+const TRAVEL_DUR = 1.3;
+const TURN_DUR = 0.5;
+const PAUSE_DUR = 0.12;
+const ANCHOR_TOP = 40;
 // Desktop: the line runs out along the classic row, turns at the far edge —
 // a sideways U — and comes back along the modern row to end at the same x
 // as "Clasic" started, so "Contemporan" lands directly underneath it.
-const TOP_Y = 3
-const LINE_GAP = 64
-const BOTTOM_Y = TOP_Y + LINE_GAP
-const RIGHT_X = 92
-const MARKER_ROW_H = TOP_Y * 2
-const MARKER_SPACER_H = LINE_GAP - MARKER_ROW_H
+const TOP_Y = 3;
+const LINE_GAP = 64;
+const BOTTOM_Y = TOP_Y + LINE_GAP;
+const RIGHT_X = 92;
+const MARKER_ROW_H = TOP_Y * 2;
+const MARKER_SPACER_H = LINE_GAP - MARKER_ROW_H;
 
 // Point graph the traveling light walks: out along the top (classic),
 // around the turn, back along the bottom (modern) in reverse car order.
@@ -105,106 +105,106 @@ const POINT_META: ({ group: "classic" | "modern"; carIndex: number } | null)[] =
     { group: "modern", carIndex: 1 },
     { group: "modern", carIndex: 0 },
     null,
-  ]
-const SEGMENT_COUNT = POINT_META.length - 1
+  ];
+const SEGMENT_COUNT = POINT_META.length - 1;
 const SEGMENT_DUR: number[] = Array.from({ length: SEGMENT_COUNT }, (_, j) =>
-  j === 6 ? TURN_DUR : TRAVEL_DUR
-)
+  j === 6 ? TURN_DUR : TRAVEL_DUR,
+);
 const SEGMENT_PAUSE: number[] = Array.from({ length: SEGMENT_COUNT }, (_, j) =>
-  POINT_META[j + 1] ? PAUSE_DUR : 0
-)
+  POINT_META[j + 1] ? PAUSE_DUR : 0,
+);
 const LOOP_TOTAL =
   SEGMENT_DUR.reduce((a, b) => a + b, 0) +
-  SEGMENT_PAUSE.reduce((a, b) => a + b, 0)
+  SEGMENT_PAUSE.reduce((a, b) => a + b, 0);
 
 function igniteStyle(
   d: HTMLSpanElement,
   lit: boolean,
   wasLit: boolean,
   now: number,
-  arrivalAt: { current: number }
+  arrivalAt: { current: number },
 ) {
-  const base = d.dataset.baseTransform || ""
-  const IGNITE_MS = 550
+  const base = d.dataset.baseTransform || "";
+  const IGNITE_MS = 550;
   if (lit) {
     // Keep the hit/ignite response snappy while the marker is being lit.
-    d.style.transition = "none"
-    if (!wasLit) arrivalAt.current = now
-    const elapsed = now - arrivalAt.current
+    d.style.transition = "none";
+    if (!wasLit) arrivalAt.current = now;
+    const elapsed = now - arrivalAt.current;
     if (elapsed < IGNITE_MS) {
       // Ease-out burst: the diamond flares bright and slightly oversized
       // right as the light reaches it, then settles into its steady lit
       // state — selling the light actually striking it.
-      const p = 1 - Math.pow(1 - elapsed / IGNITE_MS, 3)
-      const scale = 1.3 - 0.3 * p
-      const spread = 11 - 7 * p
-      const alpha = 0.75 - 0.6 * p
-      d.style.background = p < 0.6 ? "#fff6e0" : "#c9a84c"
-      d.style.boxShadow = `0 0 ${spread}px 2px rgba(255,246,224,${alpha}), 0 0 0 4px rgba(201,168,76,0.15)`
-      d.style.transform = `${base} scale(${scale})`
+      const p = 1 - Math.pow(1 - elapsed / IGNITE_MS, 3);
+      const scale = 1.3 - 0.3 * p;
+      const spread = 11 - 7 * p;
+      const alpha = 0.75 - 0.6 * p;
+      d.style.background = p < 0.6 ? "#fff6e0" : "#c9a84c";
+      d.style.boxShadow = `0 0 ${spread}px 2px rgba(255,246,224,${alpha}), 0 0 0 4px rgba(201,168,76,0.15)`;
+      d.style.transform = `${base} scale(${scale})`;
     } else {
-      d.style.background = "#c9a84c"
-      d.style.boxShadow = "0 0 0 4px rgba(201,168,76,0.15)"
-      d.style.transform = base
+      d.style.background = "#c9a84c";
+      d.style.boxShadow = "0 0 0 4px rgba(201,168,76,0.15)";
+      d.style.transform = base;
     }
   } else {
     // On loop reset, fade all light energy out instead of hard cutting to dark.
     d.style.transition =
-      "background-color 420ms ease-out, box-shadow 420ms ease-out, transform 420ms ease-out"
-    d.style.background = "#0d1f17"
-    d.style.boxShadow = "none"
-    d.style.transform = base
+      "background-color 420ms ease-out, box-shadow 420ms ease-out, transform 420ms ease-out";
+    d.style.background = "#0d1f17";
+    d.style.boxShadow = "none";
+    d.style.transform = base;
   }
 }
 
 function setTravelDotIntensity(dot: HTMLDivElement, intensity: number) {
-  const v = Math.max(0.12, Math.min(1, intensity))
-  dot.style.opacity = `${0.35 + 0.65 * v}`
-  dot.style.background = `rgba(255,246,224,${0.25 + 0.75 * v})`
+  const v = Math.max(0.12, Math.min(1, intensity));
+  dot.style.opacity = `${0.35 + 0.65 * v}`;
+  dot.style.background = `rgba(255,246,224,${0.25 + 0.75 * v})`;
   dot.style.boxShadow = `0 0 4px 1px rgba(255,246,224,${
     0.12 + 0.88 * v
   }), 0 0 18px 6px rgba(232,213,163,${
     0.08 + 0.82 * v
-  }), 0 0 34px 12px rgba(201,168,76,${0.03 + 0.47 * v})`
+  }), 0 0 34px 12px rgba(201,168,76,${0.03 + 0.47 * v})`;
 }
 
 export default function ThemeTimeline() {
-  const reduceMotion = useReducedMotion()
-  const [vertical, setVertical] = useState(false)
-  const [tablet, setTablet] = useState(false)
-  const lineRef = useRef<HTMLDivElement>(null)
-  const dotRef = useRef<HTMLDivElement>(null)
-  const mobilePathRef = useRef<SVGPathElement>(null)
-  const diamondRefs = useRef<(HTMLSpanElement | null)[]>([])
-  const modernDiamondRefs = useRef<(HTMLSpanElement | null)[]>([])
+  const reduceMotion = useReducedMotion();
+  const [vertical, setVertical] = useState(false);
+  const [tablet, setTablet] = useState(false);
+  const lineRef = useRef<HTMLDivElement>(null);
+  const dotRef = useRef<HTMLDivElement>(null);
+  const mobilePathRef = useRef<SVGPathElement>(null);
+  const diamondRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const modernDiamondRefs = useRef<(HTMLSpanElement | null)[]>([]);
 
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 640px)")
-    const update = () => setVertical(mq.matches)
-    update()
-    mq.addEventListener("change", update)
-    return () => mq.removeEventListener("change", update)
-  }, [])
+    const mq = window.matchMedia("(max-width: 640px)");
+    const update = () => setVertical(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 641px) and (max-width: 1024px)")
-    const update = () => setTablet(mq.matches)
-    update()
-    mq.addEventListener("change", update)
-    return () => mq.removeEventListener("change", update)
-  }, [])
+    const mq = window.matchMedia("(min-width: 641px) and (max-width: 1024px)");
+    const update = () => setTablet(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   // Vertical (mobile): a single straight line, light travels once through
   // the 5 classic diamonds.
   useEffect(() => {
-    if (!vertical) return
-    const line = lineRef.current
-    const dot = dotRef.current
-    const path = mobilePathRef.current
-    const diamonds = diamondRefs.current.filter(Boolean) as HTMLSpanElement[]
+    if (!vertical) return;
+    const line = lineRef.current;
+    const dot = dotRef.current;
+    const path = mobilePathRef.current;
+    const diamonds = diamondRefs.current.filter(Boolean) as HTMLSpanElement[];
     const modernDiamonds = modernDiamondRefs.current.filter(
-      Boolean
-    ) as HTMLSpanElement[]
+      Boolean,
+    ) as HTMLSpanElement[];
     if (
       !line ||
       !dot ||
@@ -212,329 +212,329 @@ export default function ThemeTimeline() {
       diamonds.length !== CARS.length ||
       modernDiamonds.length !== CARS.length
     )
-      return
+      return;
 
-    let stopped = false
-    let fracs = [0.1, 0.3, 0.5, 0.7, 0.9]
-    let modernFracs = [0.1, 0.3, 0.5, 0.7, 0.9]
-    const MOBILE_U_WIDTH = 28
-    const MOBILE_U_BEND = 20
-    const classicPrev = [false, false, false, false, false]
-    const modernPrev = [false, false, false, false, false]
+    let stopped = false;
+    let fracs = [0.1, 0.3, 0.5, 0.7, 0.9];
+    let modernFracs = [0.1, 0.3, 0.5, 0.7, 0.9];
+    const MOBILE_U_WIDTH = 28;
+    const MOBILE_U_BEND = 20;
+    const classicPrev = [false, false, false, false, false];
+    const modernPrev = [false, false, false, false, false];
     const classicArrival = [
       -Infinity,
       -Infinity,
       -Infinity,
       -Infinity,
       -Infinity,
-    ]
+    ];
     const modernArrival = [
       -Infinity,
       -Infinity,
       -Infinity,
       -Infinity,
       -Infinity,
-    ]
-    let lineSize = 0
-    let railWidth = MOBILE_U_WIDTH
-    let pathLen = 0
-    let bendLen = 0
+    ];
+    let lineSize = 0;
+    let railWidth = MOBILE_U_WIDTH;
+    let pathLen = 0;
+    let bendLen = 0;
 
     const measure = () => {
-      const lr = line.getBoundingClientRect()
-      const size = lr.height
-      if (!size) return
-      lineSize = size
+      const lr = line.getBoundingClientRect();
+      const size = lr.height;
+      if (!size) return;
+      lineSize = size;
       fracs = diamonds.map((d) => {
-        const dr = d.getBoundingClientRect()
-        return (dr.top + dr.height / 2 - lr.top) / size
-      })
+        const dr = d.getBoundingClientRect();
+        return (dr.top + dr.height / 2 - lr.top) / size;
+      });
       modernFracs = modernDiamonds.map((d) => {
-        const dr = d.getBoundingClientRect()
-        return (dr.top + dr.height / 2 - lr.top) / size
-      })
+        const dr = d.getBoundingClientRect();
+        return (dr.top + dr.height / 2 - lr.top) / size;
+      });
 
       if (path) {
-        const container = line.parentElement
-        if (!container) return
-        const cr = container.getBoundingClientRect()
+        const container = line.parentElement;
+        if (!container) return;
+        const cr = container.getBoundingClientRect();
         const xLeftRaw =
           diamonds.reduce((sum, d) => {
-            const dr = d.getBoundingClientRect()
-            return sum + (dr.left + dr.width / 2 - cr.left)
-          }, 0) / diamonds.length
+            const dr = d.getBoundingClientRect();
+            return sum + (dr.left + dr.width / 2 - cr.left);
+          }, 0) / diamonds.length;
         const xRightRaw =
           modernDiamonds.reduce((sum, d) => {
-            const dr = d.getBoundingClientRect()
-            return sum + (dr.left + dr.width / 2 - cr.left)
-          }, 0) / modernDiamonds.length
-        const xLeft = Math.round(xLeftRaw * 2) / 2
-        const xRight = Math.round(xRightRaw * 2) / 2
-        railWidth = Math.max(12, xRight - xLeft)
-        line.style.left = `${xLeft}px`
-        const yTop = 0
-        const yBottom = size
-        const xMid = (xLeft + xRight) / 2
+            const dr = d.getBoundingClientRect();
+            return sum + (dr.left + dr.width / 2 - cr.left);
+          }, 0) / modernDiamonds.length;
+        const xLeft = Math.round(xLeftRaw * 2) / 2;
+        const xRight = Math.round(xRightRaw * 2) / 2;
+        railWidth = Math.max(12, xRight - xLeft);
+        line.style.left = `${xLeft}px`;
+        const yTop = 0;
+        const yBottom = size;
+        const xMid = (xLeft + xRight) / 2;
         path.setAttribute(
           "d",
           `M ${xLeft},${yTop} L ${xLeft},${yBottom} Q ${xMid},${
             yBottom + MOBILE_U_BEND
-          } ${xRight},${yBottom} L ${xRight},${yTop}`
-        )
-        pathLen = path.getTotalLength()
-        bendLen = Math.max(0, pathLen - 2 * size)
+          } ${xRight},${yBottom} L ${xRight},${yTop}`,
+        );
+        pathLen = path.getTotalLength();
+        bendLen = Math.max(0, pathLen - 2 * size);
       }
-    }
-    measure()
-    const ro = new ResizeObserver(measure)
-    ro.observe(line)
-    if (line.parentElement) ro.observe(line.parentElement)
-    window.addEventListener("resize", measure)
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(line);
+    if (line.parentElement) ro.observe(line.parentElement);
+    window.addEventListener("resize", measure);
 
     // One global speed for the whole path (top run + bend + bottom run) so
     // the dot doesn't appear to slow down while it's on the curved part —
     // every segment's duration is proportional to its real pixel length.
-    const TARGET_TRAVEL_TOTAL = SEGMENT_DUR.reduce((a, b) => a + b, 0)
+    const TARGET_TRAVEL_TOTAL = SEGMENT_DUR.reduce((a, b) => a + b, 0);
 
-    const start = performance.now()
-    let raf = 0
+    const start = performance.now();
+    let raf = 0;
     const frame = (now: number) => {
-      if (stopped) return
-      raf = requestAnimationFrame(frame)
-      const points = [0, ...fracs, 1]
+      if (stopped) return;
+      raf = requestAnimationFrame(frame);
+      const points = [0, ...fracs, 1];
       const rightStops = modernFracs
         .map((f, idx) => ({ p: 1 - f, idx }))
-        .sort((a, b) => a.p - b.p)
-      const rightPoints = [0, ...rightStops.map((s) => s.p), 1]
+        .sort((a, b) => a.p - b.p);
+      const rightPoints = [0, ...rightStops.map((s) => s.p), 1];
 
       const segLenPx = Array.from({ length: SEGMENT_COUNT }, (_, j) => {
-        if (j === 6) return bendLen
-        if (j < 6) return Math.abs(points[j + 1] - points[j]) * lineSize
-        const k = j - 7
-        return Math.abs(rightPoints[k + 1] - rightPoints[k]) * lineSize
-      })
-      const totalLenPx = segLenPx.reduce((a, b) => a + b, 0)
+        if (j === 6) return bendLen;
+        if (j < 6) return Math.abs(points[j + 1] - points[j]) * lineSize;
+        const k = j - 7;
+        return Math.abs(rightPoints[k + 1] - rightPoints[k]) * lineSize;
+      });
+      const totalLenPx = segLenPx.reduce((a, b) => a + b, 0);
       const segDur =
         totalLenPx > 0
           ? segLenPx.map((len) => (len / totalLenPx) * TARGET_TRAVEL_TOTAL)
-          : SEGMENT_DUR
+          : SEGMENT_DUR;
 
       const total =
         segDur.reduce((a, b) => a + b, 0) +
-        SEGMENT_PAUSE.reduce((a, b) => a + b, 0)
-      const t = ((now - start) / 1000) % total
-      const classicFilled = [false, false, false, false, false]
-      const modernFilled = [false, false, false, false, false]
-      let currLen = 0
-      let dotIntensity = 1
+        SEGMENT_PAUSE.reduce((a, b) => a + b, 0);
+      const t = ((now - start) / 1000) % total;
+      const classicFilled = [false, false, false, false, false];
+      const modernFilled = [false, false, false, false, false];
+      let currLen = 0;
+      let dotIntensity = 1;
       // POINT_META's modern carIndex assumes fracs ascending with car order
       // (true on desktop by construction); on mobile the real car index at
       // each modern stop comes from rightStops' own sort instead.
-      const modernCarAt = (pointIdx: number) => rightStops[pointIdx - 8]?.idx
+      const modernCarAt = (pointIdx: number) => rightStops[pointIdx - 8]?.idx;
       const markUpTo = (pointIdx: number) => {
         for (let k = 1; k <= pointIdx; k++) {
-          const meta = POINT_META[k]
-          if (!meta) continue
-          if (meta.group === "classic") classicFilled[meta.carIndex] = true
+          const meta = POINT_META[k];
+          if (!meta) continue;
+          if (meta.group === "classic") classicFilled[meta.carIndex] = true;
           else {
-            const carIdx = modernCarAt(k)
-            if (carIdx !== undefined) modernFilled[carIdx] = true
+            const carIdx = modernCarAt(k);
+            if (carIdx !== undefined) modernFilled[carIdx] = true;
           }
         }
-      }
+      };
 
-      let acc = 0
-      let lenAcc = 0
+      let acc = 0;
+      let lenAcc = 0;
       for (let j = 0; j < SEGMENT_COUNT; j++) {
-        const dur = segDur[j]
+        const dur = segDur[j];
         if (t < acc + dur) {
-          const p = dur > 0 ? (t - acc) / dur : 0
-          currLen = lenAcc + segLenPx[j] * p
+          const p = dur > 0 ? (t - acc) / dur : 0;
+          currLen = lenAcc + segLenPx[j] * p;
           if (POINT_META[j + 1] && p > 0.94) {
-            const hitEase = (p - 0.94) / 0.06
-            dotIntensity = 1 - 0.75 * hitEase
+            const hitEase = (p - 0.94) / 0.06;
+            dotIntensity = 1 - 0.75 * hitEase;
           }
-          markUpTo(j)
-          break
+          markUpTo(j);
+          break;
         }
-        acc += dur
-        lenAcc += segLenPx[j]
-        const pause = SEGMENT_PAUSE[j]
+        acc += dur;
+        lenAcc += segLenPx[j];
+        const pause = SEGMENT_PAUSE[j];
         if (pause > 0) {
           if (t < acc + pause) {
-            currLen = lenAcc
-            dotIntensity = 0.18
-            markUpTo(j + 1)
-            break
+            currLen = lenAcc;
+            dotIntensity = 0.18;
+            markUpTo(j + 1);
+            break;
           }
-          acc += pause
+          acc += pause;
         }
       }
 
-      const pt = path.getPointAtLength(Math.max(0, Math.min(pathLen, currLen)))
-      const lineLeft = line.offsetLeft
-      dot.style.top = `${pt.y - 5.5}px`
-      dot.style.left = `${pt.x - lineLeft - 5.5}px`
-      dot.style.transform = "none"
-      setTravelDotIntensity(dot, dotIntensity)
+      const pt = path.getPointAtLength(Math.max(0, Math.min(pathLen, currLen)));
+      const lineLeft = line.offsetLeft;
+      dot.style.top = `${pt.y - 5.5}px`;
+      dot.style.left = `${pt.x - lineLeft - 5.5}px`;
+      dot.style.transform = "none";
+      setTravelDotIntensity(dot, dotIntensity);
       diamonds.forEach((d, idx) => {
         igniteStyle(d, classicFilled[idx], classicPrev[idx], now, {
           get current() {
-            return classicArrival[idx]
+            return classicArrival[idx];
           },
           set current(v) {
-            classicArrival[idx] = v
+            classicArrival[idx] = v;
           },
-        })
-        classicPrev[idx] = classicFilled[idx]
-      })
+        });
+        classicPrev[idx] = classicFilled[idx];
+      });
 
       modernDiamonds.forEach((d, idx) => {
         igniteStyle(d, modernFilled[idx], modernPrev[idx], now, {
           get current() {
-            return modernArrival[idx]
+            return modernArrival[idx];
           },
           set current(v) {
-            modernArrival[idx] = v
+            modernArrival[idx] = v;
           },
-        })
-        modernPrev[idx] = modernFilled[idx]
-      })
-    }
-    raf = requestAnimationFrame(frame)
+        });
+        modernPrev[idx] = modernFilled[idx];
+      });
+    };
+    raf = requestAnimationFrame(frame);
 
     return () => {
-      stopped = true
-      ro.disconnect()
-      window.removeEventListener("resize", measure)
-      cancelAnimationFrame(raf)
-    }
-  }, [vertical])
+      stopped = true;
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+      cancelAnimationFrame(raf);
+    };
+  }, [vertical]);
 
   // Desktop: the light runs the whole sideways-U — out along the classic
   // row, around the turn, back along the modern row.
   useEffect(() => {
-    if (vertical) return
-    const line = lineRef.current
-    const dot = dotRef.current
+    if (vertical) return;
+    const line = lineRef.current;
+    const dot = dotRef.current;
     const classicDiamonds = diamondRefs.current.filter(
-      Boolean
-    ) as HTMLSpanElement[]
+      Boolean,
+    ) as HTMLSpanElement[];
     const modernDiamonds = modernDiamondRefs.current.filter(
-      Boolean
-    ) as HTMLSpanElement[]
+      Boolean,
+    ) as HTMLSpanElement[];
     if (
       !line ||
       !dot ||
       classicDiamonds.length !== CARS.length ||
       modernDiamonds.length !== CARS.length
     )
-      return
+      return;
 
-    let stopped = false
-    let fracs = [0.1, 0.3, 0.5, 0.7, 0.9]
-    const classicPrev = [false, false, false, false, false]
-    const modernPrev = [false, false, false, false, false]
+    let stopped = false;
+    let fracs = [0.1, 0.3, 0.5, 0.7, 0.9];
+    const classicPrev = [false, false, false, false, false];
+    const modernPrev = [false, false, false, false, false];
     const classicArrival = [
       -Infinity,
       -Infinity,
       -Infinity,
       -Infinity,
       -Infinity,
-    ]
+    ];
     const modernArrival = [
       -Infinity,
       -Infinity,
       -Infinity,
       -Infinity,
       -Infinity,
-    ]
-    const TARGET_TRAVEL_TOTAL = SEGMENT_DUR.reduce((a, b) => a + b, 0)
-    const rightEdge = RIGHT_X / 100
-    const turnMidY = (TOP_Y + BOTTOM_Y) / 2
-    const TURN_SAMPLE_COUNT = 120
-    let turnLookup: { s: number; x: number; y: number }[] = []
-    let turnLengthPx = 0
-    let lineWidth = 0
+    ];
+    const TARGET_TRAVEL_TOTAL = SEGMENT_DUR.reduce((a, b) => a + b, 0);
+    const rightEdge = RIGHT_X / 100;
+    const turnMidY = (TOP_Y + BOTTOM_Y) / 2;
+    const TURN_SAMPLE_COUNT = 120;
+    let turnLookup: { s: number; x: number; y: number }[] = [];
+    let turnLengthPx = 0;
+    let lineWidth = 0;
 
     const turnPointAt = (q: number) => {
       if (q <= 0.5) {
-        const u = q * 2
-        const inv = 1 - u
+        const u = q * 2;
+        const inv = 1 - u;
         return {
           x: inv * inv * rightEdge + 2 * inv * u * 1 + u * u * 1,
           y: inv * inv * TOP_Y + 2 * inv * u * TOP_Y + u * u * turnMidY,
-        }
+        };
       }
-      const u = (q - 0.5) * 2
-      const inv = 1 - u
+      const u = (q - 0.5) * 2;
+      const inv = 1 - u;
       return {
         x: inv * inv * 1 + 2 * inv * u * 1 + u * u * rightEdge,
         y: inv * inv * turnMidY + 2 * inv * u * BOTTOM_Y + u * u * BOTTOM_Y,
-      }
-    }
+      };
+    };
 
     const buildTurnLookup = (lineWidthPx: number) => {
-      const pts: { s: number; x: number; y: number }[] = []
-      let total = 0
-      let prev = turnPointAt(0)
-      pts.push({ s: 0, x: prev.x, y: prev.y })
+      const pts: { s: number; x: number; y: number }[] = [];
+      let total = 0;
+      let prev = turnPointAt(0);
+      pts.push({ s: 0, x: prev.x, y: prev.y });
 
       for (let n = 1; n <= TURN_SAMPLE_COUNT; n++) {
-        const q = n / TURN_SAMPLE_COUNT
-        const curr = turnPointAt(q)
-        total += Math.hypot((curr.x - prev.x) * lineWidthPx, curr.y - prev.y)
-        pts.push({ s: total, x: curr.x, y: curr.y })
-        prev = curr
+        const q = n / TURN_SAMPLE_COUNT;
+        const curr = turnPointAt(q);
+        total += Math.hypot((curr.x - prev.x) * lineWidthPx, curr.y - prev.y);
+        pts.push({ s: total, x: curr.x, y: curr.y });
+        prev = curr;
       }
 
       if (total > 0) {
-        for (const p of pts) p.s /= total
+        for (const p of pts) p.s /= total;
       }
-      return { pts, total }
-    }
+      return { pts, total };
+    };
 
     const pointOnTurnByArc = (sNorm: number) => {
-      if (!turnLookup.length) return turnPointAt(sNorm)
-      if (sNorm <= 0) return turnLookup[0]
-      if (sNorm >= 1) return turnLookup[turnLookup.length - 1]
+      if (!turnLookup.length) return turnPointAt(sNorm);
+      if (sNorm <= 0) return turnLookup[0];
+      if (sNorm >= 1) return turnLookup[turnLookup.length - 1];
 
-      let hi = 1
-      while (hi < turnLookup.length && turnLookup[hi].s < sNorm) hi++
-      const lo = hi - 1
-      const a = turnLookup[lo]
-      const b = turnLookup[hi]
-      const span = b.s - a.s || 1
-      const u = (sNorm - a.s) / span
+      let hi = 1;
+      while (hi < turnLookup.length && turnLookup[hi].s < sNorm) hi++;
+      const lo = hi - 1;
+      const a = turnLookup[lo];
+      const b = turnLookup[hi];
+      const span = b.s - a.s || 1;
+      const u = (sNorm - a.s) / span;
       return {
         x: a.x + (b.x - a.x) * u,
         y: a.y + (b.y - a.y) * u,
-      }
-    }
+      };
+    };
 
     const measure = () => {
-      const lr = line.getBoundingClientRect()
-      if (!lr.width) return
-      lineWidth = lr.width
+      const lr = line.getBoundingClientRect();
+      if (!lr.width) return;
+      lineWidth = lr.width;
       fracs = classicDiamonds.map((d) => {
-        const dr = d.getBoundingClientRect()
-        return (dr.left + dr.width / 2 - lr.left) / lr.width
-      })
-      const turnData = buildTurnLookup(lr.width)
-      turnLookup = turnData.pts
-      turnLengthPx = turnData.total
-    }
-    measure()
-    const ro = new ResizeObserver(measure)
-    ro.observe(line)
+        const dr = d.getBoundingClientRect();
+        return (dr.left + dr.width / 2 - lr.left) / lr.width;
+      });
+      const turnData = buildTurnLookup(lr.width);
+      turnLookup = turnData.pts;
+      turnLengthPx = turnData.total;
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(line);
 
-    const start = performance.now()
-    let raf = 0
+    const start = performance.now();
+    let raf = 0;
     const frame = (now: number) => {
-      if (stopped) return
-      raf = requestAnimationFrame(frame)
-      const t = ((now - start) / 1000) % LOOP_TOTAL
-      const [f0, f1, f2, f3, f4] = fracs
+      if (stopped) return;
+      raf = requestAnimationFrame(frame);
+      const t = ((now - start) / 1000) % LOOP_TOTAL;
+      const [f0, f1, f2, f3, f4] = fracs;
       const xs = [
         0,
         f0,
@@ -550,99 +550,99 @@ export default function ThemeTimeline() {
         f1,
         f0,
         0,
-      ]
+      ];
       const segLenPx = Array.from({ length: SEGMENT_COUNT }, (_, j) =>
-        j === 6 ? turnLengthPx : Math.abs(xs[j + 1] - xs[j]) * lineWidth
-      )
-      const totalLenPx = segLenPx.reduce((a, b) => a + b, 0)
+        j === 6 ? turnLengthPx : Math.abs(xs[j + 1] - xs[j]) * lineWidth,
+      );
+      const totalLenPx = segLenPx.reduce((a, b) => a + b, 0);
       const segDur =
         totalLenPx > 0
           ? segLenPx.map((len) => (len / totalLenPx) * TARGET_TRAVEL_TOTAL)
-          : SEGMENT_DUR
-      const classicFilled = [false, false, false, false, false]
-      const modernFilled = [false, false, false, false, false]
+          : SEGMENT_DUR;
+      const classicFilled = [false, false, false, false, false];
+      const modernFilled = [false, false, false, false, false];
 
       const markUpTo = (pointIdx: number) => {
         for (let p = 1; p <= pointIdx; p++) {
-          const meta = POINT_META[p]
-          if (!meta) continue
-          if (meta.group === "classic") classicFilled[meta.carIndex] = true
-          else modernFilled[meta.carIndex] = true
+          const meta = POINT_META[p];
+          if (!meta) continue;
+          if (meta.group === "classic") classicFilled[meta.carIndex] = true;
+          else modernFilled[meta.carIndex] = true;
         }
-      }
+      };
 
-      let x = xs[0]
-      let y = TOP_Y
-      let dotIntensity = 1
-      let acc = 0
+      let x = xs[0];
+      let y = TOP_Y;
+      let dotIntensity = 1;
+      let acc = 0;
       for (let j = 0; j < SEGMENT_COUNT; j++) {
-        const dur = segDur[j]
+        const dur = segDur[j];
         if (t < acc + dur) {
-          const p = dur > 0 ? (t - acc) / dur : 0
+          const p = dur > 0 ? (t - acc) / dur : 0;
           if (j === 6) {
-            const pt = pointOnTurnByArc(p)
-            x = pt.x
-            y = pt.y
+            const pt = pointOnTurnByArc(p);
+            x = pt.x;
+            y = pt.y;
           } else {
-            x = xs[j] + (xs[j + 1] - xs[j]) * p
-            y = j <= 5 ? TOP_Y : BOTTOM_Y
+            x = xs[j] + (xs[j + 1] - xs[j]) * p;
+            y = j <= 5 ? TOP_Y : BOTTOM_Y;
           }
           if (POINT_META[j + 1] && p > 0.94) {
-            const hitEase = (p - 0.94) / 0.06
-            dotIntensity = 1 - 0.75 * hitEase
+            const hitEase = (p - 0.94) / 0.06;
+            dotIntensity = 1 - 0.75 * hitEase;
           }
-          markUpTo(j)
-          break
+          markUpTo(j);
+          break;
         }
-        acc += dur
-        const pause = SEGMENT_PAUSE[j]
+        acc += dur;
+        const pause = SEGMENT_PAUSE[j];
         if (pause > 0) {
           if (t < acc + pause) {
-            x = xs[j + 1]
-            y = j + 1 <= 6 ? TOP_Y : BOTTOM_Y
-            if (POINT_META[j + 1]) dotIntensity = 0.18
-            markUpTo(j + 1)
-            break
+            x = xs[j + 1];
+            y = j + 1 <= 6 ? TOP_Y : BOTTOM_Y;
+            if (POINT_META[j + 1]) dotIntensity = 0.18;
+            markUpTo(j + 1);
+            break;
           }
-          acc += pause
+          acc += pause;
         }
       }
 
-      dot.style.left = x * 100 + "%"
-      dot.style.top = `${y - 5.5}px`
-      setTravelDotIntensity(dot, dotIntensity)
+      dot.style.left = x * 100 + "%";
+      dot.style.top = `${y - 5.5}px`;
+      setTravelDotIntensity(dot, dotIntensity);
 
       classicDiamonds.forEach((d, idx) => {
         igniteStyle(d, classicFilled[idx], classicPrev[idx], now, {
           get current() {
-            return classicArrival[idx]
+            return classicArrival[idx];
           },
           set current(v) {
-            classicArrival[idx] = v
+            classicArrival[idx] = v;
           },
-        })
-        classicPrev[idx] = classicFilled[idx]
-      })
+        });
+        classicPrev[idx] = classicFilled[idx];
+      });
       modernDiamonds.forEach((d, idx) => {
         igniteStyle(d, modernFilled[idx], modernPrev[idx], now, {
           get current() {
-            return modernArrival[idx]
+            return modernArrival[idx];
           },
           set current(v) {
-            modernArrival[idx] = v
+            modernArrival[idx] = v;
           },
-        })
-        modernPrev[idx] = modernFilled[idx]
-      })
-    }
-    raf = requestAnimationFrame(frame)
+        });
+        modernPrev[idx] = modernFilled[idx];
+      });
+    };
+    raf = requestAnimationFrame(frame);
 
     return () => {
-      stopped = true
-      ro.disconnect()
-      cancelAnimationFrame(raf)
-    }
-  }, [vertical])
+      stopped = true;
+      ro.disconnect();
+      cancelAnimationFrame(raf);
+    };
+  }, [vertical]);
 
   if (vertical) {
     return (
@@ -762,10 +762,10 @@ export default function ThemeTimeline() {
             (() => {
               const isHighlighted =
                 car.brand === "Lamborghini" &&
-                car.model === "Centenario Tractor"
-              const isRollsRoyce = car.brand === "Rolls-Royce"
+                car.model === "Centenario Tractor";
+              const isRollsRoyce = car.brand === "Rolls-Royce";
               const isPhantomI =
-                car.brand === "Rolls-Royce" && car.model === "Phantom I"
+                car.brand === "Rolls-Royce" && car.model === "Phantom I";
               return (
                 <div
                   key={`${car.brand}-${car.year || i}`}
@@ -848,7 +848,7 @@ export default function ThemeTimeline() {
                   >
                     <span
                       ref={(el) => {
-                        diamondRefs.current[i] = el
+                        diamondRefs.current[i] = el;
                       }}
                       data-base-transform="rotate(45deg)"
                       aria-hidden="true"
@@ -876,7 +876,7 @@ export default function ThemeTimeline() {
                   >
                     <span
                       ref={(el) => {
-                        modernDiamondRefs.current[i] = el
+                        modernDiamondRefs.current[i] = el;
                       }}
                       data-base-transform="rotate(45deg)"
                       aria-hidden="true"
@@ -940,15 +940,15 @@ export default function ThemeTimeline() {
                     </motion.div>
                   </div>
                 </div>
-              )
-            })()
+              );
+            })(),
           )}
         </motion.div>
       </div>
-    )
+    );
   }
 
-  const SVG_H = BOTTOM_Y + 20
+  const SVG_H = BOTTOM_Y + 20;
 
   return (
     <div className="thm-timeline-scroll">
@@ -1072,9 +1072,9 @@ export default function ThemeTimeline() {
             (() => {
               const isHighlighted =
                 car.brand === "Lamborghini" &&
-                car.model === "Centenario Tractor"
+                car.model === "Centenario Tractor";
               const isPhantomI =
-                car.brand === "Rolls-Royce" && car.model === "Phantom I"
+                car.brand === "Rolls-Royce" && car.model === "Phantom I";
               return (
                 <div
                   key={`${car.brand}-${car.year || i}`}
@@ -1103,8 +1103,8 @@ export default function ThemeTimeline() {
                         fontSize: isHighlighted
                           ? "clamp(17px,1.7vw,22px)"
                           : isPhantomI
-                          ? "clamp(15px,1.35vw,18px)"
-                          : "clamp(16px,1.5vw,20px)",
+                            ? "clamp(15px,1.35vw,18px)"
+                            : "clamp(16px,1.5vw,20px)",
                         fontWeight: isHighlighted ? 700 : 400,
                         lineHeight: 1.3,
                         color: isHighlighted ? "#f5e6b8" : "var(--ivory)",
@@ -1168,7 +1168,7 @@ export default function ThemeTimeline() {
                   >
                     <span
                       ref={(el) => {
-                        diamondRefs.current[i] = el
+                        diamondRefs.current[i] = el;
                       }}
                       data-base-transform="rotate(45deg)"
                       aria-hidden="true"
@@ -1197,7 +1197,7 @@ export default function ThemeTimeline() {
                   >
                     <span
                       ref={(el) => {
-                        modernDiamondRefs.current[i] = el
+                        modernDiamondRefs.current[i] = el;
                       }}
                       data-base-transform="rotate(45deg)"
                       aria-hidden="true"
@@ -1254,11 +1254,11 @@ export default function ThemeTimeline() {
                     </motion.span>
                   </div>
                 </div>
-              )
-            })()
+              );
+            })(),
           )}
         </motion.div>
       </div>
     </div>
-  )
+  );
 }

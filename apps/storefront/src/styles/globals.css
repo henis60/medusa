@@ -4388,3 +4388,21 @@ html {
     width: calc(100% / 0.58);
   }
 }
+
+/* --- Meridian: program row "Colecțiile noi" image needs a different
+   object-position at wider viewports to keep the outfits in frame. --- */
+.thm-program-img-collections {
+  object-position: 50% 50% !important;
+}
+
+@media (min-width: 861px) {
+  .thm-program-img-collections {
+    object-position: 50% 35% !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .thm-program-img-collections {
+    object-position: 50% 30% !important;
+  }
+}

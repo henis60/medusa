@@ -15,12 +15,14 @@ const TICKET_TIERS = [
   {
     name: "Pre Sale",
     price: "100 RON",
+    oldPrice: "190 RON",
     note: "",
-    extraNote: "Opțional: pahar de prosecco și apă la intrare — 25 RON",
+    extraNote: "Opțional: pahar de prosecco și apă la intrare",
+    extraNotePrice: "25 RON",
     stages: [] as { name: string; price: string }[],
     includes: [
       "Acces la expoziția celor zece automobile",
-      "Concertul live de blues & jazz, în aer liber",
+      "Concertul Mihail și Gray Bliss Band din Cluj-Napoca",
       "Expoziția de pictură și sculptură",
     ],
   },
@@ -133,7 +135,14 @@ export default function MeridianTemplate() {
                 }}
               >
                 The Hunter{" "}
-                <em style={{ fontStyle: "italic", color: "#c9a84c" }}>
+                <em
+                  className={montigny.className}
+                  style={{
+                    fontStyle: "normal",
+                    color: "#c9a84c",
+                    fontSize: "clamp(54px,7.2vw,104px)",
+                  }}
+                >
                   Meridian
                 </em>
               </h1>
@@ -165,9 +174,12 @@ export default function MeridianTemplate() {
                 }}
               >
                 Zece automobile în cinci perechi clasic–contemporan, un concert
-                de blues &amp; jazz în aer liber, o expoziție de pictură și
-                sculptură și trei colecții noi The Hunter House, într-o singură
-                zi, la Colonia Pictorilor.
+                în aer liber cu Mihail și Gray Bliss Band din Cluj-Napoca, o
+                expoziție de pictură și sculptură și trei colecții noi{" "}
+                <strong style={{ fontStyle: "italic", fontWeight: 600 }}>
+                  The Hunter House
+                </strong>
+                , într-o singură zi, la Colonia Pictorilor.
               </p>
               <div
                 className="thm-hero-cta-row"
@@ -272,12 +284,15 @@ export default function MeridianTemplate() {
                     margin: 0,
                   }}
                 >
-                  Hunter vine din vechea engleză huntian — a urmări cu un scop
-                  anume. Meridian, din latinescul meridies, e linia care setează
-                  un punct comun între emisfere. Împreună, devin linia de ochire
-                  a unui standard occidental de gust, urmărit pe traseul dintre
-                  Est și Vest — cel pe care Londra, Parisul și Viena îl trasau
-                  acum un secol, cu accent local la fiecare curte care îl purta.
+                  Hunter vine din vechea engleză{" "}
+                  <strong style={{ fontStyle: "italic", fontWeight: 600 }}>huntian</strong>, a
+                  urmări cu un scop anume.{" "}
+                  <strong style={{ fontStyle: "italic", fontWeight: 600 }}>Meridian</strong>, din
+                  latinescul meridies, e linia care setează un punct comun între
+                  emisfere. Împreună, devin linia de ochire a unui standard
+                  occidental de gust, urmărit pe traseul dintre Est și Vest, cel
+                  pe care Londra, Parisul și Viena îl trasau acum un secol, cu
+                  accent local la fiecare curte care îl purta.
                 </p>
                 <p
                   className="thm-concept-para"
@@ -290,12 +305,14 @@ export default function MeridianTemplate() {
                     margin: "20px 0 0",
                   }}
                 >
-                  Legătura aceea nu s-a rupt, doar s-a subțiat pentru o vreme.
-                  The Hunter Meridian o reia: un reper anual, cu temă și piese
-                  noi la fiecare ediție — Ediția I, evoluția automobilului de la
-                  clasic la contemporan. Fiecare invitat, fie om de succes care
-                  a văzut deja Ascot sau Saint-Tropez, fie om de cultură care
-                  recunoaște o operă, aduce cu el o bucată din același meridian.
+                  Acesta nu s-a rupt.{" "}
+                  <strong style={{ fontStyle: "italic", fontWeight: 600 }}>
+                    The Hunter Meridian
+                  </strong>{" "}
+                  propune un reper anual, cu tematică și piese noi la fiecare
+                  ediție, unde fiecare invitat care a văzut deja Ascot sau
+                  Saint-Moritz și fiecare om de cultură care recunoaște o operă,
+                  aduce cu el o bucată din același meridian.
                 </p>
                 <blockquote
                   className="thm-concept-quote"
@@ -312,7 +329,7 @@ export default function MeridianTemplate() {
                     maxWidth: "40ch",
                   }}
                 >
-                  Un meridian unește lumile, chiar le conectează.
+                  Un meridian unește lumile și le conectează.
                 </blockquote>
               </div>
               <div
@@ -366,8 +383,8 @@ export default function MeridianTemplate() {
                 margin: "20px 0 0",
               }}
             >
-              Zece automobile, cinci perechi: aceleași mărci, separate de șase
-              decenii, expuse față în față.
+              Zece automobile, cinci perechi, aceleași mărci expuse față în
+              față.
             </p>
           </Reveal>
           <ThemeTimeline />
@@ -404,10 +421,10 @@ export default function MeridianTemplate() {
                   maxWidth: "54ch",
                 }}
               >
-                Operă de artă unicat, din doar 5 exemplare existente în lume,
-                atestată oficial de Lamborghini.Prima expunere publică în
-                România. Cu mult înaintea supercar-urilor, Ferruccio Lamborghini
-                construia tractoare. Aici a început totul.
+                Operă de artă unicată, doar 5 exemplare existente în lume,
+                atestată oficial de Lamborghini, își are prima expunere publică
+                în România. Cu mult înaintea supercar-urilor, Ferruccio
+                Lamborghini construia tractoare, așa a început totul.
               </p>
               <p
                 style={{
@@ -420,11 +437,11 @@ export default function MeridianTemplate() {
                   maxWidth: "54ch",
                 }}
               >
-                Lângă el așezăm un Lamborghini Aventador SVJ, care spune
-                cealaltă parte a aceleiași povești: ce a crescut în șaizeci de
-                ani din tractorul acela — Old Money și New Rich, două momente
-                ale aceleiași istorii. Clasicismul se poate finanța, nu se poate
-                cumpăra: ține de timp, nu de bani. Tractorul e acolo să
+                Lângă el stă prezentul, care spune cealaltă parte a aceleiași
+                povești: ce a crescut în șaizeci de ani din tractorul acesta,
+                fenomenul Old Money și New Rich, două momente ale aceleiași
+                istorii. Clasicismul se poate finanța, dar nu se poate cumpăra,
+                pentru că ține de timp și nu de bani. Tractorul e acolo să
                 amintească ce anume susține valoarea mașinii de lângă el.
               </p>
             </div>
@@ -503,6 +520,19 @@ export default function MeridianTemplate() {
                       minHeight: 40,
                     }}
                   >
+                    {tier.oldPrice ? (
+                      <span
+                        style={{
+                          fontFamily: "var(--pd)",
+                          fontSize: "clamp(14px,1.4vw,17px)",
+                          fontStyle: "italic",
+                          textDecoration: "line-through",
+                          color: "rgba(245,240,232,0.4)",
+                        }}
+                      >
+                        Standard {tier.oldPrice}
+                      </span>
+                    ) : null}
                     <span
                       style={{
                         fontFamily: "var(--pd)",
@@ -548,15 +578,42 @@ export default function MeridianTemplate() {
                   {tier.extraNote ? (
                     <p
                       style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
                         fontFamily: "var(--cg)",
-                        fontSize: 13,
+                        fontSize: 14,
                         fontStyle: "italic",
-                        fontWeight: 300,
-                        color: "rgba(245,240,232,0.5)",
+                        fontWeight: 500,
+                        color: "rgba(245,240,232,0.9)",
                         margin: "0 0 12px",
                       }}
                     >
+                      <svg
+                        aria-hidden="true"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#c9a84c"
+                        strokeWidth="1.5"
+                        style={{ flex: "0 0 auto" }}
+                      >
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 8v8M8 12h8" strokeLinecap="round" />
+                      </svg>
                       {tier.extraNote}
+                      {tier.extraNotePrice ? (
+                        <span
+                          style={{
+                            fontSize: 17,
+                            fontWeight: 600,
+                            color: "#c9a84c",
+                          }}
+                        >
+                          {tier.extraNotePrice}
+                        </span>
+                      ) : null}
                     </p>
                   ) : null}
                   {tier.stages.length > 0 ? (
@@ -626,6 +683,9 @@ export default function MeridianTemplate() {
                           aria-hidden="true"
                           style={{
                             flex: "0 0 auto",
+                            display: "inline-flex",
+                            justifyContent: "center",
+                            width: 14,
                             fontSize: 5,
                             color: "#8b6914",
                             marginTop: 6,
@@ -710,7 +770,8 @@ export default function MeridianTemplate() {
               style={{
                 position: "absolute",
                 left: 0,
-                bottom: 0,
+                top: "50%",
+                transform: "translateY(-50%)",
                 padding: "clamp(20px,3.5vw,40px) var(--pad)",
                 pointerEvents: "none",
               }}
@@ -756,10 +817,7 @@ export default function MeridianTemplate() {
                       maxWidth: "58ch",
                     }}
                   >
-                    O locație cu tradiție în artă, la 20 de minute de centrul
-                    Băii Mari: verde, clădiri de epocă, ateliere care
-                    funcționează și astăzi. Spațiu generos în aer liber, cu zonă
-                    acoperită, scenă pentru concert și parcare amplă.
+                    Strada Victoriei numărul 21, Baia Mare, Maramureș.
                   </p>
                 </div>
               </div>
@@ -779,7 +837,7 @@ export default function MeridianTemplate() {
           >
             <iframe
               src="https://www.google.com/maps?q=Colonia+Pictorilor,+Baia+Mare&z=15&output=embed"
-              title="Hartă Google — Colonia Pictorilor, Baia Mare"
+              title="Hartă Google, Colonia Pictorilor, Baia Mare"
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
               allowFullScreen

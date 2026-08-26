@@ -37,6 +37,14 @@ export const metadata = {
   title: "The Hunter House",
   description:
     "The Hunter House — Return of the Elegant Gentleman. Tailoring premium, The Hunter Bar și o comunitate exclusivă, reunite într-un spațiu unic în România.",
+  icons: {
+    icon: "/images/favicon-dark.svg",
+    apple: "/images/apple-touch-icon.png",
+  },
+}
+
+export const viewport = {
+  themeColor: "#152018",
 }
 
 export default function RootLayout({

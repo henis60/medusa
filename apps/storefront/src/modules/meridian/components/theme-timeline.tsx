@@ -5,10 +5,18 @@ import { useEffect, useRef, useState } from "react"
 
 const CARS = [
   {
+    year: "1936",
+    brand: "Rolls-Royce",
+    model: "Phantom I",
+    modernYear: "",
+    modernBrand: "Rolls-Royce",
+    modernModel: "Spectre",
+  },
+  {
     year: "1952",
     brand: "Bentley",
     model: "",
-    modernYear: "2026",
+    modernYear: "",
     modernBrand: "Bentley",
     modernModel: "Continental GT",
   },
@@ -16,7 +24,7 @@ const CARS = [
     year: "1958",
     brand: "Mercedes",
     model: "S-Class",
-    modernYear: "2026",
+    modernYear: "",
     modernBrand: "Mercedes",
     modernModel: "S-Class Maybach",
   },
@@ -24,7 +32,7 @@ const CARS = [
     year: "",
     brand: "Lamborghini",
     model: "Centenario Tractor",
-    modernYear: "2026",
+    modernYear: "",
     modernBrand: "Lamborghini",
     modernModel: "Aventador SVJ",
     highlight: true,
@@ -33,17 +41,9 @@ const CARS = [
     year: "1976",
     brand: "Porsche",
     model: "911",
-    modernYear: "2026",
+    modernYear: "",
     modernBrand: "Porsche",
     modernModel: "911 Turbo S",
-  },
-  {
-    year: "1972",
-    brand: "Rolls-Royce",
-    model: "Phantom I",
-    modernYear: "2026",
-    modernBrand: "Rolls-Royce",
-    modernModel: "Spectre",
   },
 ]
 

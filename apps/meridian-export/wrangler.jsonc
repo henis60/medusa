@@ -3,7 +3,7 @@
   // produced by `next build` with output: "export". This is where the build
   // output directory is configured — the newer Workers flow has no dashboard
   // field for it, unlike the older Pages flow.
-  "name": "the-hunter",
+  "name": "meridian",
   "compatibility_date": "2025-01-01",
   "assets": {
     "directory": "./out",

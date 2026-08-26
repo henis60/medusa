@@ -11,12 +11,12 @@ const ROWS = [
     titleEm: "de colecție",
     body: "Zece automobile de excepție, expuse în perechi clasic-contemporan. Piesa centrală: Lamborghini Centenario Tractor.",
     src: "/meridian/thm-program-1.webp",
-    objectPositionY: "78%",
+    objectPositionY: "51%",
   },
   {
     kicker: "Concert live",
-    title: "Trupă de ",
-    titleEm: "blues & jazz",
+    title: "Mihail ",
+    titleEm: "și Gray Bliss Band din Cluj-Napoca",
     body: "Concert live, în aer liber. Blues-ul și jazz-ul, ca și automobilele de excepție, trăiesc din improvizație și din precizia execuției.",
     src: "/meridian/thm-program-2.webp",
     objectPositionY: "51%",
@@ -25,23 +25,23 @@ const ROWS = [
     kicker: "Artă vizuală",
     title: "Pictură și ",
     titleEm: "sculptură",
-    body: "La Colonia Pictorilor — o locație cu tradiție în artă. Lucrările sunt integrate în parcursul evenimentului.",
+    body: "Colonia Pictorilor este o locație cu tradiție în artă. Lucrările sunt integrate în parcursul evenimentului nostru.",
     src: "/meridian/thm-program-3.webp",
     objectPositionY: "50%",
   },
   {
     kicker: "Colecțiile noi",
-    title: "Colecțiile",
+    title: "Prezentarea ținutelor",
     titleEm: "",
     body: "Trei colecții prezentate în premieră: vânătoare, echitație și lifestyle feminin.",
     src: "/meridian/thm-program-4.webp",
     objectPositionY: "20%",
   },
-]
+];
 
 const COLLAPSED_MOBILE = { minHeight: "130px", padding: "20px var(--pad)" }
 const EXPANDED_MOBILE = { minHeight: "280px", padding: "32px var(--pad)" }
-const COLLAPSED_DESKTOP = { minHeight: "190px", padding: "28px var(--pad)" }
+const COLLAPSED_DESKTOP = { minHeight: "240px", padding: "28px var(--pad)" }
 const EXPANDED_DESKTOP = { minHeight: "420px", padding: "44px var(--pad)" }
 
 export default function ProgramRows() {
@@ -100,6 +100,11 @@ export default function ProgramRows() {
             alt=""
             fill
             sizes="100vw"
+            className={
+              row.kicker === "Colecțiile noi"
+                ? "thm-program-img-collections"
+                : undefined
+            }
             style={{
               objectFit: "cover",
               objectPosition: `50% ${row.objectPositionY}`,

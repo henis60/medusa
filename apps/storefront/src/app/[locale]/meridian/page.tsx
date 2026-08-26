@@ -4,16 +4,15 @@ import MeridianTemplate from "@modules/meridian/templates"
 
 const TITLE = "The Hunter Meridian — Ediția I, 26 septembrie 2026"
 const DESCRIPTION =
-  "Zece automobile în cinci perechi clasic–contemporan, cu Lamborghini Centenario Tractor în premieră în România, concert live de blues & jazz, expoziție de pictură și sculptură și trei colecții noi The Hunter House. 26 septembrie 2026, Colonia Pictorilor, Baia Mare."
+  "Zece automobile în cinci perechi clasic–contemporan, cu Lamborghini Centenario Tractor în premieră în România, concert Mihail și Gray Bliss Band din Cluj-Napoca, expoziție de pictură și sculptură și trei colecții noi The Hunter House. 26 septembrie 2026, Colonia Pictorilor, Baia Mare."
 const OG_DESCRIPTION =
   "26 septembrie 2026, Colonia Pictorilor, Baia Mare. O zi de automobile de colecție, blues & jazz, artă și Made to Measure."
 const URL = "https://thehunter.ro/meridian"
-// Brand lockup used as the social-share card. Not 1.91:1, so Facebook/X
-// crop it vertically — the logo is centred with generous whitespace, so it
-// survives the crop intact.
+// Brand lockup used as the social-share card, at the standard 1.91:1 OG
+// ratio so Facebook/X/WhatsApp display it uncropped.
 const IMAGE = "https://thehunter.ro/meridian/thm-og.png"
-const IMAGE_W = 1772
-const IMAGE_H = 1181
+const IMAGE_W = 1200
+const IMAGE_H = 630
 const IMAGE_ALT = "The Hunter Meridian"
 
 export const metadata: Metadata = {
@@ -27,7 +26,7 @@ export const metadata: Metadata = {
     "automobile de colecție România",
     "Lamborghini Centenario Tractor",
     "Colonia Pictorilor Baia Mare",
-    "concert blues jazz Baia Mare",
+    "concert Mihail și Gray Bliss Band din Cluj-Napoca",
     "eveniment lifestyle Maramureș",
     "The Hunter House",
     "made to measure",
