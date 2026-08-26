@@ -201,7 +201,7 @@ export default function MeridianTemplate() {
                 }}
               >
                 <a
-                  href="https://www.iabilet.ro"
+                  href="https://www.iabilet.ro/bilete-baia-mare-the-hunter-meridian-130573"
                   target="_blank"
                   rel="noopener"
                   className="thm-btn-solid thm-hero-cta"
@@ -726,7 +726,7 @@ export default function MeridianTemplate() {
               style={{ display: "flex", gap: 16, flexWrap: "wrap" }}
             >
               <a
-                href="https://www.iabilet.ro"
+                href="https://www.iabilet.ro/bilete-baia-mare-the-hunter-meridian-130573"
                 target="_blank"
                 rel="noopener"
                 className="thm-btn-solid thm-hero-cta"

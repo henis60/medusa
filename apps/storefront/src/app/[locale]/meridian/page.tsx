@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "ro_RO",
-    siteName: "The Hunter House",
+    siteName: "The Hunter Meridian",
     title: TITLE,
     description: OG_DESCRIPTION,
     url: URL,
@@ -84,8 +84,8 @@ const eventSchema = {
   },
   organizer: {
     "@type": "Organization",
-    name: "The Hunter House",
-    url: "https://thehunter.ro/",
+    name: "The Hunter Meridian",
+    url: URL,
   },
   offers: [
     {
@@ -94,7 +94,15 @@ const eventSchema = {
       price: "100",
       priceCurrency: "RON",
       availability: "https://schema.org/InStock",
-      url: "https://www.iabilet.ro",
+      url: "https://www.iabilet.ro/bilete-baia-mare-the-hunter-meridian-130573",
+    },
+    {
+      "@type": "Offer",
+      name: "Standard",
+      price: "190",
+      priceCurrency: "RON",
+      availability: "https://schema.org/InStock",
+      url: "https://www.iabilet.ro/bilete-baia-mare-the-hunter-meridian-130573",
     },
     {
       "@type": "Offer",
@@ -102,12 +110,12 @@ const eventSchema = {
       price: "2800",
       priceCurrency: "RON",
       availability: "https://schema.org/LimitedAvailability",
-      url: "https://www.iabilet.ro",
+      url: "https://www.iabilet.ro/bilete-baia-mare-the-hunter-meridian-130573",
     },
   ],
   performer: {
     "@type": "Organization",
-    name: "The Hunter House",
+    name: "The Hunter Meridian",
   },
 }
 

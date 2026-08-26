@@ -1,7 +1,7 @@
 export default function BileteNavLink() {
   return (
     <a
-      href="https://www.iabilet.ro"
+      href="https://www.iabilet.ro/bilete-baia-mare-the-hunter-meridian-130573"
       target="_blank"
       rel="noopener"
       aria-label="Bilete"
