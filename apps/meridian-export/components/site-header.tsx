@@ -43,6 +43,7 @@ export default function SiteHeader({
           style={{
             fontFamily: "var(--pd)",
             fontSize: 20,
+            lineHeight: 1,
             letterSpacing: "0.12em",
             color: "var(--ivory)",
             textDecoration: "none",
