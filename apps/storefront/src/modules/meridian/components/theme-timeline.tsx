@@ -21,14 +21,6 @@ const CARS = [
     modernModel: "Continental GT",
   },
   {
-    year: "1958",
-    brand: "Mercedes",
-    model: "S-Class",
-    modernYear: "",
-    modernBrand: "Mercedes",
-    modernModel: "S-Class Maybach",
-  },
-  {
     year: "",
     brand: "Lamborghini",
     model: "Centenario Tractor",
@@ -36,6 +28,14 @@ const CARS = [
     modernBrand: "Lamborghini",
     modernModel: "Aventador SVJ",
     highlight: true,
+  },
+  {
+    year: "1958",
+    brand: "Mercedes",
+    model: "S-Class",
+    modernYear: "",
+    modernBrand: "Mercedes",
+    modernModel: "S-Class Maybach",
   },
   {
     year: "1976",

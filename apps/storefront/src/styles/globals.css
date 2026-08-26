@@ -4386,6 +4386,7 @@ html {
 @media (min-width: 861px) {
   .thm-locatia-overlay {
     width: calc(100% / 0.58);
+    top: 42% !important;
   }
 }
 
