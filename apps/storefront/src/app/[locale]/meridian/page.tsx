@@ -94,6 +94,7 @@ const eventSchema = {
       price: "100",
       priceCurrency: "RON",
       availability: "https://schema.org/InStock",
+      validFrom: "2026-08-26",
       url: "https://www.iabilet.ro/bilete-baia-mare-the-hunter-meridian-130573",
     },
     {
@@ -102,6 +103,7 @@ const eventSchema = {
       price: "190",
       priceCurrency: "RON",
       availability: "https://schema.org/InStock",
+      validFrom: "2026-08-26",
       url: "https://www.iabilet.ro/bilete-baia-mare-the-hunter-meridian-130573",
     },
     {
@@ -110,6 +112,7 @@ const eventSchema = {
       price: "2800",
       priceCurrency: "RON",
       availability: "https://schema.org/LimitedAvailability",
+      validFrom: "2026-08-26",
       url: "https://www.iabilet.ro/bilete-baia-mare-the-hunter-meridian-130573",
     },
   ],

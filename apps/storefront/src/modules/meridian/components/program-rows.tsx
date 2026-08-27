@@ -21,14 +21,15 @@ const ROWS = [
     src: "/meridian/thm-program-2.webp",
     objectPositionY: "51%",
   },
-  {
-    kicker: "Artă vizuală",
-    title: "Pictură și ",
-    titleEm: "sculptură",
-    body: "Colonia Pictorilor este o locație cu tradiție în artă. Lucrările sunt integrate în parcursul evenimentului nostru.",
-    src: "/meridian/thm-program-3.webp",
-    objectPositionY: "50%",
-  },
+  // { kicker: "Artă vizuală" } row — temporarily disabled.
+  // {
+  //   kicker: "Artă vizuală",
+  //   title: "Pictură și ",
+  //   titleEm: "sculptură",
+  //   body: "Colonia Pictorilor este o locație cu tradiție în artă. Lucrările sunt integrate în parcursul evenimentului nostru.",
+  //   src: "/meridian/thm-program-3.webp",
+  //   objectPositionY: "50%",
+  // },
   {
     kicker: "Colecțiile noi",
     title: "Prezentarea ținutelor",

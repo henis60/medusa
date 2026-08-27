@@ -741,6 +741,8 @@ export default function MeridianTemplate() {
       {/* Locația */}
       <section id="locatia" style={{ background: "var(--dark)" }}>
         <div className="thm-locatia-row">
+          {/* Locația media (photo + text overlay) — temporarily disabled,
+              map only for now.
           <div
             className="thm-locatia-media"
             style={{
@@ -825,6 +827,7 @@ export default function MeridianTemplate() {
               </div>
             </div>
           </div>
+          */}
           <a
             href="https://www.google.com/maps/dir/?api=1&destination=Colonia+Pictorilor,+Baia+Mare"
             target="_blank"
