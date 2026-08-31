@@ -7,7 +7,7 @@ const TITLE = "The Hunter Meridian — Ediția I, 26 septembrie 2026";
 const DESCRIPTION =
   "Zece automobile, concert Jazz & Blues cu Gray Bliss Band și invitatul special Mihail, artă și colecții noi. 26 septembrie 2026, Baia Mare.";
 const OG_DESCRIPTION =
-  "26 septembrie 2026, Colonia Pictorilor, Baia Mare. O zi de automobile de colecție, blues & jazz, artă și Made to Measure.";
+  "26 septembrie 2026, Baia Mare. O zi de automobile de colecție, blues & jazz, artă și Made to Measure.";
 const PAGE_URL = `${SITE_URL}/meridian`;
 // Brand lockup used as the social-share card, at the standard 1.91:1 OG
 // ratio so Facebook/X/WhatsApp display it uncropped.
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     "eveniment auto Baia Mare",
     "automobile de colecție România",
     "Lamborghini Centenario Tractor",
-    "Colonia Pictorilor Baia Mare",
+    "eveniment Baia Mare Maramureș",
     "concert Jazz & Blues Gray Bliss Band Cluj-Napoca",
     "Mihail invitat special",
     "eveniment lifestyle Maramureș",
@@ -74,7 +74,7 @@ const eventSchema = {
   url: PAGE_URL,
   location: {
     "@type": "Place",
-    name: "Colonia Pictorilor",
+    name: "Baia Mare",
     address: {
       "@type": "PostalAddress",
       addressLocality: "Baia Mare",

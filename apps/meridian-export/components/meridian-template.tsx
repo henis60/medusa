@@ -181,7 +181,7 @@ export default function MeridianTemplate() {
                 <strong style={{ fontStyle: "italic", fontWeight: 600 }}>
                   The Hunter House
                 </strong>
-                , într-o singură zi, la Colonia Pictorilor.
+                , într-o singură zi.
               </p>
               <div
                 className="thm-hero-cta-row"
@@ -828,64 +828,70 @@ export default function MeridianTemplate() {
             </div>
           </div>
           */}
-          <a
-            href="https://www.google.com/maps/dir/?api=1&destination=Colonia+Pictorilor,+Baia+Mare"
-            target="_blank"
-            rel="noopener"
-            aria-label="Indicații către locație"
-            className="thm-map-link"
-            style={{
-              position: "relative",
-              display: "block",
-              background: "var(--dark2)",
-            }}
-          >
-            <iframe
-              src="https://www.google.com/maps?q=Colonia+Pictorilor,+Baia+Mare&z=15&output=embed"
-              title="Hartă Google, Colonia Pictorilor, Baia Mare"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              allowFullScreen
-              className="thm-map-dark"
+          {/* Map link — temporarily disabled entirely (venue kept private
+              on the page). Wrapped in {false && (...)} rather than a plain
+              JSX comment since the pin SVG below has its own {/* *}/} block,
+              which would otherwise prematurely close a wrapping comment. */}
+          {false && (
+            <a
+              href="https://www.google.com/maps/dir/?api=1&destination=Colonia+Pictorilor,+Baia+Mare"
+              target="_blank"
+              rel="noopener"
+              aria-label="Indicații către locație"
+              className="thm-map-link"
               style={{
+                position: "relative",
                 display: "block",
-                width: "100%",
-                height: "100%",
-                border: 0,
-                pointerEvents: "none",
-              }}
-            />
-            {/* The embed API has no marker-styling option, so the default red
-              pin is masked by the dark filter and this gold pin is overlaid
-              at the map's center — where a "q="-style embed always anchors
-              its marker — to match the brand. */}
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 24 32"
-              className="thm-map-pin"
-              style={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                width: 30,
-                height: 40,
-                transform: "translate(-50%, -100%)",
-                filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.45))",
-                pointerEvents: "none",
+                background: "var(--dark2)",
               }}
             >
-              <path
-                d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20c0-6.6-5.4-12-12-12z"
-                fill="#c9a84c"
-                stroke="#0d1f17"
-                strokeWidth="1.5"
+              <iframe
+                src="https://www.google.com/maps?q=Colonia+Pictorilor,+Baia+Mare&z=15&output=embed"
+                title="Hartă Google, Baia Mare"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
+                className="thm-map-dark"
+                style={{
+                  display: "block",
+                  width: "100%",
+                  height: "100%",
+                  border: 0,
+                  pointerEvents: "none",
+                }}
               />
-              <circle cx="12" cy="12" r="4.5" fill="#0d1f17" />
-            </svg>
-            <span aria-hidden="true" className="thm-map-overlay">
-              Indicații către locație →
-            </span>
-          </a>
+              {/* The embed API has no marker-styling option, so the default red
+                pin is masked by the dark filter and this gold pin is overlaid
+                at the map's center — where a "q="-style embed always anchors
+                its marker — to match the brand. */}
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 32"
+                className="thm-map-pin"
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  width: 30,
+                  height: 40,
+                  transform: "translate(-50%, -100%)",
+                  filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.45))",
+                  pointerEvents: "none",
+                }}
+              >
+                <path
+                  d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20c0-6.6-5.4-12-12-12z"
+                  fill="#c9a84c"
+                  stroke="#0d1f17"
+                  strokeWidth="1.5"
+                />
+                <circle cx="12" cy="12" r="4.5" fill="#0d1f17" />
+              </svg>
+              <span aria-hidden="true" className="thm-map-overlay">
+                Indicații către locație →
+              </span>
+            </a>
+          )}
         </div>
       </section>
 
