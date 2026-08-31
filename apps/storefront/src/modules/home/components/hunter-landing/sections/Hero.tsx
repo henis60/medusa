@@ -57,10 +57,15 @@ const Hero = () => {
       {/* Hero content */}
       <div className="hero-content">
         <div className="hero-top-group">
+          {/* No opacity in `initial`: this text is the page's LCP candidate.
+              Chrome excludes opacity:0 elements from LCP, so an opacity
+              fade-in here gates the paint behind JS hydration + the
+              animation delay/duration — the y-offset alone keeps the slide-up
+              feel without hiding the text from the LCP measurement. */}
           <motion.div
             className="eyebrow"
-            initial={reduced ? false : { opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={reduced ? false : { y: 20 }}
+            animate={{ y: 0 }}
             transition={{ duration: 0.7, ease, delay: 0.15 }}
           >
             <motion.div
@@ -117,8 +122,8 @@ const Hero = () => {
           </motion.div>
 
           <motion.div
-            initial={reduced ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={reduced ? false : { y: 16 }}
+            animate={{ y: 0 }}
             transition={{ duration: 0.7, ease, delay: 0.82 }}
           >
             <span className="eyebrow-text">{t("online shop")}</span>
