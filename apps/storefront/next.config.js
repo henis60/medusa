@@ -192,8 +192,10 @@ const nextConfig = {
         // Mirrors the remotePattern above — this environment's bucket only,
         // never a wildcard across every R2 account.
         ...(mediaOrigin ? [mediaOrigin] : []),
-        "https://*.s3.*.amazonaws.com",
-        "https://*.s3.amazonaws.com",
+        // CSP only allows a single leading wildcard label, so this alone
+        // covers both the legacy https://*.s3.amazonaws.com form and
+        // region-specific buckets like https://bucket.s3.eu-central-1.amazonaws.com.
+        "https://*.amazonaws.com",
         MAP_TILES,
         GOOGLE_TAG,
         GOOGLE_ANALYTICS_WWW,

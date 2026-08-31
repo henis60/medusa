@@ -349,7 +349,7 @@ body.hunter-landing-active::before {
   /* Hero background picture — suited man near a staircase (Unsplash
            License, free for commercial use). Swap this URL for your own image
            (drop the file in public/landing/images/ and update the path). */
-  background-image: url("/landing/images/hero-suit.jpg");
+  background-image: url("/landing/images/hero-suit.webp");
   background-size: cover;
   background-position: 50% 10%;
   will-change: transform;

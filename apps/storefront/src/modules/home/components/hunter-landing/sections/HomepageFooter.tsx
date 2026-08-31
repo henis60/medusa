@@ -27,7 +27,7 @@ function FooterLink({
   return (
     <LocalizedClientLink
       href={href}
-      className="font-serif text-[15px] leading-none text-[rgba(232,213,163,0.75)] hover:text-hunter-gold transition-colors w-fit"
+      className="font-serif text-[15px] leading-none text-[rgba(232,213,163,0.75)] hover:text-hunter-gold transition-colors w-fit inline-block py-3"
     >
       {children}
     </LocalizedClientLink>
@@ -40,7 +40,7 @@ export default function HomepageFooter() {
     <footer className="w-full bg-[#0D0D0D] border-t border-[rgba(201,168,76,0.15)]">
       <div className="content-container flex flex-col gap-6 pt-8 pb-4">
         <div className="grid grid-cols-1 xsmall:grid-cols-3 gap-x-8 gap-y-6">
-          <nav className="flex flex-col items-center gap-2 xsmall:items-start">
+          <nav className="flex flex-col items-center gap-0 xsmall:items-start">
             {COLUMN_1.map((link) => (
               <FooterLink key={link.href} href={link.href}>
                 {t(link.label)}
@@ -48,7 +48,7 @@ export default function HomepageFooter() {
             ))}
           </nav>
 
-          <nav className="flex flex-col items-center gap-2 xsmall:items-start">
+          <nav className="flex flex-col items-center gap-0 xsmall:items-start">
             {COLUMN_2.map((link) => (
               <FooterLink key={link.href} href={link.href}>
                 {t(link.label)}
@@ -109,7 +109,7 @@ export default function HomepageFooter() {
             </span>
           </div>
 
-          <span className="font-sans text-[9px] uppercase tracking-[3px] text-[rgba(232,213,163,0.4)]">
+          <span className="font-sans text-[9px] uppercase tracking-[3px] text-[rgba(232,213,163,0.6)]">
             © {new Date().getFullYear()} {t("Toate drepturile rezervate")}
           </span>
         </div>

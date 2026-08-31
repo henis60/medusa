@@ -46,5 +46,20 @@ export default async function Home({
   // null here just meant this section popped in after hydration on every
   // visit, since ISR already resolves the data at regen time, not per-request.
   const shopSlot = region ? <ShopCollection region={region} /> : null
-  return <HunterLanding shopSlot={shopSlot} />
+  return (
+    <>
+      {/* The hero is a CSS background-image (globals.css .hero-bg), so the
+          browser only discovers it after parsing/applying the stylesheet —
+          well after LCP scanning starts. Preloading it here (Next hoists
+          <link> rendered in a Server Component into <head>) lets the browser
+          fetch it in parallel with the CSS instead of after it. */}
+      <link
+        rel="preload"
+        as="image"
+        href="/landing/images/hero-suit.webp"
+        fetchPriority="high"
+      />
+      <HunterLanding shopSlot={shopSlot} />
+    </>
+  )
 }

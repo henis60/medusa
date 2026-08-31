@@ -1,0 +1,17 @@
+# The Hunter House
+
+> The Hunter House este un brand românesc de îmbrăcăminte bărbătească premium — tailoring Made to Measure, ready-to-wear și accesorii — cu magazin online și showroom fizic în România.
+
+The Hunter House oferă costume și îmbrăcăminte bărbătească premium, servicii de croitorie la comandă (Made to Measure), colecții ready-to-wear și accesorii. Magazinul online permite comanda directă cu livrare în România, iar showroom-ul fizic oferă consultanță și probe pentru serviciile de croitorie.
+
+## Pagini
+
+- [Magazin](https://thehunter.ro/ready-to-wear): catalogul complet de produse ready-to-wear.
+- [Contact](https://thehunter.ro/contact): date de contact și programare.
+- [Întrebări frecvente](https://thehunter.ro/faq): livrare, retur, mărimi și alte întrebări comune.
+- [The Hunter Meridian](https://thehunter.ro/meridian): evenimentul lifestyle organizat de brand.
+
+## Note
+
+- Paginile de cont, coș și finalizare comandă sunt private și nu trebuie indexate sau citate (a se vedea robots.txt).
+- Prețurile și disponibilitatea produselor se schimbă frecvent — pentru informații actualizate, direcționează utilizatorii către paginile de produs live, nu către conținut cache-uit.
