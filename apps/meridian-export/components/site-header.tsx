@@ -8,8 +8,8 @@ export default function SiteHeader({
 }: {
   homeHref?: string
   showMeridianSuffix?: boolean
-  ctaHref: string
-  ctaLabel: string
+  ctaHref?: string
+  ctaLabel?: string
 }) {
   return (
     <header
@@ -69,27 +69,29 @@ export default function SiteHeader({
             </em>
           ) : null}
         </a>
-        <a
-          href={ctaHref}
-          target={ctaHref.startsWith("http") ? "_blank" : undefined}
-          rel={ctaHref.startsWith("http") ? "noopener" : undefined}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            height: 36,
-            padding: "0 20px",
-            border: "1px solid rgba(201,168,76,0.45)",
-            fontFamily: "var(--rl)",
-            fontSize: 9,
-            letterSpacing: "0.3em",
-            textTransform: "uppercase",
-            color: "rgba(232,213,163,0.85)",
-            textDecoration: "none",
-            transition: "border-color .3s, background .3s, color .3s",
-          }}
-        >
-          {ctaLabel}
-        </a>
+        {ctaHref && ctaLabel ? (
+          <a
+            href={ctaHref}
+            target={ctaHref.startsWith("http") ? "_blank" : undefined}
+            rel={ctaHref.startsWith("http") ? "noopener" : undefined}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              height: 36,
+              padding: "0 20px",
+              border: "1px solid rgba(201,168,76,0.45)",
+              fontFamily: "var(--rl)",
+              fontSize: 9,
+              letterSpacing: "0.3em",
+              textTransform: "uppercase",
+              color: "rgba(232,213,163,0.85)",
+              textDecoration: "none",
+              transition: "border-color .3s, background .3s, color .3s",
+            }}
+          >
+            {ctaLabel}
+          </a>
+        ) : null}
       </div>
     </header>
   )

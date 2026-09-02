@@ -85,12 +85,7 @@ export default function MeridianTemplate() {
   return (
     <div className="thm-root">
       <HashScrollFix />
-      <SiteHeader
-        homeHref="/"
-        showMeridianSuffix
-        ctaHref="https://www.iabilet.ro/bilete-baia-mare-the-hunter-meridian-130573"
-        ctaLabel="Bilete"
-      />
+      <SiteHeader homeHref="/" showMeridianSuffix />
       <div className="thm-hero-shell">
         {/* Hero */}
         <section
@@ -192,10 +187,8 @@ export default function MeridianTemplate() {
                   marginTop: 44,
                 }}
               >
-                <a
-                  href="https://www.iabilet.ro/bilete-baia-mare-the-hunter-meridian-130573"
-                  target="_blank"
-                  rel="noopener"
+                <SmoothAnchorLink
+                  href="#program"
                   className="thm-btn-solid thm-hero-cta"
                   style={{
                     ...ctaBase,
@@ -205,26 +198,8 @@ export default function MeridianTemplate() {
                     transition: "background .3s",
                   }}
                 >
-                  Cumpără bilete{" "}
-                  <span style={{ fontSize: 15, color: "#0d1f17" }}>→</span>
-                </a>
-                <SmoothAnchorLink
-                  href="#program"
-                  className="thm-btn-outline thm-hero-cta"
-                  style={{
-                    ...ctaBase,
-                    border: "1px solid rgba(201,168,76,0.45)",
-                    color: "rgba(232,213,163,0.78)",
-                    justifyContent: "center",
-                    transition: "border-color .3s, background .3s, color .3s",
-                  }}
-                >
                   Vezi programul{" "}
-                  <span
-                    style={{ fontSize: 15, color: "rgba(201,168,76,0.55)" }}
-                  >
-                    →
-                  </span>
+                  <span style={{ fontSize: 15, color: "#0d1f17" }}>→</span>
                 </SmoothAnchorLink>
               </div>
             </div>
@@ -486,7 +461,8 @@ export default function MeridianTemplate() {
         <ProgramRows />
       </section>
 
-      {/* Bilete */}
+      {/* Bilete — temporarily disabled entirely, entry is free. */}
+      {false && (
       <section
         style={{
           padding: "clamp(56px,9vw,96px) var(--pad)",
@@ -737,6 +713,7 @@ export default function MeridianTemplate() {
           </div>
         </Reveal>
       </section>
+      )}
 
       {/* Locația */}
       <section id="locatia" style={{ background: "var(--dark)" }}>
