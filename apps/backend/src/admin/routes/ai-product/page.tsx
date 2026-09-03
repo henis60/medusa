@@ -28,6 +28,7 @@ type Row = {
   category: string;
   tags: string;
   stock: string;
+  technical_details: string;
   inStoreOnly: boolean;
   libraryUrls: string[];
   status: RowStatus;
@@ -581,6 +582,7 @@ const AIProductPage = () => {
               category: raw.category ?? "",
               tags: raw.tags ?? "",
               stock: raw.stock ?? "",
+              technical_details: raw.technical_details ?? "",
               inStoreOnly: false,
               libraryUrls: [],
               status: "idle" as RowStatus,
@@ -624,6 +626,7 @@ const AIProductPage = () => {
         category: "",
         tags: "",
         stock: "",
+        technical_details: "",
         inStoreOnly: false,
         libraryUrls: [],
         status: "idle",
@@ -696,6 +699,9 @@ const AIProductPage = () => {
                 );
                 return Number.isFinite(p) ? { price_ron: p } : {};
               })(),
+              ...(row.technical_details?.trim()
+                ? { technical_details: row.technical_details.trim() }
+                : {}),
               ...(extraInstructions.trim()
                 ? { extraInstructions: extraInstructions.trim() }
                 : {}),
@@ -1351,6 +1357,9 @@ const AIProductPage = () => {
                   Material
                 </th>
                 <th className="text-left py-2 px-3 text-ui-fg-subtle font-medium text-xs">
+                  Detalii Tehnice
+                </th>
+                <th className="text-left py-2 px-3 text-ui-fg-subtle font-medium text-xs">
                   Colecție
                 </th>
                 <th className="text-left py-2 px-3 text-ui-fg-subtle font-medium text-xs">
@@ -1440,6 +1449,18 @@ const AIProductPage = () => {
                         onChange={(v) => updateField(row.index, "material", v)}
                         placeholder="Tweed"
                         disabled={disabled}
+                      />
+                    </td>
+                    <td className="py-2 px-3">
+                      <textarea
+                        value={row.technical_details}
+                        onChange={(e) =>
+                          updateField(row.index, "technical_details", e.target.value)
+                        }
+                        placeholder="Dimensiune: 25 × 25 cm&#10;Finisaj premium"
+                        disabled={disabled}
+                        rows={2}
+                        className="w-full bg-transparent border-b border-transparent hover:border-ui-border-base focus:border-ui-border-interactive focus:outline-none py-0.5 text-sm text-ui-fg-base placeholder:text-ui-fg-muted disabled:opacity-40 disabled:cursor-not-allowed resize-none"
                       />
                     </td>
                     <td className="py-2 px-3">

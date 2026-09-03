@@ -15,6 +15,7 @@ type GenerateProductBody = {
   colors?: string[]
   sizes?: string[]
   price_ron?: number
+  technical_details?: string
   extraInstructions?: string
 }
 
@@ -49,7 +50,7 @@ type AIProductResult = {
 }
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
-  const { imageUrl, imageUrls: allImageUrls, material, colors, sizes, price_ron, extraInstructions } = req.body as GenerateProductBody
+  const { imageUrl, imageUrls: allImageUrls, material, colors, sizes, price_ron, technical_details, extraInstructions } = req.body as GenerateProductBody
   const priceHint = price_ron ?? null
 
   if (!imageUrl) {
@@ -143,10 +144,15 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     ? "Nu menționa culori specifice în text — sunt gestionate ca variante separate."
     : `Culorile produsului sunt: ${JSON.stringify(colors)}. NU le menționa în text — sunt gestionate ca variante separate.`
 
+  const technicalNote = technical_details?.trim()
+    ? `Detaliile tehnice furnizate sunt:\n${technical_details}\nIncorporează acestea în bullet points din descriere, exact așa cum sunt formulate.`
+    : ""
+
   const prompt = `Ești un copywriter de lux pentru The Hunter House, un brand premium de modă masculină din România (stil elegant, inspirat din tradițiile vânătorești britanice). Folosești română literară corectă: articole hotărâte corecte (gulerul, nu "guleru"; mâneca, nu "mâneca"; nasturele, nu "nasturel"), fără forme colocviale sau greșeli gramaticale.
 
 ${n > 1 ? `Ai ${n} imagini ale aceluiași produs (indexate 0-${n - 1}).` : "Imaginea conține produsul de analizat."}
 ${colorsNote}
+${technicalNote}
 NU menționa mărimile (S, M, L, XL etc.) sau disponibilitatea pe mărimi în niciun text — sunt gestionate ca variante separate.
 ${materialNote}
 
@@ -154,7 +160,7 @@ Analizează produsul și returnează JSON cu exact aceste câmpuri:
 - "title": titlu comercial scurt și elegant (max 60 caractere, în română, fără culori; termenii de modă internaționali sunt permisi: "business", "casual", "slim fit", "tweed" etc., ex: "Jachetă Tweed Business", "Costum Lână Slim Fit", "Butoni Medalion Argint")
 - "subtitle": 1-2 propoziții, max 160 caractere, ton elegant, material și ocazie, fără culori. Ex: "Confecționat din lână merinos fină, alegerea perfectă pentru ocazii formale."
 - "description": două părți într-un singur string (fără culori — sunt variante separate):
-  1. paragraf narativ 2-3 propoziții, material/design/ocazie
+  1. paragraf narativ maximum 2 propoziții, material/design/ocazie
   2. linie goală + bullet points cu specificații tehnice (material, finisaj, mecanism, ocazie), fiecare cu "• "
   NU menționa brand, etichetă, ambalaj, suport, suprafață, culori sau mărimi. Descrie exclusiv produsul.
   Format: "Descriere...\n\n• Specificație 1\n• Specificație 2"
