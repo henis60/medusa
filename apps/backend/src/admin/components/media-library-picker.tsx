@@ -33,6 +33,7 @@ export default function MediaLibraryPicker({
     new Set(),
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -50,6 +51,54 @@ export default function MediaLibraryPicker({
       setLastUploadedUrls(new Set(urls));
       await queryClient.invalidateQueries({ queryKey: ["media-library-picker"] });
       toast.success(`${files.length} imagini încărcate`);
+    } catch (err: any) {
+      toast.error(err.message || "Upload eșuat");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // A directory picker (webkitdirectory) hands back every file in the
+  // selected tree in one flat FileList, each carrying its original path in
+  // `webkitRelativePath` (e.g. "MyFolder/Sub/img.jpg"). The upload endpoint
+  // only takes a single `folder` per request, so files are grouped by their
+  // subfolder here and uploaded one request per subfolder — that's what
+  // actually recreates the nested structure under the current library
+  // folder, instead of dumping every file flat into one place.
+  const handleFolderUpload = async (files: File[]) => {
+    if (!files.length) return;
+    setUploading(true);
+    try {
+      const groups = new Map<string, File[]>();
+      for (const file of files) {
+        const relPath = (file as any).webkitRelativePath || file.name;
+        // Drop the filename, keep the subfolder path (may be empty for a
+        // file directly in the picked root).
+        const subfolder = relPath.split("/").slice(0, -1).join("/");
+        const list = groups.get(subfolder) ?? [];
+        list.push(file);
+        groups.set(subfolder, list);
+      }
+
+      const allUrls: string[] = [];
+      for (const [subfolder, groupFiles] of groups) {
+        const folder = [prefix.replace(/\/$/, ""), subfolder]
+          .filter(Boolean)
+          .join("/");
+        const urls = await uploadFiles(
+          groupFiles,
+          convert,
+          "/admin/media-library",
+          { folder },
+        );
+        allUrls.push(...urls);
+      }
+
+      setLastUploadedUrls(new Set(allUrls));
+      await queryClient.invalidateQueries({ queryKey: ["media-library-picker"] });
+      toast.success(
+        `${files.length} imagini încărcate în ${groups.size} folder${groups.size === 1 ? "" : "e"}`,
+      );
     } catch (err: any) {
       toast.error(err.message || "Upload eșuat");
     } finally {
@@ -128,6 +177,21 @@ export default function MediaLibraryPicker({
                 e.target.value = "";
               }}
             />
+            <input
+              ref={folderInputRef}
+              type="file"
+              multiple
+              className="hidden"
+              // Non-standard but universally supported attributes for
+              // picking a whole directory tree instead of individual files —
+              // not in React's JSX typing for <input>, hence the spread.
+              {...({ webkitdirectory: "", directory: "" } as any)}
+              onChange={(e) => {
+                const files = Array.from(e.target.files ?? []);
+                if (files.length) handleFolderUpload(files);
+                e.target.value = "";
+              }}
+            />
             <Button
               size="small"
               variant="secondary"
@@ -135,6 +199,14 @@ export default function MediaLibraryPicker({
               isLoading={uploading}
             >
               Încarcă imagini
+            </Button>
+            <Button
+              size="small"
+              variant="secondary"
+              onClick={() => folderInputRef.current?.click()}
+              isLoading={uploading}
+            >
+              Încarcă folder
             </Button>
             <IconButton variant="transparent" onClick={onClose}>
               <XMark />
