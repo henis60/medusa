@@ -372,11 +372,13 @@ export default defineMiddlewares({
       methods: ["POST"],
       middlewares: [authLimiter],
     },
-    {
-      matcher: "/admin/ai/generate-product",
-      methods: ["POST"],
-      middlewares: [aiGenerateLimiter],
-    },
+    // Rate limit temporarily disabled — re-add `middlewares: [aiGenerateLimiter]`
+    // to restore the 20/hour-per-admin cap once no longer needed.
+    // {
+    //   matcher: "/admin/ai/generate-product",
+    //   methods: ["POST"],
+    //   middlewares: [aiGenerateLimiter],
+    // },
     // Matched individually rather than with "/store/eawb/*" — see the note on
     // the auth routes above about path-to-regexp not treating a trailing "*"
     // as a sub-path wildcard.
