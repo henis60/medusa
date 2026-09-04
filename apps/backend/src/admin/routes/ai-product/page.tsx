@@ -742,6 +742,59 @@ const AIProductPage = () => {
               .map((s) => s.trim())
               .filter(Boolean)
           : (aiResult.sizes ?? []);
+
+        // Reorder colors to match the order they appear in variant_images
+        // (based on reordered image indices). colors_hex/colors_en are
+        // parallel arrays the AI returns in its OWN original order and never
+        // reorders itself — they're permuted alongside `colors` here so
+        // hexFor()/translation lookups (which index into them by position)
+        // stay aligned instead of pointing at the wrong color.
+        if (colors.length > 1 && imageOrderApplied && aiResult.variant_images) {
+          const norm = (s: string) => s.trim().toLowerCase();
+          // variant_images keys come from the AI and can drift in casing/
+          // whitespace from `colors` — resolve back to the exact string in
+          // `colors` so `seen`/indexOf below match reliably.
+          const byNorm = new Map(colors.map((c) => [norm(c), c]));
+          const colorOrder: string[] = [];
+          const seen = new Set<string>();
+          // Iterate through reordered images and collect colors in order
+          for (const origIdx of aiResult.image_order) {
+            for (const [color, origIdxs] of Object.entries(
+              aiResult.variant_images,
+            )) {
+              const match = byNorm.get(norm(color));
+              if (
+                match &&
+                (origIdxs as number[]).includes(origIdx) &&
+                !seen.has(match)
+              ) {
+                colorOrder.push(match);
+                seen.add(match);
+              }
+            }
+          }
+          // Keep any colors not in variant_images at the end
+          for (const c of colors) {
+            if (!seen.has(c)) {
+              colorOrder.push(c);
+            }
+          }
+          if (colorOrder.length === colors.length) {
+            const permutation = colorOrder.map((c) => colors.indexOf(c));
+            colors.length = 0;
+            colors.push(...colorOrder);
+            if (aiResult.colors_hex?.length === permutation.length) {
+              aiResult.colors_hex = permutation.map(
+                (idx) => aiResult.colors_hex[idx],
+              );
+            }
+            if (aiResult.colors_en?.length === permutation.length) {
+              aiResult.colors_en = permutation.map(
+                (idx) => aiResult.colors_en[idx],
+              );
+            }
+          }
+        }
         const priceRonRaw = row.price_ron.trim();
         const priceRon: number | number[] = priceRonRaw.includes(";")
           ? priceRonRaw

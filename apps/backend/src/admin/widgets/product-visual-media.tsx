@@ -50,8 +50,9 @@ function colorValueOf(variant: MediaVariant): string | null {
 
 type ColorGroup = { label: string; variantIds: string[] };
 
-function groupByColor(variants: MediaVariant[]): ColorGroup[] {
+function groupByColor(variants: MediaVariant[], images: MediaImage[] = []): ColorGroup[] {
   const groups = new Map<string, ColorGroup>();
+
   for (const variant of variants) {
     const color = colorValueOf(variant);
     if (!color) continue;
@@ -62,7 +63,26 @@ function groupByColor(variants: MediaVariant[]): ColorGroup[] {
       groups.set(color, { label: color, variantIds: [variant.id] });
     }
   }
-  return [...groups.values()].sort((a, b) => a.label.localeCompare(b.label));
+
+  // Order colors by first appearance in images
+  const colorFirstIndex = new Map<string, number>();
+  for (let imgIdx = 0; imgIdx < images.length; imgIdx++) {
+    const image = images[imgIdx];
+    const variantIds = new Set((image.variants ?? []).map((v) => v.id));
+    for (const variant of variants) {
+      const color = colorValueOf(variant);
+      if (color && variantIds.has(variant.id) && !colorFirstIndex.has(color)) {
+        colorFirstIndex.set(color, imgIdx);
+      }
+    }
+  }
+
+  return [...groups.values()].sort((a, b) => {
+    const aIdx = colorFirstIndex.get(a.label) ?? Infinity;
+    const bIdx = colorFirstIndex.get(b.label) ?? Infinity;
+    if (aIdx === bIdx) return a.label.localeCompare(b.label);
+    return aIdx - bIdx;
+  });
 }
 
 function ConfirmRemoveDialog({
@@ -146,7 +166,7 @@ const ProductVisualMediaWidget = ({
 
   const images = data?.product.images ?? [];
   const variants = data?.product.variants ?? [];
-  const colorGroups = groupByColor(variants);
+  const colorGroups = groupByColor(variants, images);
   // Products with no color option (e.g. size-only) have nothing to group —
   // fall back to raw variants so assignment is still possible.
   const hasColorOption = colorGroups.length > 0;
@@ -218,7 +238,8 @@ const ProductVisualMediaWidget = ({
   };
 
   const makeThumbnail = async (image: MediaImage) => {
-    await saveImages(images, image.url);
+    const reordered = [image, ...images.filter((img) => img.id !== image.id)];
+    await saveImages(reordered, image.url);
   };
 
   const reorder = async (from: number, to: number) => {
