@@ -172,12 +172,45 @@ const ProductVisualMediaWidget = ({
   const hasColorOption = colorGroups.length > 0;
   const thumbnail = data?.product.thumbnail;
 
+  // The storefront's color selector reads variant order (variant_rank), not
+  // the option's own value order — Medusa has no rank field on
+  // product_option_value, so that raw order can't be made to follow images
+  // at all (see option-select.tsx's colorOrdered()). Re-ranking variants by
+  // the first image showing their color is what actually keeps the
+  // storefront's displayed color order following whatever order images are
+  // dragged into here. Ties (multiple sizes of one color) keep their
+  // original relative order.
+  const nextVariantRanks = (
+    nextImages: MediaImage[],
+  ): { id: string; variant_rank: number }[] | undefined => {
+    if (!hasColorOption) return undefined;
+    const colorFirstIndex = new Map<string, number>();
+    nextImages.forEach((image, imgIdx) => {
+      const variantIds = new Set((image.variants ?? []).map((v) => v.id));
+      for (const variant of variants) {
+        const color = colorValueOf(variant);
+        if (color && variantIds.has(variant.id) && !colorFirstIndex.has(color)) {
+          colorFirstIndex.set(color, imgIdx);
+        }
+      }
+    });
+    return variants
+      .map((v, i) => ({
+        id: v.id,
+        sortKey: colorFirstIndex.get(colorValueOf(v) ?? "") ?? Infinity,
+        i,
+      }))
+      .sort((a, b) => a.sortKey - b.sortKey || a.i - b.i)
+      .map(({ id }, rank) => ({ id, variant_rank: rank }));
+  };
+
   const saveImages = async (
     nextImages: MediaImage[],
     nextThumbnail?: string | null,
   ) => {
     setBusy(true);
     try {
+      const variantUpdates = nextVariantRanks(nextImages);
       await sdk.client.fetch(`/admin/products/${product.id}`, {
         method: "POST",
         body: {
@@ -201,6 +234,7 @@ const ProductVisualMediaWidget = ({
               : { url: img.url, rank: index },
           ),
           ...(nextThumbnail !== undefined ? { thumbnail: nextThumbnail } : {}),
+          ...(variantUpdates ? { variants: variantUpdates } : {}),
         },
       });
       await refresh();
