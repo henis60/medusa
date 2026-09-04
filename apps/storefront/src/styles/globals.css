@@ -1520,15 +1520,6 @@ body.hunter-landing-active::before {
   text-transform: uppercase;
   color: var(--gold-d);
   margin-bottom: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.ev-freq::before {
-  content: "";
-  width: 14px;
-  height: 1px;
-  background: var(--gold-d);
 }
 .ev-title {
   font-family: var(--pd);
@@ -1763,15 +1754,6 @@ body.hunter-landing-active::before {
   text-transform: uppercase;
   color: rgba(201, 168, 76, 0.55);
   margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.zone-tag::before {
-  content: "";
-  width: 16px;
-  height: 1px;
-  background: rgba(201, 168, 76, 0.4);
 }
 
 .zone-title {
@@ -2376,15 +2358,6 @@ a.cb-value:hover {
   text-transform: uppercase;
   color: var(--gold-d);
   margin-bottom: 18px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.modal-kicker::before {
-  content: "";
-  width: 24px;
-  height: 1px;
-  background: var(--gold-d);
 }
 
 .modal-title {
@@ -2558,15 +2531,6 @@ a.cb-value:hover {
   letter-spacing: 3px;
   text-transform: uppercase;
   color: rgba(201, 168, 76, 0.28);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.shop-note::before {
-  content: "";
-  width: 24px;
-  height: 1px;
-  background: rgba(201, 168, 76, 0.2);
 }
 
 /* ── 4-PRODUCT GRID ── */

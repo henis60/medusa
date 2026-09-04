@@ -34,7 +34,10 @@ export default function Membership() {
     <section className="section mem-sec" id="membership">
       <div className="section-inner">
         <div className="kicker rv">
-          {t("Membership")}
+          <span>{t("Membership")}</span>
+          <span className="font-sans text-[10px] uppercase tracking-[3px] text-hunter-gold leading-none">
+            {t("Coming Soon")}
+          </span>
         </div>
         <h2 className="sec-title rv">
           {t("The Hunter")}

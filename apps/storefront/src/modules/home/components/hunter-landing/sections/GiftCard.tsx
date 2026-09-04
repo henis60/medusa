@@ -69,7 +69,10 @@ export default function GiftCard() {
           </div>
           <div className="rv">
             <div className="kicker">
-              {t("Gift Card")}
+              <span>{t("Gift Card")}</span>
+              <span className="font-sans text-[10px] uppercase tracking-[3px] text-hunter-gold leading-none">
+                {t("Coming Soon")}
+              </span>
             </div>
             <h2 className="sec-title">
               {t("Cadoul perfect")}

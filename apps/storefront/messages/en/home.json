@@ -109,7 +109,7 @@
     "20–30 guests · semi-open format"
   ],
   "Anual": "Annual",
-  "Annual": "Annual",
+  "Meridian": "Meridian",
   "Toamnă · Invitație exclusivă · Național": "Autumn · Exclusive invitation · National",
   "Lansarea colecției de vânătoare și ecvestru Invitați selectați din toată România Selecție de vinuri premium Parteneri de brand": "The launch of the hunting and equestrian collection. Selected guests from across Romania. A premium wine selection. Brand partners.",
   "hunterAnnualPerks": [
@@ -118,6 +118,7 @@
     "National guests · press · partners"
   ],
   "Gift Card": "Gift Card",
+  "Coming Soon": "Coming Soon",
   "Cadoul perfect": "The perfect gift",
   "pentru un": "for a",
   "gentleman": "gentleman.",

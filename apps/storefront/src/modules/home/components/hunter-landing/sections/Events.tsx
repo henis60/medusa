@@ -41,7 +41,7 @@ export default function Events() {
       id: 3,
       freq: t("Anual"),
       titleMain: t("The Hunter"),
-      titleEm: t("Annual"),
+      titleEm: t("Meridian"),
       when: t("Toamnă · Invitație exclusivă · Național"),
       desc: t("Lansarea colecției de vânătoare și ecvestru Invitați selectați din toată România Selecție de vinuri premium Parteneri de brand"),
       perks: t.raw("hunterAnnualPerks") as string[],
