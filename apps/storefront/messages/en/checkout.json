@@ -63,7 +63,7 @@
   "Niciun locker disponibil pentru acest curier în localitatea ta Alege livrare la ușă": "No locker available for this courier in your locality. Choose door delivery instead.",
   "Caută locker după nume sau adresă": "Search for a locker by name or address",
   "Niciun rezultat": "No results",
-  "Selectat: {name} — {address}": "Selected: {name} — {address}",
+  "Selectat: {name} - {address}": "Selected: {name} - {address}",
   "Locker selectat": "Selected locker",
   "Continuă cu metoda de plată": "Continue to payment method",
   "Coș": "Cart",
@@ -78,5 +78,5 @@
   "Magazin temporar indisponibil": "Store temporarily unavailable",
   "Nu am putut contacta serverul chiar acum Dacă ai finalizat deja plata, comanda ta este în siguranță Te rugăm să revii peste câteva minute": "We couldn't reach the server right now. If you already completed the payment, your order is safe. Please come back in a few minutes.",
   "Înapoi la coș": "Back to cart",
-  "Nu-ți face griji — dacă ai finalizat plata, comanda ta este în siguranță și vei primi un email de confirmare Poți reîncerca sau reveni la coș": "Don't worry — if you completed the payment, your order is safe and you'll receive a confirmation email. You can try again or return to your cart."
+  "Nu-ți face griji - dacă ai finalizat plata, comanda ta este în siguranță și vei primi un email de confirmare Poți reîncerca sau reveni la coș": "Don't worry - if you completed the payment, your order is safe and you'll receive a confirmation email. You can try again or return to your cart."
 }

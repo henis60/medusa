@@ -1,6 +1,7 @@
 "use client"
 
-import { motion, useReducedMotion } from "framer-motion"
+import { m as motion, useReducedMotion } from "framer-motion"
+import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 const CARS = [
@@ -169,6 +170,7 @@ function setTravelDotIntensity(dot: HTMLDivElement, intensity: number) {
 }
 
 export default function ThemeTimeline() {
+  const t = useTranslations("meridian")
   const reduceMotion = useReducedMotion()
   const [vertical, setVertical] = useState(false)
   const [tablet, setTablet] = useState(false)
@@ -737,7 +739,7 @@ export default function ThemeTimeline() {
                 color: "rgba(201,168,76,0.75)",
               }}
             >
-              Clasic
+              {t("Clasic")}
             </span>
             <div style={{ width: 20, flexShrink: 0 }} />
             <div style={{ width: 36, flexShrink: 0 }} />
@@ -754,7 +756,7 @@ export default function ThemeTimeline() {
                 color: "rgba(201,168,76,0.75)",
               }}
             >
-              Contemporan
+              {t("Contemporan")}
             </span>
           </div>
 
@@ -1041,7 +1043,7 @@ export default function ThemeTimeline() {
                   color: "rgba(201,168,76,0.75)",
                 }}
               >
-                Clasic
+                {t("Clasic")}
               </span>
             </div>
             <div style={{ height: MARKER_ROW_H }} />
@@ -1063,7 +1065,7 @@ export default function ThemeTimeline() {
                   marginTop: "25px",
                 }}
               >
-                Contemporan
+                {t("Contemporan")}
               </span>
             </div>
           </div>

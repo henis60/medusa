@@ -12,7 +12,7 @@ export async function generateMetadata({
   const locale = (await params)?.locale ?? routing.defaultLocale
   const t = await getTranslations({ locale, namespace: "app" })
   return {
-    title: t("404 — Coș negăsit"),
+    title: t("404 - Coș negăsit"),
     description: t("Coșul pe care încerci să îl accesezi nu există"),
   }
 }

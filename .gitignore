@@ -57,3 +57,6 @@ yarn-error.log*
 ehthumbs.db
 Thumbs.db
 **/.DS_Store
+
+# Local working notes, not shared project docs
+GOING-LIVE.md

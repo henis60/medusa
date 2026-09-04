@@ -9,7 +9,7 @@
   "Trimite alt mesaj": "Send another message",
   "Nu am putut trimite mesajul Verifică conexiunea și încearcă din nou": "We couldn't send your message. Check your connection and try again.",
   "Prea multe încercări Te rugăm să revii peste câteva minute": "Too many attempts. Please come back in a few minutes.",
-  "Protejat de reCAPTCHA —": "Protected by reCAPTCHA —",
+  "Protejat de reCAPTCHA": "Protected by reCAPTCHA",
   "Confidențialitate": "Privacy",
   "Termeni": "Terms",
   "Contact": "Contact",
@@ -21,5 +21,5 @@
   "Program": "Hours",
   "Luni – Vineri · 07:00 – 18:00": "Monday – Friday · 07:00 – 18:00",
   "Sâmbătă · 09:00 – 14:30": "Saturday · 09:00 – 14:30",
-  "Hartă — Bulevardul Unirii 7, Baia Mare": "Map — Bulevardul Unirii 7, Baia Mare"
+  "Hartă - Bulevardul Unirii 7, Baia Mare": "Map - Bulevardul Unirii 7, Baia Mare"
 }

@@ -1,7 +1,9 @@
 "use client"
 import { useEffect, useRef, useState } from "react"
+// `m` (not `motion`) + the root LazyMotionProvider ([locale]/layout.tsx): the
+// animation engine loads asynchronously instead of shipping in the initial JS.
 import {
-  motion,
+  m as motion,
   useReducedMotion,
   useScroll,
   useTransform,
@@ -63,21 +65,9 @@ const Hero = () => {
               either delays or visibly glitches the very first paint. The
               decorative underline still animates below. */}
           <div className="eyebrow">
-            <motion.div
-              className="eyebrow-line"
-              initial={reduced ? false : { scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ duration: 1.0, ease, delay: 0.4 }}
-            />
             <span className="eyebrow-text">
               {t("Return of the Elegant Gentleman")}
             </span>
-            <motion.div
-              className="eyebrow-line"
-              initial={reduced ? false : { scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ duration: 1.0, ease, delay: 0.5 }}
-            />
           </div>
 
           <div className="hero-logo">
@@ -129,7 +119,6 @@ const Hero = () => {
         >
           <LocalizedClientLink href="/ready-to-wear" className="hero-cta">
             <span className="hero-cta-text">{t("Explorează Colecția")}</span>
-            <span className="hero-cta-arrow">→</span>
           </LocalizedClientLink>
         </motion.div>
       </div>

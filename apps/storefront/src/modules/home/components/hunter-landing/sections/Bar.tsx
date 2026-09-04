@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react"
 import {
   animate,
-  motion,
+  m as motion,
   useInView,
   useMotionValue,
   useReducedMotion,
@@ -44,7 +44,7 @@ export default function Bar() {
       <div className="bar-band-bg" id="band2"></div>
       <div className="bar-content">
         <div className="kicker rv">
-          <span className="kicker-bar"></span>{t("Wine & cocktails")}
+          {t("Wine & cocktails")}
         </div>
         <h2 className="bar-title rv">
           {t("The Hunter")}

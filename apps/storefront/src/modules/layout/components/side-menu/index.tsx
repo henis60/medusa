@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { Popover, PopoverPanel } from "@headlessui/react"
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence, m as motion } from "framer-motion"
 import { useTranslations } from "next-intl"
 import { XMark } from "@medusajs/icons"
 import { MenuIcon } from "@modules/layout/components/nav-icons"

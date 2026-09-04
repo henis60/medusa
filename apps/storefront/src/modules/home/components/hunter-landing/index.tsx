@@ -83,11 +83,6 @@ const HunterLanding = ({ shopSlot }: { shopSlot?: React.ReactNode }) => {
           const htmlEl = el as HTMLElement
           const isGroup = el.classList.contains("rv-group")
           const isLineDraw = el.classList.contains("line-draw")
-          // Most kickers in the sections below carry BOTH "kicker" and "rv"
-          // classes (only GiftCard's is a bare "kicker") — excluding "rv"
-          // here meant the kicker-bar grow-in never ran for 8 of the 9
-          // sections, since they never took this branch as isKicker.
-          const isKicker = el.classList.contains("kicker")
           // Stagger delay comes from a data attribute, NOT an inline
           // transition-delay: many of these elements (links, buttons, grids)
           // carry a CSS `transition` for hover, and a real transition-delay on
@@ -150,29 +145,10 @@ const HunterLanding = ({ shopSlot }: { shopSlot?: React.ReactNode }) => {
                     {
                       duration: 0.55,
                       ease: [0.23, 1, 0.32, 1],
-                      delay: isKicker ? 0 : delay,
+                      delay,
                     }
                   )
                 )
-                // The kicker's leading gold line (.kicker-bar) has its own
-                // grow-in animation in CSS, gated behind a `.kicker.visible`
-                // class — but nothing here ever adds that class, so the CSS
-                // animation never fires and the bar sits at width:0
-                // permanently. Animate it directly with framer instead,
-                // same as everything else in this effect.
-                if (isKicker) {
-                  const bar = htmlEl.querySelector<HTMLElement>(".kicker-bar")
-                  if (bar) {
-                    bar.style.width = "0px"
-                    controls.push(
-                      animate(
-                        bar,
-                        { width: ["0px", "32px"] },
-                        { duration: 0.6, ease: [0.23, 1, 0.32, 1], delay: 0.1 }
-                      )
-                    )
-                  }
-                }
               }
               unsub()
             },

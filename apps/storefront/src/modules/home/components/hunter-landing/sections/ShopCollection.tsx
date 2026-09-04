@@ -34,7 +34,7 @@ export default async function ShopCollection({
       <div className="section-inner">
         <div className="shop-header">
           <div className="kicker rv">
-            <span className="kicker-bar"></span>{collection.title}
+            {collection.title}
           </div>
           <h2 className="shop-hl rv">
             {t("Colecție")} <br />
@@ -54,7 +54,6 @@ export default async function ShopCollection({
         <div className="rv hero-cta-wrap" data-rv-delay="0.2" style={{ marginTop: "2.5rem" }}>
           <LocalizedClientLink href={`/collections/${collection.handle}`} className="hero-cta hero-cta--wide">
             <span className="hero-cta-text">{t("Vezi colecția")}</span>
-            <span className="hero-cta-arrow">→</span>
           </LocalizedClientLink>
         </div>
       </div>

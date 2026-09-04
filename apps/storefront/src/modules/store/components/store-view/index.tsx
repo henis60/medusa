@@ -172,7 +172,7 @@ export default function StoreView({
               text={
                 activeCategory?.description ||
                 (activeCollection?.metadata?.description as string) ||
-                t("Piese selectate cu grijă — cămăși, accesorii și colecții pentru garderoba ta")
+                t("Piese selectate cu grijă - cămăși, accesorii și colecții pentru garderoba ta")
               }
             />
           </div>

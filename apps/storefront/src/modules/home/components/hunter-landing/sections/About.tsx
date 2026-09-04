@@ -8,10 +8,10 @@ export default function About() {
   const t = useTranslations("home")
 
   const pillars = [
-    { num: "01", name: t("Tailoring"), desc: t("Made to Measure și Ready to Wear — costume construite pe corpul tău") },
-    { num: "02", name: t("The Hunter Bar"), desc: t("Selecție de vinuri rare, cocktailuri clasice și spirtoase premium Un sanctuar al gustului, cu atmosferă unică") },
-    { num: "03", name: t("Comunitate Privată"), desc: t("Friday Social Club — un cerc select de antreprenori, reuniți pentru degustare de vin, pian live și conversații care contează") },
-    { num: "04", name: t("Heritage & Vânătoare"), desc: t("Colecție exclusivă în stil britanic — Harris Tweed, lână tradițională, croieli cu caracter Eleganța unui alt timp") },
+    { name: t("Tailoring"), desc: t("Made to Measure și Ready to Wear - costume construite pe corpul tău") },
+    { name: t("The Hunter Bar"), desc: t("Selecție de vinuri rare, cocktailuri clasice și spirtoase premium Un sanctuar al gustului, cu atmosferă unică") },
+    { name: t("Comunitate Privată"), desc: t("Friday Social Club - un cerc select de antreprenori, reuniți pentru degustare de vin, pian live și conversații care contează") },
+    { name: t("Heritage & Vânătoare"), desc: t("Colecție exclusivă în stil britanic - Harris Tweed, lână tradițională, croieli cu caracter Eleganța unui alt timp") },
   ]
 
   return (
@@ -35,7 +35,7 @@ export default function About() {
       <div className="about-text-col">
         <div className="about-bg-glyph">H</div>
         <div className="kicker rv">
-          <span className="kicker-bar"></span>{t("Origin")}
+          {t("Origin")}
         </div>
         <h2 className="sec-title rv">
           {t("The Hunter")}
@@ -47,8 +47,7 @@ export default function About() {
         </p>
         <div className="pillars rv-group">
           {pillars.map((pillar) => (
-            <div key={pillar.num} className="pillar">
-              <div className="pl-num">{pillar.num}</div>
+            <div key={pillar.name} className="pillar">
               <div>
                 <div className="pl-name">{pillar.name}</div>
                 <p className="pl-desc">{pillar.desc}</p>

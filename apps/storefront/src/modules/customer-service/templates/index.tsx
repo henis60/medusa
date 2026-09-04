@@ -187,7 +187,7 @@ const CustomerServiceTemplate = async () => {
               rel="noopener noreferrer"
               className="text-[var(--theme-text)] border-b border-hunter-gold/40 hover:border-hunter-gold transition-colors w-fit"
             >
-              {t("ANPC — Autoritatea Națională pentru Protecția Consumatorilor")}
+              {t("ANPC - Autoritatea Națională pentru Protecția Consumatorilor")}
             </a>
             <a
               href="https://ec.europa.eu/consumers/odr"

@@ -133,7 +133,7 @@ const TermsOfUseTemplate = async () => {
 
         <Section title={t("Proprietate intelectuală")}>
           <p>
-            {t("Tot conținutul platformei — texte, imagini, logo-uri, design — este proprietatea exclusivă a")}{" "}
+            {t("Tot conținutul platformei - texte, imagini, logo-uri, design - este proprietatea exclusivă a")}{" "}
             <span className="text-[var(--theme-text)]">{t("The Hunter House")}</span> {t("sau a partenerilor săi și este protejat de legislația privind drepturile de autor Orice reproducere în scopuri comerciale fără acord scris este interzisă")}
           </p>
         </Section>
@@ -149,7 +149,7 @@ const TermsOfUseTemplate = async () => {
               rel="noopener noreferrer"
               className="text-[var(--theme-text)] border-b border-hunter-gold/40 hover:border-hunter-gold transition-colors w-fit"
             >
-              {t("ANPC — Autoritatea Națională pentru Protecția Consumatorilor")}
+              {t("ANPC - Autoritatea Națională pentru Protecția Consumatorilor")}
             </a>
             <a
               href="https://ec.europa.eu/consumers/odr"

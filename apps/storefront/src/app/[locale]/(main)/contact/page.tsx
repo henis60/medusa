@@ -12,7 +12,7 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "app" })
   return {
     title: t("Contact"),
-    description: t("Scrie-ne — răspundem în maximum 24 de ore în zilele lucrătoare"),
+    description: t("Scrie-ne - răspundem în maximum 24 de ore în zilele lucrătoare"),
   }
 }
 

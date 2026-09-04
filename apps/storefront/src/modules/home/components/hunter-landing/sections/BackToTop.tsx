@@ -1,6 +1,6 @@
 "use client"
 import { useState } from "react"
-import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "framer-motion"
+import { AnimatePresence, m as motion, useMotionValueEvent, useScroll } from "framer-motion"
 import { useTranslations } from "next-intl"
 
 export default function BackToTop() {

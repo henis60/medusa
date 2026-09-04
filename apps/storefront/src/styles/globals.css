@@ -474,22 +474,6 @@ body.hunter-landing-active::before {
   gap: 14px;
   margin-bottom: 28px;
 }
-.eyebrow-line {
-  height: 1px;
-  flex: 0 0 40px;
-  background: var(--gold-d);
-}
-.eyebrow > :first-child {
-  transform-origin: left;
-}
-.eyebrow > :last-child {
-  transform-origin: right;
-}
-@keyframes growLine {
-  to {
-    transform: scaleX(1);
-  }
-}
 .eyebrow-text {
   font-family: var(--rl);
   font-size: 11px;
@@ -750,17 +734,6 @@ body.hunter-landing-active::before {
 .hero-cta:hover .hero-cta-text {
   color: var(--gold);
 }
-.hero-cta-arrow {
-  font-size: 15px;
-  color: rgba(201, 168, 76, 0.55);
-  transition: transform 0.3s, color 0.3s;
-  display: inline-block;
-}
-.hero-cta:hover .hero-cta-arrow {
-  transform: translateX(5px);
-  color: var(--gold);
-}
-
 /* Shop collection CTA — full-width on mobile, centered on desktop */
 .hero-cta-wrap {
   display: flex;
@@ -975,15 +948,6 @@ body.hunter-landing-active::before {
   display: flex;
   align-items: center;
   gap: 12px;
-}
-.kicker-bar {
-  height: 1px;
-  width: 0;
-  background: var(--gold-d);
-  animation: none;
-}
-.kicker.visible .kicker-bar {
-  animation: growLine 1s 0.1s forwards;
 }
 
 .sec-title {
@@ -1240,14 +1204,6 @@ body.hunter-landing-active::before {
 .pillar:hover {
   padding-left: 10px;
   border-color: rgba(201, 168, 76, 0.2);
-}
-.pl-num {
-  font-family: var(--rl);
-  font-size: 10px;
-  letter-spacing: 2px;
-  color: rgba(201, 168, 76, 0.4);
-  flex-shrink: 0;
-  padding-top: 3px;
 }
 .pl-name {
   font-family: var(--ci);
@@ -2865,18 +2821,6 @@ a.cb-value:hover {
 .mtm-step:hover::before {
   transform: scaleX(1);
 }
-.ms-num {
-  font-family: var(--pd);
-  font-size: 44px;
-  font-weight: 700;
-  color: rgba(201, 168, 76, 0.06);
-  line-height: 1;
-  margin-bottom: 10px;
-  transition: color 0.35s;
-}
-.mtm-step:hover .ms-num {
-  color: rgba(201, 168, 76, 0.14);
-}
 .ms-name {
   font-family: var(--ci);
   font-size: 11px;
@@ -3587,10 +3531,6 @@ a.cb-value:hover {
   .mtm-step {
     padding: 18px 16px;
   }
-  .ms-num {
-    font-size: 28px;
-    margin-bottom: 6px;
-  }
   .gc-sec {
     min-height: auto;
     padding-top: 48px;
@@ -3937,9 +3877,7 @@ html {
     opacity: 1 !important;
     transform: none !important;
   }
-  .line-draw,
-  .kicker-bar,
-  .eyebrow-line {
+  .line-draw {
     transform: none !important;
   }
 }
@@ -4325,16 +4263,6 @@ html {
   }
   .thm-eyebrow-sep {
     display: none;
-  }
-  /* The right rule is normally a flexible gradient tail while the left one
-     is a fixed short dash — fine for a single-line label, but once the date
-     wraps to two centered lines that asymmetry visibly pushes it off-center. */
-  .thm-eyebrow-rule-left,
-  .thm-eyebrow-rule-right {
-    flex: 0 0 32px !important;
-  }
-  .thm-eyebrow-rule-right {
-    background: #8b6914 !important;
   }
 }
 

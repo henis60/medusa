@@ -89,7 +89,7 @@ const ContactTemplate = async () => {
             className="block border border-[var(--theme-border)] min-h-[200px]"
           >
             <iframe
-              title={t("Hartă — Bulevardul Unirii 7, Baia Mare")}
+              title={t("Hartă - Bulevardul Unirii 7, Baia Mare")}
               src="https://www.google.com/maps?q=Bulevardul+Unirii+7,+Baia+Mare&output=embed"
               width="100%"
               height="100%"

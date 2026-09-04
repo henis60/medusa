@@ -24,6 +24,7 @@ const NAMESPACES = [
   "shipping",
   "wishlist",
   "app",
+  "meridian",
 ] as const
 
 export default getRequestConfig(async ({ requestLocale }) => {

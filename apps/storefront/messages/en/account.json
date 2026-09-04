@@ -1,5 +1,5 @@
 {
-  "← Înapoi la profil": "← Back to profile",
+  "Înapoi la profil": "Back to profile",
   "Ai întrebări?": "Have questions?",
   "Găsește răspunsuri pe pagina de întrebări frecvente": "Find answers on our frequently asked questions page.",
   "Întrebări frecvente": "FAQ",
@@ -37,7 +37,7 @@
   "Dacă adresa de email există în sistem, vei primi un link de resetare în câteva minute": "If the email address exists in our system, you'll receive a reset link within a few minutes.",
   "Email": "Email",
   "Trimite Link": "Send Link",
-  "Protejat de reCAPTCHA —": "Protected by reCAPTCHA —",
+  "Protejat de reCAPTCHA": "Protected by reCAPTCHA",
   "Verificarea de securitate a eșuat Reîncearcă sau dezactivează temporar blocantele de reclame": "Security check failed. Please retry or temporarily disable your ad blocker.",
   "Confidențialitate": "Privacy",
   "Termeni": "Terms",

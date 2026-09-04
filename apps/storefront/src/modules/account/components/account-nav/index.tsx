@@ -98,7 +98,19 @@ const MobileNav = ({ route, t }: { route: string; t: NavT }) => {
             className="inline-flex items-center gap-2 small:py-3 small:-my-3 small:px-3 small:-mx-3 small:px-3 small:-mx-3 font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-[var(--theme-gold)] active:text-[var(--theme-gold)] transition-colors"
             data-testid="account-back-link"
           >
-            <span aria-hidden>←</span>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <polyline points="15 6 9 12 15 18" />
+            </svg>
             <span>{t("Înapoi")}</span>
           </LocalizedClientLink>
           <div className="py-4">

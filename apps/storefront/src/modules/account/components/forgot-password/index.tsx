@@ -67,7 +67,19 @@ const ForgotPassword = ({ setCurrentView }: Props) => {
             onClick={() => setCurrentView(LOGIN_VIEW.SIGN_IN)}
             className="w-full h-12 flex items-center justify-center gap-2 bg-hunter-gold text-hunter-dark hover:opacity-90 transition-opacity font-sans uppercase tracking-[3px] text-[13px]"
           >
-            <span>←</span>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <polyline points="15 6 9 12 15 18" />
+            </svg>
             <span>{t("Înapoi")}</span>
           </button>
         </div>
@@ -92,7 +104,7 @@ const ForgotPassword = ({ setCurrentView }: Props) => {
             {t("Trimite Link")}
           </SubmitButton>
           <p className="font-sans text-[11px] text-[var(--theme-text-muted)] mt-4 text-center leading-relaxed">
-            {t("Protejat de reCAPTCHA —")}{" "}
+            {t("Protejat de reCAPTCHA")}{" "}
             <a
               href="https://policies.google.com/privacy"
               target="_blank"

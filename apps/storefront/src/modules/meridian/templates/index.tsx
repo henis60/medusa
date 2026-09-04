@@ -1,8 +1,8 @@
 import Image from "next/image"
+import { useTranslations } from "next-intl"
 
 import Nav from "@modules/layout/templates/nav"
 import HeroEyebrow from "../components/hero-eyebrow"
-import EyebrowLine from "../components/eyebrow-line"
 import HashScrollFix from "../components/hash-scroll-fix"
 import MeridianCanvas from "../components/meridian-canvas"
 import ProgramRows from "../components/program-rows"
@@ -51,8 +51,6 @@ const eyebrowRow = {
   marginBottom: 14,
 } as const
 
-const eyebrowRule = { height: 1, width: 48, background: "#8b6914" } as const
-
 const eyebrowLabel = {
   fontFamily: "var(--rl)",
   fontSize: 10,
@@ -82,6 +80,7 @@ const ctaBase = {
 } as const
 
 export default function MeridianTemplate() {
+  const t = useTranslations("meridian")
   return (
     <div className="thm-root">
       <HashScrollFix />
@@ -94,7 +93,7 @@ export default function MeridianTemplate() {
             <em
               className={`not-italic normal-case text-hunter-gold tracking-tight text-[28px] mt-[5px] ${montigny.className}`}
             >
-              Meridian
+              {t("Meridian")}
             </em>
           </>
         }
@@ -152,7 +151,7 @@ export default function MeridianTemplate() {
                     fontSize: "clamp(54px,7.2vw,104px)",
                   }}
                 >
-                  Meridian
+                  {t("Meridian")}
                 </em>
               </h1>
               <p
@@ -168,8 +167,9 @@ export default function MeridianTemplate() {
                   margin: "34px 0 0",
                 }}
               >
-                Meridianul pe care eleganța Vestului își găsește rădăcini în
-                Est.
+                {t(
+                  "Meridianul pe care eleganța Vestului își găsește rădăcini în Est."
+                )}
               </p>
               <p
                 style={{
@@ -182,14 +182,9 @@ export default function MeridianTemplate() {
                   margin: "22px 0 0",
                 }}
               >
-                Zece automobile în cinci perechi clasic–contemporan, un concert
-                Jazz & Blues în aer liber cu Gray Bliss Band din Cluj-Napoca
-                și invitatul special Mihail, o
-                expoziție de pictură și sculptură și trei colecții noi{" "}
-                <strong style={{ fontStyle: "italic", fontWeight: 600 }}>
-                  The Hunter House
-                </strong>
-                , într-o singură zi.
+                {t(
+                  "Zece automobile în cinci perechi clasic–contemporan, un concert Jazz & Blues în aer liber cu Gray Bliss Band din Cluj-Napoca și invitatul special Mihail, o expoziție de pictură și sculptură și trei colecții noi The Hunter House, într-o singură zi."
+                )}
               </p>
               <div
                 className="thm-hero-cta-row"
@@ -211,8 +206,7 @@ export default function MeridianTemplate() {
                     transition: "background .3s",
                   }}
                 >
-                  Vezi programul{" "}
-                  <span style={{ fontSize: 15, color: "#0d1f17" }}>→</span>
+                  {t("Vezi programul")}
                 </SmoothAnchorLink>
               </div>
             </div>
@@ -247,8 +241,7 @@ export default function MeridianTemplate() {
             <div className="thm-concept-grid">
               <div className="thm-concept-textwrap">
                 <div className="thm-concept-lead" style={eyebrowRow}>
-                  <EyebrowLine style={eyebrowRule} />
-                  <span style={eyebrowLabel}>Conceptul</span>
+                  <span style={eyebrowLabel}>{t("Conceptul")}</span>
                 </div>
                 <h2
                   className="thm-concept-lead thm-concept-heading"
@@ -258,9 +251,9 @@ export default function MeridianTemplate() {
                     maxWidth: "24ch",
                   }}
                 >
-                  O tradiție{" "}
+                  {t("O tradiție")}{" "}
                   <em style={{ fontStyle: "italic", color: "#c9a84c" }}>
-                    în devenire.
+                    {t("în devenire.")}
                   </em>
                 </h2>
                 <p
@@ -274,15 +267,13 @@ export default function MeridianTemplate() {
                     margin: 0,
                   }}
                 >
-                  Hunter vine din vechea engleză{" "}
-                  <strong style={{ fontStyle: "italic", fontWeight: 600 }}>huntian</strong>, a
-                  urmări cu un scop anume.{" "}
-                  <strong style={{ fontStyle: "italic", fontWeight: 600 }}>Meridian</strong>, din
-                  latinescul meridies, e linia care setează un punct comun între
-                  emisfere. Împreună, devin linia de ochire a unui standard
-                  occidental de gust, urmărit pe traseul dintre Est și Vest, cel
-                  pe care Londra, Parisul și Viena îl trasau acum un secol, cu
-                  accent local la fiecare curte care îl purta.
+                  {t.rich("conceptIntro", {
+                    strong: (chunks) => (
+                      <strong style={{ fontStyle: "italic", fontWeight: 600 }}>
+                        {chunks}
+                      </strong>
+                    ),
+                  })}
                 </p>
                 <p
                   className="thm-concept-para"
@@ -295,14 +286,13 @@ export default function MeridianTemplate() {
                     margin: "20px 0 0",
                   }}
                 >
-                  Acesta nu s-a rupt.{" "}
-                  <strong style={{ fontStyle: "italic", fontWeight: 600 }}>
-                    The Hunter Meridian
-                  </strong>{" "}
-                  propune un reper anual, cu tematică și piese noi la fiecare
-                  ediție, unde fiecare invitat care a văzut deja Ascot sau
-                  Saint-Moritz și fiecare om de cultură care recunoaște o operă,
-                  aduce cu el o bucată din același meridian.
+                  {t.rich("conceptContinuation", {
+                    strong: (chunks) => (
+                      <strong style={{ fontStyle: "italic", fontWeight: 600 }}>
+                        {chunks}
+                      </strong>
+                    ),
+                  })}
                 </p>
                 <blockquote
                   className="thm-concept-quote"
@@ -319,7 +309,7 @@ export default function MeridianTemplate() {
                     maxWidth: "40ch",
                   }}
                 >
-                  Un meridian unește lumile și le conectează.
+                  {t("Un meridian unește lumile și le conectează.")}
                 </blockquote>
               </div>
               <div
@@ -352,13 +342,12 @@ export default function MeridianTemplate() {
         <div style={{ maxWidth: 1360, margin: "0 auto", position: "relative" }}>
           <Reveal>
             <div style={eyebrowRow}>
-              <EyebrowLine style={eyebrowRule} />
-              <span style={eyebrowLabel}>Tema Ediției I</span>
+              <span style={eyebrowLabel}>{t("Tema Ediției I")}</span>
             </div>
             <h2 style={{ ...sectionHeading, margin: 0, maxWidth: "16ch" }}>
-              Evoluția{" "}
+              {t("Evoluția")}{" "}
               <em style={{ fontStyle: "italic", color: "#c9a84c" }}>
-                automobilului
+                {t("automobilului")}
               </em>
             </h2>
             <p
@@ -373,8 +362,9 @@ export default function MeridianTemplate() {
                 margin: "20px 0 0",
               }}
             >
-              Zece automobile, cinci perechi, aceleași mărci expuse față în
-              față.
+              {t(
+                "Zece automobile, cinci perechi, aceleași mărci expuse față în față."
+              )}
             </p>
           </Reveal>
           <ThemeTimeline />
@@ -383,7 +373,7 @@ export default function MeridianTemplate() {
         <Reveal>
           <div className="thm-piesa-grid">
             <div>
-              <span style={eyebrowLabel}>Piesa centrală</span>
+              <span style={eyebrowLabel}>{t("Piesa centrală")}</span>
               <h3
                 style={{
                   fontFamily: "var(--pd)",
@@ -395,9 +385,9 @@ export default function MeridianTemplate() {
                   maxWidth: "22ch",
                 }}
               >
-                Lamborghini{" "}
+                {t("Lamborghini")}{" "}
                 <em style={{ fontStyle: "italic", color: "#c9a84c" }}>
-                  Centenario Tractor
+                  {t("Centenario Tractor")}
                 </em>
               </h3>
               <p
@@ -411,10 +401,7 @@ export default function MeridianTemplate() {
                   maxWidth: "54ch",
                 }}
               >
-                Operă de artă unicată, doar 5 exemplare existente în lume,
-                atestată oficial de Lamborghini, își are prima expunere publică
-                în România. Cu mult înaintea supercar-urilor, Ferruccio
-                Lamborghini construia tractoare, așa a început totul.
+                {t("piesaPara1")}
               </p>
               <p
                 style={{
@@ -427,12 +414,7 @@ export default function MeridianTemplate() {
                   maxWidth: "54ch",
                 }}
               >
-                Lângă el stă prezentul, care spune cealaltă parte a aceleiași
-                povești: ce a crescut în șaizeci de ani din tractorul acesta,
-                fenomenul Old Money și New Rich, două momente ale aceleiași
-                istorii. Clasicismul se poate finanța, dar nu se poate cumpăra,
-                pentru că ține de timp și nu de bani. Tractorul e acolo să
-                amintească ce anume susține valoarea mașinii de lângă el.
+                {t("piesaPara2")}
               </p>
             </div>
             <figure
@@ -485,7 +467,6 @@ export default function MeridianTemplate() {
         <Reveal>
           <div style={{ maxWidth: 1360, margin: "0 auto" }}>
             <div style={eyebrowRow}>
-              <EyebrowLine style={eyebrowRule} />
               <span style={eyebrowLabel}>Bilete</span>
             </div>
             <div
@@ -719,8 +700,7 @@ export default function MeridianTemplate() {
                   transition: "background .3s",
                 }}
               >
-                Cumpără bilete{" "}
-                <span style={{ fontSize: 15, color: "#0d1f17" }}>→</span>
+                Cumpără bilete
               </a>
             </div>
           </div>
@@ -773,8 +753,7 @@ export default function MeridianTemplate() {
               <div style={{ maxWidth: 1360, margin: "0 auto" }}>
                 <div style={{ maxWidth: 640, pointerEvents: "auto" }}>
                   <div style={{ ...eyebrowRow, marginBottom: 12 }}>
-                    <EyebrowLine style={eyebrowRule} />
-                    <span
+                      <span
                       style={{
                         ...eyebrowLabel,
                         color: "rgba(201,168,76,0.85)",
@@ -878,7 +857,7 @@ export default function MeridianTemplate() {
                 <circle cx="12" cy="12" r="4.5" fill="#0d1f17" />
               </svg>
               <span aria-hidden="true" className="thm-map-overlay">
-                Indicații către locație →
+                Indicații către locație
               </span>
             </a>
           )}
@@ -897,8 +876,7 @@ export default function MeridianTemplate() {
           <div className="thm-contact-grid">
             <div style={{ gridArea: "title" }}>
               <div style={eyebrowRow}>
-                <EyebrowLine style={eyebrowRule} />
-                <span style={eyebrowLabel}>Contact</span>
+                <span style={eyebrowLabel}>{t("Contact")}</span>
               </div>
               <h2
                 style={{
@@ -911,9 +889,9 @@ export default function MeridianTemplate() {
                   maxWidth: "18ch",
                 }}
               >
-                Explorăm împreună o posibilă{" "}
+                {t("Explorăm împreună o posibilă")}{" "}
                 <em style={{ fontStyle: "italic", color: "#c9a84c" }}>
-                  colaborare?
+                  {t("colaborare?")}
                 </em>
               </h2>
               <p
@@ -927,9 +905,9 @@ export default function MeridianTemplate() {
                   margin: "18px 0 0",
                 }}
               >
-                Ești interesat de mai multe detalii sau de un parteneriat cu The
-                Hunter Meridian? Scrie-ne și îți răspundem în cel mai scurt
-                timp.
+                {t(
+                  "Ești interesat de mai multe detalii sau de un parteneriat cu The Hunter Meridian? Scrie-ne și îți răspundem în cel mai scurt timp."
+                )}
               </p>
             </div>
             <div style={{ gridArea: "contact", alignSelf: "end" }}>
@@ -958,7 +936,7 @@ export default function MeridianTemplate() {
                       flex: "0 0 90px",
                     }}
                   >
-                    Telefon
+                    {t("Telefon")}
                   </span>
                   <p
                     style={{
@@ -990,7 +968,7 @@ export default function MeridianTemplate() {
                       flex: "0 0 90px",
                     }}
                   >
-                    Email
+                    {t("Email")}
                   </span>
                   <p
                     style={{
@@ -1147,7 +1125,7 @@ export default function MeridianTemplate() {
                 fontSize: 20,
               }}
             >
-              Meridian
+              {t("Meridian")}
             </em>
           </span>
           <span
@@ -1159,7 +1137,7 @@ export default function MeridianTemplate() {
               fontSize: 11,
             }}
           >
-            © 2026 The Hunter. Toate drepturile rezervate.
+            {t("© 2026 The Hunter. Toate drepturile rezervate.")}
           </span>
         </div>
       </footer>

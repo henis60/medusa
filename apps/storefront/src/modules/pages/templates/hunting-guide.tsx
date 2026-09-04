@@ -11,39 +11,33 @@ const HuntingGuideTemplate = () => {
 
   const sections = [
     {
-      num: "01",
-      title: t("Harris Tweed — legenda scoțiană"),
-      body: t("Există puține țesături cu o poveste atât de autentică Harris Tweed este țesut manual, în casele localnicilor din insulele Outer Hebrides, Scotland, din lână pură virgilă vopsită și filată local Fiecare metraj poartă stampila de autenticitate a Harris Tweed Authority Rezistența lui este legendară — o haină din Harris Tweed durează decenii, capătă caracter cu fiecare purtare și se îmbunătățește cu timpul"
+      title: t("Harris Tweed - legenda scoțiană"),
+      body: t("Există puține țesături cu o poveste atât de autentică Harris Tweed este țesut manual, în casele localnicilor din insulele Outer Hebrides, Scotland, din lână pură virgilă vopsită și filată local Fiecare metraj poartă stampila de autenticitate a Harris Tweed Authority Rezistența lui este legendară - o haină din Harris Tweed durează decenii, capătă caracter cu fiecare purtare și se îmbunătățește cu timpul"
       ),
     },
     {
-      num: "02",
       title: t("Haina de vânătoare: structura"),
       body: t("O haină de vânătoare bine construită are câteva elemente esențiale: umeri cu suficientă libertate de mișcare pentru a ridica arma, plastron dublu sau căptușit în față pentru protecție, buzunare mari cu capac pentru cartuș și vânat mic, și un spate cu fantă sau cut care permite mișcarea Lungimea optimă ajunge la mijlocul coapsei Culoarea tradițională este în tonuri de pământ, olive, brunâ sau heather"
       ),
     },
     {
-      num: "03",
       title: t("Layering: arta stratificării"),
-      body: t("Vânătoarea presupune ore petrecute afară, cu temperaturi variabile Principiul stratificării este simplu: un strat de bază termic, un strat intermediar de lână sau fleece, și haina exterioară Nu face greșeala unui singur strat gros — nu poți adapta temperatura O vestă matlasată sau un gilet de lână între cămașă și haină este soluția britanică clasică, elegantă și eficientă"
+      body: t("Vânătoarea presupune ore petrecute afară, cu temperaturi variabile Principiul stratificării este simplu: un strat de bază termic, un strat intermediar de lână sau fleece, și haina exterioară Nu face greșeala unui singur strat gros - nu poți adapta temperatura O vestă matlasată sau un gilet de lână între cămașă și haină este soluția britanică clasică, elegantă și eficientă"
       ),
     },
     {
-      num: "04",
       title: t("Pantaloni și jambiere"),
-      body: t("Pantalonii plus-fours — cei care se termină sub genunchi și se închid cu o curea — sunt haina autentică a vânătorii britanice Asocierea cu jambiere din lână sau woollen socks înalte este estetică și funcțională: protejează piciorul de vegetație, oferă căldură și se usucă rapid Alternativa modernă sunt pantalonii drepți din tweed sau moleskin, purtați cu bocanci înalți"
+      body: t("Pantalonii plus-fours - cei care se termină sub genunchi și se închid cu o curea - sunt haina autentică a vânătorii britanice Asocierea cu jambiere din lână sau woollen socks înalte este estetică și funcțională: protejează piciorul de vegetație, oferă căldură și se usucă rapid Alternativa modernă sunt pantalonii drepți din tweed sau moleskin, purtați cu bocanci înalți"
       ),
     },
     {
-      num: "05",
       title: t("Încălțăminte: alegerea corectă"),
-      body: t("Bocancii din piele cu talpă de cauciuc sunt standardul — impermeabili, cu gleznă înaltă, cu un gripaj bun pe teren umed Brandurile clasice britanice ca Dubarry, Hunter sau Le Chameau au construit reputații de decenii în teren Evită orice cu talpă netedă sau piele fină Bocancul bun se îngrijește cu ceară de protecție înainte de fiecare ieșire"
+      body: t("Bocancii din piele cu talpă de cauciuc sunt standardul - impermeabili, cu gleznă înaltă, cu un gripaj bun pe teren umed Brandurile clasice britanice ca Dubarry, Hunter sau Le Chameau au construit reputații de decenii în teren Evită orice cu talpă netedă sau piele fină Bocancul bun se îngrijește cu ceară de protecție înainte de fiecare ieșire"
       ),
     },
     {
-      num: "06",
       title: t("Accesorii cu sens"),
-      body: t("Căciula de tweed sau cloth cap este piesa de rezistență — completează ansamblul și protejează capul Mănușile de piele cu căptușeală sunt esențiale în lunile reci O eșarfă de cachemire sau lână merino adaugă căldură și eleganță Cartuș-bandoliera din piele sau textil, dacă o porți vizibil, trebuie să fie de calitate — ea spune la fel de mult despre tine ca și haina"
+      body: t("Căciula de tweed sau cloth cap este piesa de rezistență - completează ansamblul și protejează capul Mănușile de piele cu căptușeală sunt esențiale în lunile reci O eșarfă de cachemire sau lână merino adaugă căldură și eleganță Cartuș-bandoliera din piele sau textil, dacă o porți vizibil, trebuie să fie de calitate - ea spune la fel de mult despre tine ca și haina"
       ),
     },
   ]
@@ -85,16 +79,11 @@ const HuntingGuideTemplate = () => {
         <div className="page-container py-14 small:py-20">
           <div className="grid grid-cols-1 small:grid-cols-2 gap-x-20 gap-y-16 mb-16">
             {sections.slice(0, 2).map((s) => (
-              <div key={s.num}>
-                <div className="flex items-start gap-4 mb-4">
-                  <span className="font-sans text-[10px] text-hunter-gold/50 tracking-[2px] mt-1 shrink-0">
-                    {s.num}
-                  </span>
-                  <h2 className="font-display text-2xl small:text-3xl text-[var(--theme-text)] leading-[1.05]">
-                    {s.title}
-                  </h2>
-                </div>
-                <p className="font-sans text-sm leading-relaxed text-[var(--theme-text-muted)] pl-8">
+              <div key={s.title}>
+                <h2 className="font-display text-2xl small:text-3xl text-[var(--theme-text)] leading-[1.05] mb-4">
+                  {s.title}
+                </h2>
+                <p className="font-sans text-sm leading-relaxed text-[var(--theme-text-muted)]">
                   {s.body}
                 </p>
               </div>
@@ -113,16 +102,11 @@ const HuntingGuideTemplate = () => {
             </div>
             <div className="flex flex-col gap-12">
               {sections.slice(2, 4).map((s) => (
-                <div key={s.num}>
-                  <div className="flex items-start gap-4 mb-4">
-                    <span className="font-sans text-[10px] text-hunter-gold/50 tracking-[2px] mt-1 shrink-0">
-                      {s.num}
-                    </span>
-                    <h2 className="font-display text-2xl small:text-3xl text-[var(--theme-text)] leading-[1.05]">
-                      {s.title}
-                    </h2>
-                  </div>
-                  <p className="font-sans text-sm leading-relaxed text-[var(--theme-text-muted)] pl-8">
+                <div key={s.title}>
+                  <h2 className="font-display text-2xl small:text-3xl text-[var(--theme-text)] leading-[1.05] mb-4">
+                    {s.title}
+                  </h2>
+                  <p className="font-sans text-sm leading-relaxed text-[var(--theme-text-muted)]">
                     {s.body}
                   </p>
                 </div>
@@ -133,16 +117,11 @@ const HuntingGuideTemplate = () => {
           {/* Sections 05–06 */}
           <div className="grid grid-cols-1 small:grid-cols-2 gap-x-20 gap-y-16">
             {sections.slice(4).map((s) => (
-              <div key={s.num}>
-                <div className="flex items-start gap-4 mb-4">
-                  <span className="font-sans text-[10px] text-hunter-gold/50 tracking-[2px] mt-1 shrink-0">
-                    {s.num}
-                  </span>
-                  <h2 className="font-display text-2xl small:text-3xl text-[var(--theme-text)] leading-[1.05]">
-                    {s.title}
-                  </h2>
-                </div>
-                <p className="font-sans text-sm leading-relaxed text-[var(--theme-text-muted)] pl-8">
+              <div key={s.title}>
+                <h2 className="font-display text-2xl small:text-3xl text-[var(--theme-text)] leading-[1.05] mb-4">
+                  {s.title}
+                </h2>
+                <p className="font-sans text-sm leading-relaxed text-[var(--theme-text-muted)]">
                   {s.body}
                 </p>
               </div>

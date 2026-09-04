@@ -33,7 +33,7 @@ export default function CheckoutError({
   return (
     <ErrorContent
       reset={reset}
-      description={t("Nu-ți face griji — dacă ai finalizat plata, comanda ta este în siguranță și vei primi un email de confirmare Poți reîncerca sau reveni la coș")}
+      description={t("Nu-ți face griji - dacă ai finalizat plata, comanda ta este în siguranță și vei primi un email de confirmare Poți reîncerca sau reveni la coș")}
       homeHref="/cos"
       homeLabel={t("Înapoi la coș")}
     />

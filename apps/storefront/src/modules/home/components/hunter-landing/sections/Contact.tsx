@@ -13,7 +13,7 @@ export default function Contact() {
         <div className="contact-layout">
           <div>
             <div className="kicker rv">
-              <span className="kicker-bar"></span>{t("Contact")}
+              {t("Contact")}
             </div>
             <h2 className="sec-title rv">
               {t("Totul începe cu")}

@@ -1,6 +1,6 @@
 "use client"
 
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence, m as motion } from "framer-motion"
 import { useLocale, useTranslations } from "next-intl"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"

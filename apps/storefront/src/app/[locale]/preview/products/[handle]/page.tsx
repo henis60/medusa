@@ -122,7 +122,7 @@ export default async function ProductPreviewPage(props: Props) {
           zIndex: 9000,
         }}
       >
-        {t("PROPOSED — acest produs nu este publicat")}
+        {t("PROPOSED - acest produs nu este publicat")}
       </div>
       <ProductTemplate
         product={product}

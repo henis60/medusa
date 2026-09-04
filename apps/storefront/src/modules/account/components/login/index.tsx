@@ -116,7 +116,7 @@ const Login = ({ setCurrentView, redirectTo }: Props) => {
         </button>
 
         <p className="font-sans text-[11px] text-[var(--theme-text-muted)] mt-4 text-center leading-relaxed">
-          {t("Protejat de reCAPTCHA —")}{" "}
+          {t("Protejat de reCAPTCHA")}{" "}
           <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-hunter-gold transition-colors">{t("Confidențialitate")}</a>
           {" "}&amp;{" "}
           <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-hunter-gold transition-colors">{t("Termeni")}</a>

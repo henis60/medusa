@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef } from "react"
-import { motion, useScroll, useTransform } from "framer-motion"
+import { m as motion, useScroll, useTransform } from "framer-motion"
 import { useTranslations } from "next-intl"
 
 const QuoteBand = () => {

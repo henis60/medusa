@@ -118,10 +118,23 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
         {!standalone ? (
           <LocalizedClientLink
             href="/profil/comenzi"
-            className="font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
+            className="inline-flex items-center gap-1.5 font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
             data-testid="back-to-overview-button"
           >
-            {t("← Înapoi")}
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <polyline points="15 6 9 12 15 18" />
+            </svg>
+            {t("Înapoi")}
           </LocalizedClientLink>
         ) : null}
         <h1 className="font-display text-[28px] small:text-[32px] leading-[1] text-[var(--theme-text)]">

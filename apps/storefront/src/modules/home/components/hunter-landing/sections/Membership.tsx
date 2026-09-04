@@ -34,7 +34,7 @@ export default function Membership() {
     <section className="section mem-sec" id="membership">
       <div className="section-inner">
         <div className="kicker rv">
-          <span className="kicker-bar"></span>{t("Membership")}
+          {t("Membership")}
         </div>
         <h2 className="sec-title rv">
           {t("The Hunter")}

@@ -1,6 +1,6 @@
 "use client"
 
-import { motion, useReducedMotion } from "framer-motion"
+import { m as motion, useReducedMotion } from "framer-motion"
 import { useTranslations } from "next-intl"
 
 export default function Events() {
@@ -53,7 +53,7 @@ export default function Events() {
     <section className="section ev-sec" id="events">
       <div className="section-inner">
         <div className="kicker rv">
-          <span className="kicker-bar"></span>{t("Events")}
+          {t("Events")}
         </div>
         <h2 className="sec-title rv">
           {t("Seri care")}

@@ -98,7 +98,7 @@ const ShippingInfoTab = () => {
   const items = [
     { label: t("Livrare rapidă"), desc: t("Coletul ajunge în 3–5 zile lucrătoare la adresa ta sau la un punct de ridicare") },
     { label: t("Schimburi simple"), desc: t("Nu se potrivește? Schimbăm produsul fără bătăi de cap") },
-    { label: t("Retururi ușoare"), desc: t("Returnează produsul și îți rambursăm banii — fără întrebări") },
+    { label: t("Retururi ușoare"), desc: t("Returnează produsul și îți rambursăm banii - fără întrebări") },
   ]
 
   return (

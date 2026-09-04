@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence, m as motion } from "framer-motion"
 import { useTranslations } from "next-intl"
 import AppointmentDatePicker from "@modules/programare/components/appointment-date-picker"
 import { useRecaptcha } from "@lib/hooks/use-recaptcha"

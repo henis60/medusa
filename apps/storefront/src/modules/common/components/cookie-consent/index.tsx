@@ -2,7 +2,7 @@
 
 import { Link } from "@i18n/navigation"
 import { useEffect, useState } from "react"
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence, m as motion } from "framer-motion"
 import { useTranslations } from "next-intl"
 import CookieConsentBanner from "react-cookie-consent"
 import { useConsent, CONSENT_COOKIE } from "@lib/context/consent-context"

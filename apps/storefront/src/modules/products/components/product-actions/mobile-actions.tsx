@@ -12,7 +12,7 @@ import OptionSelect from "./option-select"
 import { useMemo, useEffect, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 import { createPortal } from "react-dom"
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence, m as motion } from "framer-motion"
 import { useScrollLock } from "@lib/hooks/use-scroll-lock"
 
 type MobileActionsProps = {

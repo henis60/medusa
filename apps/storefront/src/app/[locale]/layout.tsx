@@ -8,6 +8,7 @@ import { routing } from "@i18n/routing"
 import { setRequestLocaleValue } from "@lib/util/request-locale"
 import { serializeJsonLd } from "@lib/util/json-ld"
 import { ThemeProvider } from "../../providers/theme-provider"
+import { LazyMotionProvider } from "../../providers/lazy-motion-provider"
 import { FavoritesProvider } from "@lib/context/favorites-context"
 import { ConsentProvider } from "@lib/context/consent-context"
 import CookieConsent from "@modules/common/components/cookie-consent"
@@ -54,7 +55,7 @@ const cinzel = Cinzel({
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),
   title: {
-    default: "The Hunter House — Return of the Elegant Gentleman",
+    default: "The Hunter House - Return of the Elegant Gentleman",
     // Pages that only set a plain string title (e.g. "Contact") get this
     // suffix automatically; pages building their own full "X | Brand"
     // string (product/category pages) aren't affected — the template only
@@ -160,12 +161,14 @@ export default async function RootLayout({ children, params }: Props) {
           <ChunkErrorGuard />
           <GoogleAnalytics />
           <ThemeProvider>
-            <ConsentProvider>
-              <FavoritesProvider>
-                <main className="relative">{children}</main>
-                <CookieConsent />
-              </FavoritesProvider>
-            </ConsentProvider>
+            <LazyMotionProvider>
+              <ConsentProvider>
+                <FavoritesProvider>
+                  <main className="relative">{children}</main>
+                  <CookieConsent />
+                </FavoritesProvider>
+              </ConsentProvider>
+            </LazyMotionProvider>
           </ThemeProvider>
         </NextIntlClientProvider>
       </body>

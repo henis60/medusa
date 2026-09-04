@@ -34,18 +34,18 @@ export default function Collections() {
   ]
 
   const mtmSteps = [
-    { num: "01", name: t("Consultație"), desc: t("Discutăm stilul, ocaziile, preferințele Primul pas spre costumul care te definește") },
-    { num: "02", name: t("Material"), desc: t("Alegi din colecția noastră de țesături premium – Super 100 până la Super 180, din cele mai bune manufacture europene") },
-    { num: "03", name: t("Măsuri"), desc: t("Luăm toate măsurile necesare Construim tiparul unic pe corpul tău – nu pe o talie standard") },
-    { num: "04", name: t("Fitting"), desc: t("Fitting intermediar pentru ajustări perfecte înainte de finisare Fiecare detaliu, perfect") },
-    { num: "05", name: t("Livrare"), desc: t("Costumul tău gata în 21 de zile Livrat în sacul de protecție The Hunter House") },
+    { name: t("Consultație"), desc: t("Discutăm stilul, ocaziile, preferințele Primul pas spre costumul care te definește") },
+    { name: t("Material"), desc: t("Alegi din colecția noastră de țesături premium – Super 100 până la Super 180, din cele mai bune manufacture europene") },
+    { name: t("Măsuri"), desc: t("Luăm toate măsurile necesare Construim tiparul unic pe corpul tău – nu pe o talie standard") },
+    { name: t("Fitting"), desc: t("Fitting intermediar pentru ajustări perfecte înainte de finisare Fiecare detaliu, perfect") },
+    { name: t("Livrare"), desc: t("Costumul tău gata în 21 de zile Livrat în sacul de protecție The Hunter House") },
   ]
 
   return (
     <section className="section coll-sec" id="collections">
       <div className="section-inner">
         <div className="kicker rv">
-          <span className="kicker-bar"></span>{t("Collections")}
+          {t("Collections")}
         </div>
         <h2 className="sec-title rv">
           {t("Pentru fiecare")}
@@ -129,8 +129,7 @@ export default function Collections() {
           </div>
           <div className="mtm-steps">
             {mtmSteps.map((step) => (
-              <div key={step.num} className="mtm-step">
-                <div className="ms-num">{step.num}</div>
+              <div key={step.name} className="mtm-step">
                 <div className="ms-name">{step.name}</div>
                 <p className="ms-desc">{step.desc}</p>
               </div>

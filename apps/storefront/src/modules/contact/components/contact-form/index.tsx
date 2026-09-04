@@ -189,7 +189,7 @@ export default function ContactForm() {
             {status === "loading" ? t("Se trimite") : t("Trimite mesajul")}
           </button>
           <p className="font-sans text-[9px] text-[var(--theme-text-muted)] leading-relaxed">
-            {t("Protejat de reCAPTCHA —")}{" "}
+            {t("Protejat de reCAPTCHA")}{" "}
             <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-hunter-gold transition-colors">
               {t("Confidențialitate")}
             </a>{" "}

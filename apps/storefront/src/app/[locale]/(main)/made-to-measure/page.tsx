@@ -13,7 +13,7 @@ export async function generateMetadata({
   return {
     title: t("Made to Measure"),
     description: t(
-      "Ce înseamnă un costum Made to Measure — procesul, țesăturile, măsurătorile și diferența față de Ready to Wear Tailoring premium la Hunter House",
+      "Ce înseamnă un costum Made to Measure - procesul, țesăturile, măsurătorile și diferența față de Ready to Wear Tailoring premium la Hunter House",
     ),
   }
 }

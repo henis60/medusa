@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { motion, useMotionValue, animate } from "framer-motion"
+import { m as motion, useMotionValue, animate } from "framer-motion"
 import { useTranslations } from "next-intl"
 
 type Props = {

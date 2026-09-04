@@ -174,7 +174,7 @@ const Newsletter = () => {
                         letterSpacing: "0.5px",
                       }}
                     >
-                      {t("Protejat de reCAPTCHA —")}{" "}
+                      {t("Protejat de reCAPTCHA")}{" "}
                       <a
                         href="https://policies.google.com/privacy"
                         target="_blank"

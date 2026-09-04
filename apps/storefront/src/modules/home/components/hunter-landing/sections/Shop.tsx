@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 import { Link } from "@i18n/navigation"
-import { motion } from "framer-motion"
+import { m as motion } from "framer-motion"
 import { useTranslations } from "next-intl"
 
 type Product = {
@@ -164,7 +164,7 @@ export default function Shop() {
       <div className="section-inner">
         <div className="shop-header">
           <div className="kicker rv">
-            <span className="kicker-bar"></span>{t("Online Shop")}
+            {t("Online Shop")}
           </div>
           <h2 className="shop-hl rv">
             {t("Cămăși")} <br />
