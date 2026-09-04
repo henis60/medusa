@@ -43,7 +43,7 @@ const MadeToMeasureTemplate = () => {
   ]
 
   return (
-    <div className="bg-hunter-dark2 text-hunter-ivory w-full min-h-screen">
+    <div className="bg-[var(--theme-bg)] w-full min-h-screen">
       {/* Hero */}
       <div className="relative w-full h-[55vh] small:h-[70vh] overflow-hidden">
         <Image
@@ -56,7 +56,7 @@ const MadeToMeasureTemplate = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/20 to-black/75" />
         <div className="absolute bottom-0 left-0 right-0 page-container pb-10 small:pb-14">
           <div className="mb-4">
-            <span className="font-sans text-[10px] uppercase tracking-[5px] text-hunter-gold/70">
+            <span className="font-sans text-[10px] uppercase tracking-[5px] text-white/60">
               {t("The Hunter House · Tailoring")}
             </span>
           </div>
@@ -68,21 +68,21 @@ const MadeToMeasureTemplate = () => {
 
       {/* Intro */}
       <div className="page-container py-12 small:py-16">
-        <p className="max-w-xl font-serif text-lg small:text-xl text-hunter-ivory/70 leading-relaxed">
+        <p className="max-w-xl font-serif text-lg small:text-xl text-[var(--theme-text-muted)] leading-relaxed">
           {t("O experiență de croitorie personalizată, în care fiecare costum este creat după măsurătorile, stilul și preferințele tale Alegi materialele, detaliile și finisajele, iar noi construim o piesă cu o potrivire impecabilă și un caracter unic")}
         </p>
       </div>
 
       {/* Sections 01–02 */}
-      <div className="border-t border-hunter-gold-d/20">
+      <div className="border-t border-[var(--theme-border)]">
         <div className="page-container py-14 small:py-20">
           <div className="grid grid-cols-1 small:grid-cols-2 gap-x-20 gap-y-16">
             {sections.slice(0, 2).map((s) => (
               <div key={s.title}>
-                <h2 className="font-display text-2xl small:text-3xl text-hunter-ivory leading-[1.05] mb-4">
+                <h2 className="font-display text-2xl small:text-3xl text-[var(--theme-text)] leading-[1.05] mb-4">
                   {s.title}
                 </h2>
-                <p className="font-serif text-base leading-relaxed text-hunter-ivory/65">
+                <p className="font-sans text-sm leading-relaxed text-[var(--theme-text-muted)]">
                   {s.body}
                 </p>
               </div>
@@ -118,10 +118,10 @@ const MadeToMeasureTemplate = () => {
           <div className="flex flex-col gap-12">
             {sections.slice(2, 4).map((s) => (
               <div key={s.title}>
-                <h2 className="font-display text-2xl small:text-3xl text-hunter-ivory leading-[1.05] mb-4">
+                <h2 className="font-display text-2xl small:text-3xl text-[var(--theme-text)] leading-[1.05] mb-4">
                   {s.title}
                 </h2>
-                <p className="font-serif text-base leading-relaxed text-hunter-ivory/65">
+                <p className="font-sans text-sm leading-relaxed text-[var(--theme-text-muted)]">
                   {s.body}
                 </p>
               </div>
@@ -141,10 +141,10 @@ const MadeToMeasureTemplate = () => {
         <div className="grid grid-cols-1 small:grid-cols-2 gap-x-20 gap-y-16">
           {sections.slice(4).map((s) => (
             <div key={s.title}>
-              <h2 className="font-display text-2xl small:text-3xl text-hunter-ivory leading-[1.05] mb-4">
+              <h2 className="font-display text-2xl small:text-3xl text-[var(--theme-text)] leading-[1.05] mb-4">
                 {s.title}
               </h2>
-              <p className="font-serif text-base leading-relaxed text-hunter-ivory/65">
+              <p className="font-sans text-sm leading-relaxed text-[var(--theme-text-muted)]">
                 {s.body}
               </p>
             </div>
@@ -153,13 +153,13 @@ const MadeToMeasureTemplate = () => {
       </div>
 
       {/* CTA */}
-      <div className="border-t border-hunter-gold-d/20">
+      <div className="border-t border-[var(--theme-border)]">
         <div className="page-container py-14 flex flex-col small:flex-row items-start small:items-center justify-between gap-8">
           <div>
-            <p className="font-display text-3xl small:text-4xl text-hunter-ivory leading-[1.05] mb-2">
+            <p className="font-display text-3xl small:text-4xl text-[var(--theme-text)] leading-[1.05] mb-2">
               {t("Începe cu o conversație")}
             </p>
-            <p className="font-serif text-base text-hunter-ivory/65 max-w-md">
+            <p className="font-sans text-sm text-[var(--theme-text-muted)] max-w-md">
               {t("Prima întâlnire este fără obligații Îți arătăm atelierul, țesăturile și îți explicăm procesul pas cu pas")}
             </p>
           </div>
