@@ -33,8 +33,6 @@ export async function generateMetadata({
       "automobile de colecție România",
       "Lamborghini Centenario Tractor",
       "eveniment Baia Mare Maramureș",
-      "concert Jazz & Blues Gray Bliss Band Cluj-Napoca",
-      "Mihail invitat special",
       "eveniment lifestyle Maramureș",
       "The Hunter House",
       "made to measure",

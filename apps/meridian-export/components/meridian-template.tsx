@@ -12,38 +12,6 @@ import SponsorMarquee from "./sponsor-marquee";
 import ThemeTimeline from "./theme-timeline";
 import { montigny } from "./fonts";
 
-const TICKET_TIERS = [
-  {
-    name: "Pre Sale",
-    price: "100 RON",
-    oldPrice: "190 RON",
-    note: "",
-    extraNote: "Opțional: pahar de prosecco și apă la intrare",
-    extraNotePrice: "25 RON",
-    stages: [] as { name: string; price: string }[],
-    includes: [
-      "Acces la expoziția celor zece automobile",
-      "Concert Jazz & Blues cu Gray Bliss Band din Cluj-Napoca și invitatul special Mihail",
-      "Expoziția de pictură și sculptură",
-    ],
-  },
-  {
-    name: "VIP",
-    price: "2.800 RON",
-    note: "Număr limitat",
-    extraNote: "",
-    stages: [] as { name: string; price: string }[],
-    includes: [
-      "Acces complet la întregul eveniment",
-      "Champagne Grand Cru Blanc de Blancs",
-      "Selecție de caviar & stridii proaspete",
-      "Bar dedicat de whiskey, cognac și vinuri",
-      "Catering coordonat de un sommelier cu 3 stele Michelin",
-      "Prezentarea celor trei colecții The Hunter House",
-    ],
-  },
-];
-
 const eyebrowRow = {
   display: "flex",
   alignItems: "center",
@@ -169,10 +137,8 @@ export default function MeridianTemplate() {
                   margin: "22px 0 0",
                 }}
               >
-                Zece automobile în cinci perechi clasic–contemporan, un concert
-                Jazz & Blues în aer liber cu Gray Bliss Band din Cluj-Napoca
-                și invitatul special Mihail, o
-                expoziție de pictură și sculptură și trei colecții noi{" "}
+                Zece automobile în cinci perechi clasic–contemporan și trei
+                colecții noi{" "}
                 <strong style={{ fontStyle: "italic", fontWeight: 600 }}>
                   The Hunter House
                 </strong>
@@ -188,7 +154,7 @@ export default function MeridianTemplate() {
                 }}
               >
                 <SmoothAnchorLink
-                  href="#program"
+                  href="#tema"
                   className="thm-btn-solid thm-hero-cta"
                   style={{
                     ...ctaBase,
@@ -198,7 +164,7 @@ export default function MeridianTemplate() {
                     transition: "background .3s",
                   }}
                 >
-                  Vezi programul{" "}
+                  Vezi tema{" "}
                   <span style={{ fontSize: 15, color: "#0d1f17" }}>→</span>
                 </SmoothAnchorLink>
               </div>
@@ -460,260 +426,6 @@ export default function MeridianTemplate() {
       >
         <ProgramRows />
       </section>
-
-      {/* Bilete — temporarily disabled entirely, entry is free. */}
-      {false && (
-      <section
-        style={{
-          padding: "clamp(56px,9vw,96px) var(--pad)",
-          background: "var(--dark2)",
-        }}
-      >
-        <Reveal>
-          <div style={{ maxWidth: 1360, margin: "0 auto" }}>
-            <div style={eyebrowRow}>
-              <EyebrowLine style={eyebrowRule} />
-              <span style={eyebrowLabel}>Bilete</span>
-            </div>
-            <div
-              className="thm-ticket-tiers"
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                alignItems: "start",
-                columnGap: "clamp(80px, 16vw, 280px)",
-                rowGap: "clamp(28px, 4vw, 72px)",
-                margin: "0 0 40px",
-              }}
-            >
-              {TICKET_TIERS.map((tier) => (
-                <div key={tier.name}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "baseline",
-                      gap: 16,
-                      flexWrap: "wrap",
-                      marginBottom: 8,
-                      minHeight: 40,
-                    }}
-                  >
-                    {tier.oldPrice ? (
-                      <span
-                        style={{
-                          fontFamily: "var(--pd)",
-                          fontSize: "clamp(14px,1.4vw,17px)",
-                          fontStyle: "italic",
-                          textDecoration: "line-through",
-                          color: "rgba(245,240,232,0.4)",
-                        }}
-                      >
-                        Standard {tier.oldPrice}
-                      </span>
-                    ) : null}
-                    <span
-                      style={{
-                        fontFamily: "var(--pd)",
-                        fontSize: "clamp(22px,2.2vw,28px)",
-                        fontWeight: 400,
-                        lineHeight: 1.2,
-                        color: "var(--ivory)",
-                      }}
-                    >
-                      {tier.name}
-                    </span>
-                    <span
-                      style={{
-                        fontFamily: "var(--pd)",
-                        fontSize: "clamp(18px,1.8vw,22px)",
-                        fontStyle: "italic",
-                        color: "#c9a84c",
-                      }}
-                    >
-                      {tier.price}
-                    </span>
-                    {tier.note ? (
-                      <span
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          alignSelf: "center",
-                          fontFamily: "var(--rl)",
-                          fontSize: 9,
-                          lineHeight: 1,
-                          letterSpacing: "0.15em",
-                          textTransform: "uppercase",
-                          color: "rgba(201,168,76,0.6)",
-                          border: "1px solid rgba(201,168,76,0.35)",
-                          borderRadius: 2,
-                          padding: "4px 6px 3px",
-                        }}
-                      >
-                        {tier.note}
-                      </span>
-                    ) : null}
-                  </div>
-                  {tier.extraNote ? (
-                    <p
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        fontFamily: "var(--cg)",
-                        fontSize: 14,
-                        fontStyle: "italic",
-                        fontWeight: 500,
-                        color: "rgba(245,240,232,0.9)",
-                        margin: "0 0 12px",
-                      }}
-                    >
-                      <svg
-                        aria-hidden="true"
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#c9a84c"
-                        strokeWidth="1.5"
-                        style={{ flex: "0 0 auto" }}
-                      >
-                        <circle cx="12" cy="12" r="9" />
-                        <path d="M12 8v8M8 12h8" strokeLinecap="round" />
-                      </svg>
-                      {tier.extraNote}
-                      {tier.extraNotePrice ? (
-                        <span
-                          style={{
-                            fontSize: 17,
-                            fontWeight: 600,
-                            color: "#c9a84c",
-                          }}
-                        >
-                          {tier.extraNotePrice}
-                        </span>
-                      ) : null}
-                    </p>
-                  ) : null}
-                  {tier.stages.length > 0 ? (
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 8,
-                        margin: "0 0 16px",
-                      }}
-                    >
-                      {tier.stages.map((stage) => (
-                        <div
-                          key={stage.name}
-                          style={{
-                            display: "flex",
-                            alignItems: "baseline",
-                            gap: 10,
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontFamily: "var(--cg)",
-                              fontSize: 12,
-                              fontStyle: "italic",
-                              fontWeight: 300,
-                              color: "rgba(245,240,232,0.4)",
-                            }}
-                          >
-                            {stage.name}
-                          </span>
-                          <span
-                            style={{
-                              fontFamily: "var(--cg)",
-                              fontSize: 12,
-                              fontStyle: "italic",
-                              fontWeight: 300,
-                              color: "rgba(201,168,76,0.45)",
-                            }}
-                          >
-                            {stage.price}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      marginTop:
-                        !tier.extraNote && tier.stages.length === 0 ? 8 : 0,
-                      gap: 10,
-                    }}
-                  >
-                    {tier.includes.map((item) => (
-                      <div
-                        key={item}
-                        style={{
-                          display: "flex",
-                          alignItems: "flex-start",
-                          gap: 10,
-                        }}
-                      >
-                        <span
-                          aria-hidden="true"
-                          style={{
-                            flex: "0 0 auto",
-                            display: "inline-flex",
-                            justifyContent: "center",
-                            width: 14,
-                            fontSize: 5,
-                            color: "#8b6914",
-                            marginTop: 6,
-                          }}
-                        >
-                          ◆
-                        </span>
-                        <span
-                          style={{
-                            fontFamily: "var(--cg)",
-                            fontSize: 13,
-                            fontStyle: "italic",
-                            fontWeight: 300,
-                            lineHeight: 1.6,
-                            color: "rgba(245,240,232,0.6)",
-                          }}
-                        >
-                          {item}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div
-              className="thm-hero-cta-row"
-              style={{ display: "flex", gap: 16, flexWrap: "wrap" }}
-            >
-              <a
-                href="https://www.iabilet.ro/bilete-baia-mare-the-hunter-meridian-130573"
-                target="_blank"
-                rel="noopener"
-                className="thm-btn-solid thm-hero-cta"
-                style={{
-                  ...ctaBase,
-                  background: "var(--gold)",
-                  color: "#0d1f17",
-                  justifyContent: "center",
-                  transition: "background .3s",
-                }}
-              >
-                Cumpără bilete{" "}
-                <span style={{ fontSize: 15, color: "#0d1f17" }}>→</span>
-              </a>
-            </div>
-          </div>
-        </Reveal>
-      </section>
-      )}
 
       {/* Locația */}
       <section id="locatia" style={{ background: "var(--dark)" }}>

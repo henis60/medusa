@@ -13,13 +13,6 @@ const ROWS = [
     isCollections: false,
   },
   {
-    key: "row2",
-    src: "/meridian/thm-program-2.webp",
-    objectPositionY: "51%",
-    isCollections: false,
-  },
-  // "row3visual" (Artă vizuală) row — temporarily disabled.
-  {
     key: "row3",
     src: "/meridian/thm-program-4.webp",
     objectPositionY: "20%",

@@ -14,23 +14,6 @@ const ROWS = [
     objectPositionY: "51%",
   },
   {
-    kicker: "Concert live",
-    title: "Gray Bliss Band și ",
-    titleEm: "invitatul special Mihail",
-    body: "Concert Jazz & Blues susținut de Gray Bliss Band din Cluj-Napoca și de invitatul special Mihail.",
-    src: "/meridian/thm-program-2.webp",
-    objectPositionY: "51%",
-  },
-  // { kicker: "Artă vizuală" } row — temporarily disabled.
-  // {
-  //   kicker: "Artă vizuală",
-  //   title: "Pictură și ",
-  //   titleEm: "sculptură",
-  //   body: "Colonia Pictorilor este o locație cu tradiție în artă. Lucrările sunt integrate în parcursul evenimentului nostru.",
-  //   src: "/meridian/thm-program-3.webp",
-  //   objectPositionY: "50%",
-  // },
-  {
     kicker: "Colecțiile noi",
     title: "Prezentarea ținutelor",
     titleEm: "",
