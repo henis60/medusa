@@ -70,7 +70,7 @@ export const listProducts = async ({
           offset,
           region_id: region?.id,
           fields:
-            "*variants.calculated_price,+variants.inventory_quantity,*variants.images,*variants.options,+variants.metadata,*options,*options.values,+metadata,+tags,",
+            "*variants.calculated_price,+variants.inventory_quantity,*variants.images,*variants.options,+variants.metadata,+variants.variant_rank,*options,*options.values,+metadata,+tags,",
           ...queryParams,
         },
         next,
@@ -222,8 +222,10 @@ export const getProductByHandle = async (
         fields:
           // *variants.options / *options must match listProducts — without
           // them the first render can't map a selection back to a variant,
-          // so the picker always resolves to variants[0].
-          "*variants.calculated_price,+variants.inventory_quantity,*variants.images,*variants.options,*options,*options.values,+metadata,+tags,*categories",
+          // so the picker always resolves to variants[0]. variant_rank is
+          // needed because the API doesn't itself sort the variants relation
+          // by it — see colorOrdered() in option-select.tsx.
+          "*variants.calculated_price,+variants.inventory_quantity,*variants.images,*variants.options,+variants.variant_rank,*options,*options.values,+metadata,+tags,*categories",
       },
       next: { tags: ["products"], revalidate: 3600 },
       cache: "force-cache",

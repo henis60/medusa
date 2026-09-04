@@ -44,11 +44,17 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
 
   const rawValues = (option.values ?? []).map((v) => v.value)
 
-  // Colors follow variant creation order (matches image grouping), since the
-  // raw option.values order is not consistent across store/preview APIs.
+  // Colors follow variant_rank (matches image grouping — see the Galerie
+  // media widget, which re-ranks variants to follow drag-reordered images),
+  // since the raw option.values order is not consistent across store/preview
+  // APIs. The API does not itself sort the `variants` relation by rank, so it
+  // must be sorted here rather than trusting array order.
   const colorOrdered = () => {
+    const rankedVariants = [...(variants ?? [])].sort(
+      (a, b) => (a.variant_rank ?? 0) - (b.variant_rank ?? 0)
+    )
     const seen: string[] = []
-    for (const v of variants ?? []) {
+    for (const v of rankedVariants) {
       const val = v.options?.find((o) => o.option_id === option.id)?.value
       if (val && !seen.includes(val)) seen.push(val)
     }
