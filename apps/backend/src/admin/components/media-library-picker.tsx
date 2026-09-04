@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  Badge,
   Button,
   Checkbox,
   Heading,
@@ -28,6 +29,9 @@ export default function MediaLibraryPicker({
   const [convert, setConvert] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [selectedUrls, setSelectedUrls] = useState<string[]>([]);
+  const [lastUploadedUrls, setLastUploadedUrls] = useState<Set<string>>(
+    new Set(),
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
@@ -40,9 +44,10 @@ export default function MediaLibraryPicker({
     if (!files.length) return;
     setUploading(true);
     try {
-      await uploadFiles(files, convert, "/admin/media-library", {
+      const urls = await uploadFiles(files, convert, "/admin/media-library", {
         folder: prefix.replace(/\/$/, ""),
       });
+      setLastUploadedUrls(new Set(urls));
       await queryClient.invalidateQueries({ queryKey: ["media-library-picker"] });
       toast.success(`${files.length} imagini încărcate`);
     } catch (err: any) {
@@ -204,6 +209,7 @@ export default function MediaLibraryPicker({
               ))}
             {(data?.assets ?? []).map((asset) => {
               const selected = selectedUrls.includes(asset.url);
+              const justUploaded = lastUploadedUrls.has(asset.url);
               return (
                 <button
                   key={asset.key}
@@ -213,7 +219,9 @@ export default function MediaLibraryPicker({
                   className={`aspect-square rounded border overflow-hidden transition-shadow ${
                     selected
                       ? "border-ui-border-interactive shadow-outline-interactive"
-                      : "border-ui-border-base hover:ring-2 hover:ring-ui-border-interactive"
+                      : justUploaded
+                        ? "border-ui-fg-positive ring-2 ring-ui-fg-positive"
+                        : "border-ui-border-base hover:ring-2 hover:ring-ui-border-interactive"
                   }`}
                 >
                   <div className="relative w-full h-full">
@@ -222,6 +230,13 @@ export default function MediaLibraryPicker({
                       alt={asset.alt_text ?? ""}
                       className="w-full h-full object-cover"
                     />
+                    {justUploaded && !selected && (
+                      <div className="absolute top-1 left-1">
+                        <Badge size="2xsmall" color="green">
+                          Nou
+                        </Badge>
+                      </div>
+                    )}
                     {selected && (
                       <div className="absolute inset-0 bg-black/20 flex items-start justify-end p-1">
                         <div className="bg-ui-bg-base rounded-full w-6 h-6 flex items-center justify-center text-ui-fg-interactive">
