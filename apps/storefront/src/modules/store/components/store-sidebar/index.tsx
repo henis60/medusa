@@ -34,8 +34,7 @@ const isAlwaysOpen = (category: HttpTypes.StoreProductCategory) => {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2.5 mb-4">
-      <span className="h-px w-5 bg-hunter-gold/60" />
+    <div className="mb-4">
       <p className="font-sans text-[9px] uppercase tracking-[4px] text-[var(--theme-text-muted)]">
         {children}
       </p>

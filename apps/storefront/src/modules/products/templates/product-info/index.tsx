@@ -13,7 +13,6 @@ const ProductInfo = ({ product, action }: ProductInfoProps) => {
     <div id="product-info" className="flex flex-col gap-y-4">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 flex-wrap min-w-0">
-          <span className="h-px w-5 bg-hunter-gold/60 shrink-0" />
           {product.collection ? (
             <LocalizedClientLink
               href={`/collections/${product.collection.handle}`}

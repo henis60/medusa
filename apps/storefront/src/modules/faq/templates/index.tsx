@@ -117,8 +117,7 @@ const FAQTemplate = () => {
       />
       {/* Header */}
       <div className="page-container pt-6 pb-5">
-        <div className="flex items-center gap-3 mb-3">
-          <span className="h-px w-8 bg-hunter-gold" />
+        <div className="mb-3">
           <span className="font-sans text-[10px] uppercase tracking-[5px] text-[var(--theme-text-muted)]">
             {t("Ajutor")}
           </span>

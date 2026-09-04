@@ -55,8 +55,7 @@ const WeddingGuideTemplate = () => {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/20 to-black/75" />
         <div className="absolute bottom-0 left-0 right-0 page-container pb-10 small:pb-14">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="h-px w-8 bg-hunter-gold" />
+          <div className="mb-4">
             <span className="font-sans text-[10px] uppercase tracking-[5px] text-white/60">
               {t("The Hunter House · Tailoring")}
             </span>
