@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Badge,
   Button,
@@ -36,10 +36,25 @@ export default function MediaLibraryPicker({
   const folderInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const {
+    data,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ["media-library-picker", q, prefix],
-    queryFn: () => fetchMediaAssets({ limit: 60, q: q || undefined, prefix }),
+    queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
+      fetchMediaAssets({ limit: 60, q: q || undefined, prefix, cursor: pageParam }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   });
+
+  // Folders only ever appear on the single page that first reaches their
+  // prefix (S3's delimiter grouping rolls up everything past it), so
+  // flattening across pages can't duplicate one — safe to concat as-is.
+  const assets = data?.pages.flatMap((p) => p.assets) ?? [];
+  const folders = data?.pages.flatMap((p) => p.folders) ?? [];
 
   const handleUpload = async (files: File[]) => {
     if (!files.length) return;
@@ -260,14 +275,12 @@ export default function MediaLibraryPicker({
         </div>
         <div className="flex-1 overflow-y-auto p-4">
           {isLoading && <Text className="text-ui-fg-muted">Se încarcă...</Text>}
-          {!isLoading &&
-            (data?.assets.length ?? 0) === 0 &&
-            (data?.folders.length ?? 0) === 0 && (
-              <Text className="text-ui-fg-muted">Nicio imagine găsită.</Text>
-            )}
+          {!isLoading && assets.length === 0 && folders.length === 0 && (
+            <Text className="text-ui-fg-muted">Nicio imagine găsită.</Text>
+          )}
           <div className="grid grid-cols-6 gap-3">
             {!q &&
-              (data?.folders ?? []).map((folder) => (
+              folders.map((folder) => (
                 <button
                   key={folder}
                   onClick={() => enterFolder(folder)}
@@ -279,7 +292,7 @@ export default function MediaLibraryPicker({
                   </Text>
                 </button>
               ))}
-            {(data?.assets ?? []).map((asset) => {
+            {assets.map((asset) => {
               const selected = selectedUrls.includes(asset.url);
               const justUploaded = lastUploadedUrls.has(asset.url);
               return (
@@ -321,6 +334,18 @@ export default function MediaLibraryPicker({
               );
             })}
           </div>
+          {hasNextPage && (
+            <div className="flex justify-center pt-4">
+              <Button
+                size="small"
+                variant="secondary"
+                onClick={() => fetchNextPage()}
+                isLoading={isFetchingNextPage}
+              >
+                Încarcă mai multe
+              </Button>
+            </div>
+          )}
         </div>
         <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-ui-border-base">
           <Text size="small" className="text-ui-fg-muted">
