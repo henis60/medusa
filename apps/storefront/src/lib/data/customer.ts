@@ -152,13 +152,13 @@ export async function login(_currentState: unknown, formData: FormData) {
   try {
     const token = await sdk.auth.login("customer", "emailpass", { email, password })
 
-    // The SDK only rejects on a hard failure (network/5xx). A guest customer
-    // (or any identity without a working emailpass credential) resolves
-    // successfully but with a non-string result (e.g. a verification/MFA
-    // payload) instead of a token — treat that the same as bad credentials
-    // rather than silently "logging in" with no token and no error shown.
+    // emailpass never actually resolves with a non-string result (that shape
+    // only exists for SSO/MFA/verification providers, which this backend
+    // doesn't use) — this is just a defensive guard against silently
+    // "logging in" with no token and no error shown if that ever changes.
+    // Not a credentials problem, so use the generic system-error message.
     if (typeof token !== "string") {
-      return "Email sau parolă incorectă."
+      return "A apărut o eroare. Te rugăm să încerci din nou mai târziu."
     }
 
     await setAuthToken(token)
@@ -168,7 +168,14 @@ export async function login(_currentState: unknown, formData: FormData) {
     if (isRateLimitError(error)) {
       return "Prea multe încercări. Te rugăm să revii peste câteva minute."
     }
-    return "Email sau parolă incorectă."
+    // A 401 here always means bad credentials — including a guest-checkout
+    // email, which has no password set and fails the exact same way as an
+    // unknown email. Anything else (network failure, 5xx) is a real system
+    // error and must say so, not blame the user's email/password.
+    if ((error as { status?: number })?.status === 401) {
+      return "Email sau parolă incorectă."
+    }
+    return "A apărut o eroare. Te rugăm să încerci din nou mai târziu."
   }
 
   // Cart transfer is best-effort: the cart-mismatch handler retries it silently
