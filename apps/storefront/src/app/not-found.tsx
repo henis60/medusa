@@ -11,7 +11,16 @@
 // hydration error #310, since this file has no root layout above it), so
 // don't repeat that; leave the Link as-is.
 import "styles/globals.css"
+import type { Metadata } from "next"
+import { getBaseURL } from "@lib/util/env"
 import NotFoundContent from "@modules/common/components/not-found"
+
+// This route sits outside the [locale] layout tree (see note below), so it
+// doesn't inherit [locale]/layout.tsx's metadataBase — without its own,
+// Next falls back to localhost:8080 for any OG/Twitter image resolution.
+export const metadata: Metadata = {
+  metadataBase: new URL(getBaseURL()),
+}
 
 // next-intl's build plugin (next.config.js's withNextIntl) wraps every
 // server-rendered page app-wide — including this one, despite it having
