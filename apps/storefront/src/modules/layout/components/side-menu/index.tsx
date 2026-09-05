@@ -178,7 +178,7 @@ function SubmenuHeader({
       <button
         type="button"
         onClick={onBack}
-        className="inline-flex items-center gap-1.5 font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
+        className="inline-flex items-end gap-1.5 font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
       >
         <svg
           width="18"

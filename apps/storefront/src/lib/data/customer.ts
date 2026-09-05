@@ -150,18 +150,25 @@ export async function login(_currentState: unknown, formData: FormData) {
   const password = formData.get("password") as string
 
   try {
-    await sdk.auth
-      .login("customer", "emailpass", { email, password })
-      .then(async (token) => {
-        await setAuthToken(token as string)
-        const customerCacheTag = await getCacheTag("customers")
-        revalidateTag(customerCacheTag)
-      })
+    const token = await sdk.auth.login("customer", "emailpass", { email, password })
+
+    // The SDK only rejects on a hard failure (network/5xx). A guest customer
+    // (or any identity without a working emailpass credential) resolves
+    // successfully but with a non-string result (e.g. a verification/MFA
+    // payload) instead of a token — treat that the same as bad credentials
+    // rather than silently "logging in" with no token and no error shown.
+    if (typeof token !== "string") {
+      return "Email sau parolă incorectă."
+    }
+
+    await setAuthToken(token)
+    const customerCacheTag = await getCacheTag("customers")
+    revalidateTag(customerCacheTag)
   } catch (error) {
     if (isRateLimitError(error)) {
       return "Prea multe încercări. Te rugăm să revii peste câteva minute."
     }
-    return String(error)
+    return "Email sau parolă incorectă."
   }
 
   // Cart transfer is best-effort: the cart-mismatch handler retries it silently

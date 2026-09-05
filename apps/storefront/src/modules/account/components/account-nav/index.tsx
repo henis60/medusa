@@ -95,7 +95,7 @@ const MobileNav = ({ route, t }: { route: string; t: NavT }) => {
         <div>
           <LocalizedClientLink
             href={backTarget(route)}
-            className="inline-flex items-center gap-2 small:py-3 small:-my-3 small:px-3 small:-mx-3 small:px-3 small:-mx-3 font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-[var(--theme-gold)] active:text-[var(--theme-gold)] transition-colors"
+            className="inline-flex items-end gap-2 small:py-3 small:-my-3 small:px-3 small:-mx-3 small:px-3 small:-mx-3 font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-[var(--theme-gold)] active:text-[var(--theme-gold)] transition-colors"
             data-testid="account-back-link"
           >
             <svg

@@ -48,7 +48,7 @@ const ProductTemplate = async ({
       >
         <LocalizedClientLink
           href="/ready-to-wear"
-          className="inline-flex items-center gap-2 text-[var(--theme-text-muted)] hover:text-[var(--theme-gold)] transition-colors font-sans text-[11px] uppercase tracking-[3px]"
+          className="inline-flex items-end gap-2 text-[var(--theme-text-muted)] hover:text-[var(--theme-gold)] transition-colors font-sans text-[11px] uppercase tracking-[3px]"
         >
           <svg
             width="18"

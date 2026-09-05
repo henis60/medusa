@@ -29,7 +29,7 @@ const QuoteBand = () => {
           <br />
           {t("Înseamnă să fii")} <strong>{t("memorat")}</strong>&rdquo;
         </p>
-        <div className="band-source">&mdash; {t("The Hunter House")} &mdash;</div>
+        <div className="band-source">{t("The Hunter House")}</div>
       </div>
     </div>
   )

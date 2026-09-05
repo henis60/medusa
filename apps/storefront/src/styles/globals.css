@@ -332,7 +332,7 @@ body.hunter-landing-active::before {
   .hero-content {
     flex: 1;
     justify-content: space-between;
-    padding-top: clamp(90px, 22vh, 140px);
+    padding-top: clamp(120px, 28vh, 180px);
     padding-bottom: clamp(20px, 5vh, 48px);
   }
   .hero-top-group {
@@ -817,10 +817,6 @@ body.hunter-landing-active::before {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-.mqgem {
-  font-size: 6px;
-  opacity: 0.35;
 }
 @keyframes mq {
   from {

@@ -122,7 +122,7 @@ export default function Collections() {
           <div className="mtm-inline-header">
             <div className="mtm-tag">{t("Made to measure")}</div>
             <h3 className="mtm-inline-title">
-              {t("Costumul tău nu se găsește –")}
+              {t("Costumul tău nu se găsește")}
               <br />
               <em>{t("se construiește")}</em>
             </h3>

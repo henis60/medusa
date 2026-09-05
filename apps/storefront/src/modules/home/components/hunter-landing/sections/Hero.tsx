@@ -2,21 +2,13 @@
 import { useEffect, useRef, useState } from "react"
 // `m` (not `motion`) + the root LazyMotionProvider ([locale]/layout.tsx): the
 // animation engine loads asynchronously instead of shipping in the initial JS.
-import {
-  m as motion,
-  useReducedMotion,
-  useScroll,
-  useTransform,
-} from "framer-motion"
+import { m as motion, useScroll, useTransform } from "framer-motion"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { useTranslations } from "next-intl"
-
-const ease = [0.23, 1, 0.32, 1] as const
 
 const Hero = () => {
   const t = useTranslations("home")
   const heroRef = useRef<HTMLElement>(null)
-  const reduced = useReducedMotion()
   const [marqueePaused, setMarqueePaused] = useState(false)
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -95,32 +87,14 @@ const Hero = () => {
             </div>
           </div>
 
-          <motion.div
-            className="orn"
-            initial={reduced ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease, delay: 0.72 }}
-          >
-            <div className="orn-line" />
-            <div className="orn-gem" />
-            <div className="orn-line r" />
-          </motion.div>
-
-          <div>
-            <span className="eyebrow-text">{t("online shop")}</span>
-          </div>
         </div>
         {/* end hero-top-group */}
 
-        <motion.div
-          initial={reduced ? false : { opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease, delay: 1.1 }}
-        >
+        <div>
           <LocalizedClientLink href="/ready-to-wear" className="hero-cta">
             <span className="hero-cta-text">{t("Explorează Colecția")}</span>
           </LocalizedClientLink>
-        </motion.div>
+        </div>
       </div>
 
       <div
@@ -142,7 +116,7 @@ const Hero = () => {
         >
           {items.map((label, i) => (
             <div className="mqitem" key={i}>
-              {label} <span className="mqgem">◆</span>
+              {label}
             </div>
           ))}
         </div>

@@ -118,7 +118,7 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
         {!standalone ? (
           <LocalizedClientLink
             href="/profil/comenzi"
-            className="inline-flex items-center gap-1.5 font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
+            className="inline-flex items-end gap-1.5 font-sans text-[9px] uppercase tracking-[3px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
             data-testid="back-to-overview-button"
           >
             <svg

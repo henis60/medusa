@@ -136,7 +136,7 @@ export default function MeridianTemplate() {
                 }}
               >
                 {t(
-                  "Meridianul pe care eleganța Vestului își găsește rădăcini în Est."
+                  "Meridianul pe care eleganța Vestului își găsește rădăcini în Est"
                 )}
               </p>
               <p
@@ -151,7 +151,7 @@ export default function MeridianTemplate() {
                 }}
               >
                 {t(
-                  "Zece automobile în cinci perechi clasic–contemporan și trei colecții noi The Hunter House, într-o singură zi."
+                  "Zece automobile în cinci perechi clasic–contemporan și trei colecții noi The Hunter House, într-o singură zi"
                 )}
               </p>
               <div
@@ -221,7 +221,7 @@ export default function MeridianTemplate() {
                 >
                   {t("O tradiție")}{" "}
                   <em style={{ fontStyle: "italic", color: "#c9a84c" }}>
-                    {t("în devenire.")}
+                    {t("în devenire")}
                   </em>
                 </h2>
                 <p
@@ -277,7 +277,7 @@ export default function MeridianTemplate() {
                     maxWidth: "40ch",
                   }}
                 >
-                  {t("Un meridian unește lumile și le conectează.")}
+                  {t("Un meridian unește lumile și le conectează")}
                 </blockquote>
               </div>
               <div
@@ -331,7 +331,7 @@ export default function MeridianTemplate() {
               }}
             >
               {t(
-                "Zece automobile, cinci perechi, aceleași mărci expuse față în față."
+                "Zece automobile, cinci perechi, aceleași mărci expuse față în față"
               )}
             </p>
           </Reveal>
@@ -622,7 +622,7 @@ export default function MeridianTemplate() {
                 }}
               >
                 {t(
-                  "Ești interesat de mai multe detalii sau de un parteneriat cu The Hunter Meridian? Scrie-ne și îți răspundem în cel mai scurt timp."
+                  "Ești interesat de mai multe detalii sau de un parteneriat cu The Hunter Meridian? Scrie-ne și îți răspundem în cel mai scurt timp"
                 )}
               </p>
             </div>
@@ -853,7 +853,7 @@ export default function MeridianTemplate() {
               fontSize: 11,
             }}
           >
-            {t("© 2026 The Hunter. Toate drepturile rezervate.")}
+            {t("© 2026 The Hunter Toate drepturile rezervate")}
           </span>
         </div>
       </footer>
