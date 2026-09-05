@@ -1,6 +1,5 @@
 import React, { Suspense } from "react"
 
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ImageGallery from "@modules/products/components/image-gallery"
 import VariantAwareGallery from "@modules/products/components/image-gallery/variant-aware"
 import ProductActions from "@modules/products/components/product-actions"
@@ -10,11 +9,11 @@ import ProductInfo from "@modules/products/templates/product-info"
 import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-related-products"
 import { notFound } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
-import { getTranslations } from "next-intl/server"
 
 import ProductActionsWrapper from "./product-actions-wrapper"
 import ProductFavoriteButton from "@modules/products/components/product-favorite-button"
 import AnimatedColumn from "@modules/products/components/animated-column"
+import ProductBackLink from "@modules/products/components/product-back-link"
 import { SelectedVariantProvider } from "@modules/products/context/selected-variant-context"
 
 type ProductTemplateProps = {
@@ -36,8 +35,6 @@ const ProductTemplate = async ({
     return notFound()
   }
 
-  const t = await getTranslations("products")
-
   return (
     <div className="bg-[var(--theme-bg)] min-h-screen">
       {/* Back to shop */}
@@ -46,25 +43,7 @@ const ProductTemplate = async ({
         delay={0}
         className="page-container pt-3 small:pt-4 pb-0"
       >
-        <LocalizedClientLink
-          href="/ready-to-wear"
-          className="inline-flex items-end gap-2 text-[var(--theme-text-muted)] hover:text-[var(--theme-gold)] transition-colors font-sans text-[11px] uppercase tracking-[3px]"
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <polyline points="15 6 9 12 15 18" />
-          </svg>
-          <span>{t("Înapoi")}</span>
-        </LocalizedClientLink>
+        <ProductBackLink fallbackHref="/ready-to-wear" />
       </AnimatedColumn>
 
       {/* Main product section */}
