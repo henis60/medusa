@@ -22,7 +22,13 @@ export const revalidateStorefrontStep = createStep(
     try {
       const res = await fetch(
         `${base}/api/revalidate?secret=${encodeURIComponent(secret)}`,
-        { method: "POST" }
+        {
+          method: "POST",
+          // See product-revalidate.ts subscriber — Node's fetch sends no
+          // User-Agent by default, which the storefront's Cloudflare WAF
+          // blocks as a bot signature.
+          headers: { "User-Agent": "TheHunterBackend-Revalidate/1.0" },
+        }
       )
       if (!res.ok) {
         logger.warn(`Storefront revalidation returned ${res.status}`)

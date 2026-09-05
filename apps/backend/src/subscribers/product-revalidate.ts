@@ -31,6 +31,11 @@ let pending: Pending | null = null
 async function callRevalidate(base: string, secret: string): Promise<Response> {
   return fetch(`${base}/api/revalidate?secret=${encodeURIComponent(secret)}`, {
     method: "POST",
+    // Node's fetch sends no User-Agent by default, and the storefront's
+    // Cloudflare WAF blocks exactly that (a scanner/bot signature) — without
+    // this header every call here 403s at the edge before ever reaching the
+    // storefront's /api/revalidate route.
+    headers: { "User-Agent": "TheHunterBackend-Revalidate/1.0" },
   })
 }
 
