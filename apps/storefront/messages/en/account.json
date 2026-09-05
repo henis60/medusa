@@ -113,5 +113,13 @@
   "Sumarul activității contului tău": "Summary of your account activity.",
   "Intră în contul tău The Hunter House": "Sign in to your The Hunter House account.",
   "Resetare parolă": "Reset password",
-  "Setează o parolă nouă pentru contul tău": "Set a new password for your account."
+  "Setează o parolă nouă pentru contul tău": "Set a new password for your account.",
+  "Verificare anti-spam eșuată Încearcă din nou": "Anti-spam check failed. Please try again.",
+  "A apărut o eroare Te rugăm să încerci din nou mai târziu": "Something went wrong. Please try again later.",
+  "Email sau parolă incorectă": "Incorrect email or password.",
+  "Link-ul de resetare este invalid sau a expirat": "The reset link is invalid or has expired.",
+  "Sesiunea a expirat Te rugăm să te autentifici din nou": "Your session has expired. Please sign in again.",
+  "Autentificare necesară": "Authentication required.",
+  "ID-ul comenzii este obligatoriu": "Order ID is required.",
+  "ID-ul adresei este obligatoriu": "Address ID is required."
 }

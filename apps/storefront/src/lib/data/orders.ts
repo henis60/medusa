@@ -2,6 +2,7 @@
 
 import { sdk } from "@lib/config"
 import medusaError from "@lib/util/medusa-error"
+import { getTranslations } from "next-intl/server"
 import { getAuthHeaders, getCacheOptions } from "./cookies"
 import { getMedusaLocaleHeaders } from "@lib/util/request-locale"
 import { HttpTypes } from "@medusajs/types"
@@ -219,7 +220,8 @@ export const createTransferRequest = async (
   const id = formData.get("order_id") as string
 
   if (!id) {
-    return { success: false, error: "Order ID is required", order: null }
+    const t = await getTranslations("account")
+    return { success: false, error: t("ID-ul comenzii este obligatoriu"), order: null }
   }
 
   const headers = await getAuthHeaders()

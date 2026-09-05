@@ -113,5 +113,13 @@
   "Sumarul activității contului tău": "Sumarul activității contului tău.",
   "Intră în contul tău The Hunter House": "Intră în contul tău The Hunter House.",
   "Resetare parolă": "Resetare parolă",
-  "Setează o parolă nouă pentru contul tău": "Setează o parolă nouă pentru contul tău."
+  "Setează o parolă nouă pentru contul tău": "Setează o parolă nouă pentru contul tău.",
+  "Verificare anti-spam eșuată Încearcă din nou": "Verificare anti-spam eșuată. Încearcă din nou.",
+  "A apărut o eroare Te rugăm să încerci din nou mai târziu": "A apărut o eroare. Te rugăm să încerci din nou mai târziu.",
+  "Email sau parolă incorectă": "Email sau parolă incorectă.",
+  "Link-ul de resetare este invalid sau a expirat": "Link-ul de resetare este invalid sau a expirat.",
+  "Sesiunea a expirat Te rugăm să te autentifici din nou": "Sesiunea a expirat. Te rugăm să te autentifici din nou.",
+  "Autentificare necesară": "Autentificare necesară.",
+  "ID-ul comenzii este obligatoriu": "ID-ul comenzii este obligatoriu.",
+  "ID-ul adresei este obligatoriu": "ID-ul adresei este obligatoriu."
 }

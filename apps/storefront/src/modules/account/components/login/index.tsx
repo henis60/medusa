@@ -83,16 +83,15 @@ const Login = ({ setCurrentView, redirectTo }: Props) => {
             data-testid="password-input"
           />
         </div>
-        <ErrorMessage
-          error={recaptchaError || message}
-          data-testid="login-error-message"
-        />
-
-        <div className="flex justify-end mt-2">
+        <div className="flex items-center justify-between gap-3 mt-2">
+          <ErrorMessage
+            error={recaptchaError || message}
+            data-testid="login-error-message"
+          />
           <button
             type="button"
             onClick={() => setCurrentView(LOGIN_VIEW.FORGOT_PASSWORD)}
-            className="font-sans text-[13px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
+            className="shrink-0 ml-auto font-sans text-[13px] text-[var(--theme-text-muted)] hover:text-hunter-gold transition-colors"
           >
             {t("Ai uitat parola?")}
           </button>

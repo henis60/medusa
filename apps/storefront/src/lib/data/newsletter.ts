@@ -1,6 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { getTranslations } from "next-intl/server"
 import { getAuthHeaders } from "./cookies"
 
 // The newsletter endpoints identify the subscriber from their session rather
@@ -33,7 +34,8 @@ export const subscribeToNewsletter = async (): Promise<{
 }> => {
   const headers = await getAuthHeaders()
   if (!("authorization" in headers)) {
-    return { success: false, error: "Autentificare necesară" }
+    const t = await getTranslations("account")
+    return { success: false, error: t("Autentificare necesară") }
   }
 
   try {
@@ -44,7 +46,7 @@ export const subscribeToNewsletter = async (): Promise<{
     })
     return { success: true }
   } catch (error) {
-    return { success: false, error: resolveError(error) }
+    return { success: false, error: await resolveError(error) }
   }
 }
 
@@ -54,7 +56,8 @@ export const unsubscribeFromNewsletter = async (): Promise<{
 }> => {
   const headers = await getAuthHeaders()
   if (!("authorization" in headers)) {
-    return { success: false, error: "Autentificare necesară" }
+    const t = await getTranslations("account")
+    return { success: false, error: t("Autentificare necesară") }
   }
 
   try {
@@ -64,7 +67,7 @@ export const unsubscribeFromNewsletter = async (): Promise<{
     })
     return { success: true }
   } catch (error) {
-    return { success: false, error: resolveError(error) }
+    return { success: false, error: await resolveError(error) }
   }
 }
 
@@ -73,10 +76,11 @@ export const unsubscribeFromNewsletter = async (): Promise<{
 // so the backend's own text doesn't survive the SDK — the caller falls back to
 // its own translated string when this returns undefined, which keeps the
 // message in the user's locale instead of hardcoding Romanian here.
-const resolveError = (error: unknown): string | undefined => {
+const resolveError = async (error: unknown): Promise<string | undefined> => {
   const status = (error as { status?: number })?.status
   if (status === 429) {
-    return "Prea multe încercări. Te rugăm să revii peste câteva minute."
+    const t = await getTranslations("account")
+    return t("Prea multe încercări Te rugăm să revii peste câteva minute")
   }
   return undefined
 }

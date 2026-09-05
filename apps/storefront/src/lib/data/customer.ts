@@ -5,6 +5,7 @@ import medusaError from "@lib/util/medusa-error"
 import { isRateLimitError } from "@lib/util/is-rate-limit-error"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
+import { getTranslations } from "next-intl/server"
 import { redirect } from "@i18n/navigation"
 import { routing } from "@i18n/routing"
 import { getLocale } from "./locale-actions"
@@ -80,8 +81,9 @@ async function verifyRecaptcha(token: string | null): Promise<boolean> {
 }
 
 export async function signup(_currentState: unknown, formData: FormData) {
+  const t = await getTranslations("account")
   const recaptchaOk = await verifyRecaptcha(formData.get("recaptchaToken") as string | null)
-  if (!recaptchaOk) return "Verificare anti-spam eșuată. Încearcă din nou."
+  if (!recaptchaOk) return t("Verificare anti-spam eșuată Încearcă din nou")
 
   const password = formData.get("password") as string
   const customerForm = {
@@ -124,9 +126,9 @@ export async function signup(_currentState: unknown, formData: FormData) {
     return createdCustomer
   } catch (error) {
     if (isRateLimitError(error)) {
-      return "Prea multe încercări. Te rugăm să revii peste câteva minute."
+      return t("Prea multe încercări Te rugăm să revii peste câteva minute")
     }
-    return String(error)
+    return t("A apărut o eroare Te rugăm să încerci din nou mai târziu")
   }
 }
 
@@ -143,8 +145,9 @@ const isSafeRedirect = (href: string): boolean =>
   href.startsWith("/") && !href.startsWith("//") && !href.startsWith("/\\")
 
 export async function login(_currentState: unknown, formData: FormData) {
+  const t = await getTranslations("account")
   const recaptchaOk = await verifyRecaptcha(formData.get("recaptchaToken") as string | null)
-  if (!recaptchaOk) return "Verificare anti-spam eșuată. Încearcă din nou."
+  if (!recaptchaOk) return t("Verificare anti-spam eșuată Încearcă din nou")
 
   const email = formData.get("email") as string
   const password = formData.get("password") as string
@@ -158,24 +161,39 @@ export async function login(_currentState: unknown, formData: FormData) {
     // "logging in" with no token and no error shown if that ever changes.
     // Not a credentials problem, so use the generic system-error message.
     if (typeof token !== "string") {
-      return "A apărut o eroare. Te rugăm să încerci din nou mai târziu."
+      return t("A apărut o eroare Te rugăm să încerci din nou mai târziu")
     }
 
     await setAuthToken(token)
+
+    // The emailpass provider can issue a valid token for an identity that
+    // doesn't actually resolve to a usable customer (e.g. an email shared
+    // with an admin user, or a stale/orphaned customer_id link) —
+    // /store/customers/me then 401s on every subsequent request, leaving
+    // the visitor stuck on the login form with no error shown. Confirm the
+    // session actually works before treating login as a success. This isn't
+    // a bad-password case (the credentials just matched), so use the
+    // generic system-error message rather than "wrong email or password".
+    const customer = await retrieveCustomer()
+    if (!customer) {
+      await removeAuthToken()
+      return t("A apărut o eroare Te rugăm să încerci din nou mai târziu")
+    }
+
     const customerCacheTag = await getCacheTag("customers")
     revalidateTag(customerCacheTag)
   } catch (error) {
     if (isRateLimitError(error)) {
-      return "Prea multe încercări. Te rugăm să revii peste câteva minute."
+      return t("Prea multe încercări Te rugăm să revii peste câteva minute")
     }
     // A 401 here always means bad credentials — including a guest-checkout
     // email, which has no password set and fails the exact same way as an
     // unknown email. Anything else (network failure, 5xx) is a real system
     // error and must say so, not blame the user's email/password.
     if ((error as { status?: number })?.status === 401) {
-      return "Email sau parolă incorectă."
+      return t("Email sau parolă incorectă")
     }
-    return "A apărut o eroare. Te rugăm să încerci din nou mai târziu."
+    return t("A apărut o eroare Te rugăm să încerci din nou mai târziu")
   }
 
   // Cart transfer is best-effort: the cart-mismatch handler retries it silently
@@ -209,15 +227,16 @@ export async function resetPassword(
   _currentState: unknown,
   formData: FormData
 ) {
+  const t = await getTranslations("account")
   const password = formData.get("password") as string
   const passwordConfirm = formData.get("password_confirm") as string
 
   if (password !== passwordConfirm) {
-    return "Parolele nu coincid."
+    return t("Parolele nu coincid")
   }
 
   if (password.length < 8) {
-    return "Parola trebuie să aibă cel puțin 8 caractere."
+    return t("Parola trebuie să aibă minim 8 caractere")
   }
 
   try {
@@ -230,9 +249,9 @@ export async function resetPassword(
     return "success"
   } catch (error) {
     if (isRateLimitError(error)) {
-      return "Prea multe încercări. Te rugăm să revii peste câteva minute."
+      return t("Prea multe încercări Te rugăm să revii peste câteva minute")
     }
-    return "Link-ul de resetare este invalid sau a expirat."
+    return t("Link-ul de resetare este invalid sau a expirat")
   }
 }
 
@@ -240,8 +259,9 @@ export async function requestPasswordReset(
   _currentState: unknown,
   formData: FormData
 ) {
+  const t = await getTranslations("account")
   const recaptchaOk = await verifyRecaptcha(formData.get("recaptchaToken") as string | null)
-  if (!recaptchaOk) return "Verificare anti-spam eșuată. Încearcă din nou."
+  if (!recaptchaOk) return t("Verificare anti-spam eșuată Încearcă din nou")
 
   const email = formData.get("email") as string
 
@@ -252,9 +272,9 @@ export async function requestPasswordReset(
     return "success"
   } catch (error) {
     if (isRateLimitError(error)) {
-      return "Prea multe încercări. Te rugăm să revii peste câteva minute."
+      return t("Prea multe încercări Te rugăm să revii peste câteva minute")
     }
-    return "A apărut o eroare. Te rugăm să încerci din nou."
+    return t("A apărut o eroare Te rugăm să încerci din nou mai târziu")
   }
 }
 
@@ -285,9 +305,10 @@ const handleUnauthorized = async (
   await removeAuthToken()
   const customerCacheTag = await getCacheTag("customers")
   revalidateTag(customerCacheTag)
+  const t = await getTranslations("account")
   return {
     success: false,
-    error: "Sesiunea a expirat. Te rugăm să te autentifici din nou.",
+    error: t("Sesiunea a expirat Te rugăm să te autentifici din nou"),
   }
 }
 
@@ -392,7 +413,8 @@ export const updateCustomerAddress = async (
     (currentState.addressId as string) || (formData.get("addressId") as string)
 
   if (!addressId) {
-    return { success: false, error: "Address ID is required" }
+    const t = await getTranslations("account")
+    return { success: false, error: t("ID-ul adresei este obligatoriu") }
   }
 
   const address = {
