@@ -25,10 +25,11 @@ export default function ProductPrice({
   }
 
   return (
-    <div className="flex flex-col gap-y-1">
+    <div className="flex items-baseline gap-x-3 flex-wrap">
       <span
-        className={clx("font-display text-3xl text-hunter-gold", {
+        className={clx("font-display text-3xl", {
           "text-hunter-gold-b": selectedPrice.price_type === "sale",
+          "text-hunter-gold": selectedPrice.price_type !== "sale",
         })}
       >
         {!variant && t("De la ")}
@@ -40,14 +41,14 @@ export default function ProductPrice({
         </span>
       </span>
       {selectedPrice.price_type === "sale" && (
-        <p className="text-sm text-[var(--theme-text-muted)]">
+        <span className="text-sm text-[var(--theme-text-muted)]">
           <span className="line-through" data-testid="original-product-price">
             {selectedPrice.original_price}
           </span>
           <span className="ml-2 text-hunter-gold">
             -{selectedPrice.percentage_diff}%
           </span>
-        </p>
+        </span>
       )}
     </div>
   )

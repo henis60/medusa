@@ -29,7 +29,7 @@ import { getMedusaLocaleHeaders } from "@lib/util/request-locale"
  * @returns The cart object if found, or null if not found.
  */
 const DEFAULT_CART_FIELDS =
-  "*items, *region, *items.variant, +items.variant.thumbnail, +items.variant.inventory_quantity, +items.variant.manage_inventory, +items.variant.allow_backorder, *items.variant.images, +items.variant.options, +items.variant.options.option, *items.variant.product, +items.variant.product.thumbnail, *items.variant.product.images, +items.variant.product.options, +items.variant.product.options.values, *items.variant.product.variants, *items.variant.product.variants.options, *items.variant.product.variants.images, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, *payment_collection, +payment_collection.payment_sessions"
+  "*items, *region, *items.variant, +items.variant.thumbnail, +items.variant.inventory_quantity, +items.variant.manage_inventory, +items.variant.allow_backorder, *items.variant.images, +items.variant.options, +items.variant.options.option, *items.variant.product, +items.variant.product.thumbnail, *items.variant.product.images, +items.variant.product.options, +items.variant.product.options.values, *items.variant.product.variants, *items.variant.product.variants.options, *items.variant.product.variants.images, *items.thumbnail, *items.metadata, +items.total, +items.original_total, *promotions, +shipping_methods.name, *payment_collection, +payment_collection.payment_sessions"
 
 // A misconfigured promotion (e.g. a campaign budget requiring a customer
 // attribute the cart doesn't have yet) can make Medusa throw while

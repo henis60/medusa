@@ -10,7 +10,7 @@ type ProductInfoProps = {
 
 const ProductInfo = ({ product, action }: ProductInfoProps) => {
   return (
-    <div id="product-info" className="flex flex-col gap-y-4">
+    <div id="product-info" className="flex flex-col">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 flex-wrap min-w-0">
           {product.collection ? (
@@ -43,7 +43,7 @@ const ProductInfo = ({ product, action }: ProductInfoProps) => {
       </Heading>
       {product.subtitle && (
         <Text
-          className="font-serif italic text-[17px] leading-relaxed text-[var(--theme-text-muted)] whitespace-pre-line"
+          className="font-serif italic text-[17px] leading-relaxed text-[var(--theme-text-muted)] whitespace-pre-line mt-4"
           data-testid="product-subtitle"
         >
           {product.subtitle}
