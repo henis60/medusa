@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 const CARS = [
   {
-    year: "1936",
+    year: "1931",
     brand: "Rolls-Royce",
     model: "Phantom I",
     modernYear: "",
