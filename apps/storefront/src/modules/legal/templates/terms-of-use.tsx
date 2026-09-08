@@ -55,6 +55,7 @@ const TermsOfUseTemplate = async () => {
             <li>{t("Nr Reg Comerțului:")} J24/356/2023</li>
             <li>{t("CUI")}: 47739604</li>
             <li>{t("Adresă:")} Str. Piața Eroilor, nr. 2, Târgu Lăpuș, Maramureș</li>
+            <li>{t("Rol în comercializare:")} {t("Comerciant")}</li>
           </ul>
         </Section>
 
@@ -94,10 +95,19 @@ const TermsOfUseTemplate = async () => {
 
         <Section title={t("Comenzi")}>
           <p>
+            {t("Plasezi comanda direct din magazin: alegi produsul, mărimea și culoarea, apoi finalizezi în câțiva pași Primești confirmarea pe email imediat")}
+          </p>
+          <p>
             {t("O comandă plasată reprezintă o ofertă de cumpărare Contractul de vânzare se consideră încheiat în momentul confirmării de expediere")}
           </p>
           <p>
             {t("Ne rezervăm dreptul de a anula o comandă în caz de stoc epuizat, eroare de preț, plată neverificată sau suspiciune de fraudă")}
+          </p>
+          <p>
+            {t("Plată:")}{" "}
+            <span className="text-[var(--theme-text)]">
+              {t("online, securizat, cu cardul (Visa/Mastercard), procesat prin Netopia Payments")}
+            </span>
           </p>
         </Section>
 
@@ -106,6 +116,9 @@ const TermsOfUseTemplate = async () => {
             {t("Livrăm prin curier în toată România, în")}{" "}
             <span className="text-[var(--theme-text)]">{t("3–5 zile lucrătoare")}</span>
             {t(" Riscul pierderii sau deteriorării produselor trece la cumpărător în momentul intrării în posesia fizică a acestora")}
+          </p>
+          <p>
+            {t("Vei primi un cod de urmărire (tracking) pentru a-ți monitoriza coletul")}
           </p>
         </Section>
 
@@ -137,7 +150,7 @@ const TermsOfUseTemplate = async () => {
           </p>
         </Section>
 
-        <Section label={t("Legislație")} title={t("Legea aplicabilă")}>
+        <Section title={t("Legea aplicabilă")}>
           <p>
             {t("Acești termeni sunt guvernați de legislația română Litigiile vor fi soluționate în primul rând pe cale amiabilă, iar în caz contrar, prin instanțele competente din România")}
           </p>

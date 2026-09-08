@@ -95,7 +95,7 @@ const CustomerServiceTemplate = async () => {
           </p>
           <LocalizedClientLink
             href="/contact"
-            className="font-sans text-[10px] uppercase tracking-[3px] text-hunter-gold border-b border-hunter-gold/40 hover:border-hunter-gold transition-colors w-fit pb-0.5"
+            className="shrink-0 h-11 px-6 inline-flex items-center justify-center border border-[var(--theme-border)] font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text)] hover:border-hunter-gold hover:text-hunter-gold active:border-hunter-gold active:text-hunter-gold transition-colors w-fit"
           >
             {t("Deschide formularul de contact")}
           </LocalizedClientLink>
@@ -222,18 +222,23 @@ const CustomerServiceTemplate = async () => {
           </div>
         </Section>
 
-        <Section title={t("Întrebări frecvente")}>
-          <p>
-            {t("Încă ai întrebări? Răspunsurile la cele mai comune întrebări despre comenzi, livrare, retur și plată sunt pe pagina dedicată"
-            )}
-          </p>
+        <div className="bg-[var(--theme-surface)] border border-[var(--theme-border)] p-5 small:p-8 flex flex-col small:flex-row items-stretch small:items-center justify-between gap-5 small:gap-6">
+          <div>
+            <p className="font-display text-[20px] leading-[1.1] text-[var(--theme-text)] mb-1.5 small:mb-2">
+              {t("Întrebări frecvente")}
+            </p>
+            <p className="font-sans text-[12px] text-[var(--theme-text-muted)]">
+              {t("Încă ai întrebări? Răspunsurile la cele mai comune întrebări despre comenzi, livrare, retur și plată sunt pe pagina dedicată"
+              )}
+            </p>
+          </div>
           <LocalizedClientLink
             href="/faq"
-            className="font-sans text-[10px] uppercase tracking-[3px] text-hunter-gold border-b border-hunter-gold/40 hover:border-hunter-gold transition-colors w-fit pb-0.5"
+            className="shrink-0 h-11 px-6 inline-flex items-center justify-center border border-[var(--theme-border)] font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text)] hover:border-hunter-gold hover:text-hunter-gold active:border-hunter-gold active:text-hunter-gold transition-colors"
           >
             {t("Vezi întrebările frecvente")}
           </LocalizedClientLink>
-        </Section>
+        </div>
       </div>
     </div>
   )
