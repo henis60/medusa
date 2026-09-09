@@ -155,7 +155,7 @@ const NetopiaPaymentButton = ({
   const locale = useLocale()
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(
-    CHECKOUT_DISABLED ? t("Plățile sunt temporar indisponibile Revenim în curând") : null
+    CHECKOUT_DISABLED ? t("Plățile sunt temporar indisponibile") : null
   )
 
   const handlePayment = async () => {

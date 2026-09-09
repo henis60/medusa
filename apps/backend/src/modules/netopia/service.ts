@@ -137,7 +137,7 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
       );
       throw new MedusaError(
         MedusaError.Types.NOT_ALLOWED,
-        "Plățile sunt temporar indisponibile. Revenim în curând.",
+        "Plățile sunt temporar indisponibile.",
       );
     }
 
