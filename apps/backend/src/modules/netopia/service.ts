@@ -126,6 +126,21 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
   async initiatePayment(
     input: InitiatePaymentInput,
   ): Promise<InitiatePaymentOutput> {
+    // Temporary launch safeguard: while still on NETOPIA_TEST_MODE/SANDBOX,
+    // a "successful" checkout never actually captures real money — a
+    // customer could complete an order believing they paid. Block checkout
+    // entirely until live keys are confirmed and NETOPIA_SANDBOX/
+    // NETOPIA_TEST_MODE are set to "false". Remove this block once live.
+    if (this.options.sandbox) {
+      this.logger.warn(
+        "Netopia checkout blocked: still in sandbox/test mode (see initiatePayment safeguard in service.ts)",
+      );
+      throw new MedusaError(
+        MedusaError.Types.NOT_ALLOWED,
+        "Plățile sunt temporar indisponibile. Revenim în curând.",
+      );
+    }
+
     const amountRON = toNumber(input.amount);
     const currency = (input.currency_code ?? "RON").toUpperCase();
     const ctx = (input.context as Record<string, unknown> | undefined) ?? {};

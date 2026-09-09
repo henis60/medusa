@@ -133,6 +133,13 @@ function collectBrowserInfo(): Record<string, string> {
   }
 }
 
+// Temporary launch safeguard, paired with the sandbox check in the backend's
+// NetopiaService.initiatePayment — set alongside NETOPIA_TEST_MODE while the
+// domain migration / Netopia live-key approval is in progress, so the button
+// itself is visibly disabled instead of only failing after a click. Remove
+// once NETOPIA_SANDBOX/NETOPIA_TEST_MODE are back to "false".
+const CHECKOUT_DISABLED = process.env.NEXT_PUBLIC_CHECKOUT_DISABLED === "true"
+
 const NetopiaPaymentButton = ({
   cart,
   providerId,
@@ -147,7 +154,9 @@ const NetopiaPaymentButton = ({
   const t = useTranslations("checkout")
   const locale = useLocale()
   const [submitting, setSubmitting] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(
+    CHECKOUT_DISABLED ? t("Plățile sunt temporar indisponibile Revenim în curând") : null
+  )
 
   const handlePayment = async () => {
     setSubmitting(true)
@@ -171,11 +180,11 @@ const NetopiaPaymentButton = ({
   return (
     <>
       <button
-        disabled={notReady || submitting}
+        disabled={notReady || submitting || CHECKOUT_DISABLED}
         onClick={handlePayment}
         data-testid={dataTestId}
         className={`relative w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:cursor-not-allowed overflow-hidden ${
-          notReady ? "opacity-40" : ""
+          notReady || CHECKOUT_DISABLED ? "opacity-40" : ""
         }`}
       >
         {/* This is the checkout's most consequential click — a plain text
