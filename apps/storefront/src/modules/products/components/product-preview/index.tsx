@@ -99,7 +99,9 @@ export default function ProductPreview({
         </p>
         <div className="flex items-center justify-between gap-2 [&_*]:!text-[10px]">
           <ColorSwatches product={product} />
-          <StockOrPrice />
+          <div className="ml-auto">
+            <StockOrPrice />
+          </div>
         </div>
       </div>
 
@@ -117,7 +119,9 @@ export default function ProductPreview({
         </p>
         <div className="flex items-center justify-between gap-2">
           <ColorSwatches product={product} />
-          <StockOrPrice />
+          <div className="ml-auto">
+            <StockOrPrice />
+          </div>
         </div>
       </div>
     </ProductCardLink>
