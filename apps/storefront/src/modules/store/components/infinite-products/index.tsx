@@ -279,11 +279,29 @@ export default function InfiniteProducts({
     }
   }, [filtersKey, sortBy, buildQueryParams, countryCode, locale])
 
+  // A fast/continuous scroll can keep the sentinel intersecting across many
+  // consecutive page loads, each one re-triggering `loadMore` the instant
+  // the previous fetch resolves — on a quick connection this fires fast
+  // enough to trip Cloudflare's per-IP rate limit for a real visitor, not a
+  // bot. Enforce a minimum gap between fetch starts (rescheduling instead of
+  // dropping the trigger, so a fast scroller still gets every page, just not
+  // faster than this).
+  const lastLoadAtRef = useRef(0)
+  const MIN_LOAD_INTERVAL_MS = 400
+
   const loadMore = useCallback(() => {
     if (loading || !hasMore) return
     // Don't append while the displayed list doesn't match the URL filters —
     // the refetch effect above is about to replace it from page 1.
     if (filtersKey !== activeFilters.current) return
+
+    const elapsed = Date.now() - lastLoadAtRef.current
+    if (elapsed < MIN_LOAD_INTERVAL_MS) {
+      setTimeout(loadMore, MIN_LOAD_INTERVAL_MS - elapsed)
+      return
+    }
+    lastLoadAtRef.current = Date.now()
+
     setLoading(true)
     const nextPage = page + 1
     listProductsWithSort({
