@@ -18,7 +18,8 @@ const ItemsPreviewTemplate = ({ cart }: ItemsTemplateProps) => {
   return (
     <div
       className={clx("divide-y divide-[var(--theme-border)]", {
-        "overflow-y-scroll overflow-x-hidden no-scrollbar max-h-[420px]": hasOverflow,
+        "small:overflow-y-scroll overflow-x-hidden small:max-h-[420px] small:pr-2 items-table-scroll":
+          hasOverflow,
       })}
       data-testid="items-table"
     >

@@ -108,6 +108,21 @@
     scrollbar-width: none; /* Firefox */
   }
 
+  /* Visible-at-rest scrollbar (the global one only shows on hover) — used
+     where an overflow container needs to read as scrollable at a glance. */
+  .items-table-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(201, 168, 76, 0.4) transparent;
+  }
+  .items-table-scroll::-webkit-scrollbar-thumb {
+    background: rgba(201, 168, 76, 0.4);
+    background-clip: padding-box;
+  }
+  .items-table-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--gold);
+    background-clip: padding-box;
+  }
+
   input:focus ~ label,
   input:not(:placeholder-shown) ~ label {
     @apply -translate-y-2 text-xsmall-regular;

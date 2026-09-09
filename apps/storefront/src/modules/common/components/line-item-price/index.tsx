@@ -16,9 +16,14 @@ const LineItemPrice = async ({
   currencyCode,
 }: LineItemPriceProps) => {
   const t = await getTranslations("common")
-  const { total, original_total } = item
-  const originalPrice = original_total ?? 0
+  const { total, compare_at_unit_price, quantity } = item
   const currentPrice = total ?? 0
+  // compare_at_unit_price is the price-list "was" price (a sale), distinct
+  // from original_total (which only reflects cart-level promotions/coupons).
+  const originalPrice =
+    typeof compare_at_unit_price === "number"
+      ? compare_at_unit_price * (quantity ?? 1)
+      : currentPrice
   const hasReducedPrice = currentPrice < originalPrice
 
   return (

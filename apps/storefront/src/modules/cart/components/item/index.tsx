@@ -80,7 +80,15 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
       .finally(() => setUpdating(false))
   }
 
-  const hasDiscount = (item.total ?? 0) < (item.original_total ?? 0)
+  // compare_at_unit_price is the price-list "was" price (e.g. a sale), set
+  // once when the item was added to the cart — distinct from
+  // original_total/total, which only diverge when a cart-level promotion
+  // (coupon code) is applied. A sale price with no coupon needs this field,
+  // or the discount silently doesn't show anywhere in cart/checkout.
+  const hasDiscount =
+    typeof item.compare_at_unit_price === "number" &&
+    item.compare_at_unit_price > (item.unit_price ?? 0)
+  const originalTotal = (item.compare_at_unit_price ?? 0) * item.quantity
 
   if (type === "preview") {
     return (
@@ -269,7 +277,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
               {hasDiscount && (
                 <span className="font-serif italic text-[11px] text-[var(--theme-text-muted)] line-through">
                   {convertToLocale({
-                    amount: item.original_total ?? 0,
+                    amount: originalTotal,
                     currency_code: currencyCode,
                   })}
                 </span>

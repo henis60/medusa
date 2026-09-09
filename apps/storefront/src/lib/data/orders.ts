@@ -109,7 +109,7 @@ export const retrieveOrder = async (id: string, locale?: string) => {
         // which needs this same deep variant/product tree the cart fetches
         // (see retrieveCart in ./cart.ts).
         fields:
-          "*payment_collections.payments,*items,*items.metadata,*items.variant,+items.variant.thumbnail,*items.variant.images,*items.variant.product,+items.variant.product.thumbnail,*items.variant.product.images,+items.variant.product.options,+items.variant.product.options.values,*items.variant.product.variants,*items.variant.product.variants.options,*items.product,*fulfillments,*fulfillments.labels",
+          "*payment_collections.payments,*items,+items.compare_at_unit_price,*items.metadata,*items.variant,+items.variant.thumbnail,*items.variant.images,*items.variant.product,+items.variant.product.thumbnail,*items.variant.product.images,+items.variant.product.options,+items.variant.product.options.values,*items.variant.product.variants,*items.variant.product.variants.options,*items.product,*fulfillments,*fulfillments.labels",
       },
       headers,
       next,
