@@ -21,7 +21,7 @@ const Summary = ({ cart }: SummaryProps) => {
 
   return (
     <div className="flex flex-col gap-6 border border-[var(--theme-border)] p-6 small:p-8">
-      <CartTotals totals={cart} />
+      <CartTotals totals={cart} items={cart.items} />
 
       <div>
         <LocalizedClientLink
