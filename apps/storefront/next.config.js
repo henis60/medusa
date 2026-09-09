@@ -152,8 +152,10 @@ const nextConfig = {
     // challenge iframe from www.gstatic.com.
     const RECAPTCHA = "https://www.google.com"
     const RECAPTCHA_STATIC = "https://www.gstatic.com"
-    // Leaflet basemap tiles for the checkout locker picker.
-    const MAP_TILES = "https://*.basemaps.cartocdn.com"
+    // Leaflet basemap tiles for the checkout locker picker. CARTO's free
+    // tiles started requiring an API key, so this now points at OSM's own
+    // tile servers instead (free, no key, for this kind of low-volume use).
+    const MAP_TILES = "https://*.tile.openstreetmap.org"
 
     const csp = {
       "default-src": ["'self'"],
