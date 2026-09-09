@@ -397,17 +397,17 @@ export async function initiatePaymentSession(
       return resp
     })
     .catch((error) => {
-      try {
-        medusaError(error)
-      } catch (safeError) {
-        console.error("initiatePaymentSession failed:", safeError)
-        return {
-          error: (safeError as Error).message,
-        } as unknown as HttpTypes.StorePaymentCollectionResponse
-      }
-      // medusaError always throws, so this line is unreachable — satisfies
-      // the compiler without a bogus fallback return.
-      throw error
+      console.error("initiatePaymentSession failed:", error)
+      // Not medusaError(): its axios-shaped branches (response/request) don't
+      // match this SDK's plain-Error rejections, so it falls through to the
+      // "Error setting up the request: " catch-all prefix — noise on top of
+      // an already-clean backend message (e.g. the sandbox-mode block).
+      const message =
+        (error as { message?: string } | undefined)?.message ||
+        "A apărut o eroare. Reîncearcă."
+      return {
+        error: message,
+      } as unknown as HttpTypes.StorePaymentCollectionResponse
     })
 }
 
