@@ -426,24 +426,35 @@ export async function initiateNetopiaPayment(
   const fullCart = await retrieveCart(cartId)
   const addr = fullCart?.shipping_address
 
-  const resp = (await initiatePaymentSession(cart, {
-    provider_id: providerId,
-    data: {
-      billing_address: addr
-        ? {
-            email: fullCart?.email ?? undefined,
-            phone: addr.phone ?? undefined,
-            first_name: addr.first_name ?? undefined,
-            last_name: addr.last_name ?? undefined,
-            city: addr.city ?? undefined,
-            postal_code: addr.postal_code ?? undefined,
-            province: addr.province ?? undefined,
-          }
-        : undefined,
-      browser_info: browserInfo,
-      locale,
-    },
-  }, { revalidate: false })) as { payment_collection?: HttpTypes.StorePaymentCollection }
+  // Server Actions that throw have their error message stripped by Next.js in
+  // production (only a digest reaches the client) — including deliberate,
+  // safe-to-show errors like the backend's sandbox-mode checkout block. Catch
+  // here so a blocked/failed payment session surfaces as a normal `undefined`
+  // return, which the caller already renders as a friendly Romanian message.
+  let resp: { payment_collection?: HttpTypes.StorePaymentCollection } | undefined
+  try {
+    resp = (await initiatePaymentSession(cart, {
+      provider_id: providerId,
+      data: {
+        billing_address: addr
+          ? {
+              email: fullCart?.email ?? undefined,
+              phone: addr.phone ?? undefined,
+              first_name: addr.first_name ?? undefined,
+              last_name: addr.last_name ?? undefined,
+              city: addr.city ?? undefined,
+              postal_code: addr.postal_code ?? undefined,
+              province: addr.province ?? undefined,
+            }
+          : undefined,
+        browser_info: browserInfo,
+        locale,
+      },
+    }, { revalidate: false })) as { payment_collection?: HttpTypes.StorePaymentCollection }
+  } catch (err) {
+    console.error("initiateNetopiaPayment failed:", err)
+    return undefined
+  }
 
   const session = resp?.payment_collection?.payment_sessions?.find(
     (s) => s.provider_id === providerId
