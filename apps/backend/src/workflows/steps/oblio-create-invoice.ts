@@ -46,9 +46,7 @@ export const oblioCreateInvoiceStep = createStep(
         "items.title",
         "items.quantity",
         "items.unit_price",
-        "items.total",
-        "items.subtotal",
-        "items.discount_total",
+        "items.adjustments.amount",
       ],
       filters: { id: order_id },
     })
@@ -85,13 +83,21 @@ export const oblioCreateInvoiceStep = createStep(
       `${(billing as any).first_name ?? order.customer?.first_name ?? ""} ${(billing as any).last_name ?? order.customer?.last_name ?? ""}`.trim() ||
       order.email
 
-    // Unit price AFTER any promotion applied to the line.
+    // Unit price AFTER any discount applied to the line.
     //
-    // `unit_price` is the pre-discount price, so invoicing it directly billed
-    // the customer more than they actually paid whenever a promotion was
-    // active — a real problem on a fiscal document. `item.total` is the final
-    // amount for the line (tax inclusive, matching `vatIncluded: true` below),
-    // so dividing it by the quantity gives the effective unit price.
+    // `unit_price` already reflects a price-list sale (Medusa bakes the
+    // calculated/sale amount into unit_price at add-to-cart time — see
+    // prepareLineItemData in @medusajs/core-flows — so no further adjustment
+    // is needed for that case). A cart-level promotion/coupon is different:
+    // it's applied as a separate `LineItemAdjustment`, not folded into
+    // unit_price, so it has to be subtracted explicitly.
+    //
+    // `OrderLineItem` has no persisted total/subtotal/discount_total column
+    // (only unit_price, compare_at_unit_price and the adjustments relation —
+    // see @medusajs/order's line-item model) — those are decorated onto the
+    // entity by the order module's own service, not something `query.graph`
+    // reliably resolves. Computing from unit_price + adjustments directly
+    // avoids depending on a field that silently came back empty here.
     //
     // The discount is folded into the unit price rather than sent as a separate
     // Oblio discount line: that keeps the invoice total equal to the order
@@ -99,14 +105,12 @@ export const oblioCreateInvoiceStep = createStep(
     // discount-line semantics, which are not verifiable from here.
     const effectiveUnitPrice = (item: any): number => {
       const quantity = Number(item.quantity ?? 1) || 1
-
-      const lineTotal = Number(item.total)
-      if (Number.isFinite(lineTotal)) return lineTotal / quantity
-
-      // Fallback if `total` isn't populated: subtract the line's discount.
       const unitPrice = Number(item.unit_price ?? 0)
-      const discountTotal = Number(item.discount_total ?? 0)
-      return unitPrice - (Number.isFinite(discountTotal) ? discountTotal : 0) / quantity
+      const adjustmentTotal = (item.adjustments ?? []).reduce(
+        (sum: number, adj: any) => sum + (Number(adj.amount) || 0),
+        0
+      )
+      return unitPrice - adjustmentTotal / quantity
     }
 
     const products = (order.items ?? []).map((item: any) => ({

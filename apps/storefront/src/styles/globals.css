@@ -487,7 +487,7 @@ body.hunter-landing-active::before {
   align-items: center;
   justify-content: center;
   gap: 14px;
-  margin-bottom: 28px;
+  margin-bottom: 18px;
 }
 .eyebrow-text {
   font-family: var(--rl);

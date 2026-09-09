@@ -32,14 +32,6 @@ const OrderSummary = async ({ order }: OrderSummaryProps) => {
             {fmt(order.item_subtotal)}
           </span>
         </div>
-        {order.discount_total > 0 && (
-          <div className="flex items-center justify-between font-sans text-[12px]">
-            <span className="text-[var(--theme-text-muted)]">{t("Reducere")}</span>
-            <span className="text-emerald-500">
-              − {fmt(order.discount_total)}
-            </span>
-          </div>
-        )}
         {order.gift_card_total > 0 && (
           <div className="flex items-center justify-between font-sans text-[12px]">
             <span className="text-[var(--theme-text-muted)]">{t("Card cadou")}</span>
@@ -65,6 +57,14 @@ const OrderSummary = async ({ order }: OrderSummaryProps) => {
             {fmt(order.shipping_subtotal)}
           </span>
         </div>
+        {order.discount_total > 0 && (
+          <div className="flex items-center justify-between font-sans text-[12px]">
+            <span className="text-[var(--theme-text-muted)]">{t("Reducere")}</span>
+            <span className="text-emerald-500">
+              − {fmt(order.discount_total)}
+            </span>
+          </div>
+        )}
         {(order.tax_total ?? 0) > 0 && (
           <div className="flex items-center justify-between font-sans text-[12px]">
             <span className="text-[var(--theme-text-muted)]">{t("Taxe")}</span>
