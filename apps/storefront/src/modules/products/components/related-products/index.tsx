@@ -42,14 +42,16 @@ export default async function RelatedProducts({
   // it still gets recommendations instead of an empty section.
   const excludeIds = new Set([product.id, ...fitsWithProducts.map((p) => p.id)])
   const productCategoryIds = new Set((product.categories ?? []).map((c) => c.id))
-  const similarProducts = allResponse.products.filter((p) => {
-    if (excludeIds.has(p.id)) return false
-    if (product.collection_id) {
-      return p.collection_id === product.collection_id
-    }
-    if (productCategoryIds.size === 0) return false
-    return (p.categories ?? []).some((c) => productCategoryIds.has(c.id))
-  })
+  const similarProducts = allResponse.products
+    .filter((p) => {
+      if (excludeIds.has(p.id)) return false
+      if (product.collection_id) {
+        return p.collection_id === product.collection_id
+      }
+      if (productCategoryIds.size === 0) return false
+      return (p.categories ?? []).some((c) => productCategoryIds.has(c.id))
+    })
+    .slice(0, 4)
 
   if (!fitsWithProducts.length && !similarProducts.length) return null
 
