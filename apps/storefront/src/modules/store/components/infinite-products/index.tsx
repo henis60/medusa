@@ -165,6 +165,16 @@ export default function InfiniteProducts({
   const selectedColors = urlFiltered
     ? (searchParams.get("color") ?? "").split(",").filter(Boolean)
     : []
+  // A page that happens to contain zero matches for the active price/color
+  // filter doesn't mean "no more results" — `loadMore` keeps firing (the
+  // sentinel stays visible with nothing rendered above it) until it pages
+  // through the whole catalog or finds a match. At the normal small page
+  // size that's a long chain of near-instant round trips (and real load on
+  // Cloudflare's rate limit). Fetching much bigger pages whenever a facet
+  // filter is active turns that into 1-2 requests instead — included in
+  // filtersKey below so toggling a facet filter resets pagination instead of
+  // mixing page numbers computed at two different page sizes.
+  const hasFacetFilterActive = !!minPrice || !!maxPrice || selectedColors.length > 0
 
   // Filters the server-rendered `initialProducts` were fetched with (always
   // the unfiltered defaults on /store, since that page is static).
@@ -172,15 +182,17 @@ export default function InfiniteProducts({
     initialSort,
     collectionId,
     categoryId,
+    false,
   ])
   // Refetch from page 1 when the URL-driven filters (sort, collection,
-  // category) differ from what the current list was fetched with — covers
-  // user changes and landing directly on a filtered URL whose static HTML
-  // used the defaults.
+  // category, facet-filter-active) differ from what the current list was
+  // fetched with — covers user changes and landing directly on a filtered
+  // URL whose static HTML used the defaults.
   const filtersKey = JSON.stringify([
     sortBy,
     effectiveCollectionId,
     effectiveCategoryId,
+    hasFacetFilterActive,
   ])
   // True when the URL already asks for a different view than what got
   // server-rendered (e.g. a hard reload of /ready-to-wear/costume). In that case
@@ -229,9 +241,11 @@ export default function InfiniteProducts({
     [categories]
   )
 
+  const effectiveLimit = hasFacetFilterActive ? Math.max(limit, 100) : limit
+
   const buildQueryParams = useCallback(
     () => ({
-      limit,
+      limit: effectiveLimit,
       ...(effectiveCollectionId
         ? { collection_id: [effectiveCollectionId] }
         : {}),
@@ -245,7 +259,7 @@ export default function InfiniteProducts({
       ...(productsIds ? { id: productsIds } : {}),
     }),
     [
-      limit,
+      effectiveLimit,
       effectiveCollectionId,
       effectiveCategoryId,
       productsIds,
