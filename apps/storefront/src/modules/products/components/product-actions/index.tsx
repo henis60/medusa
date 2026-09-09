@@ -14,6 +14,7 @@ import MobileActions from "./mobile-actions"
 import { useSetSelectedVariant } from "@modules/products/context/selected-variant-context"
 import {
   isInStoreOnly,
+  sortedVariants,
   COLOR_OPTION_NAMES as COLOR_TITLES,
 } from "@lib/util/product"
 import { getProductPrice } from "@lib/util/get-product-price"
@@ -62,9 +63,11 @@ export default function ProductActions({
       if (product.variants?.length) {
         // Prefer the first purchasable variant — auto-selecting variants[0]
         // when it happens to be sold out made a partly-available product
-        // load looking entirely unbuyable.
-        const initial =
-          product.variants.find(isVariantInStock) ?? product.variants[0]
+        // load looking entirely unbuyable. Sorted by variant_rank first, or
+        // this "first" is whatever order the API happened to return, not the
+        // order set via Galerie media.
+        const ranked = sortedVariants(product)
+        const initial = ranked.find(isVariantInStock) ?? ranked[0]
         return optionsAsKeymap(initial.options) ?? {}
       }
       return {}

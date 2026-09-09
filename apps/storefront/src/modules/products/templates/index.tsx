@@ -15,6 +15,7 @@ import ProductFavoriteButton from "@modules/products/components/product-favorite
 import AnimatedColumn from "@modules/products/components/animated-column"
 import ProductBackLink from "@modules/products/components/product-back-link"
 import { SelectedVariantProvider } from "@modules/products/context/selected-variant-context"
+import { sortedVariants } from "@lib/util/product"
 
 type ProductTemplateProps = {
   product: HttpTypes.StoreProduct
@@ -47,7 +48,9 @@ const ProductTemplate = async ({
       </AnimatedColumn>
 
       {/* Main product section */}
-      <SelectedVariantProvider initialVariantId={product.variants?.[0]?.id ?? null}>
+      <SelectedVariantProvider
+        initialVariantId={sortedVariants(product)[0]?.id ?? null}
+      >
         <div
           className="page-container grid grid-cols-1 small:grid-cols-[1fr_420px] gap-x-20 py-8 small:pb-16 pt-2 small:pt-4"
           data-testid="product-container"

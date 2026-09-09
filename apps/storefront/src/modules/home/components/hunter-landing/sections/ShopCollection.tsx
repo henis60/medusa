@@ -23,7 +23,12 @@ export default async function ShopCollection({
     queryParams: {
       collection_id: collection.id,
       limit: 4,
-      fields: "*variants.calculated_price,+variants,+options,+images",
+      // Explicit sub-fields, not just "+variants,+options" — bare relation
+      // includes are ambiguous about which scalar fields count as "default"
+      // (variant_rank in particular isn't reliably included), and
+      // ColorSwatches needs both variants.options and options.values.
+      fields:
+        "*variants.calculated_price,+variants.options,+variants.variant_rank,+options,+options.values,+images",
     },
   })
 

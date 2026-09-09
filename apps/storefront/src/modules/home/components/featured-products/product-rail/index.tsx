@@ -20,7 +20,12 @@ export default async function ProductRail({
     regionId: region.id,
     queryParams: {
       collection_id: collection.id,
-      fields: "*variants.calculated_price",
+      // Overrides listProducts' own default fields (queryParams is spread
+      // last), so *options/*variants.options/+variants.variant_rank must be
+      // repeated here too — without them the card's ColorSwatches
+      // (getProductColors) has no product.options to read.
+      fields:
+        "*variants.calculated_price,+variants.options,+variants.variant_rank,*options,*options.values",
     },
   })
 

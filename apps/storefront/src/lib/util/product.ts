@@ -15,6 +15,24 @@ export const isColorOption = (title?: string | null): boolean =>
     COLOR_OPTION_NAMES.includes((title ?? "").toLowerCase())
 
 /**
+ * Variants sorted by `variant_rank`. The Store/Admin APIs do not themselves
+ * sort the `variants` relation by it (see colorOrdered() in
+ * option-select.tsx for how this was found) — anything that treats
+ * `product.variants[0]` or `.find(...)` order as "display order" (initial
+ * selection, color swatch order, gallery default) must sort through this
+ * first, or it silently falls back to whatever order the API happened to
+ * return, which does not follow the images/variant order set in Galerie
+ * media.
+ */
+export function sortedVariants(
+    product: HttpTypes.StoreProduct
+): HttpTypes.StoreProductVariant[] {
+    return [...(product.variants ?? [])].sort(
+        (a, b) => (a.variant_rank ?? 0) - (b.variant_rank ?? 0)
+    )
+}
+
+/**
  * Images to show for a selected variant: the variant's own images if it has
  * any, otherwise all product images. Shared by the product and preview pages.
  */

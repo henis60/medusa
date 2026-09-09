@@ -22,8 +22,11 @@ export default async function RelatedProducts({
     queryParams: {
       limit: 100,
       region_id: region.id,
+      // *options/*variants.options/+variants.variant_rank are needed for the
+      // card's color swatches (getProductColors) — without them
+      // product.options is empty and ColorSwatches renders nothing.
       fields:
-        "*variants.calculated_price,+variants.inventory_quantity,+metadata,+tags,+type,+categories.id",
+        "*variants.calculated_price,+variants.inventory_quantity,+variants.options,+variants.variant_rank,*options,*options.values,+metadata,+tags,+type,+categories.id",
     },
     countryCode,
   })

@@ -1,4 +1,5 @@
 import { HttpTypes } from "@medusajs/types"
+import { sortedVariants } from "./product"
 
 export const COLOR_MAP: Record<string, string> = {
   black: "#1a1a1a",
@@ -72,11 +73,25 @@ export function getProductColors(product: HttpTypes.StoreProduct) {
   const colorOption = getColorOption(product)
   if (!colorOption?.values?.length) return []
 
-  return colorOption.values.map((v) => ({
-    label: v.value,
+  // Order by variant_rank (first appearance), matching colorOrdered() in
+  // option-select.tsx — colorOption.values' own order isn't reliable (see
+  // sortedVariants()).
+  const seen: string[] = []
+  for (const v of sortedVariants(product)) {
+    const val = v.options?.find((o) => o.option_id === colorOption.id)?.value
+    if (val && !seen.includes(val)) seen.push(val)
+  }
+  // Any color value with no variant coverage falls back to the raw order,
+  // appended after the ranked ones.
+  for (const v of colorOption.values) {
+    if (v.value && !seen.includes(v.value)) seen.push(v.value)
+  }
+
+  return seen.map((value) => ({
+    label: value,
     hex:
-      hexFromVariants(product, colorOption.id, v.value) ??
-      COLOR_MAP[v.value?.toLowerCase()] ??
+      hexFromVariants(product, colorOption.id, value) ??
+      COLOR_MAP[value?.toLowerCase()] ??
       "#c0b8b0",
   }))
 }

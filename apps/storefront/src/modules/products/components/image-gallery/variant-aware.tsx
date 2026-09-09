@@ -248,10 +248,15 @@ export default function VariantAwareGallery({
 }: Props) {
   const t = useTranslations("products")
   // Shared with ProductActions via context (not the URL) — the provider
-  // initializes to variants[0].id, matching ProductActions' own default, so
-  // the gallery starts on the right image set immediately instead of
-  // showing all images for one frame and then narrowing down.
-  const variantId = useSelectedVariant() ?? variants?.[0]?.id ?? null
+  // initializes to the variant_rank-sorted variants[0].id, matching
+  // ProductActions' own default, so the gallery starts on the right image
+  // set immediately instead of showing all images for one frame and then
+  // narrowing down. Sorted here too since this fallback only kicks in if
+  // rendered without that context value.
+  const rankedVariants = [...(variants ?? [])].sort(
+    (a, b) => (a.variant_rank ?? 0) - (b.variant_rank ?? 0)
+  )
+  const variantId = useSelectedVariant() ?? rankedVariants[0]?.id ?? null
 
   const selectedVariant = variantId
     ? variants?.find((v) => v.id === variantId)

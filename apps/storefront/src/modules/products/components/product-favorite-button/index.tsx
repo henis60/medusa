@@ -21,8 +21,14 @@ export default function ProductFavoriteButton({ productId, productHandle, produc
 
   // Follows whichever variant (e.g. color) is currently selected on the
   // product page, so saving/removing acts on that specific variant rather
-  // than always the first one.
-  const selectedVariantId = useSelectedVariant() ?? variants?.[0]?.id ?? null
+  // than always the first one. The fallback "first" variant is sorted by
+  // variant_rank — the API doesn't order `variants` by it itself, so an
+  // unsorted variants[0] can be a different color than what the page (and
+  // its gallery) actually shows first.
+  const rankedVariants = [...(variants ?? [])].sort(
+    (a, b) => (a.variant_rank ?? 0) - (b.variant_rank ?? 0)
+  )
+  const selectedVariantId = useSelectedVariant() ?? rankedVariants[0]?.id ?? null
   const selectedVariant = variants?.find((v) => v.id === selectedVariantId) ?? null
 
   const variantThumbnail =

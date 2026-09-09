@@ -113,13 +113,18 @@ const sortOptionValues = (
   variants?: HttpTypes.StoreProductVariant[]
 ) => {
   if (isColor) {
-    // Colors follow variant creation order (matches image grouping), same
-    // as the product page's option-select.tsx — raw option.values order is
-    // not consistent across store/preview APIs, so returning it as-is here
-    // made color order diverge from the product page.
+    // Colors follow variant_rank (matches image grouping — see Galerie
+    // media), same as the product page's option-select.tsx — raw
+    // option.values order is not consistent across store/preview APIs, so
+    // returning it as-is here made color order diverge from the product
+    // page. `variants` isn't sorted by the API either, so it's re-ranked
+    // before deriving order from it.
     if (!option || !variants) return values
+    const rankedVariants = [...variants].sort(
+      (a, b) => (a.variant_rank ?? 0) - (b.variant_rank ?? 0)
+    )
     const seen: string[] = []
-    for (const v of variants) {
+    for (const v of rankedVariants) {
       const val = v.options?.find((o) => o.option_id === option.id)?.value
       if (val && !seen.includes(val)) seen.push(val)
     }

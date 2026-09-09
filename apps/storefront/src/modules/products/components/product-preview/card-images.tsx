@@ -5,7 +5,7 @@ import Image from "next/image"
 import { useTranslations } from "next-intl"
 import FavoriteButton from "./favorite-button"
 import QuickAddOverlay from "./quick-add-overlay"
-import { isInStoreOnly } from "@lib/util/product"
+import { isInStoreOnly, sortedVariants } from "@lib/util/product"
 
 type Props = {
   product: HttpTypes.StoreProduct
@@ -21,6 +21,10 @@ export default function CardImages({ product, isFeatured, noOverlay, activeImage
   const allImages = product.images ?? []
   const variants = product.variants ?? []
   const options = product.options ?? []
+  // variant_rank-sorted — the "first" variant otherwise depends on whatever
+  // order the API returns, not the order set via Galerie media (see
+  // sortedVariants()).
+  const rankedVariants = sortedVariants(product)
 
   const mainImage = product.thumbnail ?? allImages[0]?.url
   const hoverImage = allImages[1]?.url
@@ -75,16 +79,16 @@ export default function CardImages({ product, isFeatured, noOverlay, activeImage
           // and then explicitly picking that same (first) variant afterwards
           // compares as "different", letting it be added a second time
           // instead of being recognized as already favorited.
-          variantId={(activeVariant ?? variants[0] ?? null)?.id ?? null}
+          variantId={(activeVariant ?? rankedVariants[0] ?? null)?.id ?? null}
           variantTitle={
-            (((activeVariant ?? variants[0]) as any)?.options as
+            (((activeVariant ?? rankedVariants[0]) as any)?.options as
               | { value?: string }[]
               | undefined
             )
               ?.map((o) => o.value)
               .filter(Boolean)
               .join(" · ") ||
-            (activeVariant ?? variants[0])?.title ||
+            (activeVariant ?? rankedVariants[0])?.title ||
             null
           }
         />
