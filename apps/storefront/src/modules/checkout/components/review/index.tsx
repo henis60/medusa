@@ -53,6 +53,13 @@ const Review = ({
     setInitiating(true)
     setInitError(null)
     initiatePaymentSession(cart, { provider_id: providerId })
+      .then((resp) => {
+        // initiatePaymentSession never rejects (a thrown Server Action error
+        // has its message masked by Next.js in production) — a failure comes
+        // back as normal data instead, in this `error` field.
+        const error = (resp as { error?: string } | undefined)?.error
+        if (error) setInitError(error)
+      })
       .catch((err) =>
         setInitError(getDisplayableErrorMessage(err, t("A apărut o eroare Reîncearcă")))
       )

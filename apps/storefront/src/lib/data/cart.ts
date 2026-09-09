@@ -396,7 +396,24 @@ export async function initiatePaymentSession(
       }
       return resp
     })
-    .catch(medusaError)
+    .catch((error) => {
+      // A throw here crosses the Server Action boundary — Next.js masks ANY
+      // such error's message in production (replaced with a generic "Server
+      // Components render" message + digest), even a deliberately safe one
+      // like the backend's sandbox-mode checkout block. Returning the message
+      // as normal data instead of throwing avoids that masking entirely.
+      try {
+        medusaError(error)
+      } catch (safeError) {
+        console.error("initiatePaymentSession failed:", safeError)
+        return {
+          error: (safeError as Error).message,
+        } as unknown as HttpTypes.StorePaymentCollectionResponse
+      }
+      // medusaError always throws, so this line is unreachable — satisfies
+      // the compiler without a bogus fallback return.
+      throw error
+    })
 }
 
 export type NetopiaBrowserInfo = Record<string, string>
