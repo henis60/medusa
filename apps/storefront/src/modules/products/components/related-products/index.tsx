@@ -22,7 +22,8 @@ export default async function RelatedProducts({
     queryParams: {
       limit: 100,
       region_id: region.id,
-      fields: "*variants.calculated_price,+variants.inventory_quantity,+metadata,+tags,+type",
+      fields:
+        "*variants.calculated_price,+variants.inventory_quantity,+metadata,+tags,+type,+categories.id",
     },
     countryCode,
   })
@@ -33,14 +34,19 @@ export default async function RelatedProducts({
     (p) => p.id !== product.id && (p.tags ?? []).some((t) => t.value?.trim() === currentHandle)
   )
 
-  // "You may also like" — same collection, excluding current + fits-with
+  // "You may also like" — same collection, excluding current + fits-with.
+  // Falls back to sharing a category when the product has no collection, so
+  // it still gets recommendations instead of an empty section.
   const excludeIds = new Set([product.id, ...fitsWithProducts.map((p) => p.id)])
-  const similarProducts = allResponse.products.filter(
-    (p) =>
-      !excludeIds.has(p.id) &&
-      product.collection_id &&
-      p.collection_id === product.collection_id
-  )
+  const productCategoryIds = new Set((product.categories ?? []).map((c) => c.id))
+  const similarProducts = allResponse.products.filter((p) => {
+    if (excludeIds.has(p.id)) return false
+    if (product.collection_id) {
+      return p.collection_id === product.collection_id
+    }
+    if (productCategoryIds.size === 0) return false
+    return (p.categories ?? []).some((c) => productCategoryIds.has(c.id))
+  })
 
   if (!fitsWithProducts.length && !similarProducts.length) return null
 

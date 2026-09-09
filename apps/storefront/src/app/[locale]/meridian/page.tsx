@@ -102,6 +102,14 @@ export default async function MeridianPage({
       url: URL,
     },
     isAccessibleForFree: true,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "RON",
+      availability: "https://schema.org/InStock",
+      validFrom: "2026-08-26",
+      url: URL,
+    },
     performer: {
       "@type": "Organization",
       name: "The Hunter Meridian",
