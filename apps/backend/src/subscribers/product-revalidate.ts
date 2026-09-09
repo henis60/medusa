@@ -98,14 +98,23 @@ function scheduleRevalidate(
 }
 
 export default async function revalidateStorefront({
+  event,
   container,
 }: SubscriberArgs<{ id: string }>) {
   const logger = container.resolve("logger")
+  // Temporary diagnostic: unconditional, before any guard, so a missing line
+  // here after a product edit proves the subscriber itself never runs
+  // (registration/build issue) rather than failing inside the function.
+  logger.info(`[revalidate] subscriber invoked for event "${event.name}"`)
+
   const base = process.env.VITE_STOREFRONT_URL
   const secret = process.env.REVALIDATE_SECRET
 
   if (!base || !secret) {
-    return // not configured — skip silently
+    logger.warn(
+      `[revalidate] skipped — missing env: base=${base ? "set" : "MISSING"} secret=${secret ? "set" : "MISSING"}`
+    )
+    return
   }
 
   try {

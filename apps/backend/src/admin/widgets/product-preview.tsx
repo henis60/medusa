@@ -33,7 +33,7 @@ const ProductPreviewWidget = ({
   if (status !== "proposed" && status !== "published") return null;
 
   if (status === "published") {
-    const liveUrl = `${STOREFRONT_URL}/products/${product.handle}`;
+    const liveUrl = `${STOREFRONT_URL}/produs/${product.handle}`;
     return (
       <Container className="flex items-center justify-between px-6 py-4">
         <div>

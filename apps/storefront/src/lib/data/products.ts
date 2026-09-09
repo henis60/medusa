@@ -239,6 +239,16 @@ export const getProductByHandle = async (
       if (!product || (product as any).status === "draft") return undefined
       return product
     })
+    .catch((error) => {
+      // A single product with malformed data (e.g. a stray control character
+      // in an AI-generated description, breaking the response's JSON parse)
+      // must not take down the ENTIRE build — every other product/category
+      // page fails to deploy too if this throws during static generation.
+      // Degrade to notFound() for just this one handle instead; it retries
+      // on the next ISR revalidation once the underlying data is fixed.
+      console.error(`getProductByHandle(${handle}) failed:`, error)
+      return undefined
+    })
 }
 
 /**
