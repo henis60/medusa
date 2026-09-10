@@ -4133,18 +4133,20 @@ html {
   height: calc(100dvh - 64px);
 }
 
-/* On short phones, vertically-centered hero copy plus its generous mobile
-   spacing can exceed one screen — since the section centers its content,
-   any overflow pushes the top (the "Ediția I" eyebrow) up and out, behind
-   the sticky nav. Letting the shell grow past one screen there keeps
-   everything visible instead of clipping/overlapping. */
-@media (max-width: 640px) {
+/* On Safari, .thm-hero-section switches to a fixed height: 100svh below
+   767px (see the "Mobile hero layout" rule further down) — svh is the
+   *stable* small-viewport height, unaffected by the toolbar hiding/showing
+   as you scroll. If this shell (the section's parent) kept using dvh in
+   that same range, its height would keep changing right as the toolbar
+   animates while the section's own height stayed fixed, and the fill Image
+   inside would visibly resize/"zoom" as the two heights drifted apart
+   mid-scroll. Matching unit + breakpoint here removes that drift. */
+@media (max-width: 767px) {
   .thm-hero-shell {
-    height: auto;
-    min-height: calc(100vh - 64px);
-    min-height: calc(100dvh - 64px);
+    height: 100svh;
   }
 }
+
 
 /* --- Meridian: #program is a jump-link target; without this the shared
    site nav (h-16 = 64px, same at every breakpoint) lands on top of the

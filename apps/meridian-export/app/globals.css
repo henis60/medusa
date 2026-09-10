@@ -279,11 +279,17 @@ body.thm-active {
   height: calc(100dvh - 64px);
 }
 
-@media (max-width: 640px) {
+/* On Safari, .thm-hero-section switches to a fixed height: 100svh below
+   767px (see the "Mobile hero layout" rule further down) — svh is the
+   *stable* small-viewport height, unaffected by the toolbar hiding/showing
+   as you scroll. If this shell (the section's parent) kept using dvh in
+   that same range, its height would keep changing right as the toolbar
+   animates while the section's own height stayed fixed, and the fill Image
+   inside would visibly resize/"zoom" as the two heights drifted apart
+   mid-scroll. Matching unit + breakpoint here removes that drift. */
+@media (max-width: 767px) {
   .thm-hero-shell {
-    height: auto;
-    min-height: calc(100vh - 64px);
-    min-height: calc(100dvh - 64px);
+    height: 100svh;
   }
 }
 
