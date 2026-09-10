@@ -34,8 +34,9 @@ const ProductInfo = ({ product, action }: ProductInfoProps) => {
         </div>
         {action && <div className="shrink-0">{action}</div>}
       </div>
+      {/* The page's <h1> — product pages had none server-side before this. */}
       <Heading
-        level="h2"
+        level="h1"
         className="font-display text-4xl small:text-[42px] leading-[1.05] text-[var(--theme-text)]"
         data-testid="product-title"
       >

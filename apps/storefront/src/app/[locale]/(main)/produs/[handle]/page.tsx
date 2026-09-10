@@ -44,9 +44,21 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     notFound()
   }
 
-  const description = product.description
+  // Priority: the product's `subtitle` (a short, curated line set per
+  // product in admin — meant for exactly this kind of snippet, shorter and
+  // more deliberate than the full description) > the real description,
+  // truncated > a genuinely descriptive auto-fallback (not just "Title —
+  // Site Name", which is thin/unhelpful as a search snippet) for the many
+  // products with neither, including the category when the product has
+  // one, since that's the most useful extra context available.
+  const categoryName = product.categories?.[0]?.name
+  const description = product.subtitle
+    ? product.subtitle
+    : product.description
     ? product.description.slice(0, 300)
-    : `${product.title} — ${SITE_NAME}`
+    : categoryName
+    ? `${product.title} — ${categoryName} premium de la ${SITE_NAME}. Comandă online, livrare rapidă în România.`
+    : `${product.title} — piesă premium de la ${SITE_NAME}. Comandă online, livrare rapidă în România.`
   const title = `${product.title} | ${SITE_NAME}`
 
   return {

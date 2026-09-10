@@ -49,6 +49,9 @@ const nextConfig = {
   // Emit a minimal standalone server for smaller, faster container deploys.
   output: "standalone",
   reactStrictMode: true,
+  // Don't advertise the framework via the `X-Powered-By: Next.js` response
+  // header — free reconnaissance for an attacker, no benefit to us.
+  poweredByHeader: false,
   experimental: {
     // Since locale isn't in the URL (localePrefix: "never"), both locale
     // variants of a page share the same URL — Next's client-side Router

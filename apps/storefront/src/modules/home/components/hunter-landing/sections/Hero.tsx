@@ -62,8 +62,13 @@ const Hero = () => {
             </span>
           </div>
 
-          <div className="hero-logo">
-            <div className="logo-l1">
+          {/* The single <h1> for the homepage. Each letter is its own <span>
+              purely for the stagger-in animation — a screen reader spelling
+              that out letter-by-letter would be unusable, so the real text
+              is an aria-label instead and the animated spans are hidden from
+              assistive tech. */}
+          <h1 className="hero-logo" aria-label="The Hunter House">
+            <div className="logo-l1" aria-hidden="true">
               {"THE HUNTER".split("").map((ch, i) => (
                 <span
                   key={i}
@@ -74,7 +79,7 @@ const Hero = () => {
                 </span>
               ))}
             </div>
-            <div className="logo-l2">
+            <div className="logo-l2" aria-hidden="true">
               {"house".split("").map((ch, i) => (
                 <span
                   key={i}
@@ -85,7 +90,7 @@ const Hero = () => {
                 </span>
               ))}
             </div>
-          </div>
+          </h1>
 
         </div>
         {/* end hero-top-group */}

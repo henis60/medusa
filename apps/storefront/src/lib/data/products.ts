@@ -231,8 +231,13 @@ export const getProductByHandle = async (
           // them the first render can't map a selection back to a variant,
           // so the picker always resolves to variants[0]. variant_rank is
           // needed because the API doesn't itself sort the variants relation
-          // by it — see colorOrdered() in option-select.tsx.
-          "*variants.calculated_price,+variants.inventory_quantity,*variants.images,*variants.options,+variants.variant_rank,*options,*options.values,+metadata,+tags,*categories",
+          // by it — see colorOrdered() in option-select.tsx. +description
+          // and +subtitle are needed for the PDP's meta description/OG tags
+          // (subtitle is the preferred source — see generateMetadata below)
+          // — Medusa's default scalar set (unlike +title, +handle) doesn't
+          // include either, so every product silently fell back to the
+          // title-only meta description.
+          "*variants.calculated_price,+variants.inventory_quantity,*variants.images,*variants.options,+variants.variant_rank,*options,*options.values,+metadata,+tags,*categories,+description,+subtitle",
       },
       next: { tags: ["products"], revalidate: 3600 },
       cache: "force-cache",

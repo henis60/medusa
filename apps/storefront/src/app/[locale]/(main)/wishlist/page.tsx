@@ -13,6 +13,7 @@ export async function generateMetadata({
   return {
     title: t("Wishlist"),
     description: t("Produsele tale salvate"),
+    robots: { index: false, follow: false },
   }
 }
 

@@ -22,6 +22,7 @@ export async function generateMetadata({
     },
     description: t("Tailoring premium, The Hunter Bar și o comunitate exclusivă, reunite într-un spațiu unic în România"
     ),
+    alternates: { canonical: "/" },
   }
 }
 

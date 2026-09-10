@@ -1,5 +1,7 @@
 import { Suspense } from "react"
 import { HttpTypes } from "@medusajs/types"
+import { getTranslations } from "next-intl/server"
+import { Link } from "@i18n/navigation"
 
 import {
   listCollections,
@@ -69,10 +71,72 @@ export default async function ReadyToWearLayout({
     collectionCategoriesEntries
   )
 
+  const t = await getTranslations("home")
+  const topCategories = categories.filter((c) => !c.parent_category)
+
   return (
     // Suspense around StoreView: it reads useSearchParams client-side, which
-    // must sit under a boundary for the layout to prerender statically.
-    <Suspense>
+    // must sit under a boundary for the layout to prerender statically. With
+    // no `fallback`, React renders NOTHING while suspended — and since this
+    // route is static/ISR, that empty gap IS the cached HTML crawlers see
+    // (confirmed: zero headings AND zero links server-side, StoreView's own
+    // <h1>/sidebar only exist after client hydration runs useSearchParams).
+    //
+    // The fallback below is a real <h1> (generic "Ready to Wear" — the
+    // category-specific label needs client-only URL data) plus a plain,
+    // server-rendered link list to every category/collection. It isn't
+    // trying to reproduce StoreSidebar's interactive UI (active-state
+    // highlighting, onClick handlers) — a crawler only reads `href`s, and
+    // duplicating that component's client-owned callbacks here would be
+    // both risky and pointless for that audience. Real visitors see this
+    // for a single frame at most before hydration swaps in the actual
+    // interactive sidebar.
+    <Suspense
+      fallback={
+        <div className="bg-[var(--theme-bg)] w-full min-h-screen">
+          <div className="border-b border-[var(--theme-border)]">
+            <div className="page-container py-5 small:py-7">
+              <h1 className="font-display text-2xl small:text-3xl text-[var(--theme-text)] leading-none">
+                {t("Ready to Wear")}
+              </h1>
+            </div>
+          </div>
+          <nav
+            aria-label={t("Ready to Wear")}
+            className="page-container py-6 flex flex-col gap-4"
+          >
+            {collections.length > 0 && (
+              <ul className="flex flex-wrap gap-x-4 gap-y-2">
+                {collections.map((c) => (
+                  <li key={c.id}>
+                    <Link
+                      href={`/ready-to-wear/${c.handle}`}
+                      className="font-sans text-[11px] uppercase tracking-[2px] text-[var(--theme-text-muted)]"
+                    >
+                      {c.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {topCategories.length > 0 && (
+              <ul className="flex flex-wrap gap-x-4 gap-y-2">
+                {topCategories.map((c) => (
+                  <li key={c.id}>
+                    <Link
+                      href={`/ready-to-wear/${c.handle}`}
+                      className="font-sans text-[11px] uppercase tracking-[2px] text-[var(--theme-text-muted)]"
+                    >
+                      {c.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </nav>
+        </div>
+      }
+    >
       <StoreView
         collections={collections}
         categories={categories}

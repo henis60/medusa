@@ -49,6 +49,22 @@ const mediaUploadWithLimits = (
   });
 };
 
+// admin.thehunter.ro must never be indexed. Its own robots.txt route says so,
+// but Cloudflare's edge-managed robots.txt for this zone overrides/replaces
+// it (confirmed: the live response has no `Disallow: /` for this host) — a
+// response header isn't subject to that override, so it's the reliable
+// signal. Applies to every response from this backend, admin dashboard and
+// storefront-facing /store, /auth, /hooks APIs alike; none of it should ever
+// show up in search results.
+const noIndexHeader = (
+  _req: MedusaRequest,
+  res: MedusaResponse,
+  next: () => void
+) => {
+  res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  next();
+};
+
 // Same signal as medusa-config.ts's redisModules: with REDIS_URL set
 // (staging/production), counters live in Redis and are shared across
 // instances; without it (local dev), express-rate-limit falls back to its
@@ -294,6 +310,10 @@ const netopiaIpnLimiter = rateLimit({
 
 export default defineMiddlewares({
   routes: [
+    {
+      matcher: "*",
+      middlewares: [noIndexHeader],
+    },
     {
       // Netopia IPN: preserve raw body for JSON parsing (sent as text/plain)
       matcher: "/hooks/netopia",
