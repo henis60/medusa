@@ -28,6 +28,15 @@ export const sdk = new Medusa({
   baseUrl: backendUrl,
   debug: process.env.NODE_ENV === "development",
   publishableKey: process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY,
+  // Node's fetch sends no User-Agent by default — when backendUrl is the
+  // public https://admin.thehunter.ro (no MEDUSA_BACKEND_URL private-network
+  // override set), every server-side SDK call routes through Cloudflare and
+  // was being blocked by the WAF rule that rejects empty User-Agents,
+  // returning its HTML block page instead of JSON. `sdk.client.fetch` then
+  // tried to JSON.parse that HTML and threw "Unexpected token '<'". Browsers
+  // treat User-Agent as a forbidden header and silently keep the real one,
+  // so this is a no-op (harmless) for client-side calls.
+  globalHeaders: { "User-Agent": "TheHunterStorefront/1.0" },
 })
 
 // NOTE: do NOT monkey-patch sdk.client.fetch to inject the locale cookie
