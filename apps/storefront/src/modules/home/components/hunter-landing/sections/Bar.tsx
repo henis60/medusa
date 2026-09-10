@@ -41,7 +41,15 @@ export default function Bar() {
   const t = useTranslations("home")
   return (
     <div className="bar-band" id="bar">
-      <div className="bar-band-bg" id="band2"></div>
+      <div className="bar-band-bg" id="band2">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/landing/images/bar-full.webp"
+          alt=""
+          loading="lazy"
+          className="bar-band-img"
+        />
+      </div>
       <div className="bar-content">
         <div className="kicker rv">
           {t("Wine & cocktails")}

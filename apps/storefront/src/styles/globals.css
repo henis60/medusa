@@ -1342,13 +1342,20 @@ body.hunter-landing-active::before {
 .band-bg {
   position: absolute;
   inset: 0;
-  background-size: cover;
-  background-position: center;
   will-change: transform;
 }
 .band-bg.is-static {
   transform: none !important;
   will-change: auto;
+}
+/* A plain <img loading="lazy"> now, not a CSS background-image — see the
+   .zone-bg comment further up for why (no native lazy loading otherwise). */
+.band-bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .band-bg::after {
   content: "";
@@ -1422,11 +1429,14 @@ body.hunter-landing-active::before {
   grid-template-rows: 1fr 1fr;
   gap: 2px;
 }
+/* A plain <img loading="lazy"> now, not a CSS background-image — see the
+   .zone-bg comment further up for why (no native lazy loading otherwise). */
 .coll-bg-img {
   position: absolute;
   inset: 0;
-  background-size: cover;
-  background-position: center;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   transition: transform 0.7s cubic-bezier(0.23, 1, 0.32, 1);
 }
 .coll-overlay {
@@ -1616,12 +1626,18 @@ body.hunter-landing-active::before {
   flex: 3.2;
 }
 
-/* colored backgrounds per zone — real images */
+/* Per-zone images — a plain <img loading="lazy"> now (see Space.tsx), not a
+   CSS background-image: CSS background-image has no native lazy loading, so
+   all 5 of these (plus every other section's background image) downloaded
+   immediately on page load regardless of scroll position, even though this
+   section sits well below the fold — a large chunk of the page's total
+   network payload for images nobody had scrolled to yet. */
 .zone-bg {
   position: absolute;
   inset: 0;
-  background-size: cover;
-  background-position: center;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   will-change: transform;
   backface-visibility: hidden;
   transform: translateZ(0);
@@ -1630,22 +1646,6 @@ body.hunter-landing-active::before {
 .zone:hover .zone-bg,
 .zone.is-active .zone-bg {
   transform: scale(1.02);
-}
-
-.z1 .zone-bg {
-  background-image: url("/landing/images/salon.webp");
-}
-.z2 .zone-bg {
-  background-image: url("/landing/images/bar.webp");
-}
-.z3 .zone-bg {
-  background-image: url("/landing/images/atelier.webp");
-}
-.z4 .zone-bg {
-  background-image: url("/landing/images/fitting.webp");
-}
-.z5 .zone-bg {
-  background-image: url("/landing/images/lounge.webp");
 }
 
 /* dark overlay over image for text readability */
@@ -1848,9 +1848,15 @@ body.hunter-landing-active::before {
 .bar-band-bg {
   position: absolute;
   inset: 0;
-  background-image: url("/landing/images/bar-full.webp");
-  background-size: cover;
-  background-position: center;
+}
+/* A plain <img loading="lazy"> now, not a CSS background-image — see the
+   .zone-bg comment above for why (no native lazy loading otherwise). */
+.bar-band-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .bar-band-bg::after {
   content: "";
@@ -3623,7 +3629,7 @@ a.cb-value:hover {
       ════════════════════════════════════ */
 @media (min-width: 1101px) {
   .coll-bg-img--left {
-    background-position: left center !important;
+    object-position: left center !important;
   }
   .coll-sub {
     line-height: 1.55;

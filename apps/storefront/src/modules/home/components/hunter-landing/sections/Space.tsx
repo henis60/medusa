@@ -16,6 +16,7 @@ export default function Space() {
       titleEm: t("Principal"),
       titleSuffix: "" as string,
       desc: t("Pian cu coadă în centru Canapele din piele cognac Panouri tartan Royal Stewart Candelabre de alamă Covor persan"),
+      image: "/landing/images/salon.webp",
     },
     {
       id: "z2",
@@ -26,6 +27,7 @@ export default function Space() {
       titleEm: t("Sanctuarul"),
       titleSuffix: t("gustului") as string,
       desc: t("80+ referințe de vin 6 cocktailuri signature Whisky, gin și spirtoase alese personal Blat dark walnut"),
+      image: "/landing/images/bar.webp",
     },
     {
       id: "z3",
@@ -36,6 +38,7 @@ export default function Space() {
       titleEm: t("privat"),
       titleSuffix: "" as string,
       desc: t("200+ eșantioane de țesături Super 100–180 Consultație individuală Costumul tău în 21 de zile"),
+      image: "/landing/images/atelier.webp",
     },
     {
       id: "z4",
@@ -46,6 +49,7 @@ export default function Space() {
       titleEm: t("adevărului"),
       titleSuffix: "" as string,
       desc: t("Oglindă triplu-panou Iluminat calibrat Intimitate totală Ajustări finale pe loc"),
+      image: "/landing/images/fitting.webp",
     },
     {
       id: "z5",
@@ -56,6 +60,7 @@ export default function Space() {
       titleEm: t("Lounge"),
       titleSuffix: "" as string,
       desc: t("Rezervat exclusiv membrilor Întâlniri private, degustări exclusive și momente care nu se publică"),
+      image: "/landing/images/lounge.webp",
     },
   ]
 
@@ -280,7 +285,13 @@ export default function Space() {
             onMouseEnter={() => document.body.classList.add("hovering")}
             onMouseLeave={() => document.body.classList.remove("hovering")}
           >
-            <div className="zone-bg"></div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={zone.image}
+              alt=""
+              loading="lazy"
+              className="zone-bg"
+            />
             <div className="zone-tex"></div>
             <div className="zone-grad"></div>
             <div className="zone-glyph">{zone.glyph}</div>

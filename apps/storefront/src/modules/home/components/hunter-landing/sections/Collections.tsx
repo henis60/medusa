@@ -57,13 +57,13 @@ export default function Collections() {
         <div className="coll-grid rv-group">
           {/* Made to Measure - tall card */}
           <div className="coll-card coll-card-tall">
-            <div
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={collections[0].image}
+              alt=""
+              loading="lazy"
               className="coll-bg-img coll-bg-img--left"
-              style={{
-                backgroundImage: `url("${collections[0].image}")`,
-                backgroundPosition: "center center",
-              }}
-            ></div>
+            />
             <div className="coll-overlay"></div>
             <div className="coll-info">
               <div className="coll-tag">{collections[0].tag}</div>
@@ -81,13 +81,13 @@ export default function Collections() {
           <div className="coll-right-stack">
             {collections.slice(1).map((coll) => (
               <div key={coll.id} className="coll-card">
-                <div
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={coll.image}
+                  alt=""
+                  loading="lazy"
                   className="coll-bg-img"
-                  style={{
-                    backgroundImage: `url("${coll.image}")`,
-                    backgroundPosition: "center center",
-                  }}
-                ></div>
+                />
                 <div className="coll-overlay"></div>
                 <div className="coll-info">
                   <div className="coll-tag">{coll.tag}</div>

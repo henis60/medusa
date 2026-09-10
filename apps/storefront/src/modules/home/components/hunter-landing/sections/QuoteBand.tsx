@@ -15,14 +15,15 @@ const QuoteBand = () => {
 
   return (
     <div ref={ref} className="band" id="quote">
-      <motion.div
-        className="band-bg"
-        id="band1"
-        style={{
-          backgroundImage: "url('/landing/images/quote.webp')",
-          y: bgY,
-        }}
-      />
+      <motion.div className="band-bg" id="band1" style={{ y: bgY }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/landing/images/quote.webp"
+          alt=""
+          loading="lazy"
+          className="band-bg-img"
+        />
+      </motion.div>
       <div className="band-body">
         <p className="band-quote">
           &ldquo;{t("Eleganța nu înseamnă să fii remarcat")}
