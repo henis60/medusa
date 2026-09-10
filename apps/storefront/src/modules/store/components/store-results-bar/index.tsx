@@ -113,7 +113,15 @@ export default function StoreResultsBar({
   // Applied filters — what the grid actually reflects right now.
   const appliedSortBy =
     (searchParams.get("sortBy") as SortOptions) || "created_at"
-  const appliedMinPrice = Number(searchParams.get("minPrice")) || priceBounds[0]
+  // When every matching product shares the same price, priceBounds is
+  // [price, price] — the natural "no filter applied" minimum is still 0
+  // (a real, usable range), not `price` again (which would make the slider
+  // look pinned/maxed-out with nothing to drag). Mirrors PriceRangeSlider's
+  // own singlePrice handling.
+  const defaultMinPrice =
+    priceBounds[1] > priceBounds[0] ? priceBounds[0] : 0
+  const appliedMinPrice =
+    Number(searchParams.get("minPrice")) || defaultMinPrice
   const appliedMaxPrice = Number(searchParams.get("maxPrice")) || priceBounds[1]
   const appliedColors = (searchParams.get("color") ?? "")
     .split(",")
@@ -163,14 +171,14 @@ export default function StoreResultsBar({
   ]
 
   const draftFilterCount =
-    (draftMinPrice > priceBounds[0] || draftMaxPrice < priceBounds[1] ? 1 : 0) +
+    (draftMinPrice > defaultMinPrice || draftMaxPrice < priceBounds[1] ? 1 : 0) +
     (draftColors.length > 0 ? 1 : 0)
 
   const applyDraft = () => {
     pushParams((params) => {
       if (draftSort !== "created_at") params.set("sortBy", draftSort)
       else params.delete("sortBy")
-      if (draftMinPrice > priceBounds[0])
+      if (draftMinPrice > defaultMinPrice)
         params.set("minPrice", String(draftMinPrice))
       else params.delete("minPrice")
       if (draftMaxPrice < priceBounds[1])
@@ -183,7 +191,7 @@ export default function StoreResultsBar({
   }
 
   const clearFacets = () => {
-    setDraftMinPrice(priceBounds[0])
+    setDraftMinPrice(defaultMinPrice)
     setDraftMaxPrice(priceBounds[1])
     setDraftColors([])
     setDraftSort("created_at")

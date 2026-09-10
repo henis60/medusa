@@ -16,9 +16,13 @@ export default function PriceRangeSlider({
   onCommit: (v: [number, number]) => void
 }) {
   const [min, max] = bounds
-  // No price range to filter on (empty category, or nothing priced yet) —
+  // Truly nothing to filter on (empty category, or nothing priced yet) —
   // still shown, just inert, rather than the whole section disappearing.
-  const disabled = max <= min
+  const disabled = max <= 0
+  // Every matching product shares the same price: still a real, usable
+  // filter (0 up to that price), not "no range" — only the totally empty
+  // case above is disabled.
+  const singlePrice = !disabled && max === min
   const [lo, setLo] = useState(value[0])
   const [hi, setHi] = useState(value[1])
 
@@ -27,7 +31,7 @@ export default function PriceRangeSlider({
     setHi(value[1])
   }, [value[0], value[1]])
 
-  const sliderMin = disabled ? 0 : min
+  const sliderMin = disabled ? 0 : singlePrice ? 0 : min
   const sliderMax = disabled ? 1 : max
   const loValue = disabled ? sliderMin : lo
   const hiValue = disabled ? sliderMax : hi
