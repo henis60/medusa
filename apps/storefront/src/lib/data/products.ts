@@ -130,9 +130,11 @@ export const getProductsByIds = async ({
  * Paginated + sorted product listing.
  *
  * For the default created_at sort the API sorts and paginates for us, so we
- * fetch only the requested page. Price sorts still fetch 100 products and
- * sort in memory, because API-side ordering by cheapest variant price is
- * unreliable (medusajs/medusa#11029, #12900).
+ * fetch only the requested page. Price sorts still fetch every matching
+ * product and sort in memory, because API-side ordering by cheapest variant
+ * price is unreliable (medusajs/medusa#11029, #12900) — paginated (not a
+ * single capped fetch), so a catalog/category past one page's worth of
+ * products doesn't silently lose the rest from the sorted view.
  */
 export const listProductsWithSort = async ({
   page = 0,
@@ -168,17 +170,26 @@ export const listProductsWithSort = async ({
     })
   }
 
-  const {
-    response: { products },
-  } = await listProducts({
-    pageParam: 0,
-    queryParams: {
-      ...queryParams,
-      limit: 100,
-    },
-    countryCode,
-    locale,
-  })
+  const FETCH_PAGE_SIZE = 100
+  const products: HttpTypes.StoreProduct[] = []
+  let fetchPage = 1
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const {
+      response: { products: pageProducts, count: totalCount },
+    } = await listProducts({
+      pageParam: fetchPage,
+      queryParams: {
+        ...queryParams,
+        limit: FETCH_PAGE_SIZE,
+      },
+      countryCode,
+      locale,
+    })
+    products.push(...pageProducts)
+    if (pageProducts.length === 0 || products.length >= totalCount) break
+    fetchPage += 1
+  }
 
   const sortedProducts = sortProducts(products, sortBy)
 
@@ -186,10 +197,6 @@ export const listProductsWithSort = async ({
   const offset = (_page - 1) * limit
   const paginatedProducts = sortedProducts.slice(offset, offset + limit)
 
-  // Report the size of the set we actually sorted, NOT the API's total: only
-  // the first 100 products are fetched for price sorts, so an API count of
-  // e.g. 240 made pagination advertise pages that slice() can never fill,
-  // rendering empty grids past the first few pages.
   const count = sortedProducts.length
   const nextPage = count > offset + limit ? _page + 1 : null
 
@@ -253,20 +260,46 @@ export const getProductByHandle = async (
 
 /**
  * Cookie-free list of product handles for generateStaticParams (build-time
- * prerender), so the build reliably gets handles without reading cookies.
+ * prerender) and the sitemap, so both reliably get every handle without
+ * reading cookies. Paginates instead of a single capped request — a fixed
+ * `limit` here silently dropped every product past it from both the sitemap
+ * and static generation once the catalog grew past that number.
  */
 export const listProductHandles = async (
   regionId: string
 ): Promise<string[]> => {
-  return sdk.client
-    .fetch<{ products: HttpTypes.StoreProduct[] }>(`/store/products`, {
-      method: "GET",
-      query: { limit: 100, fields: "handle", region_id: regionId },
-      next: { tags: ["products"], revalidate: 3600 },
-      cache: "force-cache",
-    })
-    .then(({ products }) =>
-      products.map((p) => p.handle).filter((h): h is string => Boolean(h))
-    )
-    .catch(() => [])
+  const PAGE_SIZE = 100
+  const handles: string[] = []
+  let offset = 0
+
+  try {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { products, count } = await sdk.client.fetch<{
+        products: HttpTypes.StoreProduct[]
+        count: number
+      }>(`/store/products`, {
+        method: "GET",
+        query: {
+          limit: PAGE_SIZE,
+          offset,
+          fields: "handle",
+          region_id: regionId,
+        },
+        next: { tags: ["products"], revalidate: 3600 },
+        cache: "force-cache",
+      })
+      handles.push(
+        ...products.map((p) => p.handle).filter((h): h is string => Boolean(h))
+      )
+      offset += PAGE_SIZE
+      if (products.length === 0 || offset >= count) break
+    }
+  } catch (error) {
+    // Return whatever pages already succeeded rather than discarding them —
+    // a partial sitemap/build is better than an empty one.
+    console.error("listProductHandles failed mid-pagination:", error)
+  }
+
+  return handles
 }
