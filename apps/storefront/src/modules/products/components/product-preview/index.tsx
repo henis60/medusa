@@ -8,7 +8,7 @@ import ProductCardLink from "./product-card-link"
 
 function ColorSwatches({ product }: { product: HttpTypes.StoreProduct }) {
   const colors = getProductColors(product)
-  if (colors.length <= 1) return null
+  if (colors.length === 0) return null
 
   return (
     <div className="flex items-center gap-1.5">
