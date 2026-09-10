@@ -9,6 +9,34 @@ type RelatedProductsProps = {
   countryCode: string
 }
 
+// Generic connector/filler words — matching on these alone would pair
+// unrelated products just because of shared filler, which the
+// category/collection matching below already covers.
+const TITLE_STOPWORDS = new Set([
+  "buzunar",
+  "de",
+  "cu",
+  "si",
+  "pentru",
+  "model",
+  "modele",
+])
+
+// Lowercase, diacritic-free significant words from a title (e.g. "Cravată
+// Medalion Geometric" → ["medalion", "geometric"]) — the first word is
+// always the product-type noun (Cravată/Batistă/Butoni/...), dropped
+// unconditionally rather than via a maintained list, and short/generic
+// remaining words are filtered out too.
+function titleKeywords(title: string): string[] {
+  const [, ...rest] = title
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .split(/[\s-]+/)
+  return rest.filter((w) => w.length >= 4 && !TITLE_STOPWORDS.has(w))
+}
+
 export default async function RelatedProducts({
   product,
   countryCode,
@@ -17,41 +45,72 @@ export default async function RelatedProducts({
   const region = await getRegion(countryCode)
   if (!region) return null
 
-  // Fetch all products with full fields
-  const { response: allResponse } = await listProducts({
-    queryParams: {
-      limit: 100,
-      region_id: region.id,
-      // *options/*variants.options/+variants.variant_rank are needed for the
-      // card's color swatches (getProductColors) — without them
-      // product.options is empty and ColorSwatches renders nothing.
-      fields:
-        "*variants.calculated_price,+variants.inventory_quantity,+variants.options,+variants.variant_rank,*options,*options.values,+metadata,+tags,+type,+categories.id",
-    },
-    countryCode,
-  })
+  // Fetch every product with full fields — paginated, not a single capped
+  // request, so a catalog past one page's worth of products doesn't
+  // silently lose candidates from either section below.
+  const FETCH_PAGE_SIZE = 100
+  const allProducts: HttpTypes.StoreProduct[] = []
+  let fetchPage = 1
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const {
+      response: { products: pageProducts, count: totalCount },
+    } = await listProducts({
+      pageParam: fetchPage,
+      queryParams: {
+        limit: FETCH_PAGE_SIZE,
+        region_id: region.id,
+        // *options/*variants.options/+variants.variant_rank are needed for
+        // the card's color swatches (getProductColors) — without them
+        // product.options is empty and ColorSwatches renders nothing.
+        fields:
+          "*variants.calculated_price,+variants.inventory_quantity,+variants.options,+variants.variant_rank,*options,*options.values,+metadata,+tags,+type,+categories.id",
+      },
+      countryCode,
+    })
+    allProducts.push(...pageProducts)
+    if (pageProducts.length === 0 || allProducts.length >= totalCount) break
+    fetchPage += 1
+  }
 
   // "Fits with" — other products that have a tag whose value matches the current product's handle
   const currentHandle = product.handle ?? ""
-  const fitsWithProducts = allResponse.products.filter(
+  const fitsWithProducts = allProducts.filter(
     (p) => p.id !== product.id && (p.tags ?? []).some((t) => t.value?.trim() === currentHandle)
   )
 
-  // "You may also like" — same collection, excluding current + fits-with.
-  // Falls back to sharing a category when the product has no collection, so
-  // it still gets recommendations instead of an empty section.
+  // "You may also like" — ranked by shared significant title words first
+  // (e.g. "Cravată Medalion Geometric" pairs with other "medalion geometric"
+  // products regardless of category/collection), then topped up with
+  // same-collection (or same-category, as a fallback) matches so the section
+  // isn't empty just because nothing else shares a keyword.
   const excludeIds = new Set([product.id, ...fitsWithProducts.map((p) => p.id)])
+  const currentKeywords = new Set(titleKeywords(product.title ?? ""))
   const productCategoryIds = new Set((product.categories ?? []).map((c) => c.id))
-  const similarProducts = allResponse.products
-    .filter((p) => {
-      if (excludeIds.has(p.id)) return false
-      if (product.collection_id) {
-        return p.collection_id === product.collection_id
-      }
-      if (productCategoryIds.size === 0) return false
-      return (p.categories ?? []).some((c) => productCategoryIds.has(c.id))
-    })
-    .slice(0, 4)
+
+  const candidates = allProducts.filter((p) => !excludeIds.has(p.id))
+
+  const keywordMatches = candidates
+    .map((p) => ({
+      product: p,
+      score: titleKeywords(p.title ?? "").filter((w) => currentKeywords.has(w))
+        .length,
+    }))
+    .filter((m) => m.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .map((m) => m.product)
+
+  const collectionOrCategoryMatches = candidates.filter((p) => {
+    if (product.collection_id) return p.collection_id === product.collection_id
+    if (productCategoryIds.size === 0) return false
+    return (p.categories ?? []).some((c) => productCategoryIds.has(c.id))
+  })
+
+  const similarProductsMap = new Map<string, HttpTypes.StoreProduct>()
+  for (const p of [...keywordMatches, ...collectionOrCategoryMatches]) {
+    if (!similarProductsMap.has(p.id)) similarProductsMap.set(p.id, p)
+  }
+  const similarProducts = Array.from(similarProductsMap.values()).slice(0, 4)
 
   if (!fitsWithProducts.length && !similarProducts.length) return null
 
