@@ -1,3 +1,7 @@
+"use client"
+
+import { useEffect, useState } from "react"
+
 import { montigny } from "./fonts"
 
 export default function SiteHeader({
@@ -11,6 +15,15 @@ export default function SiteHeader({
   ctaHref?: string
   ctaLabel?: string
 }) {
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10)
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+
   return (
     <header
       style={{
@@ -21,10 +34,14 @@ export default function SiteHeader({
         zIndex: 100,
         height: 64,
         padding: "0 var(--pad)",
-        background: "rgba(11,18,14,0.55)",
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
-        borderBottom: "1px solid rgba(201,168,76,0.14)",
+        background: scrolled ? "rgba(11,18,14,0.55)" : "transparent",
+        backdropFilter: scrolled ? "blur(8px)" : "none",
+        WebkitBackdropFilter: scrolled ? "blur(8px)" : "none",
+        borderBottom: scrolled
+          ? "1px solid rgba(201,168,76,0.14)"
+          : "1px solid transparent",
+        transition:
+          "background .3s, backdrop-filter .3s, border-color .3s",
       }}
     >
       <div
@@ -50,6 +67,10 @@ export default function SiteHeader({
             display: "flex",
             alignItems: "center",
             gap: 6,
+            opacity: scrolled ? 1 : 0,
+            transform: scrolled ? "translateY(0)" : "translateY(-6px)",
+            pointerEvents: scrolled ? "auto" : "none",
+            transition: "opacity .3s, transform .3s",
           }}
         >
           <span style={{ textTransform: "uppercase" }}>The Hunter</span>

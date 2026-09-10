@@ -139,7 +139,9 @@ body.thm-active {
   justify-content: center;
   background: rgba(13, 31, 23, 0);
   opacity: 0;
-  transition: opacity 0.3s, background 0.3s;
+  transition:
+    opacity 0.3s,
+    background 0.3s;
   font-family: var(--rl);
   font-size: 10px;
   letter-spacing: 0.4em;
@@ -258,6 +260,18 @@ body.thm-active {
   }
 }
 
+@media (max-width: 767px) {
+  .thm-piesa-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .thm-piesa-figure {
+    justify-self: stretch !important;
+    width: 100% !important;
+  }
+}
+
 .thm-hero-shell {
   display: flex;
   flex-direction: column;
@@ -284,7 +298,7 @@ body.thm-active {
   opacity: 0.7;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 767px) {
   .thm-hero-cta-row {
     flex-direction: column;
   }
@@ -317,27 +331,58 @@ body.thm-active {
   }
 }
 
-@media (max-width: 640px) {
+.thm-hero-title-break {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .thm-hero-title-break {
+    display: block;
+  }
+}
+
+@media (max-width: 767px) {
   .thm-hero-content {
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   .thm-hero-content h1,
   .thm-hero-content p {
     margin-left: auto;
     margin-right: auto;
   }
-  .thm-hero-content > div:first-child {
-    justify-content: center;
-  }
   .thm-hero-cta-row {
     justify-content: center;
   }
 }
 
-@media (max-width: 640px) {
+/* --- Mobile hero layout: matches the homepage's own .hero/.hero-content
+   mobile treatment — full-viewport-height hero, content split into a top
+   group (eyebrow/title/copy) and the CTA row, separated by a fixed gap
+   (not justify-content: space-between, which stretched the gap unevenly
+   depending on how much text the top group happened to wrap to). --- */
+@media (max-width: 767px) {
   .thm-hero-section {
-    padding-top: clamp(64px, 14vw, 100px) !important;
-    padding-bottom: clamp(72px, 16vw, 110px) !important;
+    height: 100svh;
+    justify-content: center !important;
+    padding-top: 0 !important;
+    padding-bottom: clamp(24px, 6vh, 48px) !important;
+  }
+  .thm-hero-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: clamp(32px, 10vh, 80px);
+    padding-top: clamp(80px, 16vh, 130px);
+  }
+  .thm-hero-top-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 }
 
@@ -394,10 +439,7 @@ body.thm-active {
     margin-bottom: 0;
   }
   .thm-hero-copy {
-    margin-top: clamp(24px, 5vh, 44px) !important;
-  }
-  .thm-hero-cta-row {
-    margin-top: clamp(32px, 6vh, 56px) !important;
+    margin-top: clamp(12px, 2.5vh, 24px) !important;
   }
 }
 

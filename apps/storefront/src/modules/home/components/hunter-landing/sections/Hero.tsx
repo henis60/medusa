@@ -90,8 +90,11 @@ const Hero = () => {
         </div>
         {/* end hero-top-group */}
 
-        <div>
-          <LocalizedClientLink href="/ready-to-wear" className="hero-cta">
+        <div className="hero-cta-wrap">
+          <LocalizedClientLink
+            href="/ready-to-wear"
+            className="hero-cta hero-cta--wide"
+          >
             <span className="hero-cta-text">{t("Explorează Colecția")}</span>
           </LocalizedClientLink>
         </div>

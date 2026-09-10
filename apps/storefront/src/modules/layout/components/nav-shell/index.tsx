@@ -11,9 +11,9 @@ const NavShell = ({ children }: { children: React.ReactNode }) => {
   // as the true homepage — it has its own full-bleed dark hero directly
   // under the nav, so an opaque chrome background would clash with it.
   const isLanding = segments.length === 0 || isMeridian
-  // Unlike the true homepage, Meridian keeps its logo visible immediately —
-  // only the homepage hides it until scrolled past the hero.
-  const hideLogoUntilScroll = segments.length === 0
+  // Meridian gets the same hide-until-scroll logo treatment as the true
+  // homepage, since it also has its own full-bleed hero directly under nav.
+  const hideLogoUntilScroll = segments.length === 0 || isMeridian
 
   const [scrolled, setScrolled] = useState(false)
 

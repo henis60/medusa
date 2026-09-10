@@ -347,7 +347,7 @@ body.hunter-landing-active::before {
   .hero-content {
     flex: 1;
     justify-content: space-between;
-    padding-top: clamp(120px, 28vh, 180px);
+    padding-top: clamp(120px, 28vh, 200px);
     padding-bottom: clamp(20px, 5vh, 48px);
   }
   .hero-top-group {
@@ -487,11 +487,12 @@ body.hunter-landing-active::before {
   align-items: center;
   justify-content: center;
   gap: 14px;
-  margin-bottom: 18px;
+  margin-bottom: 10px;
 }
 .eyebrow-text {
   font-family: var(--rl);
   font-size: 11px;
+  font-weight: 700;
   letter-spacing: 7px;
   text-transform: uppercase;
   color: rgba(201, 168, 76, 0.6);
@@ -753,6 +754,7 @@ body.hunter-landing-active::before {
 .hero-cta-wrap {
   display: flex;
   justify-content: center;
+  width: 100%;
 }
 .hero-cta--wide {
   width: calc(100% - 2rem);
@@ -4107,6 +4109,18 @@ html {
   }
 }
 
+@media (max-width: 767px) {
+  .thm-piesa-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .thm-piesa-figure {
+    justify-self: stretch !important;
+    width: 100% !important;
+  }
+}
+
 /* --- Meridian: header + hero + sponsor strip always fill exactly one
    viewport, matching the original single-screen landing pattern. --- */
 /* The site's shared Nav is sticky (not fixed) and occupies real flow height
@@ -4141,7 +4155,7 @@ html {
 
 /* --- Meridian: hero CTAs stack full-width on phones instead of wrapping
    into two uneven-width pills. --- */
-@media (max-width: 480px) {
+@media (max-width: 767px) {
   .thm-hero-cta-row {
     flex-direction: column;
   }
@@ -4179,29 +4193,58 @@ html {
   }
 }
 
+.thm-hero-title-break {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .thm-hero-title-break {
+    display: block;
+  }
+}
+
 /* --- Meridian: hero content centers on phones (eyebrow rule, heading,
    copy, and CTA row all switch from left-aligned to centered). --- */
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   .thm-hero-content {
     text-align: center;
+    align-items: center;
   }
   .thm-hero-content h1,
   .thm-hero-content p {
     margin-left: auto;
     margin-right: auto;
   }
-  .thm-hero-content > div:first-child {
-    justify-content: center;
-  }
   .thm-hero-cta-row {
     justify-content: center;
   }
 }
 
-@media (max-width: 640px) {
+/* --- Mobile hero layout: matches the homepage's own .hero/.hero-content
+   mobile treatment — full-viewport-height hero, content split into a top
+   group (eyebrow/title/copy) and the CTA row, separated by a fixed gap
+   (not justify-content: space-between, which stretched the gap unevenly
+   depending on how much text the top group happened to wrap to). --- */
+@media (max-width: 767px) {
   .thm-hero-section {
-    padding-top: clamp(64px, 14vw, 100px) !important;
-    padding-bottom: clamp(72px, 16vw, 110px) !important;
+    height: 100svh;
+    justify-content: center !important;
+    padding-top: 0 !important;
+    padding-bottom: clamp(24px, 6vh, 48px) !important;
+  }
+  .thm-hero-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: clamp(32px, 10vh, 80px);
+    padding-top: clamp(80px, 16vh, 130px);
+  }
+  .thm-hero-top-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 }
 
@@ -4257,10 +4300,7 @@ html {
     margin-bottom: 0;
   }
   .thm-hero-copy {
-    margin-top: clamp(24px, 5vh, 44px) !important;
-  }
-  .thm-hero-cta-row {
-    margin-top: clamp(32px, 6vh, 56px) !important;
+    margin-top: clamp(12px, 2.5vh, 24px) !important;
   }
 }
 

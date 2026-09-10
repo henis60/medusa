@@ -1,5 +1,5 @@
 import Image from "next/image"
-import { useTranslations } from "next-intl"
+import { getTranslations } from "next-intl/server"
 
 import Nav from "@modules/layout/templates/nav"
 import HeroEyebrow from "../components/hero-eyebrow"
@@ -47,8 +47,8 @@ const ctaBase = {
   textTransform: "uppercase",
 } as const
 
-export default function MeridianTemplate() {
-  const t = useTranslations("meridian")
+export default async function MeridianTemplate() {
+  const t = await getTranslations("meridian")
   return (
     <div className="thm-root">
       <HashScrollFix />
@@ -77,11 +77,34 @@ export default function MeridianTemplate() {
             boxSizing: "border-box",
             display: "flex",
             flexDirection: "column",
-            justifyContent: "center",
-            padding: "clamp(40px,7vw,80px) var(--pad) clamp(56px,9vw,96px)",
-            background: "linear-gradient(180deg, #12291f 0%, #0d1f17 100%)",
+            justifyContent: "flex-end",
+            // Pull up under the transparent sticky nav (same trick as the
+            // homepage's .hero) so the hero image shows through behind it,
+            // with extra top padding to compensate so content still clears it.
+            marginTop: "-4rem",
+            padding:
+              "calc(clamp(40px,7vw,80px) + 4rem) var(--pad) clamp(120px,14vw,180px)",
+            background: "#0d1f17",
           }}
         >
+          <Image
+            src="/meridian/thm-hero.webp"
+            alt="The Hunter Meridian"
+            fill
+            priority
+            sizes="100vw"
+            style={{ objectFit: "cover" }}
+          />
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              pointerEvents: "none",
+              background:
+                "linear-gradient(180deg, rgba(18,41,31,0.55) 0%, rgba(13,31,23,0.75) 55%, rgba(13,31,23,0.95) 100%)",
+            }}
+          />
           <div
             aria-hidden="true"
             style={{
@@ -97,6 +120,7 @@ export default function MeridianTemplate() {
               className="thm-hero-content"
               style={{ position: "relative", maxWidth: 1360, margin: "0 auto" }}
             >
+             <div className="thm-hero-top-group">
               <HeroEyebrow />
               <h1
                 className="thm-hero-title"
@@ -110,7 +134,8 @@ export default function MeridianTemplate() {
                   maxWidth: "20ch",
                 }}
               >
-                The Hunter{" "}
+                <span style={{ textTransform: "uppercase" }}>The Hunter</span>
+                <br className="thm-hero-title-break" />{" "}
                 <em
                   className={montigny.className}
                   style={{
@@ -132,7 +157,7 @@ export default function MeridianTemplate() {
                   lineHeight: 1.6,
                   color: "rgba(245,240,232,0.9)",
                   maxWidth: "48ch",
-                  margin: "34px 0 0",
+                  margin: 0,
                 }}
               >
                 {t(
@@ -151,13 +176,15 @@ export default function MeridianTemplate() {
                 }}
               >
                 {t(
-                  "Zece automobile în cinci perechi clasic–contemporan și trei colecții noi The Hunter House, într-o singură zi"
+                  "Zece automobile în cinci perechi clasic–contemporan și trei colecții noi The Hunter House, într-o singură zi, la Piața Cetății în Baia Mare"
                 )}
               </p>
+             </div>
               <div
                 className="thm-hero-cta-row"
                 style={{
                   display: "flex",
+                  width: "100%",
                   gap: 16,
                   flexWrap: "wrap",
                   marginTop: 44,
@@ -165,13 +192,13 @@ export default function MeridianTemplate() {
               >
                 <SmoothAnchorLink
                   href="#tema"
-                  className="thm-btn-solid thm-hero-cta"
+                  className="thm-btn-outline thm-hero-cta"
                   style={{
                     ...ctaBase,
-                    background: "var(--gold)",
-                    color: "#0d1f17",
+                    border: "1px solid rgba(201,168,76,0.45)",
+                    color: "rgba(232,213,163,0.78)",
                     justifyContent: "center",
-                    transition: "background .3s",
+                    transition: "border-color .3s, background .3s, color .3s",
                   }}
                 >
                   {t("Vezi tema")}
@@ -386,6 +413,7 @@ export default function MeridianTemplate() {
               </p>
             </div>
             <figure
+              className="thm-piesa-figure"
               style={{
                 margin: 0,
                 justifySelf: "end",
@@ -424,160 +452,177 @@ export default function MeridianTemplate() {
         <ProgramRows />
       </section>
 
-      {/* Locația */}
-      <section id="locatia" style={{ background: "var(--dark)" }}>
-        <div className="thm-locatia-row">
-          {/* Locația media (photo + text overlay) — temporarily disabled,
-              map only for now.
-          <div
-            className="thm-locatia-media"
-            style={{
-              position: "relative",
-              width: "100%",
-              overflow: "hidden",
-              borderBottom: "1px solid rgba(201,168,76,0.25)",
-            }}
-          >
-            <Image
-              src="/meridian/thm-locatia.webp"
-              alt="Colonia Pictorilor, Baia Mare"
-              fill
-              sizes="100vw"
-              style={{ objectFit: "cover" }}
-            />
-            <div
-              aria-hidden="true"
-              style={{
-                position: "absolute",
-                inset: 0,
-                background:
-                  "linear-gradient(180deg, rgba(13,31,23,0.6) 0%, rgba(13,31,23,0.4) 40%, rgba(13,31,23,0.9) 100%)",
-                pointerEvents: "none",
-              }}
-            />
-            <div
-              className="thm-locatia-overlay"
-              style={{
-                position: "absolute",
-                left: 0,
-                top: "65%",
-                transform: "translateY(-50%)",
-                padding: "clamp(20px,3.5vw,40px) var(--pad)",
-                pointerEvents: "none",
-              }}
-            >
-              <div style={{ maxWidth: 1360, margin: "0 auto" }}>
-                <div style={{ maxWidth: 640, pointerEvents: "auto" }}>
-                  <div style={{ ...eyebrowRow, marginBottom: 12 }}>
-                      <span
-                      style={{
-                        ...eyebrowLabel,
-                        color: "rgba(201,168,76,0.85)",
-                      }}
-                    >
-                      Locația
-                    </span>
-                  </div>
-                  <h2
-                    className="thm-locatia-heading"
-                    style={{
-                      fontFamily: "var(--pd)",
-                      fontSize: "clamp(28px,3.6vw,50px)",
-                      fontWeight: 400,
-                      lineHeight: 1.05,
-                      color: "var(--ivory)",
-                      margin: 0,
-                      maxWidth: "22ch",
-                    }}
-                  >
-                    Colonia Pictorilor,{" "}
-                    <em style={{ fontStyle: "italic", color: "#c9a84c" }}>
-                      Baia Mare
-                    </em>
-                  </h2>
-                  <p
-                    style={{
-                      fontFamily: "var(--cg)",
-                      fontSize: 17,
-                      fontWeight: 300,
-                      lineHeight: 1.7,
-                      color: "rgba(245,240,232,0.8)",
-                      margin: "14px 0 0",
-                      maxWidth: "58ch",
-                    }}
-                  >
-                    Strada Victoriei numărul 21, Baia Mare, Maramureș.
-                  </p>
-                </div>
+      {/* Zona VIP */}
+      <section
+        id="vip"
+        style={{
+          padding: "clamp(56px,9vw,96px) var(--pad)",
+          background: "var(--dark2)",
+        }}
+      >
+        <Reveal>
+          <div style={{ maxWidth: 1360, margin: "0 auto" }}>
+            <div style={{ maxWidth: 640 }}>
+              <div style={eyebrowRow}>
+                <span style={eyebrowLabel}>{t("Zona VIP")}</span>
               </div>
-            </div>
-          </div>
-          */}
-          {/* Map link — temporarily disabled entirely (venue kept private
-              on the page). Wrapped in {false && (...)} rather than a plain
-              JSX comment since the pin SVG below has its own {/* *}/} block,
-              which would otherwise prematurely close a wrapping comment. */}
-          {false && (
-            <a
-              href="https://www.google.com/maps/dir/?api=1&destination=Colonia+Pictorilor,+Baia+Mare"
-              target="_blank"
-              rel="noopener"
-              aria-label="Indicații către locație"
-              className="thm-map-link"
-              style={{
-                position: "relative",
-                display: "block",
-                background: "var(--dark2)",
-              }}
-            >
-              <iframe
-                src="https://www.google.com/maps?q=Colonia+Pictorilor,+Baia+Mare&z=15&output=embed"
-                title="Hartă Google, Baia Mare"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                allowFullScreen
-                className="thm-map-dark"
+              <h2 style={{ ...sectionHeading, margin: 0, maxWidth: "18ch" }}>
+                {t("O experiență")}{" "}
+                <em style={{ fontStyle: "italic", color: "#c9a84c" }}>
+                  {t("exclusivă")}
+                </em>
+              </h2>
+              <p
                 style={{
-                  display: "block",
-                  width: "100%",
-                  height: "100%",
-                  border: 0,
-                  pointerEvents: "none",
-                }}
-              />
-              {/* The embed API has no marker-styling option, so the default red
-                pin is masked by the dark filter and this gold pin is overlaid
-                at the map's center — where a "q="-style embed always anchors
-                its marker — to match the brand. */}
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 24 32"
-                className="thm-map-pin"
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  width: 30,
-                  height: 40,
-                  transform: "translate(-50%, -100%)",
-                  filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.45))",
-                  pointerEvents: "none",
+                  fontFamily: "var(--cg)",
+                  fontSize: 18,
+                  fontStyle: "italic",
+                  fontWeight: 300,
+                  lineHeight: 1.75,
+                  color: "rgba(232,213,163,0.65)",
+                  margin: "20px 0 0",
                 }}
               >
-                <path
-                  d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20c0-6.6-5.4-12-12-12z"
-                  fill="#c9a84c"
-                  stroke="#0d1f17"
-                  strokeWidth="1.5"
-                />
-                <circle cx="12" cy="12" r="4.5" fill="#0d1f17" />
-              </svg>
-              <span aria-hidden="true" className="thm-map-overlay">
-                Indicații către locație
-              </span>
-            </a>
-          )}
-        </div>
+                {t("Un spațiu privat, dedicat unui număr limitat de invitați")}
+              </p>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 12,
+                  margin: "32px 0 0",
+                }}
+              >
+                {[
+                  "Catering coordonat de un sommelier cu 3 stele Michelin",
+                  "Champagne Grand Cru Blanc de Blancs",
+                  "Selecție de caviar & stridii premium",
+                  "Confort exclusivist",
+                ].map((item) => (
+                  <div
+                    key={item}
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: 10,
+                    }}
+                  >
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        flex: "0 0 auto",
+                        display: "inline-flex",
+                        justifyContent: "center",
+                        width: 14,
+                        fontSize: 5,
+                        color: "#8b6914",
+                        marginTop: 6,
+                      }}
+                    >
+                      ◆
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: "var(--cg)",
+                        fontSize: 16,
+                        fontStyle: "italic",
+                        fontWeight: 300,
+                        lineHeight: 1.6,
+                        color: "rgba(245,240,232,0.8)",
+                      }}
+                    >
+                      {t(item)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <a
+                href={`https://wa.me/40765080667?text=${encodeURIComponent(
+                  t(
+                    "Salut, mă interesează accesul la zona VIP - The Hunter Meridian",
+                  ),
+                )}`}
+                target="_blank"
+                rel="noopener"
+                className="thm-btn-solid"
+                style={{
+                  ...ctaBase,
+                  marginTop: 40,
+                  background: "var(--gold)",
+                  color: "#0d1f17",
+                  justifyContent: "center",
+                  transition: "background .3s",
+                }}
+              >
+                {t("Cere acces zonă VIP")}
+              </a>
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Locația */}
+      <section id="locatia" style={{ background: "var(--dark)" }}>
+        <a
+          href="https://www.google.com/maps/dir/?api=1&destination=47.6587074,23.5826247"
+          target="_blank"
+          rel="noopener"
+          aria-label={t("Indicații către locație")}
+          className="thm-map-link"
+          style={{
+            position: "relative",
+            display: "block",
+            width: "100%",
+            height: "clamp(160px,16vw,220px)",
+            background: "var(--dark2)",
+          }}
+        >
+          <iframe
+            src="https://www.google.com/maps?q=47.6587074,23.5826247&z=16&output=embed"
+            title={t("Hartă Google, Piața Cetății, Baia Mare")}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            allowFullScreen
+            className="thm-map-dark"
+            style={{
+              display: "block",
+              width: "100%",
+              height: "100%",
+              border: 0,
+              pointerEvents: "none",
+            }}
+          />
+          {/* The embed API has no marker-styling option, so the default red
+            pin is masked by the dark filter and this gold pin is overlaid
+            at the map's center — where a "q="-style embed always anchors
+            its marker — to match the brand. */}
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 32"
+            className="thm-map-pin"
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              width: 30,
+              height: 40,
+              transform: "translate(-50%, -100%)",
+              filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.45))",
+              pointerEvents: "none",
+            }}
+          >
+            <path
+              d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20c0-6.6-5.4-12-12-12z"
+              fill="#c9a84c"
+              stroke="#0d1f17"
+              strokeWidth="1.5"
+            />
+            <circle cx="12" cy="12" r="4.5" fill="#0d1f17" />
+          </svg>
+          <span aria-hidden="true" className="thm-map-overlay">
+            {t("Indicații către locație")}
+          </span>
+        </a>
       </section>
 
       {/* Contact */}

@@ -10,7 +10,7 @@ export default function HeroEyebrow() {
   const reduceMotion = useReducedMotion()
 
   return (
-    <div className="thm-eyebrow-row" style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 34 }}>
+    <div className="thm-eyebrow-row" style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
       <motion.span
         className="thm-eyebrow-date"
         style={{
