@@ -105,7 +105,14 @@ function ImageLightbox({
     y: (a.clientY + b.clientY) / 2,
   })
 
+  // Guards the desktop click-to-zoom handler below from also firing off the
+  // synthetic click a touchend produces — pinch/pan/swipe already own zoom
+  // on touch devices, so a click within this window after a real touch is
+  // ignored rather than toggling zoom a second time.
+  const lastTouchAtRef = useRef(0)
+
   const onImgTouchStart = (e: React.TouchEvent) => {
+    lastTouchAtRef.current = Date.now()
     const g = gestureRef.current
     if (e.touches.length === 2) {
       const [a, b] = [e.touches[0], e.touches[1]]
@@ -160,6 +167,29 @@ function ImageLightbox({
     if (e.touches.length === 0) g.mode = "none"
   }
 
+  // Desktop click-to-zoom: zooms in centered on the clicked point, click
+  // again anywhere to zoom back out. Touch devices already have pinch/pan
+  // for this — skip if a touch just happened so the tap-through synthetic
+  // click doesn't also toggle zoom.
+  const ZOOM_SCALE = 2.5
+  const onImgClick = (e: React.MouseEvent<HTMLImageElement>) => {
+    e.stopPropagation()
+    if (Date.now() - lastTouchAtRef.current < 500) return
+
+    if (zoom.scale > 1.01) {
+      setZoom({ scale: 1, x: 0, y: 0 })
+      return
+    }
+    const rect = e.currentTarget.getBoundingClientRect()
+    const offsetX = e.clientX - (rect.left + rect.width / 2)
+    const offsetY = e.clientY - (rect.top + rect.height / 2)
+    setZoom({
+      scale: ZOOM_SCALE,
+      x: -offsetX * (ZOOM_SCALE - 1),
+      y: -offsetY * (ZOOM_SCALE - 1),
+    })
+  }
+
   const selected = images[index]
 
   return createPortal(
@@ -211,7 +241,12 @@ function ImageLightbox({
           src={selected.url}
           alt={t("Imagine produs")}
           draggable={false}
-          onClick={(e) => e.stopPropagation()}
+          onClick={onImgClick}
+          onMouseLeave={() => {
+            // Desktop only — a real touch never fires mouseleave, so this
+            // can't interrupt the pinch/pan gestures above.
+            if (zoom.scale > 1.01) setZoom({ scale: 1, x: 0, y: 0 })
+          }}
           onTouchStart={onImgTouchStart}
           onTouchMove={onImgTouchMove}
           onTouchEnd={onImgTouchEnd}
@@ -219,6 +254,7 @@ function ImageLightbox({
             transform: `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.scale})`,
             transition: gestureRef.current.mode === "none" ? "transform 0.15s ease-out" : "none",
             touchAction: "none",
+            cursor: zoom.scale > 1.01 ? "zoom-out" : "zoom-in",
           }}
           className="max-w-[92vw] max-h-[92vh] w-auto h-auto object-contain select-none"
         />
