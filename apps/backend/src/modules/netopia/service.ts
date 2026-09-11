@@ -189,7 +189,7 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
               code: "ORDER",
               category: "general",
               price: amountRON,
-              vat: 19,
+              vat: 21,
             },
           ],
         },

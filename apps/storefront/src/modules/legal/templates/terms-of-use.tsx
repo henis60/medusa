@@ -87,7 +87,7 @@ const TermsOfUseTemplate = async () => {
         <Section title={t("Produse și prețuri")}>
           <p>
             {t("Prețurile sunt afișate în")}{" "}
-            <span className="text-[var(--theme-text)]">{t("Lei (RON)")}</span> {t("și includ TVA 19%, cu excepția cazului în care se specifică altfel Ne rezervăm dreptul de a modifica prețurile fără notificare prealabilă")}
+            <span className="text-[var(--theme-text)]">{t("Lei (RON)")}</span> {t("și includ TVA 21%, cu excepția cazului în care se specifică altfel Ne rezervăm dreptul de a modifica prețurile fără notificare prealabilă")}
           </p>
           <p>
             {t("Ne străduim să afișăm cu acuratețe culorile și detaliile produselor, însă nuanțele pot diferi ușor față de ecranul tău")}
@@ -161,7 +161,15 @@ const TermsOfUseTemplate = async () => {
             )}
           </p>
           <div className="border border-[var(--theme-border)] p-5 flex flex-col gap-2 text-[var(--theme-text)]">
-            <p>{t("Către S.C. BOJO HOUSE S.R.L., contact@thehunter.ro, +40 765 080 667:")}</p>
+            {/* Company details kept as plain literal text, not a t() key —
+                next-intl treats dots in a key as nested-path separators, so a
+                key containing "S.C.", "S.R.L." and an email/domain (all with
+                dots) fails to resolve and falls back to showing the raw
+                "namespace.key" string instead of the text (matches the
+                pattern already used for "Denumire firmă:" above). */}
+            <p>
+              {t("Către:")} S.C. BOJO HOUSE S.R.L., contact@thehunter.ro, +40 765 080 667:
+            </p>
             <p>
               {t("Prin prezenta notific retragerea mea din contractul privind vânzarea următorului produs / următoarelor produse:")}
             </p>
