@@ -51,7 +51,20 @@ export function getColorOption(product: HttpTypes.StoreProduct) {
   )
 }
 
-// Find the hex stored per-variant (metadata.color_hex) for a given color value.
+function normalizeHex(hex?: string | null) {
+  return hex && /^#?[0-9a-fA-F]{3,8}$/.test(hex)
+    ? hex.startsWith("#")
+      ? hex
+      : `#${hex}`
+    : null
+}
+
+// Find the hex stored per-variant for a given color value. The AI product
+// generator (apps/backend ai-product admin route) writes the same hex to both
+// `variant.material` (a native scalar, fetched by default — no +metadata
+// needed) and `metadata.color_hex` (kept for older products created before
+// `material` was used for this) — prefer the native field, fall back to
+// metadata for those older variants.
 export function hexFromVariants(
   product: HttpTypes.StoreProduct,
   colorOptionId: string | undefined,
@@ -61,12 +74,10 @@ export function hexFromVariants(
   const variant = product.variants?.find((v) =>
     v.options?.some((o) => o.option_id === colorOptionId && o.value === value)
   )
-  const hex = (variant?.metadata?.color_hex as string | undefined) ?? null
-  return hex && /^#?[0-9a-fA-F]{3,8}$/.test(hex)
-    ? hex.startsWith("#")
-      ? hex
-      : `#${hex}`
-    : null
+  return (
+    normalizeHex((variant as any)?.material) ??
+    normalizeHex(variant?.metadata?.color_hex as string | undefined)
+  )
 }
 
 export function getProductColors(product: HttpTypes.StoreProduct) {
