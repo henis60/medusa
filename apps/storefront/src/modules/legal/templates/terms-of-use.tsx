@@ -56,6 +56,7 @@ const TermsOfUseTemplate = async () => {
             <li>{t("CUI")}: 47739604</li>
             <li>{t("Adresă:")} Str. Piața Eroilor, nr. 2, Târgu Lăpuș, Maramureș</li>
             <li>{t("Rol în comercializare:")} {t("Comerciant")}</li>
+            <li>{t("Facturile sunt emise de:")} S.C. BOJO HOUSE S.R.L.</li>
           </ul>
         </Section>
 
@@ -122,18 +123,54 @@ const TermsOfUseTemplate = async () => {
           </p>
         </Section>
 
-        <Section label={t("OUG 34/2014")} title={t("Dreptul de retragere")}>
+        <Section label={t("OUG 34/2014")} title={t("Retur / Anulare")}>
           <p>
-            {t("Ai dreptul de a te retrage din contract în termen de")}{" "}
+            {t("Anulare:")}{" "}
+            {t("Poți anula o comandă oricând înainte de expediere, scriindu-ne pe email sau telefonic cu numărul comenzii Rambursăm integral, în maximum 14 zile de la anulare")}
+          </p>
+          <p>
+            {t("Termen de retur:")}{" "}
             <span className="text-[var(--theme-text)]">{t("14 zile calendaristice")}</span>{" "}
             {t("de la primirea produselor, fără a fi necesară justificarea deciziei")}
           </p>
           <p>
-            {t("Produsele trebuie returnate în stare originală, nefolosite și cu eticheta atașată Rambursarea se face în maximum 14 zile de la primirea înștiințării de retragere")}
+            {t("Mod de retur: scrie-ne pe email la")}{" "}
+            <a
+              href="mailto:contact@thehunter.ro"
+              className="text-[var(--theme-text)] border-b border-hunter-gold/40 hover:border-hunter-gold transition-colors"
+            >
+              contact@thehunter.ro
+            </a>{" "}
+            {t("cu numărul comenzii și, opțional, formularul de retragere de mai jos completat Îți confirmăm adresa de retur și pașii de urmat Produsele trebuie returnate în stare originală, nefolosite și cu eticheta atașată, prin curier, pe cheltuiala ta, cu excepția cazului în care produsul e neconform Rambursarea (inclusiv costul inițial de livrare) se face în maximum 14 zile de la primirea produselor returnate sau a dovezii de expediere, prin aceeași metodă de plată folosită la comandă")}
           </p>
           <p className="text-[var(--theme-text)]">
             {t("Produsele personalizate sau confecționate la comandă sunt exceptate de la dreptul de retragere")}
           </p>
+        </Section>
+
+        <Section title={t("Formular de retragere")}>
+          <p>
+            {t("Conform OUG 34/2014, poți folosi modelul de mai jos pentru a-ți exercita dreptul de retragere (completează și trimite-l pe email la")}{" "}
+            <a
+              href="mailto:contact@thehunter.ro"
+              className="text-[var(--theme-text)] border-b border-hunter-gold/40 hover:border-hunter-gold transition-colors"
+            >
+              contact@thehunter.ro
+            </a>
+            {t(" — folosirea lui nu este obligatorie)"
+            )}
+          </p>
+          <div className="border border-[var(--theme-border)] p-5 flex flex-col gap-2 text-[var(--theme-text)]">
+            <p>{t("Către S.C. BOJO HOUSE S.R.L., contact@thehunter.ro, +40 765 080 667:")}</p>
+            <p>
+              {t("Prin prezenta notific retragerea mea din contractul privind vânzarea următorului produs / următoarelor produse:")}
+            </p>
+            <p>{t("Comandat la data de / primit la data de:")}</p>
+            <p>{t("Numele consumatorului:")}</p>
+            <p>{t("Adresa consumatorului:")}</p>
+            <p>{t("Semnătura consumatorului (doar în cazul notificării pe hârtie):")}</p>
+            <p>{t("Data:")}</p>
+          </div>
         </Section>
 
         <Section title={t("Garanție")}>
