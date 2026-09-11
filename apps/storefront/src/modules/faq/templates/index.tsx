@@ -151,9 +151,9 @@ const FAQTemplate = () => {
         ))}
 
         {/* Contact footer */}
-        <div className="flex flex-col small:flex-row items-start small:items-center justify-between border-t border-[var(--theme-border)] pt-10 gap-6">
+        <div className="bg-[var(--theme-surface)] border border-[var(--theme-border)] p-5 small:p-8 flex flex-col small:flex-row items-stretch small:items-center justify-between gap-5 small:gap-6">
           <div>
-            <p className="font-display text-[20px] leading-[1.1] text-[var(--theme-text)] mb-2">
+            <p className="font-display text-[20px] leading-[1.1] text-[var(--theme-text)] mb-1.5 small:mb-2">
               {t("Nu ai găsit răspunsul?")}
             </p>
             <p className="font-sans text-[12px] text-[var(--theme-text-muted)]">
@@ -162,7 +162,7 @@ const FAQTemplate = () => {
           </div>
           <LocalizedClientLink
             href="/contact"
-            className="font-sans text-[10px] uppercase tracking-[3px] text-hunter-gold border-b border-hunter-gold/40 hover:border-hunter-gold transition-colors w-fit pb-0.5"
+            className="shrink-0 h-11 px-6 inline-flex items-center justify-center border border-[var(--theme-border)] font-sans text-[10px] uppercase tracking-[3px] text-[var(--theme-text)] hover:border-hunter-gold hover:text-hunter-gold active:border-hunter-gold active:text-hunter-gold transition-colors"
           >
             {t("Contactează-ne")}
           </LocalizedClientLink>
