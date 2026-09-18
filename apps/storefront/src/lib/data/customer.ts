@@ -207,6 +207,32 @@ export async function login(_currentState: unknown, formData: FormData) {
       error
     )
 
+    // SDK-ul aruncă la `JSON.parse`, deci pierde exact ce ne trebuie: statusul
+    // HTTP și corpul răspunsului. Le luăm cu un fetch brut pe ACEEAȘI cale, cu
+    // credențiale evident invalide — un backend sănătos răspunde 401 JSON, iar
+    // orice altceva (HTML, 5xx, timeout) identifică sursa paginii primite.
+    if (e?.name === "SyntaxError") {
+      try {
+        const probe = await fetch(`${resolvedBackendUrl}/auth/customer/emailpass`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: "diagnostic@invalid.invalid",
+            password: "invalid",
+          }),
+        })
+        const body = (await probe.text()).slice(0, 300).replace(/\s+/g, " ")
+        console.error(
+          `login probe: status=${probe.status} ` +
+            `contentType=${probe.headers.get("content-type") ?? "-"} ` +
+            `server=${probe.headers.get("server") ?? "-"} ` +
+            `cfRay=${probe.headers.get("cf-ray") ?? "-"} body=${body}`
+        )
+      } catch (probeErr) {
+        console.error(`login probe failed: ${(probeErr as Error).message}`)
+      }
+    }
+
     return t("A apărut o eroare Te rugăm să încerci din nou mai târziu")
   }
 
