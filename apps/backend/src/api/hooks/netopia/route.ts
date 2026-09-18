@@ -118,6 +118,14 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   const ipnStatus = (body as any)?.payment?.status
   const orderID = (body as any)?.order?.orderID as string | undefined
+  const ntpID = (body as any)?.payment?.ntpID as string | undefined
+
+  // Dovada că verificarea IPN chiar trece la live — până acum n-a trecut
+  // niciodată, deci prezența acestei linii e primul lucru de căutat în loguri.
+  logger.info(
+    `Netopia IPN ACCEPTAT: orderID=${orderID ?? "-"} ntpID=${ntpID ?? "-"} ` +
+      `status=${String(ipnStatus ?? "-")}`,
+  )
 
   const eventBus = req.scope.resolve(Modules.EVENT_BUS)
 
@@ -165,9 +173,19 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           },
           { delay: 7000, attempts: 3 }
         )
+        logger.info(
+          `Netopia IPN: emis netopia.payment.authorized pentru session_id=${orderID}`
+        )
       } catch (err) {
         logger.error(`Netopia IPN custom event error: ${(err as Error).message}`)
       }
+    } else {
+      // Explică de ce NU s-a emis evenimentul de finalizare — altfel un IPN
+      // acceptat care nu duce la comandă arată ca tăcere totală.
+      logger.info(
+        `Netopia IPN: fără eveniment de finalizare — status=${String(ipnStatus ?? "-")} ` +
+          `orderID=${orderID ?? "-"} formăValidă=${isSessionId}`
+      )
     }
   })()
 }

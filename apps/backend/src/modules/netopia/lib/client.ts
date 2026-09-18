@@ -9,35 +9,87 @@ import {
 const SANDBOX_BASE = "https://secure.sandbox.netopia-payments.com";
 const LIVE_BASE = "https://secure.mobilpay.ro/pay";
 
+/** Arată doar cât să recunoști valoarea, niciodată destul cât s-o folosești. */
+function mask(value: string): string {
+  if (!value) return "(lipsă)";
+  return value.length <= 8
+    ? `${value.slice(0, 2)}…(${value.length})`
+    : `${value.slice(0, 4)}…${value.slice(-2)} (${value.length})`;
+}
+
+/** Loguri minimale injectate din service (care deține logger-ul Medusa). */
+export type NetopiaClientLogger = {
+  info: (msg: string) => void;
+  error: (msg: string) => void;
+};
+
 export class NetopiaClient {
   private readonly baseUrl: string;
   private readonly apiKey: string;
   private readonly posSignature: string;
+  private readonly log?: NetopiaClientLogger;
 
-  constructor(options: NetopiaOptions) {
+  constructor(options: NetopiaOptions, log?: NetopiaClientLogger) {
     this.baseUrl = options.sandbox ? SANDBOX_BASE : LIVE_BASE;
     this.apiKey = options.apiKey;
     this.posSignature = options.posSignature;
+    this.log = log;
+
+    // Prima linie de diagnostic la live: confirmă CĂTRE CINE plecăm și cu ce
+    // credențiale, fără să scurgem cheile în loguri.
+    this.log?.info(
+      `Netopia client: baseUrl=${this.baseUrl} sandbox=${options.sandbox} ` +
+        `posSignature=${mask(this.posSignature)} apiKey=${mask(this.apiKey)}`,
+    );
   }
 
   private async request<T>(path: string, body: unknown): Promise<T> {
-    const res = await fetch(`${this.baseUrl}${path}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: this.apiKey,
-      },
-      body: JSON.stringify(body),
-    });
+    const startedAt = Date.now();
+    this.log?.info(`Netopia → POST ${this.baseUrl}${path}`);
+
+    let res: Response;
+    try {
+      res = await fetch(`${this.baseUrl}${path}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: this.apiKey,
+        },
+        body: JSON.stringify(body),
+      });
+    } catch (err) {
+      // Eșec de transport (DNS, TLS, timeout) — altfel invizibil în loguri.
+      this.log?.error(
+        `Netopia ✗ ${path} transport error după ${Date.now() - startedAt}ms: ` +
+          `${(err as Error).name}: ${(err as Error).message}`,
+      );
+      throw err;
+    }
+
+    const ms = Date.now() - startedAt;
 
     if (!res.ok) {
       const text = await res.text().catch(() => "");
+      this.log?.error(
+        `Netopia ✗ ${path} HTTP ${res.status} după ${ms}ms: ${text.slice(0, 300)}`,
+      );
       throw new Error(
         `Netopia ${path} failed [${res.status}]: ${text.slice(0, 300)}`,
       );
     }
 
-    return res.json() as Promise<T>;
+    const json = (await res.json()) as T;
+    const p = (json as any)?.payment;
+    const e = (json as any)?.error;
+
+    // Doar câmpuri neutre: fără date de card, fără billing.
+    this.log?.info(
+      `Netopia ← ${path} HTTP ${res.status} în ${ms}ms ` +
+        `ntpID=${p?.ntpID ?? "-"} status=${p?.status ?? "-"} ` +
+        `errorCode=${e?.code ?? "-"}${e?.message ? ` errorMessage=${e.message}` : ""}`,
+    );
+
+    return json;
   }
 
   async startPayment(req: NetopiaStartRequest): Promise<NetopiaStartResponse> {

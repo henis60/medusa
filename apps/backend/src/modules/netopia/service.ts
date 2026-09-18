@@ -136,8 +136,11 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
   constructor(container: InjectedDependencies, options: NetopiaOptions) {
     super(container, options);
     this.options = options;
-    this.client = new NetopiaClient(options);
     this.logger = container.logger;
+    this.client = new NetopiaClient(options, {
+      info: (msg) => this.logger.info(msg),
+      error: (msg) => this.logger.error(msg),
+    });
     this.deps = container;
   }
 
@@ -194,6 +197,14 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
     // apps/storefront/src/lib/data/cart.ts.
     const locale = (inputData.locale as string | undefined) || "ro";
     const redirectUrl = `${this.options.redirectUrl}?session_id=${sessionId}&locale=${encodeURIComponent(locale)}`;
+
+    // Ancora fiecărei plăți în loguri: de aici pornești căutarea după orderID
+    // când vrei să reconstitui un checkout. Fără date personale.
+    this.logger.info(
+      `Netopia initiatePayment: orderID=${sessionId} amount=${amountRON} ${currency} ` +
+        `locale=${locale} browserInfo=${browserInfo ? "da" : "nu"} ` +
+        `notifyUrl=${this.options.notifyUrl}`,
+    );
 
     let response;
     try {
@@ -254,6 +265,13 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
       );
     }
 
+    // Leagă orderID-ul nostru de ntpID-ul Netopia — perechea asta e ce ai nevoie
+    // ca să cauți o tranzacție în panoul lor pornind de la o comandă din Medusa.
+    this.logger.info(
+      `Netopia initiatePayment OK: orderID=${sessionId} ntpID=${ntpID || "-"} ` +
+        `status=${String(response.payment?.status ?? "-")} redirect=da`,
+    );
+
     return {
       id: ntpID || sessionId,
       data: {
@@ -293,10 +311,21 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
       const code = res.payment?.status;
       const { status, reason } = classifyStatus(code);
 
+      const where = `ntpID=${ntpID} orderID=${String(data.orderID ?? "?")}`;
+
       if (reason === "unknown") {
         this.logger.warn(
-          `Netopia getPaymentStatus: unknown status code ${String(code)} for ntpID=${ntpID} ` +
-            `(orderID=${String(data.orderID ?? "?")}) — treating as pending`,
+          `Netopia getPaymentStatus: unknown status code ${String(code)} for ${where} — treating as pending`,
+        );
+      } else if (reason === "rejected" || reason === "canceled" || reason === "refunded") {
+        // Eșecurile terminale trebuie să sară în ochi la live — până acum
+        // arătau identic cu o plată încă în desfășurare.
+        this.logger.warn(
+          `Netopia plată neîncheiată: ${where} cod=${String(code)} motiv=${reason} → ${status}`,
+        );
+      } else {
+        this.logger.info(
+          `Netopia getPaymentStatus: ${where} cod=${String(code)} motiv=${reason} → ${status}`,
         );
       }
 
