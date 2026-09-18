@@ -1,5 +1,5 @@
 export interface NetopiaOptions {
-  apiKey: string        // NETOPIA_SECRET — folosit în Authorization header
+  apiKey: string        // NETOPIA_API_KEY — folosit în Authorization header
   posSignature: string  // NETOPIA_ID — format XXXX-XXXX-XXXX-XXXX-XXXX
   publicKey: string     // NETOPIA_PUBLIC — certificatul Netopia pentru verificare IPN
   sandbox: boolean

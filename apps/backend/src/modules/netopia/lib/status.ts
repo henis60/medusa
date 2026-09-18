@@ -1,8 +1,27 @@
-// Netopia v2 payment status codes
+// Netopia v2 payment status codes.
+// Lista completă, conform SDK-urilor oficiale Netopia (go-sdk/ipn.go).
 export const NetopiaStatus = {
-  INITIATED: 0,
+  NEW: 1,
+  OPENED: 2,
   PAID: 3,
+  CANCELED: 4,
   CONFIRMED: 5,
-  REJECTED: 12,
-  PENDING_3DS: 15,
+  PENDING: 6,
+  SCHEDULED: 7,
+  CREDIT: 8,
+  CHARGEBACK_INIT: 9,
+  CHARGEBACK_ACCEPT: 10,
+  ERROR: 11,
+  DECLINED: 12,
+  FRAUD: 13,
+  PENDING_AUTH: 14,
+  THREE_DS_AUTH: 15,
+  CHARGEBACK_REPRESENT: 16,
+  REVERSED: 17,
+  PENDING_ANY: 18,
+  PROGRAMMED_RECURRENT: 19,
+  CANCELED_PROGRAMMED: 20,
+  TRIAL_PENDING: 21,
+  TRIAL: 22,
+  EXPIRED: 23,
 } as const

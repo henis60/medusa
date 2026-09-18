@@ -59,7 +59,14 @@ const PS = {
 // "3DS still running" and "code we've never seen", but collapsing them loses
 // the signal that something is wrong. The status stays identical; only the
 // diagnostics differ.
-type StatusReason = "settled" | "rejected" | "pending_3ds" | "initiated" | "unknown";
+type StatusReason =
+  | "settled"
+  | "rejected"
+  | "canceled"
+  | "refunded"
+  | "pending_3ds"
+  | "initiated"
+  | "unknown";
 
 function classifyStatus(code: number | undefined): {
   status: (typeof PS)[keyof typeof PS];
@@ -69,11 +76,33 @@ function classifyStatus(code: number | undefined): {
     case NetopiaStatus.CONFIRMED:
     case NetopiaStatus.PAID:
       return { status: PS.authorized, reason: "settled" };
-    case NetopiaStatus.REJECTED:
+
+    // Eșecuri terminale — plata nu se va mai autoriza niciodată. Fără ele,
+    // aceste coduri cădeau pe `default` și rămâneau `pending` la infinit,
+    // adică un card refuzat ținea checkout-ul blocat în loc să dea eroare.
+    case NetopiaStatus.ERROR:
+    case NetopiaStatus.DECLINED:
+    case NetopiaStatus.FRAUD:
+    case NetopiaStatus.EXPIRED:
       return { status: PS.error, reason: "rejected" };
-    case NetopiaStatus.PENDING_3DS:
+
+    case NetopiaStatus.CANCELED:
+    case NetopiaStatus.CANCELED_PROGRAMMED:
+      return { status: PS.canceled, reason: "canceled" };
+
+    // Bani întorși clientului după o plată confirmată.
+    case NetopiaStatus.CREDIT:
+    case NetopiaStatus.REVERSED:
+    case NetopiaStatus.CHARGEBACK_ACCEPT:
+      return { status: PS.canceled, reason: "refunded" };
+
+    case NetopiaStatus.THREE_DS_AUTH:
       return { status: PS.pending, reason: "pending_3ds" };
-    case NetopiaStatus.INITIATED:
+    case NetopiaStatus.NEW:
+    case NetopiaStatus.OPENED:
+    case NetopiaStatus.PENDING:
+    case NetopiaStatus.PENDING_AUTH:
+    case NetopiaStatus.PENDING_ANY:
       return { status: PS.pending, reason: "initiated" };
     default:
       return { status: PS.pending, reason: "unknown" };
@@ -118,7 +147,7 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
     if (missing.length) {
       throw new MedusaError(
         MedusaError.Types.INVALID_DATA,
-        `Netopia provider missing required options: ${missing.join(", ")} (set NETOPIA_SECRET and NETOPIA_ID)`,
+        `Netopia provider missing required options: ${missing.join(", ")} (set NETOPIA_API_KEY and NETOPIA_ID)`,
       );
     }
   }
@@ -233,7 +262,7 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
         orderID: sessionId,
         amountRON,
         currency,
-        status: response.payment?.status ?? NetopiaStatus.INITIATED,
+        status: response.payment?.status ?? NetopiaStatus.NEW,
       },
     };
   }

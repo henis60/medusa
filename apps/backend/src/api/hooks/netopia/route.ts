@@ -1,6 +1,6 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules, PaymentWebhookEvents } from "@medusajs/framework/utils"
-import { createVerify } from "crypto"
+import { createHash, createVerify, X509Certificate } from "crypto"
 
 const PROVIDER_ID = process.env.NETOPIA_PROVIDER_ID || "netopia_netopia"
 
@@ -11,58 +11,74 @@ type IpnVerification =
   | "unconfigured" // NETOPIA_PUBLIC not set — cannot verify at all
 
 /**
- * Verifies the RSA signature on a Netopia IPN.
+ * Verifică autenticitatea unui IPN Netopia v2.
  *
- * KNOWN GAP — must be confirmed against real Netopia v2 traffic:
- * the field names probed below (`x-netopia-signature`, `Authorization: Bearer`,
- * `payload.signature`) are NOT documented by Netopia anywhere in this repo, and
- * the signed-payload construction (`JSON.stringify(payload)`) is a guess too —
- * a real scheme almost certainly signs the raw request body bytes, not a
- * re-serialisation of the parsed object.
+ * Schema (confirmată din SDK-urile oficiale Netopia, ex. go-sdk `ipn.go`):
+ *  - header-ul `Verification-token` conține un JWT semnat RSA de Netopia;
+ *  - semnătura se verifică cu cheia publică din certificatul NETOPIA_PUBLIC;
+ *  - `iss` trebuie să fie exact "NETOPIA Payments";
+ *  - `aud` (string sau primul element din array) trebuie să fie POS signature-ul nostru;
+ *  - `sub` este base64( sha512( bytes-ul BRUT al body-ului ) ) — deci hash-ul se
+ *    calculează pe `rawBody`, niciodată pe o re-serializare a obiectului parsat,
+ *    care ar reordona cheile și ar strica potrivirea.
  *
- * The endpoint fails CLOSED on anything that isn't a verified signature —
- * invalid, unsigned and unconfigured all return 401. Because the field names
- * above are unconfirmed, that may reject every genuine IPN until they are
- * corrected; this is an accepted, deliberate tradeoff, safe because order
- * completion does not depend on this endpoint (the return page polls and
- * completes the cart, and authorization is re-verified server-to-server via
- * getPaymentStatus using the server-stored ntpID).
- *
- * TO CONFIRM IN PRODUCTION: watch for `Netopia IPN RESPINS (unsigned)` in the
- * logs after a real payment. Its presence means the signature arrives under a
- * different field/format — capture that IPN's headers and raw body, correct the
- * lookup and the signed-bytes construction here, and the webhook path resumes.
- * Orders keep completing via polling in the meantime.
+ * Endpoint-ul dă fail CLOSED: orice altceva decât "valid" înseamnă 401.
  */
 function verifyIpnSignature(
-  payload: unknown,
   rawBody: Buffer | undefined,
   headers: Record<string, unknown>
 ): IpnVerification {
   const rawPublic = process.env.NETOPIA_PUBLIC
   if (!rawPublic) return "unconfigured"
 
-  const signature =
-    (headers["x-netopia-signature"] as string | undefined) ||
-    (headers["authorization"] as string | undefined)?.replace(/^Bearer\s+/, "") ||
-    ((payload as any)?.signature as string | undefined)
+  const posSignature =
+    process.env.NETOPIA_ID || process.env.NETOPIA_POS_SIGNATURE || ""
+  if (!posSignature) return "unconfigured"
 
-  if (!signature) return "unsigned"
+  const token = headers["verification-token"] as string | undefined
+  if (!token || token.split(".").length !== 3) return "unsigned"
+
+  // Fără body-ul brut nu putem valida `sub`, deci nu putem avea încredere.
+  if (!rawBody) return "invalid"
 
   try {
     const pem = rawPublic.startsWith("-----")
       ? rawPublic
       : `-----BEGIN CERTIFICATE-----\n${rawPublic.match(/.{1,64}/g)!.join("\n")}\n-----END CERTIFICATE-----`
 
-    // Prefer the raw bytes as received — re-serialising the parsed object
-    // reorders/reformats keys and would break a genuine signature.
-    const signed = rawBody ?? Buffer.from(JSON.stringify(payload), "utf8")
+    const publicKey = new X509Certificate(pem).publicKey
 
-    const verifier = createVerify("RSA-SHA256")
-    verifier.update(signed)
-    return verifier.verify(pem, signature, "base64") ? "valid" : "invalid"
+    const [headerB64, payloadB64, signatureB64] = token.split(".")
+    const jwtHeader = JSON.parse(
+      Buffer.from(headerB64, "base64url").toString("utf8")
+    )
+
+    // Doar RSA. Refuzăm explicit "none"/HMAC — altfel oricine poate forja un token.
+    if (!/^RS(256|384|512)$/.test(jwtHeader?.alg ?? "")) return "invalid"
+
+    const verifier = createVerify(`RSA-SHA${jwtHeader.alg.slice(2)}`)
+    verifier.update(`${headerB64}.${payloadB64}`)
+    if (
+      !verifier.verify(publicKey, Buffer.from(signatureB64, "base64url"))
+    ) {
+      return "invalid"
+    }
+
+    const claims = JSON.parse(
+      Buffer.from(payloadB64, "base64url").toString("utf8")
+    )
+
+    if (claims?.iss !== "NETOPIA Payments") return "invalid"
+
+    const aud = Array.isArray(claims?.aud) ? claims.aud[0] : claims?.aud
+    if (!aud || aud !== posSignature) return "invalid"
+
+    const bodyHash = createHash("sha512").update(rawBody).digest("base64")
+    if (claims?.sub !== bodyHash) return "invalid"
+
+    return "valid"
   } catch {
-    // Malformed certificate/signature must never count as a pass.
+    // Certificat/token malformat nu trebuie să treacă niciodată drept valid.
     return "invalid"
   }
 }
@@ -80,31 +96,20 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   }
 
   const verification = verifyIpnSignature(
-    body,
     req.rawBody as Buffer | undefined,
     req.headers as Record<string, unknown>
   )
 
-  // Fail closed in every case that isn't a cryptographically verified signature.
-  //
-  // The signature field/format is still unconfirmed against real Netopia v2
-  // traffic (see verifyIpnSignature). If the probed field names are wrong, EVERY
-  // genuine IPN is rejected here — which is a deliberate, informed choice: order
-  // completion does not depend on this endpoint. The return page polls and
-  // completes the cart independently, and authorization is re-checked
-  // server-to-server via getPaymentStatus, so a rejected IPN delays the webhook
-  // path rather than losing the order.
-  //
-  // The rejection reason is logged at error level precisely so a wrong field
-  // name is obvious in production instead of looking like silence.
+  // Fail closed: orice altceva decât o semnătură verificată criptografic → 401.
+  // Chiar dacă un IPN e respins, comanda nu se pierde — pagina de return face
+  // polling și completează coșul, iar autorizarea e reverificată
+  // server-to-server prin getPaymentStatus cu ntpID-ul stocat la noi.
   if (verification !== "valid") {
     const reason = {
-      invalid: "semnătură invalidă",
-      unsigned:
-        "lipsă semnătură — niciun câmp recunoscut (x-netopia-signature / " +
-        "Authorization / body.signature); dacă TOATE IPN-urile sunt respinse, " +
-        "numele real al câmpului diferă și trebuie confirmat dintr-un IPN real",
-      unconfigured: "NETOPIA_PUBLIC nu este configurat — verificarea e imposibilă",
+      invalid: "Verification-token invalid (semnătură, iss, aud sau hash body)",
+      unsigned: "lipsește header-ul Verification-token",
+      unconfigured:
+        "NETOPIA_PUBLIC sau NETOPIA_ID nu sunt configurate — verificarea e imposibilă",
     }[verification]
 
     logger.error(`Netopia IPN RESPINS (${verification}): ${reason}`)
