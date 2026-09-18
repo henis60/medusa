@@ -1,6 +1,6 @@
 "use server"
 
-import { sdk, resolvedBackendUrl } from "@lib/config"
+import { sdk } from "@lib/config"
 import medusaError from "@lib/util/medusa-error"
 import { isRateLimitError } from "@lib/util/is-rate-limit-error"
 import { HttpTypes } from "@medusajs/types"
@@ -193,46 +193,6 @@ export async function login(_currentState: unknown, formData: FormData) {
     if ((error as { status?: number })?.status === 401) {
       return t("Email sau parolă incorectă")
     }
-
-    // Orice ajunge aici NU e o problemă de credențiale (un 401 s-a întors deja
-    // mai sus), deci e un eșec de sistem — și până acum era înghițit complet,
-    // ceea ce făcea imposibil de distins "backend inaccesibil" de "5xx" sau de
-    // un răspuns HTML primit de la un proxy/WAF în locul JSON-ului așteptat.
-    // Logăm URL-ul efectiv folosit, pentru că o variabilă de mediu absentă la
-    // runtime trimite tăcut apelurile pe URL-ul public în loc de cel privat.
-    const e = error as { status?: number; name?: string; message?: string }
-    console.error(
-      `login failed (non-401): backendUrl=${resolvedBackendUrl} ` +
-        `status=${e?.status ?? "-"} name=${e?.name ?? "-"} message=${e?.message ?? String(error)}`,
-      error
-    )
-
-    // SDK-ul aruncă la `JSON.parse`, deci pierde exact ce ne trebuie: statusul
-    // HTTP și corpul răspunsului. Le luăm cu un fetch brut pe ACEEAȘI cale, cu
-    // credențiale evident invalide — un backend sănătos răspunde 401 JSON, iar
-    // orice altceva (HTML, 5xx, timeout) identifică sursa paginii primite.
-    if (e?.name === "SyntaxError") {
-      try {
-        const probe = await fetch(`${resolvedBackendUrl}/auth/customer/emailpass`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: "diagnostic@invalid.invalid",
-            password: "invalid",
-          }),
-        })
-        const body = (await probe.text()).slice(0, 300).replace(/\s+/g, " ")
-        console.error(
-          `login probe: status=${probe.status} ` +
-            `contentType=${probe.headers.get("content-type") ?? "-"} ` +
-            `server=${probe.headers.get("server") ?? "-"} ` +
-            `cfRay=${probe.headers.get("cf-ray") ?? "-"} body=${body}`
-        )
-      } catch (probeErr) {
-        console.error(`login probe failed: ${(probeErr as Error).message}`)
-      }
-    }
-
     return t("A apărut o eroare Te rugăm să încerci din nou mai târziu")
   }
 

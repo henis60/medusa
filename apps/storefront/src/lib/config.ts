@@ -24,23 +24,6 @@ if (
   backendUrl = process.env.MEDUSA_BACKEND_URL
 }
 
-// Expus pentru diagnostic: distinge "a căzut pe URL-ul public" de "folosește
-// privatul", ceea ce din afară arată identic (aceeași eroare generică).
-export const resolvedBackendUrl = backendUrl
-
-// Un singur rând la pornirea procesului server, care arată exact CARE dintre
-// cele trei condiții de mai sus a decis URL-ul. Fără el, "variabila lipsește
-// la runtime", "NEXT_PHASE a rămas setat din build" și "variabila e string gol"
-// arată identic din afară: toate trei cad tăcut pe URL-ul public.
-if (typeof window === "undefined") {
-  const raw = process.env.MEDUSA_BACKEND_URL
-  console.log(
-    `[config] backendUrl=${backendUrl} ` +
-      `MEDUSA_BACKEND_URL=${raw === undefined ? "ABSENTĂ" : raw === "" ? "STRING GOL" : raw} ` +
-      `NEXT_PHASE=${process.env.NEXT_PHASE ?? "-"} isBuildPhase=${isBuildPhase}`
-  )
-}
-
 export const sdk = new Medusa({
   baseUrl: backendUrl,
   debug: process.env.NODE_ENV === "development",
