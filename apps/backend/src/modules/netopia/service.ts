@@ -158,18 +158,14 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
   async initiatePayment(
     input: InitiatePaymentInput,
   ): Promise<InitiatePaymentOutput> {
-    // Temporary launch safeguard: while still on NETOPIA_TEST_MODE, a
-    // "successful" checkout never actually captures real money — a
-    // customer could complete an order believing they paid. Block checkout
-    // entirely until live keys are confirmed and NETOPIA_TEST_MODE is set
-    // to "false". Remove this block once live.
+    // Safeguard-ul care bloca checkout-ul în sandbox a fost scos ca să se poată
+    // testa fluxul complet pe sandbox. Consecința: în sandbox un checkout
+    // "reușit" NU încasează bani reali, deci o comandă poate ajunge finalizată
+    // fără plată. Cât timp `sandbox` e adevărat, magazinul nu trebuie lăsat
+    // accesibil publicului — vezi NEXT_PUBLIC_CHECKOUT_DISABLED în storefront.
     if (this.options.sandbox) {
       this.logger.warn(
-        "Netopia checkout blocked: still in sandbox/test mode (see initiatePayment safeguard in service.ts)",
-      );
-      throw new MedusaError(
-        MedusaError.Types.NOT_ALLOWED,
-        "Plățile sunt temporar indisponibile.",
+        "Netopia: SANDBOX activ — plățile NU încasează bani reali (NETOPIA_TEST_MODE != 'false')",
       );
     }
 

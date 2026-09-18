@@ -133,12 +133,18 @@ function collectBrowserInfo(): Record<string, string> {
   }
 }
 
-// Temporary launch safeguard, paired with the sandbox check in the backend's
-// NetopiaService.initiatePayment — set alongside NETOPIA_TEST_MODE while the
-// domain migration / Netopia live-key approval is in progress, so the button
-// itself is visibly disabled instead of only failing after a click. Remove
-// once NETOPIA_TEST_MODE is back to "false".
-const CHECKOUT_DISABLED = process.env.NEXT_PUBLIC_CHECKOUT_DISABLED === "true"
+// Blocaj temporar de lansare: Netopia nu a aprobat încă POS-ul pentru
+// producție ("POS is not approved"), deci nicio plată reală nu poate trece.
+// Butonul e dezactivat și mesajul apare din start, fără niciun click.
+//
+// Intenționat NU e citit din `process.env.NEXT_PUBLIC_*`: variabilele acelea
+// sunt inline-uite la `next build`, deci o schimbare în env-ul de runtime nu
+// are efect până la un rebuild — exact confuzia care a făcut ca mesajul să
+// apară deși variabila era pusă pe `false`. O constantă în cod e neambiguă:
+// se vede în diff și se schimbă într-un singur loc.
+//
+// >>> PUNE PE `false` CÂND NETOPIA APROBĂ POS-UL ȘI NETOPIA_TEST_MODE="false" <<<
+const CHECKOUT_WARNING = true
 
 const NetopiaPaymentButton = ({
   cart,
@@ -154,9 +160,9 @@ const NetopiaPaymentButton = ({
   const t = useTranslations("checkout")
   const locale = useLocale()
   const [submitting, setSubmitting] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(
-    CHECKOUT_DISABLED ? t("Plățile sunt temporar indisponibile") : null
-  )
+  // Avertismentul stă separat de `errorMessage`: nu e o eroare a clientului și
+  // nu trebuie șters când acesta apasă butonul (handlePayment golește erorile).
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const handlePayment = async () => {
     setSubmitting(true)
@@ -179,12 +185,21 @@ const NetopiaPaymentButton = ({
 
   return (
     <>
+      {CHECKOUT_WARNING && (
+        <p
+          role="status"
+          data-testid="netopia-payment-warning"
+          className="mb-3 border border-amber-500/40 bg-amber-500/10 px-3 py-2 font-sans text-[11px] leading-relaxed text-amber-200"
+        >
+          {t("Plățile sunt temporar indisponibile")}
+        </p>
+      )}
       <button
-        disabled={notReady || submitting || CHECKOUT_DISABLED}
+        disabled={notReady || submitting}
         onClick={handlePayment}
         data-testid={dataTestId}
         className={`relative w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:cursor-not-allowed overflow-hidden ${
-          notReady || CHECKOUT_DISABLED ? "opacity-40" : ""
+          notReady ? "opacity-40" : ""
         }`}
       >
         {/* This is the checkout's most consequential click — a plain text
