@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl"
 import AppointmentDatePicker from "@modules/programare/components/appointment-date-picker"
 import { useRecaptcha } from "@lib/hooks/use-recaptcha"
 import { useScrollLock } from "@lib/hooks/use-scroll-lock"
+import { submitContactForm } from "@lib/data/public-forms"
 import { isValidEmail, isValidPhone } from "@lib/util/validation"
 
 const inputClass = (err?: boolean) =>
@@ -140,40 +141,25 @@ export default function AppointmentModal({
         return
       }
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/contact`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-publishable-api-key":
-              process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? "",
-          },
-          body: JSON.stringify({
-            name,
-            email,
-            type: "appointment",
-            recaptchaToken,
-            message: [
-              `${t("Telefon")}: ${phone || "—"}`,
-              `${t("Data")}: ${date || "—"}${
-                time ? ` ${t("la")} ${time}` : ""
-              }`,
-              "",
-              message,
-            ].join("\n"),
-          }),
-        }
-      )
+      const res = await submitContactForm({
+        name,
+        email,
+        type: "appointment",
+        recaptchaToken,
+        message: [
+          `${t("Telefon")}: ${phone || "—"}`,
+          `${t("Data")}: ${date || "—"}${time ? ` ${t("la")} ${time}` : ""}`,
+          "",
+          message,
+        ].join("\n"),
+      })
 
-      if (res.status === 429) {
-        setErrorMsg(
-          t("Prea multe încercări Te rugăm să revii peste câteva minute")
-        )
-        setStatus("error")
-        return
-      }
-      if (!res.ok) {
+      if (!res.success) {
+        if (res.reason === "rate_limited") {
+          setErrorMsg(
+            t("Prea multe încercări Te rugăm să revii peste câteva minute")
+          )
+        }
         setStatus("error")
         return
       }

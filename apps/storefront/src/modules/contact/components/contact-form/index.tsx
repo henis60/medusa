@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useTranslations } from "next-intl"
 import { useRecaptcha } from "@lib/hooks/use-recaptcha"
+import { submitContactForm } from "@lib/data/public-forms"
 
 const inputClass = (err?: boolean) =>
   `w-full h-10 bg-transparent border px-3 font-sans text-sm text-[var(--theme-text)] placeholder:text-[var(--theme-text-muted)] focus:outline-none transition-colors ${
@@ -82,39 +83,20 @@ export default function ContactForm() {
         return
       }
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/contact`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? "",
-          },
-          body: JSON.stringify({
-            name: data.get("name"),
-            email: data.get("email"),
-            message: data.get("message"),
-            type: "contact",
-            recaptchaToken,
-          }),
-        }
-      )
+      const res = await submitContactForm({
+        name: String(data.get("name") ?? ""),
+        email: String(data.get("email") ?? ""),
+        message: String(data.get("message") ?? ""),
+        type: "contact",
+        recaptchaToken,
+      })
 
-      if (res.status === 429) {
-        setErrorMsg(t("Prea multe încercări Te rugăm să revii peste câteva minute"))
-        setStatus("error")
-        return
-      }
-
-      if (!res.ok) {
-        // A non-JSON error body (e.g. a proxy's 502 HTML page) must not
-        // throw here and fall into the generic connection-error catch below
-        // — parse defensively and still surface the server's own message
-        // when there is one, same as the newsletter form does.
-        const json = await res.json().catch(() => null)
+      if (!res.success) {
         setErrorMsg(
-          json?.error ||
-            t("Nu am putut trimite mesajul Verifică conexiunea și încearcă din nou")
+          res.reason === "rate_limited"
+            ? t("Prea multe încercări Te rugăm să revii peste câteva minute")
+            : res.message ||
+                t("Nu am putut trimite mesajul Verifică conexiunea și încearcă din nou")
         )
         setStatus("error")
         return

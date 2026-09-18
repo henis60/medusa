@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useTranslations } from "next-intl"
 import { useRecaptcha } from "@lib/hooks/use-recaptcha"
+import { submitNewsletterSignup } from "@lib/data/public-forms"
 
 type Status = "idle" | "loading" | "success" | "error"
 
@@ -36,29 +37,14 @@ const Newsletter = () => {
         throw new Error("recaptcha")
       }
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/newsletter`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-publishable-api-key":
-              process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? "",
-          },
-          body: JSON.stringify({ email, recaptchaToken }),
-        }
-      )
+      const res = await submitNewsletterSignup({ email, recaptchaToken })
 
-      if (res.status === 429) {
-        setErrorMsg(t("Prea multe încercări Te rugăm să revii peste câteva minute"))
-        setStatus("error")
-        return
-      }
-
-      const json = await res.json()
-
-      if (!res.ok) {
-        setErrorMsg(json.error || t("Înscrierea nu a putut fi finalizată Încearcă din nou"))
+      if (!res.success) {
+        setErrorMsg(
+          res.reason === "rate_limited"
+            ? t("Prea multe încercări Te rugăm să revii peste câteva minute")
+            : res.message || t("Înscrierea nu a putut fi finalizată Încearcă din nou")
+        )
         setStatus("error")
         return
       }
