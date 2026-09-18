@@ -27,8 +27,17 @@ const NAMESPACES = [
   "meridian",
 ] as const
 
-export default getRequestConfig(async ({ requestLocale }) => {
-  let locale = await requestLocale
+export default getRequestConfig(async ({ requestLocale, locale: explicitLocale }) => {
+  // Prefer an explicitly-passed locale (next-intl forwards the one given to
+  // e.g. `getTranslations({locale})`) and only fall back to `requestLocale`,
+  // which reads headers. That read is what turned every unmatched dotted URL
+  // into a 500: such paths skip the locale middleware (see middleware.ts's
+  // HAS_FILE_EXTENSION bypass), fall through to the root not-found.tsx that
+  // Next prerenders statically as /_not-found, and its NotFoundContent asks
+  // for translations with an explicit locale — so reading headers anyway made
+  // the route dynamic at runtime and Next threw "Page changed from static to
+  // dynamic" instead of rendering the 404.
+  let locale = explicitLocale ?? (await requestLocale)
 
   if (!locale || !routing.locales.includes(locale as (typeof routing.locales)[number])) {
     locale = routing.defaultLocale

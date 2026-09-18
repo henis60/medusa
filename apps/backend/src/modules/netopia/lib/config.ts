@@ -15,9 +15,7 @@ export function loadNetopiaOptionsFromEnv(): NetopiaOptions {
     apiKey,
     posSignature,
     publicKey: process.env.NETOPIA_PUBLIC || "",
-    sandbox:
-      process.env.NETOPIA_SANDBOX !== "false" &&
-      process.env.NETOPIA_TEST_MODE !== "false",
+    sandbox: process.env.NETOPIA_TEST_MODE !== "false",
     notifyUrl: process.env.NETOPIA_NOTIFY_URL || `${backendUrl}/hooks/netopia`,
     // The customer's BROWSER lands here after paying — must be the
     // storefront, never the backend (that's notifyUrl's job, server-to-server).

@@ -137,7 +137,7 @@ function collectBrowserInfo(): Record<string, string> {
 // NetopiaService.initiatePayment — set alongside NETOPIA_TEST_MODE while the
 // domain migration / Netopia live-key approval is in progress, so the button
 // itself is visibly disabled instead of only failing after a click. Remove
-// once NETOPIA_SANDBOX/NETOPIA_TEST_MODE are back to "false".
+// once NETOPIA_TEST_MODE is back to "false".
 const CHECKOUT_DISABLED = process.env.NEXT_PUBLIC_CHECKOUT_DISABLED === "true"
 
 const NetopiaPaymentButton = ({

@@ -7,7 +7,7 @@ import {
 } from "./types";
 
 const SANDBOX_BASE = "https://secure.sandbox.netopia-payments.com";
-const LIVE_BASE = "https://secure.netopia-payments.com";
+const LIVE_BASE = "https://secure.mobilpay.ro/pay";
 
 export class NetopiaClient {
   private readonly baseUrl: string;
