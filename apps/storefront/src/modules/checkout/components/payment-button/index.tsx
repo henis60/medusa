@@ -189,7 +189,7 @@ const NetopiaPaymentButton = ({
         <p
           role="status"
           data-testid="netopia-payment-warning"
-          className="mb-3 border border-amber-500/40 bg-amber-500/10 px-3 py-2 font-sans text-[11px] leading-relaxed text-amber-200"
+          className="mb-3 border border-amber-400 bg-amber-50 px-3 py-2 font-sans text-[12px] leading-relaxed text-amber-900"
         >
           {t("Plățile sunt temporar indisponibile")}
         </p>

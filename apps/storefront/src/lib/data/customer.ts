@@ -1,6 +1,6 @@
 "use server"
 
-import { sdk } from "@lib/config"
+import { sdk, resolvedBackendUrl } from "@lib/config"
 import medusaError from "@lib/util/medusa-error"
 import { isRateLimitError } from "@lib/util/is-rate-limit-error"
 import { HttpTypes } from "@medusajs/types"
@@ -193,6 +193,20 @@ export async function login(_currentState: unknown, formData: FormData) {
     if ((error as { status?: number })?.status === 401) {
       return t("Email sau parolă incorectă")
     }
+
+    // Orice ajunge aici NU e o problemă de credențiale (un 401 s-a întors deja
+    // mai sus), deci e un eșec de sistem — și până acum era înghițit complet,
+    // ceea ce făcea imposibil de distins "backend inaccesibil" de "5xx" sau de
+    // un răspuns HTML primit de la un proxy/WAF în locul JSON-ului așteptat.
+    // Logăm URL-ul efectiv folosit, pentru că o variabilă de mediu absentă la
+    // runtime trimite tăcut apelurile pe URL-ul public în loc de cel privat.
+    const e = error as { status?: number; name?: string; message?: string }
+    console.error(
+      `login failed (non-401): backendUrl=${resolvedBackendUrl} ` +
+        `status=${e?.status ?? "-"} name=${e?.name ?? "-"} message=${e?.message ?? String(error)}`,
+      error
+    )
+
     return t("A apărut o eroare Te rugăm să încerci din nou mai târziu")
   }
 

@@ -24,6 +24,10 @@ if (
   backendUrl = process.env.MEDUSA_BACKEND_URL
 }
 
+// Expus pentru diagnostic: distinge "a căzut pe URL-ul public" de "folosește
+// privatul", ceea ce din afară arată identic (aceeași eroare generică).
+export const resolvedBackendUrl = backendUrl
+
 export const sdk = new Medusa({
   baseUrl: backendUrl,
   debug: process.env.NODE_ENV === "development",
