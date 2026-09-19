@@ -1,4 +1,5 @@
 import Medusa from "@medusajs/js-sdk"
+import { headers } from "next/headers"
 
 // Resolve the backend URL per runtime:
 // - Browser → NEXT_PUBLIC_MEDUSA_BACKEND_URL (public, inlined at build time).
@@ -24,10 +25,7 @@ if (
   backendUrl = process.env.MEDUSA_BACKEND_URL
 }
 
-export const sdk = new Medusa({
-  baseUrl: backendUrl,
-  debug: process.env.NODE_ENV === "development",
-  publishableKey: process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY,
+const BASE_GLOBAL_HEADERS = {
   // Node's fetch sends no User-Agent by default — when backendUrl is the
   // public https://admin.thehunter.ro (no MEDUSA_BACKEND_URL private-network
   // override set), every server-side SDK call routes through Cloudflare and
@@ -36,8 +34,50 @@ export const sdk = new Medusa({
   // tried to JSON.parse that HTML and threw "Unexpected token '<'". Browsers
   // treat User-Agent as a forbidden header and silently keep the real one,
   // so this is a no-op (harmless) for client-side calls.
-  globalHeaders: { "User-Agent": "TheHunterStorefront/1.0" },
+  "User-Agent": "TheHunterStorefront/1.0",
+}
+
+export const sdk = new Medusa({
+  baseUrl: backendUrl,
+  debug: process.env.NODE_ENV === "development",
+  publishableKey: process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY,
+  globalHeaders: BASE_GLOBAL_HEADERS,
 })
+
+/**
+ * An SDK instance that forwards the visitor's real IP as `x-client-ip`.
+ *
+ * Auth runs as a server action (see lib/data/customer.ts), so it leaves this
+ * container rather than the visitor's browser — which made the backend's
+ * per-IP auth rate limit a single 10-per-15-minutes budget shared by every
+ * customer on the site, since they all arrive from this one IP. Forwarding the
+ * real address makes that limit per-visitor again. Same trap the backend
+ * already documents on its newsletter and Netopia-polling limiters.
+ *
+ * Use it ONLY for the rate-limited /auth/customer/* calls: it reads headers(),
+ * which opts the caller into dynamic rendering — see the NOTE below.
+ */
+export async function getClientScopedSdk(): Promise<Medusa> {
+  const requestHeaders = await headers()
+  // x-forwarded-for is a comma-separated chain; the first entry is the client.
+  const clientIp =
+    requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    requestHeaders.get("x-real-ip")?.trim() ||
+    ""
+
+  // No usable address — fall back to the shared instance rather than sending an
+  // empty header, so the backend keys on its own req.ip as it did before.
+  if (!clientIp) {
+    return sdk
+  }
+
+  return new Medusa({
+    baseUrl: backendUrl,
+    debug: process.env.NODE_ENV === "development",
+    publishableKey: process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY,
+    globalHeaders: { ...BASE_GLOBAL_HEADERS, "x-client-ip": clientIp },
+  })
+}
 
 // NOTE: do NOT monkey-patch sdk.client.fetch to inject the locale cookie
 // globally. Reading cookies() inside every SDK call silently opts EVERY

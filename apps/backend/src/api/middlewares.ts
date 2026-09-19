@@ -202,6 +202,22 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   passOnStoreError: true,
   store: redisStore("rl:auth:"),
+  // Same trap documented on newsletterLimiter and netopiaSessionCartLimiter:
+  // the storefront calls /auth/customer/* from a server action, so req.ip is
+  // that container's address for EVERY visitor — a plain per-IP key made this
+  // one 10-per-15-minutes budget shared by the whole site, locking out the
+  // eleventh person to log in. The storefront forwards the visitor's real
+  // address as x-client-ip (see its lib/config.ts getClientScopedSdk).
+  //
+  // Trusting a caller-supplied header is only safe because nothing else can
+  // reach these routes: Cloudflare Access blocks /auth/* at the edge, so the
+  // storefront over Railway's private network is the only origin. If that ever
+  // changes, this header becomes spoofable for an unlimited budget and must be
+  // replaced with a verified hop.
+  keyGenerator: (req) => {
+    const forwarded = (req.headers["x-client-ip"] as string | undefined)?.trim();
+    return `ip:${ipKeyGenerator(forwarded || req.ip || "")}`;
+  },
   handler: rateLimited("Prea multe încercări. Te rugăm să revii peste câteva minute."),
 });
 

@@ -44,21 +44,42 @@ export default async function sendPasswordResetEmail({
     return;
   }
 
+  // `auth.password_reset` fires for BOTH actor types — a storefront customer
+  // and a dashboard admin. Without this split every admin reset request sent
+  // the customer email, whose link posts to the /auth/customer/... endpoint and
+  // therefore can never reset a `user` password. The token payload already
+  // carries the actor type, so branch on it.
+  const isAdmin = payload.actor_type === "user";
+
   const maskedEmail = maskEmail(email);
-  logger.info(`Sending password reset email to: ${maskedEmail}`);
+  logger.info(
+    `Sending ${isAdmin ? "admin" : "customer"} password reset email to: ${maskedEmail}`
+  );
 
   try {
     const notificationService = container.resolve("notification");
 
+    // Medusa serves the dashboard from the backend itself, so the admin reset
+    // page lives at <backend>/app/reset-password — there is no separate admin
+    // URL env var.
+    const adminResetUrl = `${process.env.BACKEND_URL ?? ""}/app/reset-password?token=${encodeURIComponent(
+      data.token
+    )}&email=${encodeURIComponent(email)}`;
+
     await notificationService.createNotifications({
       to: email,
-      template: "7",
+      // Numeric ids are Brevo templates; a name falls through to the provider's
+      // locally-rendered HTML (see buildFallbackEmail) — used for the admin mail
+      // so it doesn't depend on a Brevo template being kept in sync.
+      template: isAdmin ? "admin-password-reset" : "7",
       channel: "email",
       data: {
         email,
         token: data.token,
         token_expiry_at: payload.exp ? formatExpiry(payload.exp) : "—",
-        storefront_url: process.env.VITE_STOREFRONT_URL,
+        ...(isAdmin
+          ? { reset_url: adminResetUrl }
+          : { storefront_url: process.env.VITE_STOREFRONT_URL }),
       },
     });
 

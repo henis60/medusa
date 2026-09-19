@@ -1,6 +1,6 @@
 "use server"
 
-import { sdk } from "@lib/config"
+import { getClientScopedSdk, sdk } from "@lib/config"
 import medusaError from "@lib/util/medusa-error"
 import { isRateLimitError } from "@lib/util/is-rate-limit-error"
 import { HttpTypes } from "@medusajs/types"
@@ -94,7 +94,11 @@ export async function signup(_currentState: unknown, formData: FormData) {
   }
 
   try {
-    const token = await sdk.auth.register("customer", "emailpass", {
+    // Rate-limited route — go through the IP-forwarding instance so the
+    // backend's per-IP budget isn't shared by every visitor (see getClientScopedSdk).
+    const authSdk = await getClientScopedSdk()
+
+    const token = await authSdk.auth.register("customer", "emailpass", {
       email: customerForm.email,
       password: password,
     })
@@ -111,7 +115,7 @@ export async function signup(_currentState: unknown, formData: FormData) {
       headers
     )
 
-    const loginToken = await sdk.auth.login("customer", "emailpass", {
+    const loginToken = await authSdk.auth.login("customer", "emailpass", {
       email: customerForm.email,
       password,
     })
@@ -153,7 +157,9 @@ export async function login(_currentState: unknown, formData: FormData) {
   const password = formData.get("password") as string
 
   try {
-    const token = await sdk.auth.login("customer", "emailpass", { email, password })
+    // Rate-limited route — see getClientScopedSdk.
+    const authSdk = await getClientScopedSdk()
+    const token = await authSdk.auth.login("customer", "emailpass", { email, password })
 
     // emailpass never actually resolves with a non-string result (that shape
     // only exists for SSO/MFA/verification providers, which this backend
@@ -240,7 +246,9 @@ export async function resetPassword(
   }
 
   try {
-    await sdk.auth.updateProvider(
+    // Rate-limited route — see getClientScopedSdk.
+    const authSdk = await getClientScopedSdk()
+    await authSdk.auth.updateProvider(
       "customer",
       "emailpass",
       { password },
@@ -266,7 +274,9 @@ export async function requestPasswordReset(
   const email = formData.get("email") as string
 
   try {
-    await sdk.auth.resetPassword("customer", "emailpass", {
+    // Rate-limited route — see getClientScopedSdk.
+    const authSdk = await getClientScopedSdk()
+    await authSdk.auth.resetPassword("customer", "emailpass", {
       identifier: email,
     })
     return "success"

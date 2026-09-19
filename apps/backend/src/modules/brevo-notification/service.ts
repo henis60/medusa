@@ -121,6 +121,7 @@ class BrevoNotificationProviderService extends AbstractNotificationProviderServi
       "order-confirmation": `Confirmare comandă #${data.order_id || ""}`,
       "order-shipped": `Comanda ta #${data.order_id || ""} a fost expediată`,
       "password-reset": "Resetare parolă",
+      "admin-password-reset": "Resetare parolă administrator",
       "admin-invite": "Invitație administrator",
       "contact-form": `Mesaj nou de la ${data.name || data.email || "vizitator"}`,
       "appointment-form": `Cerere programare — ${data.name || data.email || "vizitator"}`,
@@ -217,6 +218,45 @@ class BrevoNotificationProviderService extends AbstractNotificationProviderServi
           </div>
           <div style="padding:16px 32px;background:#f8f8f8;border-top:1px solid #eee;">
             <p style="margin:0;color:#aaa;font-size:11px;">Mesaj primit prin formularul de contact de pe thehunter.ro</p>
+          </div>
+        </div>`
+    }
+
+    // Deliberately NOT the storefront's dark/gold branding: this one only ever
+    // reaches staff, and lands them in the Medusa admin — so it mirrors the
+    // dashboard's own neutral look instead, making it obvious at a glance that
+    // it is not the customer-facing reset email (which is Brevo template 7).
+    if (template === "admin-password-reset") {
+      const safeUrl = escapeHtml(data.reset_url)
+      const safeEmail = escapeHtml(data.email)
+      const safeExpiry = escapeHtml(data.token_expiry_at)
+      return `
+        <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Arial,sans-serif;background:#f9fafb;padding:32px 16px;">
+          <div style="max-width:480px;margin:0 auto;background:#fff;border:1px solid #e4e4e7;border-radius:8px;overflow:hidden;">
+            <div style="padding:24px 32px 0;">
+              <p style="margin:0;color:#71717a;font-size:12px;">${brand} · Admin</p>
+            </div>
+            <div style="padding:16px 32px 32px;">
+              <h1 style="margin:0 0 12px;font-size:20px;font-weight:600;color:#18181b;">Resetare parolă</h1>
+              <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#52525b;">
+                Am primit o cerere de resetare a parolei pentru contul de administrator
+                <strong style="color:#18181b;">${safeEmail}</strong>. Apasă butonul de mai jos ca să setezi o parolă nouă.
+              </p>
+              <a href="${safeUrl}"
+                 style="display:inline-block;padding:10px 20px;background:#18181b;color:#fff;text-decoration:none;font-size:14px;font-weight:500;border-radius:6px;">
+                Setează o parolă nouă
+              </a>
+              <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#71717a;">
+                Linkul expiră la <strong style="color:#18181b;">${safeExpiry}</strong>.
+              </p>
+              <p style="margin:16px 0 0;font-size:13px;line-height:1.6;color:#71717a;">
+                Dacă nu tu ai cerut resetarea, ignoră acest email — parola rămâne neschimbată.
+              </p>
+              <div style="margin-top:24px;padding-top:24px;border-top:1px solid #e4e4e7;">
+                <p style="margin:0 0 6px;font-size:12px;color:#a1a1aa;">Dacă butonul nu funcționează, copiază linkul:</p>
+                <p style="margin:0;font-size:12px;color:#71717a;word-break:break-all;">${safeUrl}</p>
+              </div>
+            </div>
           </div>
         </div>`
     }
