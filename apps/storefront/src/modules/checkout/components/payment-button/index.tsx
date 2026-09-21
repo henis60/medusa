@@ -11,11 +11,13 @@ import Spinner from "@modules/common/icons/spinner"
 
 type PaymentButtonProps = {
   cart: HttpTypes.StoreCart
+  availablePaymentMethods: { id: string }[]
   "data-testid": string
 }
 
 const PaymentButton: React.FC<PaymentButtonProps> = ({
   cart,
+  availablePaymentMethods,
   "data-testid": dataTestId,
 }) => {
   const t = useTranslations("checkout")
@@ -26,19 +28,28 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     !cart.email ||
     (cart.shipping_methods?.length ?? 0) < 1
 
+  // Provider-ul se ia din metodele disponibile, NU dintr-o sesiune de plată
+  // existentă. Înainte, pasul de review crea o sesiune doar ca butonul să afle
+  // provider-ul de aici — iar butonul crea la click încă una, cu datele
+  // complete. Rezultatul: două tranzacții la Netopia pentru fiecare checkout,
+  // dintre care una mereu neplătită. O sesiune existentă (revenire în pas,
+  // reîncărcare) rămâne prioritară, ca să nu schimbăm provider-ul sub o plată
+  // deja începută.
   const paymentSession = cart.payment_collection?.payment_sessions?.[0]
+  const providerId =
+    paymentSession?.provider_id ?? availablePaymentMethods[0]?.id
 
   switch (true) {
-    case isManual(paymentSession?.provider_id):
+    case isManual(providerId):
       return (
         <ManualTestPaymentButton notReady={notReady} data-testid={dataTestId} />
       )
-    case isNetopia(paymentSession?.provider_id):
+    case isNetopia(providerId):
       return (
         <NetopiaPaymentButton
           notReady={notReady}
           cart={cart}
-          providerId={paymentSession!.provider_id}
+          providerId={providerId!}
           data-testid={dataTestId}
         />
       )

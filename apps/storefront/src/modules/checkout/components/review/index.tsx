@@ -1,16 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import PaymentButton from "../payment-button"
-import ErrorMessage from "../error-message"
-import { initiatePaymentSession } from "@lib/data/cart"
 import { useSearchParams } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 import { useTranslations } from "next-intl"
 import { bodyMutedClass, sectionTitleClass } from "@modules/checkout/components/typography"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import { getDisplayableErrorMessage } from "@lib/util/stale-deployment"
-import Spinner from "@modules/common/icons/spinner"
 
 // Netopia is the store's only payment provider, so there's no method to pick
 // — the session is initiated silently as soon as this step opens, instead of
@@ -33,39 +28,16 @@ const Review = ({
   const previousStepsCompleted =
     cart.shipping_address && (cart.shipping_methods?.length ?? 0) > 0
 
-  const hasPaymentSession = !!cart.payment_collection?.payment_sessions?.length
-  const [initiating, setInitiating] = useState(false)
-  const [initError, setInitError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (
-      !isOpen ||
-      !previousStepsCompleted ||
-      paidByGiftcard ||
-      hasPaymentSession ||
-      initiating
-    ) {
-      return
-    }
-    const providerId = availablePaymentMethods[0]?.id
-    if (!providerId) return
-
-    setInitiating(true)
-    setInitError(null)
-    initiatePaymentSession(cart, { provider_id: providerId })
-      .then((resp) => {
-        // initiatePaymentSession never rejects (a thrown Server Action error
-        // has its message masked by Next.js in production) — a failure comes
-        // back as normal data instead, in this `error` field.
-        const error = (resp as { error?: string } | undefined)?.error
-        if (error) setInitError(error)
-      })
-      .catch((err) =>
-        setInitError(getDisplayableErrorMessage(err, t("A apărut o eroare Reîncearcă")))
-      )
-      .finally(() => setInitiating(false))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, previousStepsCompleted, paidByGiftcard, hasPaymentSession])
+  // Nicio sesiune de plată nu se mai creează aici.
+  //
+  // Anterior, la deschiderea pasului se iniția o sesiune „de pre-încălzire",
+  // doar ca PaymentButton să afle provider-ul din `payment_sessions[0]`. Dar
+  // butonul creează oricum o sesiune proprie la click — cu browser_info și cu
+  // suma finală — așa că fiecare checkout lăsa la Netopia o tranzacție în plus,
+  // neplătită și fără date de facturare (apărea ca „Client" în lista lor).
+  //
+  // Acum provider-ul vine direct din `availablePaymentMethods`, deci sesiunea
+  // se creează o singură dată, la click.
 
   return (
     <div className={!isOpen ? "opacity-50 pointer-events-none select-none" : ""}>
@@ -100,23 +72,17 @@ const Review = ({
             </LocalizedClientLink>
             .
           </p>
-          {paidByGiftcard || hasPaymentSession ? (
-            <PaymentButton cart={cart} data-testid="submit-order-button" />
-          ) : (
-            // Same gold button treatment as the real payment button below
-            // (just disabled, with a spinner) instead of a plain gray
-            // skeleton bar — this step directly precedes that button, so
-            // swapping a generic pulse for the real thing read as jarring
-            // rather than a continuous "getting ready to pay" state.
-            <button
-              type="button"
-              disabled
-              className="w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] opacity-70 cursor-not-allowed flex items-center justify-center"
-            >
-              <Spinner size="14" />
-            </button>
-          )}
-          <ErrorMessage error={initError} data-testid="payment-init-error-message" />
+          {/* Butonul se randează imediat: nu mai depinde de o sesiune creată
+              în prealabil, deci nu mai există starea intermediară cu spinner. */}
+          <PaymentButton
+            cart={cart}
+            // Coș achitat integral cu card cadou: nu are ce plăti la Netopia.
+            // Fără metode disponibile, butonul rămâne dezactivat — exact
+            // comportamentul de dinainte, când lipsa unei sesiuni producea
+            // același rezultat.
+            availablePaymentMethods={paidByGiftcard ? [] : availablePaymentMethods}
+            data-testid="submit-order-button"
+          />
         </>
       )}
     </div>
