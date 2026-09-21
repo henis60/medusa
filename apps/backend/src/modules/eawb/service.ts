@@ -210,13 +210,12 @@ export default class EawbFulfillmentProviderService extends AbstractFulfillmentP
         billing_to: { billing_address_id: billingAddressId },
         address_from: await this.getFromAddressData(),
         address_to: this.toAddress(shippingAddress),
-        content: {
-          envelopes_count: 0,
-          pallets_count: 0,
-          parcels_count: 1,
-          total_weight: 0.5,
-          parcels: [{ size: { weight: 0.5, width: 30, height: 20, length: 40 }, sequence_no: 1 }],
-        },
+        // Aceleași dimensiuni ca la emiterea AWB-ului. Erau scrise direct aici,
+        // deci prețul afișat la checkout se putea abate de la coletul chiar
+        // expediat — acum ambele trec prin buildContent.
+        content: buildContent(
+          ((context as any)?.items as Array<{ quantity?: number }>) ?? []
+        ),
         extra: { parcel_content: "Produse" },
       })
 

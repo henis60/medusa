@@ -65,16 +65,78 @@ export function toEpAddress(
   }
 }
 
-// Single 0.5kg parcel by default; weight scales with item count as a fallback.
+/**
+ * Dimensiunile coletului, din variabile de mediu.
+ *
+ * DE CE CONTEAZĂ: curierul taxează la MAXIMUL dintre greutatea gravimetrică
+ * (reală) și cea volumetrică = lungime×lățime×înălțime / 6000, în cm → kg.
+ * Valorile folosite până acum — 40×30×20 cm — dau 24.000/6000 = 4 kg
+ * volumetrici pentru un colet declarat de 0,5 kg. Practic fiecare comandă era
+ * tarifată ca un colet de 4 kg, oricât de mic ar fi produsul.
+ *
+ * Ca reper: pentru ca volumetricul să nu depășească 0,5 kg, coletul trebuie să
+ * stea sub 3.000 cm³ — de exemplu 25×20×6 cm.
+ *
+ * Setează-le după cutia folosită efectiv. Prea mari costă bani la fiecare
+ * comandă; prea mici riscă taxare suplimentară de curier la livrare.
+ */
+export function parcelDefaults() {
+  const num = (v: string | undefined, fallback: number) => {
+    const n = Number(v)
+    return Number.isFinite(n) && n > 0 ? n : fallback
+  }
+  // Implicite pentru o cutie mică de accesorii: 25×20×6 = 3.000 cm³, adică
+  // exact 0,5 kg volumetrici — pragul sub care volumul nu mai dictează tariful.
+  // Sunt o estimare pentru produse mici (cravate, accesorii), NU o măsurătoare:
+  // pentru comenzi mai voluminoase trebuie mărite, altfel declari sub realitate
+  // și curierul poate taxa diferența la livrare.
+  return {
+    length: num(process.env.EAWB_PARCEL_LENGTH, 25),
+    width: num(process.env.EAWB_PARCEL_WIDTH, 20),
+    height: num(process.env.EAWB_PARCEL_HEIGHT, 6),
+    // Greutatea per articol, folosită cât timp variantele nu au `weight`
+    // completat în admin (cazul actual). ~150 g e ordinul de mărime al unei
+    // cravate cu ambalaj.
+    weightPerItem: num(process.env.EAWB_PARCEL_WEIGHT_PER_ITEM, 0.15),
+    minWeight: num(process.env.EAWB_PARCEL_MIN_WEIGHT, 0.15),
+  }
+}
+
+/**
+ * Un singur colet fizic. Greutatea vine din variante când e completată
+ * (`weight` în grame, convenția Medusa), altfel se estimează din numărul de
+ * articole — spre deosebire de varianta anterioară, care declara mereu 0,5 kg
+ * indiferent de câte produse conținea comanda (ramura `count * 0.5` era cod
+ * mort, fiindcă parametrul avea implicit o valoare truthy).
+ */
 export function buildContent(
-  items: Array<{ quantity?: number }>,
-  totalWeight = 0.5
+  items: Array<{
+    quantity?: number
+    variant?: { weight?: number | null } | null
+  }>,
+  totalWeight?: number
 ): EpPriceContent {
+  const cfg = parcelDefaults()
+
   const count = Math.max(
     items.reduce((sum, i) => sum + (i.quantity ?? 1), 0),
     1
   )
-  const weight = totalWeight || count * 0.5
+
+  // Suma greutăților reale, dar numai dacă TOATE liniile au variantă cu
+  // greutate — un catalog completat parțial ar subdeclara coletul.
+  const variantGrams = items.reduce((sum, i) => {
+    const w = i.variant?.weight
+    return w && w > 0 ? sum + w * (i.quantity ?? 1) : NaN
+  }, 0)
+
+  const weight =
+    totalWeight && totalWeight > 0
+      ? totalWeight
+      : Number.isFinite(variantGrams) && variantGrams > 0
+        ? Math.max(variantGrams / 1000, cfg.minWeight)
+        : Math.max(count * cfg.weightPerItem, cfg.minWeight)
+
   return {
     envelopes_count: 0,
     pallets_count: 0,
@@ -84,7 +146,15 @@ export function buildContent(
     parcels_count: 1,
     total_weight: weight,
     parcels: [
-      { size: { weight, width: 30, height: 20, length: 40 }, sequence_no: 1 },
+      {
+        size: {
+          weight,
+          width: cfg.width,
+          height: cfg.height,
+          length: cfg.length,
+        },
+        sequence_no: 1,
+      },
     ],
   }
 }

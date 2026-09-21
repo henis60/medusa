@@ -13,10 +13,11 @@ export async function fetchOblioToken(): Promise<string> {
     throw new Error("OBLIO_CLIENT_ID și OBLIO_CLIENT_SECRET lipsesc din .env")
   }
 
-  // Calea corectă e /api/..., NU /business/api/... — aceasta din urmă întoarce
-  // 404 (verificat). Nu s-a observat până acum pentru că OBLIO_DRY_RUN
-  // întrerupe execuția înaintea oricărui apel HTTP.
-  const response = await fetch("https://www.oblio.eu/api/authorize", {
+  // Endpoint confirmat din SDK-ul oficial (OblioSoftware/OblioApi, Api.php:255):
+  // POST /api/authorize/token. Vechiul /business/api/authorize dă 404.
+  // Atenție: /api/authorize (fără /token) răspunde 401, dar e doar peretele
+  // generic al API-ului — nu endpoint-ul de autentificare.
+  const response = await fetch("https://www.oblio.eu/api/authorize/token", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

@@ -7,6 +7,7 @@ type Input = {
   token: string
   series: string
   number: string
+  link?: string
 }
 
 /**
@@ -16,15 +17,28 @@ type Input = {
 export async function downloadOblioPdf(
   token: string,
   series: string,
-  number: string
+  number: string,
+  link?: string
 ): Promise<Buffer> {
   const cui = requireOblioCui()
-  // /business/api/... întoarce 404 (verificat) — calea reală e /api/...
-  const url = new URL("https://www.oblio.eu/api/docs/invoice/download")
-  url.searchParams.set("cif", cui)
-  url.searchParams.set("type", "pdf")
-  url.searchParams.set("seriesName", series)
-  url.searchParams.set("number", number)
+
+  // Calea preferată: link-ul întors de Oblio la emitere. SDK-ul oficial
+  // (OblioSoftware/OblioApi) NU expune niciun endpoint de download — expune
+  // doar GET /api/docs/invoice pentru citirea documentului — deci URL-ul
+  // construit mai jos rămâne o presupunere. Când avem link, îl folosim.
+  //
+  // De reținut: pe api.oblio.eu un 401 NU dovedește că o cale există; e
+  // peretele generic al API-ului. (Așa am „confirmat" greșit /api/authorize.)
+  const url = link
+    ? new URL(link)
+    : new URL("https://www.oblio.eu/api/docs/invoice/download")
+
+  if (!link) {
+    url.searchParams.set("cif", cui)
+    url.searchParams.set("type", "pdf")
+    url.searchParams.set("seriesName", series)
+    url.searchParams.set("number", number)
+  }
 
   const response = await fetch(url.toString(), {
     headers: { Authorization: `Bearer ${token}` },
@@ -54,7 +68,7 @@ export async function downloadOblioPdf(
 
 export const oblioDownloadPdfStep = createStep(
   "oblio-download-pdf",
-  async ({ order_id, token, series, number }: Input, { container }) => {
+  async ({ order_id, token, series, number, link }: Input, { container }) => {
     const logger = container.resolve("logger")
 
     if (process.env.OBLIO_DRY_RUN === "true") {
@@ -92,9 +106,10 @@ export const oblioDownloadPdfStep = createStep(
     }
 
     logger.info(
-      `Oblio → descărcare PDF ${series}/${number} pentru comanda ${order_id}`
+      `Oblio → descărcare PDF ${series}/${number} pentru comanda ${order_id} ` +
+        `(sursă=${link ? "link din răspuns" : "endpoint construit"})`
     )
-    const buffer = await downloadOblioPdf(token, series, number)
+    const buffer = await downloadOblioPdf(token, series, number, link)
     logger.info(
       `Oblio ← PDF primit ${series}/${number} (${buffer.length} B) pentru comanda ${order_id}`
     )

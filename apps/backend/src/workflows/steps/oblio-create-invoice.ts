@@ -9,6 +9,9 @@ type Input = {
 type InvoiceResult = {
   series: string
   number: string
+  // Link-ul către PDF, întors de Oblio la emitere. E calea preferată de
+  // descărcare: SDK-ul oficial nu expune niciun endpoint de download.
+  link?: string
 }
 
 export const oblioCreateInvoiceStep = createStep(
@@ -247,6 +250,10 @@ export const oblioCreateInvoiceStep = createStep(
       )
     }
 
-    return new StepResponse({ series, number } as InvoiceResult)
+    return new StepResponse({
+      series,
+      number,
+      link: typeof model.link === "string" ? model.link : undefined,
+    } as InvoiceResult)
   }
 )

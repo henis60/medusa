@@ -32,6 +32,7 @@ export const createOblioInvoiceWorkflow = createWorkflow(
         token,
         series: invoice.series,
         number: invoice.number,
+        link: invoice.link,
       }))
     )
 
