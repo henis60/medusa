@@ -10,6 +10,12 @@ type IpnVerification =
   | "unsigned" // no recognised signature field on the request
   | "unconfigured" // NETOPIA_PUBLIC not set — cannot verify at all
 
+// Motivul exact al respingerii — DOAR pentru loguri, niciodată în răspuns.
+// "invalid" acoperă șase cauze distincte cu remedii complet diferite
+// (certificat greșit vs POS signature de alt mediu vs corp modificat pe drum),
+// iar fără detaliu nu se poate alege între ele.
+type IpnDetail = { result: IpnVerification; detail: string }
+
 /**
  * Verifică autenticitatea unui IPN Netopia v2.
  *
@@ -27,26 +33,44 @@ type IpnVerification =
 function verifyIpnSignature(
   rawBody: Buffer | undefined,
   headers: Record<string, unknown>
-): IpnVerification {
+): IpnDetail {
+  const bad = (detail: string): IpnDetail => ({ result: "invalid", detail })
+
   const rawPublic = process.env.NETOPIA_PUBLIC
-  if (!rawPublic) return "unconfigured"
+  if (!rawPublic)
+    return { result: "unconfigured", detail: "NETOPIA_PUBLIC lipsește" }
 
   const posSignature =
     process.env.NETOPIA_ID || process.env.NETOPIA_POS_SIGNATURE || ""
-  if (!posSignature) return "unconfigured"
+  if (!posSignature)
+    return { result: "unconfigured", detail: "NETOPIA_ID lipsește" }
 
   const token = headers["verification-token"] as string | undefined
-  if (!token || token.split(".").length !== 3) return "unsigned"
+  if (!token)
+    return { result: "unsigned", detail: "header Verification-token absent" }
+  if (token.split(".").length !== 3)
+    return {
+      result: "unsigned",
+      detail: `Verification-token nu are 3 segmente (are ${token.split(".").length})`,
+    }
 
   // Fără body-ul brut nu putem valida `sub`, deci nu putem avea încredere.
-  if (!rawBody) return "invalid"
+  if (!rawBody)
+    return bad("rawBody indisponibil — verifică preserveRawBody în middlewares")
 
   try {
     const pem = rawPublic.startsWith("-----")
       ? rawPublic
       : `-----BEGIN CERTIFICATE-----\n${rawPublic.match(/.{1,64}/g)!.join("\n")}\n-----END CERTIFICATE-----`
 
-    const publicKey = new X509Certificate(pem).publicKey
+    let publicKey
+    try {
+      publicKey = new X509Certificate(pem).publicKey
+    } catch (err) {
+      return bad(
+        `NETOPIA_PUBLIC nu e un certificat X.509 valid: ${(err as Error).message}`
+      )
+    }
 
     const [headerB64, payloadB64, signatureB64] = token.split(".")
     const jwtHeader = JSON.parse(
@@ -54,33 +78,53 @@ function verifyIpnSignature(
     )
 
     // Doar RSA. Refuzăm explicit "none"/HMAC — altfel oricine poate forja un token.
-    if (!/^RS(256|384|512)$/.test(jwtHeader?.alg ?? "")) return "invalid"
+    if (!/^RS(256|384|512)$/.test(jwtHeader?.alg ?? ""))
+      return bad(`alg neacceptat: ${JSON.stringify(jwtHeader?.alg)}`)
 
     const verifier = createVerify(`RSA-SHA${jwtHeader.alg.slice(2)}`)
     verifier.update(`${headerB64}.${payloadB64}`)
-    if (
-      !verifier.verify(publicKey, Buffer.from(signatureB64, "base64url"))
-    ) {
-      return "invalid"
+    if (!verifier.verify(publicKey, Buffer.from(signatureB64, "base64url"))) {
+      return bad(
+        `semnătura RSA nu se verifică cu NETOPIA_PUBLIC (alg=${jwtHeader.alg})`
+      )
     }
 
     const claims = JSON.parse(
       Buffer.from(payloadB64, "base64url").toString("utf8")
     )
 
-    if (claims?.iss !== "NETOPIA Payments") return "invalid"
+    if (claims?.iss !== "NETOPIA Payments")
+      return bad(`iss neașteptat: ${JSON.stringify(claims?.iss)}`)
 
     const aud = Array.isArray(claims?.aud) ? claims.aud[0] : claims?.aud
-    if (!aud || aud !== posSignature) return "invalid"
+    if (!aud || aud !== posSignature) {
+      // Valorile se loghează mascat: sunt identificatori de POS, nu secrete,
+      // dar nu au ce căuta întregi în loguri.
+      return bad(
+        `aud != NETOPIA_ID (aud=${maskId(aud)} vs configurat=${maskId(posSignature)}) ` +
+          `— tipic chei de sandbox contra live sau invers`
+      )
+    }
 
     const bodyHash = createHash("sha512").update(rawBody).digest("base64")
-    if (claims?.sub !== bodyHash) return "invalid"
+    if (claims?.sub !== bodyHash) {
+      return bad(
+        `hash body != sub (body ${rawBody.length}B) — corpul a fost modificat ` +
+          `pe drum sau nu e cel brut`
+      )
+    }
 
-    return "valid"
-  } catch {
-    // Certificat/token malformat nu trebuie să treacă niciodată drept valid.
-    return "invalid"
+    return { result: "valid", detail: "ok" }
+  } catch (err) {
+    return bad(`excepție: ${(err as Error).name}: ${(err as Error).message}`)
   }
+}
+
+function maskId(value: unknown): string {
+  if (typeof value !== "string" || !value) return String(value)
+  return value.length <= 8
+    ? `${value.slice(0, 2)}…`
+    : `${value.slice(0, 4)}…${value.slice(-4)}`
 }
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
@@ -104,15 +148,12 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   // Chiar dacă un IPN e respins, comanda nu se pierde — pagina de return face
   // polling și completează coșul, iar autorizarea e reverificată
   // server-to-server prin getPaymentStatus cu ntpID-ul stocat la noi.
-  if (verification !== "valid") {
-    const reason = {
-      invalid: "Verification-token invalid (semnătură, iss, aud sau hash body)",
-      unsigned: "lipsește header-ul Verification-token",
-      unconfigured:
-        "NETOPIA_PUBLIC sau NETOPIA_ID nu sunt configurate — verificarea e imposibilă",
-    }[verification]
-
-    logger.error(`Netopia IPN RESPINS (${verification}): ${reason}`)
+  if (verification.result !== "valid") {
+    // Detaliul merge DOAR în loguri — răspunsul rămâne generic, ca să nu ofere
+    // unui atacator un oracol despre care verificare a picat.
+    logger.error(
+      `Netopia IPN RESPINS (${verification.result}): ${verification.detail}`
+    )
     return res.status(401).json({ errorCode: 1, message: "Invalid signature" })
   }
 
