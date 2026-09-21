@@ -1,5 +1,6 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
 import { generateTestInvoicePdf } from "../../lib/generate-test-invoice-pdf"
+import { requireOblioCui } from "./oblio-get-token"
 
 type Input = {
   order_id: string
@@ -17,8 +18,9 @@ export async function downloadOblioPdf(
   series: string,
   number: string
 ): Promise<Buffer> {
-  const cui = process.env.OBLIO_CUI ?? ""
-  const url = new URL("https://www.oblio.eu/business/api/docs/download")
+  const cui = requireOblioCui()
+  // /business/api/... întoarce 404 (verificat) — calea reală e /api/...
+  const url = new URL("https://www.oblio.eu/api/docs/invoice/download")
   url.searchParams.set("cif", cui)
   url.searchParams.set("type", "pdf")
   url.searchParams.set("seriesName", series)
@@ -29,10 +31,25 @@ export async function downloadOblioPdf(
   })
 
   if (!response.ok) {
-    throw new Error(`Oblio download PDF eșuat: ${response.status}`)
+    const text = await response.text().catch(() => "")
+    throw new Error(
+      `Oblio download PDF eșuat: ${response.status} — ${text.slice(0, 300)}`
+    )
   }
 
-  return Buffer.from(await response.arrayBuffer())
+  const buf = Buffer.from(await response.arrayBuffer())
+
+  // Un PDF gol sau un corp JSON de eroare primit cu 200 ar fi salvat ca
+  // „factură" și descoperit abia când clientul deschide fișierul.
+  const looksPdf = buf.subarray(0, 5).toString("latin1") === "%PDF-"
+  if (!looksPdf) {
+    throw new Error(
+      `Oblio download PDF: răspuns care nu e PDF (${buf.length} B, început=` +
+        `${buf.subarray(0, 60).toString("utf8").replace(/\s+/g, " ")})`
+    )
+  }
+
+  return buf
 }
 
 export const oblioDownloadPdfStep = createStep(
@@ -74,7 +91,13 @@ export const oblioDownloadPdfStep = createStep(
       return new StepResponse(pdfBuffer.toString("base64"))
     }
 
+    logger.info(
+      `Oblio → descărcare PDF ${series}/${number} pentru comanda ${order_id}`
+    )
     const buffer = await downloadOblioPdf(token, series, number)
+    logger.info(
+      `Oblio ← PDF primit ${series}/${number} (${buffer.length} B) pentru comanda ${order_id}`
+    )
     return new StepResponse(buffer.toString("base64"))
   }
 )

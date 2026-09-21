@@ -1,4 +1,5 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
+import { requireOblioCui } from "./oblio-get-token"
 
 type Input = {
   order_id: string
@@ -68,7 +69,9 @@ export const oblioCreateInvoiceStep = createStep(
       } as InvoiceResult)
     }
 
-    const cui = process.env.OBLIO_CUI
+    // Obligatoriu în payload — aruncă devreme, cu mesaj clar, în loc să trimită
+    // `cif: undefined` și să primească o eroare obscură de la Oblio.
+    const cui = requireOblioCui()
     const seriesName = process.env.OBLIO_INVOICE_SERIES ?? "FCT"
     const documentType = process.env.OBLIO_DOCUMENT_TYPE ?? "Factura"
     // Romania's standard VAT rate is 21% (the previous 19% default silently
@@ -167,7 +170,18 @@ export const oblioCreateInvoiceStep = createStep(
       }
     }
 
-    const response = await fetch("https://www.oblio.eu/business/api/docs", {
+    // Ce trimitem, fără date personale: suficient ca să reconstitui o factură
+    // greșită din loguri, fără să le transformi în arhivă de clienți.
+    logger.info(
+      `Oblio → emitere pentru comanda ${order_id}: cif=${cui} serie=${seriesName} ` +
+        `tip=${documentType} moneda=${currency} tva=${vatPercentage}% ` +
+        `linii=${products.length} total=${invoiceTotal.toFixed(2)} ` +
+        `referinta=${String(order.display_id ?? order_id)}`
+    )
+
+    // Endpoint-ul documentat e per tip de document: /api/docs/invoice.
+    // Vechiul /business/api/docs întoarce 404 (verificat).
+    const response = await fetch("https://www.oblio.eu/api/docs/invoice", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -200,15 +214,39 @@ export const oblioCreateInvoiceStep = createStep(
 
     if (!response.ok) {
       const text = await response.text()
+      logger.error(
+        `Oblio ✗ emitere HTTP ${response.status} pentru comanda ${order_id}: ${text.slice(0, 500)}`
+      )
       throw new Error(`Oblio creare factură eșuată: ${response.status} — ${text}`)
     }
 
     const data = await response.json()
     const model = data.model ?? data
 
-    return new StepResponse({
-      series: model.seriesName ?? seriesName,
-      number: String(model.number ?? ""),
-    } as InvoiceResult)
+    // Oblio poate răspunde 200 cu un status de eroare în corp; fără linia asta
+    // un eșec ar arăta identic cu un succes.
+    if (data?.status !== undefined && data.status !== 200) {
+      logger.error(
+        `Oblio ✗ emitere respinsă pentru comanda ${order_id}: ` +
+          `status=${data.status} message=${data.statusMessage ?? "-"}`
+      )
+    }
+
+    const series = model.seriesName ?? seriesName
+    const number = String(model.number ?? "")
+
+    if (!number) {
+      logger.error(
+        `Oblio: răspuns fără număr de factură pentru comanda ${order_id} — ` +
+          `chei primite: ${Object.keys(model ?? {}).join(", ")}`
+      )
+    } else {
+      logger.info(
+        `Oblio ← factură emisă ${series}/${number} pentru comanda ${order_id} ` +
+          `(link=${model.link ?? "-"})`
+      )
+    }
+
+    return new StepResponse({ series, number } as InvoiceResult)
   }
 )
