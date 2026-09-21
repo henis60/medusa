@@ -347,10 +347,43 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
 
     if (!ntpID) return { data };
 
+    // Plata cu cardul la Netopia se decontează direct, fără preautorizare
+    // separată: când statusul e deja CONFIRMED, banii sunt încasați și nu mai
+    // există ce captura. Apelul ar primi "Duplicate request" (errorCode 56),
+    // pe care îl tratam ca succes — deci logam "capturată automat" pentru o
+    // operație care de fapt eșuase. Întrebăm întâi statusul real.
+    // `data.status` e scris de authorizePayment → getPaymentStatus, iar Medusa
+    // creează `payment` cu exact acel `data` (payment-module: paymentService_
+    // .create({ ..., data })). Deci statusul decontării e deja aici și nu mai
+    // are rost un apel în plus. Interogăm doar dacă lipsește — de exemplu la o
+    // captură manuală din admin, pe o plată mai veche.
+    let code = typeof data.status === "number" ? data.status : undefined;
+
+    if (code === undefined) {
+      try {
+        const res = await this.client.getStatus(ntpID);
+        code = res.payment?.status;
+      } catch (err) {
+        // Fără status confirmat nu putem sări peste capture în siguranță —
+        // mergem mai departe, ca înainte.
+        this.logger.warn(
+          `Netopia capture: status necunoscut pentru ntpID=${ntpID} (${(err as Error).message}) — încerc capture`,
+        );
+      }
+    }
+
+    if (code === NetopiaStatus.CONFIRMED) {
+      this.logger.info(
+        `Netopia capture omis: ntpID=${ntpID} deja CONFIRMED (${code}) — decontat la autorizare`,
+      );
+      return { data };
+    }
+
     try {
       const amountRON = toNumber(data.amountRON ?? 0);
       const currency = (data.currency as string) ?? "RON";
       await this.client.capture(ntpID, amountRON, currency);
+      this.logger.info(`Netopia capture OK: ntpID=${ntpID}`);
     } catch (err) {
       this.logger.warn(`Netopia capture error: ${(err as Error).message}`);
     }
