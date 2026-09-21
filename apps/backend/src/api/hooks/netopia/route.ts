@@ -1,6 +1,12 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules, PaymentWebhookEvents } from "@medusajs/framework/utils"
-import { createHash, createVerify, X509Certificate } from "crypto"
+import {
+  createHash,
+  createPublicKey,
+  createVerify,
+  KeyObject,
+  X509Certificate,
+} from "crypto"
 
 const PROVIDER_ID = process.env.NETOPIA_PROVIDER_ID || "netopia_netopia"
 
@@ -59,17 +65,40 @@ function verifyIpnSignature(
     return bad("rawBody indisponibil — verifică preserveRawBody în middlewares")
 
   try {
-    const pem = rawPublic.startsWith("-----")
-      ? rawPublic
-      : `-----BEGIN CERTIFICATE-----\n${rawPublic.match(/.{1,64}/g)!.join("\n")}\n-----END CERTIFICATE-----`
+    // Netopia distribuie cheia de verificare în două forme, în funcție de cont
+    // și de mediu: un certificat X.509 (`BEGIN CERTIFICATE`) sau cheia publică
+    // brută SPKI (`BEGIN PUBLIC KEY`). Sunt structuri ASN.1 diferite —
+    // `X509Certificate` o respinge pe a doua — așa că le tratăm separat.
+    // Fără delimitatori, presupunem certificat (forma istorică) și, dacă nu
+    // se parsează, reîncercăm ca SPKI.
+    const trimmed = rawPublic.trim()
+    const pem = trimmed.startsWith("-----")
+      ? trimmed
+      : `-----BEGIN CERTIFICATE-----\n${trimmed.match(/.{1,64}/g)!.join("\n")}\n-----END CERTIFICATE-----`
 
-    let publicKey
+    let publicKey: KeyObject
+    let keySource: string
     try {
-      publicKey = new X509Certificate(pem).publicKey
+      if (pem.includes("BEGIN PUBLIC KEY")) {
+        publicKey = createPublicKey(pem)
+        keySource = "SPKI public key"
+      } else {
+        publicKey = new X509Certificate(pem).publicKey
+        keySource = "certificat X.509"
+      }
     } catch (err) {
-      return bad(
-        `NETOPIA_PUBLIC nu e un certificat X.509 valid: ${(err as Error).message}`
-      )
+      // Base64 fără delimitatori poate fi oricare din cele două — dacă
+      // împachetarea ca certificat a eșuat, încearcă drept cheie publică.
+      try {
+        publicKey = createPublicKey(
+          `-----BEGIN PUBLIC KEY-----\n${trimmed.match(/.{1,64}/g)!.join("\n")}\n-----END PUBLIC KEY-----`
+        )
+        keySource = "SPKI public key (fallback)"
+      } catch {
+        return bad(
+          `NETOPIA_PUBLIC nu e nici certificat X.509, nici cheie publică SPKI: ${(err as Error).message}`
+        )
+      }
     }
 
     const [headerB64, payloadB64, signatureB64] = token.split(".")
@@ -84,8 +113,13 @@ function verifyIpnSignature(
     const verifier = createVerify(`RSA-SHA${jwtHeader.alg.slice(2)}`)
     verifier.update(`${headerB64}.${payloadB64}`)
     if (!verifier.verify(publicKey, Buffer.from(signatureB64, "base64url"))) {
+      // Identifică materialul de cheie folosit, ca să se poată compara cu ce a
+      // trimis Netopia: sandbox și live semnează cu chei diferite, iar o
+      // nepotrivire de mediu arată exact ca o semnătură falsă.
       return bad(
-        `semnătura RSA nu se verifică cu NETOPIA_PUBLIC (alg=${jwtHeader.alg})`
+        `semnătura RSA nu se verifică cu NETOPIA_PUBLIC (alg=${jwtHeader.alg}) — ` +
+          `sursă=${keySource} tip=${publicKey.asymmetricKeyType} ` +
+          `biți=${publicKey.asymmetricKeyDetails?.modulusLength ?? "?"}`
       )
     }
 
