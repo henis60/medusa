@@ -76,10 +76,14 @@ const Shipping: React.FC<ShippingProps> = ({
     Record<string, number>
   >({})
   const [error, setError] = useState<string | null>(null)
-  // True when the last price fetch failed outright (network/API error) —
-  // shown as a retryable error, never cached, and never confused with a
-  // genuine "no courier serves this address" (empty prices map) result.
-  const [pricesFetchFailed, setPricesFetchFailed] = useState(false)
+  // Why the last price fetch failed, or null when it succeeded. Never confused
+  // with a genuine "no courier serves this address" (empty prices map) result,
+  // and the two failure reasons are kept apart on purpose: "unavailable" is
+  // worth retrying, "address_rejected" never is — offering Retry there is what
+  // made a customer attempt the same impossible checkout three times.
+  const [pricesError, setPricesError] = useState<
+    "address_rejected" | "unavailable" | null
+  >(null)
   const [shippingMethodId, setShippingMethodId] = useState<string | null>(
     cart.shipping_methods?.at(-1)?.shipping_option_id || null
   )
@@ -127,16 +131,20 @@ const Shipping: React.FC<ShippingProps> = ({
 
   const fetchPrices = useCallback(() => {
     setIsLoadingPrices(true)
-    setPricesFetchFailed(false)
+    setPricesError(null)
     // One request for all calculated options (backend queries Europarcel once).
     // The backend already returns only positive prices; options absent from
     // the map are treated as unavailable and disabled below.
     listEawbShippingPrices(cart.id)
-      .then((prices) => {
-        setCalculatedPricesMap(prices)
+      .then((result) => {
+        if (result.ok) {
+          setCalculatedPricesMap(result.prices)
+        } else {
+          setPricesError(result.reason)
+        }
       })
       .catch(() => {
-        setPricesFetchFailed(true)
+        setPricesError("unavailable")
       })
       .finally(() => setIsLoadingPrices(false))
   }, [cart.id])
@@ -467,7 +475,28 @@ const Shipping: React.FC<ShippingProps> = ({
               </RadioGroup>
             )}
 
-            {!isLoadingPrices && pricesFetchFailed && (
+            {/* Curierul a respins adresa: reîncercarea dă acelaşi rezultat de
+                fiecare dată, deci singura acţiune utilă e corectarea adresei. */}
+            {!isLoadingPrices && pricesError === "address_rejected" && (
+              <div className="flex items-center justify-between gap-3 py-2">
+                <p className={bodyMutedClass}>
+                  {t(
+                    "Curierul nu a acceptat adresa de livrare Verifică strada și numărul, apoi încearcă din nou"
+                  )}
+                </p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    router.push(`${pathname}?pas=adresa`, { scroll: false })
+                  }
+                  className="font-sans text-[10px] uppercase tracking-[2px] text-hunter-gold hover:underline shrink-0"
+                >
+                  {t("Modifică adresa")}
+                </button>
+              </div>
+            )}
+
+            {!isLoadingPrices && pricesError === "unavailable" && (
               <div className="flex items-center justify-between gap-3 py-2">
                 <p className={bodyMutedClass}>
                   {t(
@@ -485,7 +514,7 @@ const Shipping: React.FC<ShippingProps> = ({
             )}
 
             {!isLoadingPrices &&
-              !pricesFetchFailed &&
+              !pricesError &&
               (visibleShippingMethods?.length ?? 0) === 0 &&
               !hasPickupOptions && (
                 <p className={`${bodyMutedClass} py-2`}>

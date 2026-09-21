@@ -1,6 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules } from "@medusajs/framework/utils"
 import { EuroparcelClient } from "../../../../modules/eawb/lib/client"
+import { EuroparcelApiError } from "../../../../modules/eawb/lib/errors"
 import { buildContent, roundShippingPrice, toEpAddress } from "../../../../modules/eawb/lib/pricing"
 
 // Account-level ids (from/billing) rarely change — cache them per server process.
@@ -122,6 +123,26 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     logger.error(
       `eAWB shipping-prices failed for cart ${cartId}: ${(err as Error).message}`
     )
+
+    // Not every failure here is transient, and treating them alike cost a real
+    // order: Europarcel rejected an address with a 400 ("street name must be at
+    // least 5 characters"), the storefront showed "try again", and the customer
+    // retried three times — with two different addresses — against an error
+    // that could never resolve itself.
+    //
+    // `invalid_request` means Europarcel judged the DATA, so only the customer
+    // can fix it and they must be told what to change. Everything else
+    // (rate_limit/server/network, but also auth/insufficient_funds, which are
+    // OUR account's problem and must never be blamed on the customer's address)
+    // stays a 502 the storefront presents as retryable.
+    if (err instanceof EuroparcelApiError && err.kind === "invalid_request") {
+      return res.status(422).json({
+        error: err.message,
+        code: "address_rejected",
+        detail: err.detail,
+      })
+    }
+
     return res.status(502).json({ error: (err as Error).message })
   }
 }

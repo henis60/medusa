@@ -48,30 +48,58 @@ const internalHeaders = (): Record<string, string> => {
   return secret ? { "x-internal-secret": secret } : {}
 }
 
+export type EawbPricesResult =
+  | { ok: true; prices: Record<string, number> }
+  | {
+      ok: false
+      /** Europarcel rejected the address itself — retrying cannot help, the
+       *  customer has to correct it. */
+      reason: "address_rejected"
+      detail?: string
+    }
+  | {
+      ok: false
+      /** Transient (courier down, rate limited, network) — retrying may work. */
+      reason: "unavailable"
+    }
+
 // Fetches live courier prices for ALL eAWB calculated options in one request
 // (the backend queries Europarcel once), keyed by shipping_option id.
+//
+// Still never reports failure as an empty price map — that is byte-for-byte
+// identical to "no courier serves this address" and used to get cached as
+// permanent "no coverage". But it no longer throws either: Next redacts errors
+// thrown from a server action in production, so the client would receive only
+// an opaque digest and could not tell a wrong address from a courier outage —
+// which is exactly the distinction the caller now has to draw. Hence an
+// explicit result union instead.
 export const listEawbShippingPrices = async (
   cartId: string
-): Promise<Record<string, number>> => {
+): Promise<EawbPricesResult> => {
   const headers = {
     ...(await getAuthHeaders()),
     ...internalHeaders(),
   }
 
-  // Deliberately no .catch(() => ({})) here — an empty object is
-  // indistinguishable from "no courier serves this address", and the caller
-  // caches that result per cart+address. Swallowing a transient error into
-  // {} used to get permanently cached as "no coverage" until the cart id
-  // changed (e.g. after clearing cookies). Let it throw; the caller decides
-  // whether to show an error and must NOT cache a thrown/failed attempt.
-  return sdk.client
-    .fetch<{ prices: Record<string, number> }>(`/store/eawb/shipping-prices`, {
+  try {
+    const { prices } = await sdk.client.fetch<{
+      prices: Record<string, number>
+    }>(`/store/eawb/shipping-prices`, {
       method: "GET",
       query: { cart_id: cartId },
       headers,
       cache: "no-store",
     })
-    .then(({ prices }) => prices ?? {})
+    return { ok: true, prices: prices ?? {} }
+  } catch (error) {
+    // 422 is the backend's signal that Europarcel judged the address data
+    // itself (see the route's catch); anything else is treated as transient.
+    const status = (error as { status?: number } | null)?.status
+    if (status === 422) {
+      return { ok: false, reason: "address_rejected" }
+    }
+    return { ok: false, reason: "unavailable" }
+  }
 }
 
 export type EawbLocker = {

@@ -41,13 +41,25 @@ export function toEpAddress(
   const fullName = [firstName, lastName].filter(Boolean).join(" ")
   const contact = fullName.length >= 5 ? fullName : `${fullName || "Client"} .`.trim()
 
+  // Europarcel enforces a 5-character minimum on street_name too, not just on
+  // contact — and rejects the whole request with a 400 when it's shorter. That
+  // surfaces at checkout as a retry prompt the customer can never satisfy, so
+  // the order is simply lost (observed in production: "Olt"-length streets).
+  // Short Romanian street names are perfectly real (Olt, Jiu, Bega, Dej), and
+  // splitStreet strips the house number off the end — so a customer who writes
+  // "Olt 3" instead of "Str. Olt 3" lands under the limit through no fault of
+  // their own. Restoring the conventional prefix fixes the length without
+  // inventing anything: the AWB label still reads as a correct address.
+  const safeStreetName =
+    street_name.length >= 5 ? street_name : `Str. ${street_name}`.trim()
+
   return {
     contact: contact.length >= 5 ? contact : "Client",
     phone: (shippingAddress.phone as string)?.trim() || "0700000000",
     email: email || "comenzi@magazin.ro",
     locality_name: (shippingAddress.city as string) ?? "",
     county_name: (shippingAddress.province as string) ?? "",
-    street_name,
+    street_name: safeStreetName,
     street_number,
     country_code: ((shippingAddress.country_code as string) ?? "RO").toUpperCase(),
   }
