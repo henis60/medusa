@@ -64,6 +64,7 @@ export default async function sendOrderConfirmationEmail({
         "display_id",
         "email",
         "total",
+        "discount_total",
         "currency_code",
         "metadata",
         "customer.first_name",
@@ -129,6 +130,9 @@ export default async function sendOrderConfirmationEmail({
           subtotal: `${Number(item.subtotal ?? (item.unit_price ?? 0) * (item.quantity ?? 1)).toFixed(2)} ${(order.currency_code ?? "RON").toUpperCase()}`,
         })),
         total: `${Number(order.total ?? 0).toFixed(2)} ${(order.currency_code ?? "RON").toUpperCase()}`,
+        discount_total: Number(order.discount_total ?? 0) > 0
+          ? `${Number(order.discount_total).toFixed(2)} ${(order.currency_code ?? "RON").toUpperCase()}`
+          : null,
         shipping_address: order.shipping_address,
         storefront_url: process.env.VITE_STOREFRONT_URL,
         ...(invoiceAttachment ? { attachments: [invoiceAttachment] } : {}),
