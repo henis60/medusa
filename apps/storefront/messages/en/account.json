@@ -121,5 +121,6 @@
   "Sesiunea a expirat Te rugăm să te autentifici din nou": "Your session has expired. Please sign in again.",
   "Autentificare necesară": "Authentication required.",
   "ID-ul comenzii este obligatoriu": "Order ID is required.",
-  "ID-ul adresei este obligatoriu": "Address ID is required."
+  "ID-ul adresei este obligatoriu": "Address ID is required.",
+  "Introdu un număr de telefon valid": "Enter a valid phone number."
 }

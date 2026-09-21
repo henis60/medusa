@@ -37,5 +37,8 @@
   "Order transfer declined!": "Order transfer declined!",
   "Transfer of order {id} has been successfully declined": "Transfer of order {id} has been successfully declined.",
   "There was an error declining the transfer Please try again": "There was an error declining the transfer. Please try again.",
-  "PROPOSED - acest produs nu este publicat": "PROPOSED - this product is not published"
+  "PROPOSED - acest produs nu este publicat": "PROPOSED - this product is not published",
+  "404 — Profil negăsit": "404 — Profile not found",
+  "Profil negăsit": "Profile not found",
+  "Profilul pe care încerci să îl accesezi nu există": "The profile you are trying to access does not exist."
 }
