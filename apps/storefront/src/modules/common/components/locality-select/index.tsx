@@ -222,8 +222,29 @@ const LocalitySelect = ({
   const [county, setCounty] = useState<County | null>(null)
   const [city, setCity] = useState<Locality | null>(null)
 
+  const countyProbe = useRef<HTMLInputElement>(null)
+  const cityProbe = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     fetchCounties().then(setCounties)
+  }, [])
+
+  // Autofill-ul nu declanșează întotdeauna `onChange` în React — Chrome
+  // completează uneori câmpurile înainte de hidratare, iar unele browsere
+  // umplu tot formularul fără niciun eveniment de input. Citim direct
+  // valoarea punților de câteva ori după montare, ca să prindem și cazul ăla.
+  // Doar completăm ce lipsește: dacă utilizatorul a ales deja ceva manual,
+  // nu îl suprascriem.
+  useEffect(() => {
+    const push = () => {
+      const c = countyProbe.current?.value?.trim()
+      if (c && !countyValue) onChange?.(countyFieldName, c)
+      const l = cityProbe.current?.value?.trim()
+      if (l && !cityValue) onChange?.(cityFieldName, l)
+    }
+    const timers = [150, 600, 1500].map((ms) => setTimeout(push, ms))
+    return () => timers.forEach(clearTimeout)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Preselect county from an incoming value (e.g. saved/edited address).
@@ -272,8 +293,39 @@ const LocalitySelect = ({
 
   return (
     <>
+      {/* Valorile trimise cu formularul — mereu numele canonic din dataset,
+          niciodată textul brut scris de browser. */}
       <input type="hidden" name={countyFieldName} value={county?.name ?? ""} />
       <input type="hidden" name={cityFieldName} value={city?.name ?? ""} />
+
+      {/* Punți pentru autofill-ul browserului. Județul și localitatea sunt
+          Combobox-uri headlessui, a căror valoare stă în state React — browserul
+          nu are ce completa, așa că le umplea pe toate celelalte câmpuri și pe
+          acestea două le lăsa goale.
+          Input-urile de mai jos SUNT native și au atributele `autocomplete`
+          standard, deci browserul le populează. Valoarea lor e împinsă în
+          starea părintelui, de unde revine ca `countyValue`/`cityValue` și
+          intră exact pe potrivirea tolerantă folosită și la adresele salvate.
+          Nu pot fi `type="hidden"` sau `display:none` — browserele sar peste
+          astfel de câmpuri la autofill; de aceea sunt doar invizibile. */}
+      <input
+        ref={countyProbe}
+        name="autofill-address-level1"
+        autoComplete="address-level1"
+        tabIndex={-1}
+        aria-hidden="true"
+        className="absolute h-px w-px opacity-0 pointer-events-none -z-10"
+        onChange={(e) => onChange?.(countyFieldName, e.target.value)}
+      />
+      <input
+        ref={cityProbe}
+        name="autofill-address-level2"
+        autoComplete="address-level2"
+        tabIndex={-1}
+        aria-hidden="true"
+        className="absolute h-px w-px opacity-0 pointer-events-none -z-10"
+        onChange={(e) => onChange?.(cityFieldName, e.target.value)}
+      />
       <ComboField
         label={t("Județ")}
         required={required}
