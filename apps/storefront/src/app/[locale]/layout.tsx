@@ -55,7 +55,7 @@ const cinzel = Cinzel({
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),
   title: {
-    default: "The Hunter House - Return of the Elegant Gentleman",
+    default: "The Hunter House | Return of the Elegant Gentleman",
     // Pages that only set a plain string title (e.g. "Contact") get this
     // suffix automatically; pages building their own full "X | Brand"
     // string (product/category pages) aren't affected — the template only
