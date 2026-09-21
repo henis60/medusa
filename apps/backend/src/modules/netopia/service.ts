@@ -352,24 +352,20 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
     // există ce captura. Apelul ar primi "Duplicate request" (errorCode 56),
     // pe care îl tratam ca succes — deci logam "capturată automat" pentru o
     // operație care de fapt eșuase. Întrebăm întâi statusul real.
-    // `data.status` e scris de authorizePayment → getPaymentStatus, iar Medusa
-    // creează `payment` cu exact acel `data` (payment-module: paymentService_
-    // .create({ ..., data })). Deci statusul decontării e deja aici și nu mai
-    // are rost un apel în plus. Interogăm doar dacă lipsește — de exemplu la o
-    // captură manuală din admin, pe o plată mai veche.
-    let code = typeof data.status === "number" ? data.status : undefined;
-
-    if (code === undefined) {
-      try {
-        const res = await this.client.getStatus(ntpID);
-        code = res.payment?.status;
-      } catch (err) {
-        // Fără status confirmat nu putem sări peste capture în siguranță —
-        // mergem mai departe, ca înainte.
-        this.logger.warn(
-          `Netopia capture: status necunoscut pentru ntpID=${ntpID} (${(err as Error).message}) — încerc capture`,
-        );
-      }
+    // NU folosi `data.status`: rămâne valoarea de la inițiere (1 = NEW).
+    // Verificat empiric — Medusa creează `payment` din datele SESIUNII, nu din
+    // cele întoarse de authorizePayment, deci statusul decontării nu ajunge
+    // aici. Singura sursă de adevăr e o interogare proaspătă.
+    let code: number | undefined;
+    try {
+      const res = await this.client.getStatus(ntpID);
+      code = res.payment?.status;
+    } catch (err) {
+      // Fără status confirmat nu putem sări peste capture în siguranță —
+      // mergem mai departe și încercăm.
+      this.logger.warn(
+        `Netopia capture: status necunoscut pentru ntpID=${ntpID} (${(err as Error).message}) — încerc capture`,
+      );
     }
 
     if (code === NetopiaStatus.CONFIRMED) {
@@ -382,8 +378,21 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
     try {
       const amountRON = toNumber(data.amountRON ?? 0);
       const currency = (data.currency as string) ?? "RON";
-      await this.client.capture(ntpID, amountRON, currency);
-      this.logger.info(`Netopia capture OK: ntpID=${ntpID}`);
+      const res = await this.client.capture(ntpID, amountRON, currency);
+
+      // Netopia raportează eșecurile în CORPUL răspunsului, cu HTTP 200 —
+      // clientul nu are cum să le vadă, el verifică doar statusul HTTP. Fără
+      // verificarea de mai jos, orice eroare (inclusiv 56 "Duplicate request")
+      // era logată drept succes.
+      const errCode = res.error?.code;
+      if (errCode && errCode !== "00") {
+        this.logger.warn(
+          `Netopia capture NEEFECTUAT: ntpID=${ntpID} errorCode=${errCode} ` +
+            `errorMessage=${res.error?.message ?? "-"} (status=${res.payment?.status ?? "-"})`,
+        );
+      } else {
+        this.logger.info(`Netopia capture OK: ntpID=${ntpID}`);
+      }
     } catch (err) {
       this.logger.warn(`Netopia capture error: ${(err as Error).message}`);
     }
