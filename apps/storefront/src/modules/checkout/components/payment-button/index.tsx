@@ -144,18 +144,14 @@ function collectBrowserInfo(): Record<string, string> {
   }
 }
 
-// Blocaj temporar de lansare: Netopia nu a aprobat încă POS-ul pentru
-// producție ("POS is not approved"), deci nicio plată reală nu poate trece.
-// Butonul e dezactivat și mesajul apare din start, fără niciun click.
+// Blocaj temporar de lansare: cât timp Netopia nu a aprobat POS-ul pentru
+// producție ("POS is not approved"), nicio plată reală nu poate trece. Pe
+// `true`, butonul e dezactivat ȘI mesajul apare din start, fără niciun click.
 //
-// Intenționat NU e citit din `process.env.NEXT_PUBLIC_*`: variabilele acelea
-// sunt inline-uite la `next build`, deci o schimbare în env-ul de runtime nu
-// are efect până la un rebuild — exact confuzia care a făcut ca mesajul să
-// apară deși variabila era pusă pe `false`. O constantă în cod e neambiguă:
-// se vede în diff și se schimbă într-un singur loc.
-//
-// >>> PUNE PE `false` CÂND NETOPIA APROBĂ POS-UL ȘI NETOPIA_TEST_MODE="false" <<<
-const CHECKOUT_WARNING = true
+// ATENȚIE — `NEXT_PUBLIC_*` se inline-uiește la `next build`, nu se citește la
+// runtime: o schimbare în variabilele serviciului NU are efect până la un
+// REBUILD al storefront-ului. Un simplu restart lasă valoarea veche în bundle.
+const CHECKOUT_DISABLED = process.env.NEXT_PUBLIC_CHECKOUT_DISABLED === "true"
 
 const NetopiaPaymentButton = ({
   cart,
@@ -196,7 +192,7 @@ const NetopiaPaymentButton = ({
 
   return (
     <>
-      {CHECKOUT_WARNING && (
+      {CHECKOUT_DISABLED && (
         <p
           role="status"
           data-testid="netopia-payment-warning"
@@ -206,11 +202,11 @@ const NetopiaPaymentButton = ({
         </p>
       )}
       <button
-        disabled={notReady || submitting}
+        disabled={notReady || submitting || CHECKOUT_DISABLED}
         onClick={handlePayment}
         data-testid={dataTestId}
         className={`relative w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:cursor-not-allowed overflow-hidden ${
-          notReady ? "opacity-40" : ""
+          notReady || CHECKOUT_DISABLED ? "opacity-40" : ""
         }`}
       >
         {/* This is the checkout's most consequential click — a plain text
