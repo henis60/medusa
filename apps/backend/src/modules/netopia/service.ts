@@ -40,6 +40,7 @@ import {
   NetopiaBrowserInfo,
 } from "./lib/types";
 import { NetopiaStatus } from "./lib/status";
+import { toE164RoPhone } from "../../lib/phone";
 
 type InjectedDependencies = {
   logger: Logger;
@@ -634,7 +635,11 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
 
     return {
       email: (addr.email ?? customer.email ?? "client@example.com") as string,
-      phone: (addr.phone ?? customer.phone ?? "+40700000000") as string,
+      // Netopia acceptă doar format internațional — un „(0745)052200" scris
+      // de client era respins cu „Numărul de telefon nu este valid".
+      phone:
+        toE164RoPhone((addr.phone ?? customer.phone) as string | undefined) ??
+        "+40700000000",
       firstName: (addr.first_name ?? customer.first_name ?? "Client") as string,
       lastName: (addr.last_name ?? customer.last_name ?? "") as string,
       city: (addr.city ?? "Bucuresti") as string,

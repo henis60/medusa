@@ -239,13 +239,21 @@ export default class EawbFulfillmentProviderService extends AbstractFulfillmentP
             ((parcel?.length ?? 0) * (parcel?.width ?? 0) * (parcel?.height ?? 0)) /
             6000
           ).toFixed(2)}kg) carrier=${optionData.carrier_id} ` +
-          `service=${optionData.service_id} → ${option.price.total} ` +
-          `(rotunjit ${roundShippingPrice(option.price.total)})`
+          `service=${optionData.service_id} → net=${option.price.amount} ` +
+          `tva=${option.price.vat} total=${option.price.total} ` +
+          `(rotunjit ${roundShippingPrice(option.price.total)}, cu TVA inclus)`
       )
 
+      // `price.total` e CU TVA (= price.amount + price.vat), deci îl declarăm
+      // ca atare, la fel ca restul prețurilor din magazin (vezi
+      // scripts/set-ron-tax-inclusive.ts). Azi steagul nu schimbă nimic
+      // vizibil — nu există o cotă de taxă aplicată livrării, iar clientul
+      // vede exact prețul Europarcel cu TVA, rotunjit (15,50 → 16). Contează
+      // doar dacă se activează taxele automate: cu `false`, Medusa ar adăuga
+      // atunci TVA peste o sumă care îl conține deja.
       return {
         calculated_amount: roundShippingPrice(option.price.total),
-        is_calculated_price_tax_inclusive: false,
+        is_calculated_price_tax_inclusive: true,
       }
     } catch (err) {
       // Pricing still degrades to 0 (checkout must not break), but log the kind

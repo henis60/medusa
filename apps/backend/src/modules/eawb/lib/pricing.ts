@@ -1,4 +1,5 @@
 import { EpPriceAddress, EpPriceContent } from "./types"
+import { toNationalRoPhone } from "../../../lib/phone"
 
 // Shipping prices are rounded UP to the next whole leu, so customers always see
 // clean amounts and the shop never loses the fractional part.
@@ -55,7 +56,9 @@ export function toEpAddress(
 
   return {
     contact: contact.length >= 5 ? contact : "Client",
-    phone: (shippingAddress.phone as string)?.trim() || "0700000000",
+    phone:
+      toNationalRoPhone(shippingAddress.phone as string | undefined) ||
+      "0700000000",
     email: email || "comenzi@magazin.ro",
     locality_name: (shippingAddress.city as string) ?? "",
     county_name: (shippingAddress.province as string) ?? "",

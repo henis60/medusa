@@ -17,6 +17,7 @@ import {
 import { getRegion } from "./regions"
 import { getLocale } from "./locale-actions"
 import { getMedusaLocaleHeaders } from "@lib/util/request-locale"
+import { normalizePhone } from "@lib/util/phone"
 
 /**
  * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
@@ -633,7 +634,7 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
         city: formData.get("shipping_address.city"),
         country_code: formData.get("shipping_address.country_code"),
         province: formData.get("shipping_address.province"),
-        phone: formData.get("shipping_address.phone"),
+        phone: normalizePhone(formData.get("shipping_address.phone")),
       },
       email: formData.get("email"),
     } as any
@@ -652,7 +653,7 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
         city: formData.get("billing_address.city"),
         country_code: formData.get("billing_address.country_code"),
         province: formData.get("billing_address.province"),
-        phone: formData.get("billing_address.phone"),
+        phone: normalizePhone(formData.get("billing_address.phone")),
       }
     await updateCart(data)
   } catch (e: any) {
