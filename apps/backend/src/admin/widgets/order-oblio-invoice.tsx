@@ -1,7 +1,7 @@
 import { defineWidgetConfig } from "@medusajs/admin-sdk"
 import { DetailWidgetProps, AdminOrder } from "@medusajs/framework/types"
-import { Container, Button, Text, Badge, toast } from "@medusajs/ui"
-import { useState } from "react"
+import { Container, Button, Text, Badge, toast, usePrompt } from "@medusajs/ui"
+import { useEffect, useState } from "react"
 import { sdk } from "../lib/client"
 
 type OblioInvoiceResponse = {
@@ -20,6 +20,18 @@ const OrderOblioInvoiceWidget = ({ data: order }: DetailWidgetProps<AdminOrder>)
   })
 
   const hasInvoice = !!invoiceMeta.series && !!invoiceMeta.number
+
+  // Starea reală a OBLIO_DRY_RUN, citită din backend. `null` cât se încarcă —
+  // nu afișăm nimic decât o valoare confirmată, ca să nu reapară o etichetă
+  // greșită.
+  const [dryRun, setDryRun] = useState<boolean | null>(null)
+  const prompt = usePrompt()
+  useEffect(() => {
+    sdk.client
+      .fetch<{ dry_run: boolean }>("/admin/oblio-status")
+      .then((r) => setDryRun(r.dry_run))
+      .catch(() => setDryRun(null))
+  }, [])
 
   const handleDownload = async () => {
     setDownloading(true)
@@ -53,6 +65,21 @@ const OrderOblioInvoiceWidget = ({ data: order }: DetailWidgetProps<AdminOrder>)
   // failed silently (transient Oblio outage, misconfigured env var at the
   // time) — previously the only way to fix these was a direct DB edit.
   const handleGenerate = async () => {
+    // În afara DRY RUN se emite un document fiscal real, anulabil doar prin
+    // storno — cerem confirmare. Confirmăm și când starea nu s-a putut citi
+    // (`null`): o factură emisă din greșeală costă mai mult decât un click.
+    if (dryRun !== true) {
+      const confirmed = await prompt({
+        title: "Generezi factura în Oblio?",
+        description:
+          `Se va emite o factură fiscală reală pentru comanda #${order.display_id}. ` +
+          "Odată emisă, poate fi anulată doar prin storno.",
+        confirmText: "Da, generează",
+        cancelText: "Anulează",
+      })
+      if (!confirmed) return
+    }
+
     setGenerating(true)
     try {
       const result = await sdk.client.fetch<OblioInvoiceResponse>(
@@ -75,7 +102,7 @@ const OrderOblioInvoiceWidget = ({ data: order }: DetailWidgetProps<AdminOrder>)
           <Text size="small" weight="plus">
             Factură Oblio
           </Text>
-          {process.env.NODE_ENV === "development" && (
+          {dryRun === true && (
             <Badge size="2xsmall" color="orange">
               DRY RUN
             </Badge>

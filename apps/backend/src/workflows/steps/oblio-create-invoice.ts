@@ -128,7 +128,8 @@ export const oblioCreateInvoiceStep = createStep(
       vatPercentage,
       vatIncluded: true,
       quantity: item.quantity ?? 1,
-      productType: "Produs",
+      // Doar valori din lista Oblio — „Produs" simplu e respins cu 400.
+      productType: "Marfa",
       isDiscount: false,
       saveToDb: false,
     }))
