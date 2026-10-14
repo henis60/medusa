@@ -213,7 +213,10 @@ export const oblioCreateInvoiceStep = createStep(
         // deci OBLIO_DOCUMENT_TYPE promitea ceva ce nu putea livra: setat pe
         // "Proforma" tot o factură fiscală ar fi emis.
         seriesName,
-        useStock: false,
+        // Întreg 0/1, nu boolean (documentația Oblio, exemplul SDK oficial:
+        // 'useStock' => 0). Cu `false`, produsele de tip „Marfa" erau căutate
+        // în gestiune: „nu este in gestiunea `` din punctul de lucru `Sediu`".
+        useStock: 0,
       }),
     })
 

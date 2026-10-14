@@ -132,8 +132,11 @@ const OrderOblioInvoiceWidget = ({ data: order }: DetailWidgetProps<AdminOrder>)
   )
 }
 
+// Aceeași zonă ca widget-ul eAWB, ca factura și expedierea să stea împreună
+// în capul barei laterale. În cadrul zonei, ordinea vine din numele
+// fișierelor: „order-eawb-label" < „order-oblio-invoice", deci Oblio apare sub.
 export const config = defineWidgetConfig({
-  zone: "order.details.side.after",
+  zone: "order.details.side.before",
 })
 
 export default OrderOblioInvoiceWidget
