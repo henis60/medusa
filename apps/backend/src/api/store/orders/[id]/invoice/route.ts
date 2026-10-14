@@ -59,7 +59,8 @@ export async function GET(
     // Shared with the invoice workflow so the Oblio call lives in one place.
     try {
       const token = await fetchOblioToken()
-      pdfBuffer = await downloadOblioPdf(token, invoiceSeries, invoiceNumber)
+      const invoiceLink = order.metadata?.oblio_invoice_link as string | undefined
+      pdfBuffer = await downloadOblioPdf(token, invoiceSeries, invoiceNumber, invoiceLink)
     } catch (error) {
       throw new MedusaError(
         MedusaError.Types.UNEXPECTED_STATE,

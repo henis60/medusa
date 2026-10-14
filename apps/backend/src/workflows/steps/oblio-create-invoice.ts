@@ -76,7 +76,6 @@ export const oblioCreateInvoiceStep = createStep(
     // `cif: undefined` și să primească o eroare obscură de la Oblio.
     const cui = requireOblioCui()
     const seriesName = process.env.OBLIO_INVOICE_SERIES ?? "FCT"
-    const documentType = process.env.OBLIO_DOCUMENT_TYPE ?? "Factura"
     // Romania's standard VAT rate is 21% (the previous 19% default silently
     // under-declared VAT on every invoice issued without the env var set).
     const vatPercentage = parseInt(process.env.OBLIO_VAT_PERCENTAGE ?? "21", 10)
@@ -176,8 +175,7 @@ export const oblioCreateInvoiceStep = createStep(
     // Ce trimitem, fără date personale: suficient ca să reconstitui o factură
     // greșită din loguri, fără să le transformi în arhivă de clienți.
     logger.info(
-      `Oblio → emitere pentru comanda ${order_id}: cif=${cui} serie=${seriesName} ` +
-        `tip=${documentType} moneda=${currency} tva=${vatPercentage}% ` +
+      `Oblio → emitere pentru comanda ${order_id}: cif=${cui} serie=${seriesName} ` + `moneda=${currency} tva=${vatPercentage}% ` +
         `linii=${products.length} total=${invoiceTotal.toFixed(2)} ` +
         `referinta=${String(order.display_id ?? order_id)}`
     )
@@ -209,7 +207,10 @@ export const oblioCreateInvoiceStep = createStep(
         precision: 2,
         currency,
         products,
-        type: documentType,
+        // Tipul documentului e dat de URL (/api/docs/invoice), nu de un câmp
+        // din corp — așa funcționează API-ul Oblio. Un `type` aici era ignorat,
+        // deci OBLIO_DOCUMENT_TYPE promitea ceva ce nu putea livra: setat pe
+        // "Proforma" tot o factură fiscală ar fi emis.
         seriesName,
         useStock: false,
       }),

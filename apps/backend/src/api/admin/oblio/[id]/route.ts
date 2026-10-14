@@ -50,7 +50,10 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     // than re-implemented so credential handling stays in one place.
     try {
       const token = await fetchOblioToken()
-      pdfBase64 = (await downloadOblioPdf(token, invoiceSeries, invoiceNumber)).toString("base64")
+      const invoiceLink = order.metadata?.oblio_invoice_link as string | undefined
+      pdfBase64 = (
+        await downloadOblioPdf(token, invoiceSeries, invoiceNumber, invoiceLink)
+      ).toString("base64")
     } catch (error) {
       throw new MedusaError(
         MedusaError.Types.UNEXPECTED_STATE,

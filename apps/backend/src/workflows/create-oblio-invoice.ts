@@ -41,6 +41,7 @@ export const createOblioInvoiceWorkflow = createWorkflow(
         order_id: input.order_id,
         series: invoice.series,
         number: invoice.number,
+        link: invoice.link,
       }))
     )
 

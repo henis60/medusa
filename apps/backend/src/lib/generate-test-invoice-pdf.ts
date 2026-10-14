@@ -46,7 +46,7 @@ export function generateTestInvoicePdf(
     const vatPct = parseInt(process.env.OBLIO_VAT_PERCENTAGE ?? "21", 10)
     const companyName = process.env.OBLIO_COMPANY_NAME ?? "Firma SRL"
     const companyCui = process.env.OBLIO_CUI ?? "RO12345678"
-    const docType = process.env.OBLIO_DOCUMENT_TYPE ?? "Factura"
+    const docType = "Factura"
 
     const billing = order.billing_address ?? {}
     const clientName =

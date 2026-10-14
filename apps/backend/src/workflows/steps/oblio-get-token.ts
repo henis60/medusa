@@ -84,7 +84,6 @@ export const oblioGetTokenStep = createStep(
         `clientSecret=${present(process.env.OBLIO_CLIENT_SECRET)} ` +
         `cui=${process.env.OBLIO_CUI ?? "LIPSĂ"} ` +
         `serie=${process.env.OBLIO_INVOICE_SERIES ?? "FCT (implicit)"} ` +
-        `tip=${process.env.OBLIO_DOCUMENT_TYPE ?? "Factura (implicit)"} ` +
         `tva=${process.env.OBLIO_VAT_PERCENTAGE ?? "21 (implicit)"}`
     )
 
