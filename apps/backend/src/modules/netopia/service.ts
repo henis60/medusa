@@ -158,11 +158,13 @@ export class NetopiaProviderService extends AbstractPaymentProvider<NetopiaOptio
   async initiatePayment(
     input: InitiatePaymentInput,
   ): Promise<InitiatePaymentOutput> {
-    // Safeguard-ul care bloca checkout-ul în sandbox a fost scos ca să se poată
-    // testa fluxul complet pe sandbox. Consecința: în sandbox un checkout
-    // "reușit" NU încasează bani reali, deci o comandă poate ajunge finalizată
-    // fără plată. Cât timp `sandbox` e adevărat, magazinul nu trebuie lăsat
-    // accesibil publicului — vezi NEXT_PUBLIC_CHECKOUT_DISABLED în storefront.
+    // Nu mai există niciun blocaj al checkout-ului: nici aici, nici în
+    // storefront. Singurul semnal rămas e avertismentul de mai jos.
+    //
+    // Consecința, cât timp `sandbox` e adevărat: un checkout "reușit" NU
+    // încasează bani reali, deci o comandă poate ajunge finalizată fără plată.
+    // Treci NETOPIA_TEST_MODE pe "false" înainte de a lăsa magazinul accesibil
+    // publicului.
     if (this.options.sandbox) {
       this.logger.warn(
         "Netopia: SANDBOX activ — plățile NU încasează bani reali (NETOPIA_TEST_MODE != 'false')",

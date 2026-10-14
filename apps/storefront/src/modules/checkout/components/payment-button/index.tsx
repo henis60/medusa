@@ -144,15 +144,6 @@ function collectBrowserInfo(): Record<string, string> {
   }
 }
 
-// Blocaj temporar de lansare: cât timp Netopia nu a aprobat POS-ul pentru
-// producție ("POS is not approved"), nicio plată reală nu poate trece. Pe
-// `true`, butonul e dezactivat ȘI mesajul apare din start, fără niciun click.
-//
-// ATENȚIE — `NEXT_PUBLIC_*` se inline-uiește la `next build`, nu se citește la
-// runtime: o schimbare în variabilele serviciului NU are efect până la un
-// REBUILD al storefront-ului. Un simplu restart lasă valoarea veche în bundle.
-const CHECKOUT_DISABLED = process.env.NEXT_PUBLIC_CHECKOUT_DISABLED === "true"
-
 const NetopiaPaymentButton = ({
   cart,
   providerId,
@@ -192,21 +183,12 @@ const NetopiaPaymentButton = ({
 
   return (
     <>
-      {CHECKOUT_DISABLED && (
-        <p
-          role="status"
-          data-testid="netopia-payment-warning"
-          className="mb-3 border border-amber-400 bg-amber-50 px-3 py-2 font-sans text-[12px] leading-relaxed text-amber-900"
-        >
-          {t("Plățile sunt temporar indisponibile")}
-        </p>
-      )}
       <button
-        disabled={notReady || submitting || CHECKOUT_DISABLED}
+        disabled={notReady || submitting}
         onClick={handlePayment}
         data-testid={dataTestId}
         className={`relative w-full py-3 bg-hunter-gold text-[#0D0D0D] font-sans text-[10px] uppercase tracking-[4px] hover:opacity-90 transition-opacity disabled:cursor-not-allowed overflow-hidden ${
-          notReady || CHECKOUT_DISABLED ? "opacity-40" : ""
+          notReady ? "opacity-40" : ""
         }`}
       >
         {/* This is the checkout's most consequential click — a plain text
