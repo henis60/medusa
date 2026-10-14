@@ -53,8 +53,12 @@ export default async function sendOrderShippedEmail({
       channel: "email",
       data: {
         order_id: order.display_id,
+        // Contul clientului, apoi adresa de livrare (comenzile fără cont nu
+        // au `customer`). Același lanț ca în order-placed.ts.
         customer_name:
-          `${order.customer?.first_name ?? ""} ${order.customer?.last_name ?? ""}`.trim(),
+          `${order.customer?.first_name ?? ""} ${order.customer?.last_name ?? ""}`.trim() ||
+          `${order.shipping_address?.first_name ?? ""} ${order.shipping_address?.last_name ?? ""}`.trim() ||
+          "Client",
         shipping_address: order.shipping_address,
         tracking_number: trackingNumber,
         storefront_url: process.env.VITE_STOREFRONT_URL,

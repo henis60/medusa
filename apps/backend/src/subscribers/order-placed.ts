@@ -120,8 +120,12 @@ export default async function sendOrderConfirmationEmail({
         // which 404s/requires auth for guest checkouts. Mirrors
         // orderIdToSlug in apps/storefront/src/lib/util/order-slug.ts.
         order_slug: order.id.replace(/^order_/, ""),
+        // Contul clientului, apoi adresa de livrare: o comandă făcută fără cont
+        // (guest checkout) nu are `customer`, dar are numele pe adresă — fără
+        // rezervă, emailul saluta „Mulțumim, Client." pe aproape toate comenzile.
         customer_name:
           `${order.customer?.first_name ?? ""} ${order.customer?.last_name ?? ""}`.trim() ||
+          `${order.shipping_address?.first_name ?? ""} ${order.shipping_address?.last_name ?? ""}`.trim() ||
           "Client",
         items: (order.items ?? []).map((item: any) => ({
           title: item.title,
