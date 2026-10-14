@@ -204,6 +204,11 @@ export default class EawbFulfillmentProviderService extends AbstractFulfillmentP
     try {
       const billingAddressId = await this.getBillingAddressId()
 
+      const content = buildContent(
+        ((context as any)?.items as Array<{ quantity?: number }>) ?? []
+      )
+      const parcel = content.parcels?.[0]?.size
+
       const res = await this.client_.calculatePrices({
         carrier_id: optionData.carrier_id as string | number,
         service_id: optionData.service_id as number,
@@ -213,16 +218,30 @@ export default class EawbFulfillmentProviderService extends AbstractFulfillmentP
         // Aceleași dimensiuni ca la emiterea AWB-ului. Erau scrise direct aici,
         // deci prețul afișat la checkout se putea abate de la coletul chiar
         // expediat — acum ambele trec prin buildContent.
-        content: buildContent(
-          ((context as any)?.items as Array<{ quantity?: number }>) ?? []
-        ),
+        content,
         extra: { parcel_content: "Produse" },
       })
 
       const option = res.data?.[0]
       if (!option) {
+        this.logger_.warn(
+          `eAWB: niciun tarif returnat pentru carrier=${optionData.carrier_id} ` +
+            `service=${optionData.service_id} → 0 RON`
+        )
         return { calculated_amount: 0, is_calculated_price_tax_inclusive: false }
       }
+
+      // Ce am trimis și ce a răspuns, pe o linie: fără asta nu se poate
+      // distinge „dimensiunile nu s-au aplicat" de „curierul chiar atât cere".
+      this.logger_.info(
+        `eAWB tarif: ${parcel?.length}×${parcel?.width}×${parcel?.height}cm ` +
+          `${content.total_weight}kg (vol=${(
+            ((parcel?.length ?? 0) * (parcel?.width ?? 0) * (parcel?.height ?? 0)) /
+            6000
+          ).toFixed(2)}kg) carrier=${optionData.carrier_id} ` +
+          `service=${optionData.service_id} → ${option.price.total} ` +
+          `(rotunjit ${roundShippingPrice(option.price.total)})`
+      )
 
       return {
         calculated_amount: roundShippingPrice(option.price.total),
