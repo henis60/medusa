@@ -71,7 +71,10 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   // Mark the fulfillment as shipped right away — the AWB is generated and the
   // parcel is handed to the courier, so the order is effectively shipped. This
-  // fires `order.shipment_created`, which sends the shipped email.
+  // emits `shipment.created` (NOT `order.shipment_created`, which doesn't
+  // exist in Medusa), which sends the shipped email — see
+  // subscribers/order-shipment-created.ts. `no_notification` is deliberately
+  // not passed, so the email goes out on every successful click.
   await createOrderShipmentWorkflow(req.scope).run({
     input: {
       order_id: id,

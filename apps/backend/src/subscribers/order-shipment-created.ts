@@ -3,20 +3,56 @@ import { SubscriberArgs, type SubscriberConfig } from "@medusajs/framework";
 export default async function sendOrderShippedEmail({
   event: { data },
   container,
-}: SubscriberArgs<{ id: string; order_id: string }>) {
+}: SubscriberArgs<{ id: string; no_notification?: boolean }>) {
   const logger = container.resolve("logger");
-  logger.info(`Sending shipment notification for order: ${data.order_id}`);
+  // Medusa emite `shipment.created` cu { id, no_notification }: `id` e
+  // fulfillment-ul, iar comanda NU vine în eveniment — se află din legătura
+  // order↔fulfillment, mai jos. (Înainte ascultam „order.shipment_created",
+  // un eveniment care nu există, deci emailul nu pleca niciodată.)
+  logger.info(`shipment.created primit pentru fulfillment ${data.id}`);
+
+  // Operatorul a bifat „nu trimite notificare" la marcarea ca expediat.
+  if (data.no_notification) {
+    logger.info(`Email de expediere omis pentru fulfillment ${data.id} (no_notification)`);
+    return;
+  }
+
+  // În afara try, ca să poată fi numită și în catch.
+  let orderId: string | undefined;
 
   try {
     const query = container.resolve("query");
+
+    const { data: links } = await query.graph({
+      entity: "order_fulfillment",
+      fields: ["order_id"],
+      filters: { fulfillment_id: data.id },
+    });
+    orderId = links?.[0]?.order_id as string | undefined;
+    if (!orderId) {
+      logger.error(
+        `Nu am găsit comanda pentru fulfillment ${data.id}, emailul de expediere nu se trimite`,
+      );
+      return;
+    }
+
     const { data: fulfillments } = await query.graph({
       entity: "fulfillment",
-      fields: ["labels.tracking_number"],
+      fields: ["labels.tracking_number", "labels.tracking_url"],
       filters: { id: data.id },
     });
 
-    const trackingNumber =
-      fulfillments?.[0]?.labels?.[0]?.tracking_number ?? null;
+    const label = fulfillments?.[0]?.labels?.[0];
+    const trackingNumber = label?.tracking_number ?? null;
+
+    // Linkul de urmărire de la curier (același `track_url` pe care îl arată
+    // butonul „Tracking" din widgetul eAWB). Valorile „#" și gol sunt
+    // marcaje, nu linkuri: la DRY_RUN eticheta are tracking_url „#", iar un
+    // buton cu href „#" ar duce clientul nicăieri. Fără link valid trimitem
+    // null, ca șablonul să poată ascunde butonul.
+    const rawUrl = label?.tracking_url?.trim()
+    const trackingUrl =
+      rawUrl && rawUrl !== "#" && /^https?:\/\//i.test(rawUrl) ? rawUrl : null
 
     const { data: orders } = await query.graph({
       entity: "order",
@@ -28,11 +64,11 @@ export default async function sendOrderShippedEmail({
         "customer.last_name",
         "shipping_address.*",
       ],
-      filters: { id: data.order_id },
+      filters: { id: orderId },
     });
 
     if (!orders?.length) {
-      logger.error(`Order ${data.order_id} not found, skipping shipment email`);
+      logger.error(`Order ${orderId} not found, skipping shipment email`);
       return;
     }
 
@@ -40,7 +76,7 @@ export default async function sendOrderShippedEmail({
 
     if (!order.email) {
       logger.error(
-        `Order ${data.order_id} has no email address, skipping shipment email`,
+        `Order ${orderId} has no email address, skipping shipment email`,
       );
       return;
     }
@@ -61,20 +97,25 @@ export default async function sendOrderShippedEmail({
           "Client",
         shipping_address: order.shipping_address,
         tracking_number: trackingNumber,
+        tracking_url: trackingUrl,
         storefront_url: process.env.VITE_STOREFRONT_URL,
       },
     });
 
-    logger.info(`Shipment email sent for order ${order.id}`);
+    logger.info(
+      `Shipment email sent for order ${order.id} ` +
+        `(awb=${trackingNumber ?? "-"}, link=${trackingUrl ? "da" : "nu"})`,
+    );
   } catch (error) {
     // Not rethrown: a notification failure can happen after the provider
     // accepted the message, so an event-bus retry risks a duplicate email.
     logger.error(
-      `Failed to send shipment email for order ${data.order_id}: ${error.message}`,
+      `Failed to send shipment email for fulfillment ${data.id} ` +
+        `(order ${orderId ?? "necunoscută"}): ${error.message}`,
     );
   }
 }
 
 export const config: SubscriberConfig = {
-  event: "order.shipment_created",
+  event: "shipment.created",
 };
