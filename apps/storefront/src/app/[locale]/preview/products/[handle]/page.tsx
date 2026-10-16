@@ -2,6 +2,7 @@
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { getRegion } from "@lib/data/regions"
+import { backendBaseUrl } from "@lib/config"
 import { getImagesForVariant } from "@lib/util/product"
 import ProductTemplate from "@modules/products/templates"
 import { HttpTypes } from "@medusajs/types"
@@ -16,8 +17,7 @@ async function fetchPreviewProduct(
   token: string,
   regionId: string
 ): Promise<HttpTypes.StoreProduct | null> {
-  const backendUrl =
-    process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? "http://localhost:9000"
+  const backendUrl = backendBaseUrl
   return fetch(
     `${backendUrl}/store/preview/products/${encodeURIComponent(handle)}?token=${encodeURIComponent(token)}&region_id=${regionId}`,
     {

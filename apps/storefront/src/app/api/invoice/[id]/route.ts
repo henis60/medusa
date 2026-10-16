@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { cookies } from "next/headers"
+import { backendBaseUrl } from "@lib/config"
 
 export async function GET(
   _request: NextRequest,
@@ -13,8 +14,9 @@ export async function GET(
     return NextResponse.json({ error: "Neautentificat" }, { status: 401 })
   }
 
-  const backendUrl =
-    process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? "http://localhost:9000"
+  // Adresa rezolvată din config (privată pe server), nu cea publică: pe cea
+  // publică, Cloudflare Access întorcea pagina de sign-in cu status 200.
+  const backendUrl = backendBaseUrl
   const publishableKey =
     process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ""
 
@@ -33,6 +35,21 @@ export async function GET(
   }
 
   const pdfBuffer = await response.arrayBuffer()
+
+  // Un 200 nu garantează un PDF: orice proxy sau pagină de login poate răspunde
+  // cu succes și cu HTML. Fără verificare, clientul primea un fișier „.pdf" care
+  // nu se deschide. Semnătura unui PDF e „%PDF-" la început.
+  const head = Buffer.from(pdfBuffer.slice(0, 5)).toString("latin1")
+  if (head !== "%PDF-") {
+    console.error(
+      `invoice route: răspuns care nu e PDF pentru ${id} (${pdfBuffer.byteLength} B, ` +
+        `content-type=${response.headers.get("content-type") ?? "-"})`
+    )
+    return NextResponse.json(
+      { message: "Factura nu a putut fi descărcată acum. Încearcă din nou mai târziu." },
+      { status: 502 }
+    )
+  }
 
   return new NextResponse(pdfBuffer, {
     headers: {

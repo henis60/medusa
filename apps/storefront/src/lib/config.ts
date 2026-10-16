@@ -37,6 +37,13 @@ const BASE_GLOBAL_HEADERS = {
   "User-Agent": "TheHunterStorefront/1.0",
 }
 
+// Adresa backendului, rezolvată o singură dată: privată pe server (când
+// MEDUSA_BACKEND_URL e setată), publică în rest. Rutele care apelează backendul
+// cu `fetch` direct, în loc de SDK, trebuie să o folosească pe aceasta — cele
+// care citeau NEXT_PUBLIC_MEDUSA_BACKEND_URL ieșeau pe adresa publică, prin
+// Cloudflare Access, și primeau pagina de sign-in în loc de răspuns.
+export const backendBaseUrl = backendUrl
+
 export const sdk = new Medusa({
   baseUrl: backendUrl,
   debug: process.env.NODE_ENV === "development",
