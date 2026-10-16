@@ -140,6 +140,31 @@ export const oblioCreateInvoiceStep = createStep(
     }
 
     const management = requireOblioManagement()
+
+    // Factura se emite după ce plata e deja confirmată la Netopia, deci o
+    // marcăm încasată în Oblio. Fără `collect` rămânea „Neincasata (rest de
+    // încasat …)", deși clientul plătise. Oblio cere `documentNumber` când
+    // încasarea nu e chitanță: folosim ID-ul tranzacției Netopia, ca să se
+    // poată reconcilia cu extrasul. Interogarea e separată și învelită în
+    // try, ca o cale de câmp nepotrivită să nu poată opri emiterea facturii.
+    let collectRef = `Comanda ${order.display_id ?? order_id}`
+    try {
+      const { data: payOrders } = await query.graph({
+        entity: "order",
+        fields: ["payment_collections.payments.data"],
+        filters: { id: order_id },
+      })
+      const ntpID = ((payOrders?.[0] as any)?.payment_collections ?? [])
+        .flatMap((pc: any) => pc?.payments ?? [])
+        .map((p: any) => p?.data?.ntpID)
+        .find(Boolean)
+      if (ntpID) collectRef = `Netopia ${ntpID}`
+    } catch (err) {
+      logger.warn(
+        `Oblio: nu am putut citi ntpID pentru comanda ${order_id} (${(err as Error).message}) — ` +
+          `încasarea se înregistrează cu referința „${collectRef}"`
+      )
+    }
     // Punctul de lucru căruia îi aparține gestiunea. Oblio are „Sediu" ca
     // valoare implicită; dacă gestiunea e la alt punct de lucru, produsul nu
     // se găsește: „nu este in gestiunea `X` din punctul de lucru `Sediu`".
@@ -215,7 +240,8 @@ export const oblioCreateInvoiceStep = createStep(
       `Oblio → emitere pentru comanda ${order_id}: cif=${cui} serie=${seriesName} ` + `moneda=${currency} tva=${vatPercentage}% ` +
         `linii=${products.length} tipuri=${[...new Set(products.map((p) => p.productType))].join("/")} ` +
         `useStock=0 gestiune=${management} ` +
-        `punctLucru=${workStation ?? "Sediu (implicit)"} total=${invoiceTotal.toFixed(2)} ` +
+        `punctLucru=${workStation ?? "Sediu (implicit)"} incasare=Card/${collectRef} ` +
+        `total=${invoiceTotal.toFixed(2)} ` +
         `referinta=${String(order.display_id ?? order_id)}`
     )
 
@@ -237,6 +263,15 @@ export const oblioCreateInvoiceStep = createStep(
           country: (billing as any).country_code ?? "RO",
           phone: (billing as any).phone ?? "",
           email: order.email ?? "",
+        },
+        // Încasarea prin card (Netopia). `value` lipsește intenționat: implicit
+        // e totalul facturii. Tipul „Card" e din lista Oblio; dacă
+        // contabilitatea îl preferă altfel (ex. „Alta incasare banca"),
+        // se schimbă aici.
+        collect: {
+          type: "Card",
+          documentNumber: collectRef,
+          issueDate: today,
         },
         issueDate: today,
         dueDate: today,
@@ -268,7 +303,10 @@ export const oblioCreateInvoiceStep = createStep(
     }
 
     const data = await response.json()
-    const model = data.model ?? data
+    // Oblio răspunde { status, statusMessage, data: { seriesName, number, link… } }
+    // — datele facturii sunt în `data.data`. Citite din rădăcină, numărul
+    // lipsea, iar pasul de PDF cerea un document fără număr.
+    const model = data.data ?? data.model ?? data
 
     // Oblio poate răspunde 200 cu un status de eroare în corp; fără linia asta
     // un eșec ar arăta identic cu un succes.
@@ -283,9 +321,19 @@ export const oblioCreateInvoiceStep = createStep(
     const number = String(model.number ?? "")
 
     if (!number) {
+      // Oblio a răspuns cu succes (HTTP 2xx), deci factura a fost, cel mai
+      // probabil, EMISĂ — doar că nu i-am găsit numărul. Nu mergem mai departe
+      // (PDF, metadata) cu un număr gol, iar mesajul avertizează să nu se
+      // regenereze înainte de a verifica în Oblio: ar ieși un duplicat fiscal.
       logger.error(
         `Oblio: răspuns fără număr de factură pentru comanda ${order_id} — ` +
-          `chei primite: ${Object.keys(model ?? {}).join(", ")}`
+          `chei primite: ${Object.keys(model ?? {}).join(", ")} — ` +
+          `răspuns: ${JSON.stringify(data).slice(0, 500)}`
+      )
+      throw new Error(
+        `Oblio a răspuns cu succes, dar fără număr de factură (comanda ${order_id}). ` +
+          `Factura a fost probabil emisă — VERIFICĂ în Oblio înainte de a o genera ` +
+          `din nou, altfel apare un duplicat.`
       )
     } else {
       logger.info(

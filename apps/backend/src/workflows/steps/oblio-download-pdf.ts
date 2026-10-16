@@ -22,25 +22,42 @@ export async function downloadOblioPdf(
 ): Promise<Buffer> {
   const cui = requireOblioCui()
 
-  // Calea preferată: link-ul întors de Oblio la emitere. SDK-ul oficial
-  // (OblioSoftware/OblioApi) NU expune niciun endpoint de download — expune
-  // doar GET /api/docs/invoice pentru citirea documentului — deci URL-ul
-  // construit mai jos rămâne o presupunere. Când avem link, îl folosim.
-  //
-  // De reținut: pe api.oblio.eu un 401 NU dovedește că o cale există; e
-  // peretele generic al API-ului. (Așa am „confirmat" greșit /api/authorize.)
-  const url = link
-    ? new URL(link)
-    : new URL("https://www.oblio.eu/api/docs/invoice/download")
+  // SDK-ul oficial (OblioSoftware/OblioApi) NU are endpoint de download. Are
+  // în schimb GET /api/docs/invoice pentru CITIREA unui document, iar
+  // documentul conține link-ul către PDF — același link pe care îl întoarce și
+  // emiterea. Deci:
+  //   1. folosim link-ul salvat pe comandă, dacă există;
+  //   2. altfel citim documentul după serie + număr și luăm link-ul de acolo.
+  // Un „/api/docs/invoice/download" construit de noi răspundea „Action not
+  // found" — endpoint inexistent, pe care l-am luat drept valid fiindcă
+  // api.oblio.eu întoarce 401 pe orice cale (un 401 nu dovedește nimic).
+  let pdfLink = link
+  if (!pdfLink) {
+    const docUrl = new URL("https://www.oblio.eu/api/docs/invoice")
+    docUrl.searchParams.set("cif", cui)
+    docUrl.searchParams.set("seriesName", series)
+    docUrl.searchParams.set("number", number)
 
-  if (!link) {
-    url.searchParams.set("cif", cui)
-    url.searchParams.set("type", "pdf")
-    url.searchParams.set("seriesName", series)
-    url.searchParams.set("number", number)
+    const docRes = await fetch(docUrl.toString(), {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!docRes.ok) {
+      const text = await docRes.text().catch(() => "")
+      throw new Error(
+        `Oblio citire document ${series}/${number} eșuată: ${docRes.status} — ${text.slice(0, 300)}`
+      )
+    }
+    const doc = (await docRes.json()) as { data?: { link?: string } }
+    pdfLink = doc?.data?.link
+    if (!pdfLink) {
+      throw new Error(
+        `Oblio: documentul ${series}/${number} există, dar răspunsul nu are link către PDF ` +
+          `(chei: ${Object.keys(doc?.data ?? {}).join(", ") || "—"})`
+      )
+    }
   }
 
-  const response = await fetch(url.toString(), {
+  const response = await fetch(pdfLink, {
     headers: { Authorization: `Bearer ${token}` },
   })
 
