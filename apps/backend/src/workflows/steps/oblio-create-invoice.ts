@@ -140,6 +140,11 @@ export const oblioCreateInvoiceStep = createStep(
     }
 
     const management = requireOblioManagement()
+    // Punctul de lucru căruia îi aparține gestiunea. Oblio are „Sediu" ca
+    // valoare implicită; dacă gestiunea e la alt punct de lucru, produsul nu
+    // se găsește: „nu este in gestiunea `X` din punctul de lucru `Sediu`".
+    // Nu se trimite nimic dacă variabila lipsește, ca să păstrăm implicitul.
+    const workStation = process.env.OBLIO_WORK_STATION?.trim() || undefined
 
     const products = resolved.map(({ item, result }): Record<string, any> => ({
       name: (result as { name: string }).name,
@@ -209,7 +214,8 @@ export const oblioCreateInvoiceStep = createStep(
     logger.info(
       `Oblio → emitere pentru comanda ${order_id}: cif=${cui} serie=${seriesName} ` + `moneda=${currency} tva=${vatPercentage}% ` +
         `linii=${products.length} tipuri=${[...new Set(products.map((p) => p.productType))].join("/")} ` +
-        `useStock=0 gestiune=${management} total=${invoiceTotal.toFixed(2)} ` +
+        `useStock=0 gestiune=${management} ` +
+        `punctLucru=${workStation ?? "Sediu (implicit)"} total=${invoiceTotal.toFixed(2)} ` +
         `referinta=${String(order.display_id ?? order_id)}`
     )
 
@@ -249,6 +255,7 @@ export const oblioCreateInvoiceStep = createStep(
         // 'useStock' => 0). Cu `false`, produsele de tip „Marfa" erau căutate
         // în gestiune: „nu este in gestiunea `` din punctul de lucru `Sediu`".
         useStock: 0,
+        ...(workStation ? { workStation } : {}),
       }),
     })
 
