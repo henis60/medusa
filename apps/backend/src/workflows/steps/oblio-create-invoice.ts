@@ -1,6 +1,7 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
 import { requireOblioCui, requireOblioManagement } from "./oblio-get-token"
 import { oblioProductName } from "../../lib/oblio-product-name"
+import { countryNameRo } from "../../lib/country-name"
 
 type Input = {
   order_id: string
@@ -260,7 +261,7 @@ export const oblioCreateInvoiceStep = createStep(
           address: (billing as any).address_1 ?? "",
           state: (billing as any).province ?? "",
           city: (billing as any).city ?? "",
-          country: (billing as any).country_code ?? "RO",
+          country: countryNameRo((billing as any).country_code),
           phone: (billing as any).phone ?? "",
           email: order.email ?? "",
         },
