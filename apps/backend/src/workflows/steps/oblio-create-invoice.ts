@@ -1,5 +1,6 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
 import { requireOblioCui } from "./oblio-get-token"
+import { oblioProductName } from "../../lib/oblio-product-name"
 
 type Input = {
   order_id: string
@@ -48,6 +49,8 @@ export const oblioCreateInvoiceStep = createStep(
         "billing_address.phone",
         "items.id",
         "items.title",
+        "items.variant.product.title",
+        "items.variant.product.categories.name",
         "items.quantity",
         "items.unit_price",
         "items.adjustments.amount",
@@ -118,9 +121,31 @@ export const oblioCreateInvoiceStep = createStep(
       return unitPrice - adjustmentTotal / quantity
     }
 
-    const products = (order.items ?? []).map((item: any) => ({
-      name: item.title,
-      code: item.id,
+    // Pe factură merge NUMELE CATEGORIEI produsului, nu titlul din Medusa: în
+    // nomenclatorul Oblio există câte un produs pentru fiecare categorie, cu
+    // același nume. Fără o categorie clară se oprește, cu produsele numite —
+    // nu ghicim o clasificare fiscală.
+    const resolved = (order.items ?? []).map((item: any) => ({
+      item,
+      result: oblioProductName(item),
+    }))
+    const problems = resolved.flatMap((r) =>
+      "error" in r.result ? [r.result.error] : []
+    )
+    if (problems.length) {
+      throw new Error(
+        `Oblio: ${problems.join("; ")}. Fiecare produs trebuie să aibă exact o ` +
+          `categorie, al cărei nume există identic în nomenclatorul Oblio.`
+      )
+    }
+
+    const products = resolved.map(({ item, result }) => ({
+      name: (result as { name: string }).name,
+      // Titlul real rămâne vizibil pe factură, ca descriere.
+      description: item.title,
+      // Fără cod: id-ul liniei de comandă nu există în nomenclatorul Oblio și
+      // ar putea împiedica potrivirea după nume.
+      code: "",
       price: effectiveUnitPrice(item),
       measuringUnit: "buc",
       currency,
@@ -138,6 +163,7 @@ export const oblioCreateInvoiceStep = createStep(
     if (shippingTotal > 0) {
       products.push({
         name: "Transport",
+        description: "",
         code: "shipping",
         price: shippingTotal,
         measuringUnit: "buc",
@@ -177,7 +203,8 @@ export const oblioCreateInvoiceStep = createStep(
     // greșită din loguri, fără să le transformi în arhivă de clienți.
     logger.info(
       `Oblio → emitere pentru comanda ${order_id}: cif=${cui} serie=${seriesName} ` + `moneda=${currency} tva=${vatPercentage}% ` +
-        `linii=${products.length} total=${invoiceTotal.toFixed(2)} ` +
+        `linii=${products.length} tipuri=${[...new Set(products.map((p) => p.productType))].join("/")} ` +
+        `useStock=0 total=${invoiceTotal.toFixed(2)} ` +
         `referinta=${String(order.display_id ?? order_id)}`
     )
 
