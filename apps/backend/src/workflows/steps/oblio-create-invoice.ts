@@ -1,5 +1,5 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
-import { requireOblioCui } from "./oblio-get-token"
+import { requireOblioCui, requireOblioManagement } from "./oblio-get-token"
 import { oblioProductName } from "../../lib/oblio-product-name"
 
 type Input = {
@@ -139,7 +139,9 @@ export const oblioCreateInvoiceStep = createStep(
       )
     }
 
-    const products = resolved.map(({ item, result }) => ({
+    const management = requireOblioManagement()
+
+    const products = resolved.map(({ item, result }): Record<string, any> => ({
       name: (result as { name: string }).name,
       // Titlul real rămâne vizibil pe factură, ca descriere.
       description: item.title,
@@ -155,6 +157,9 @@ export const oblioCreateInvoiceStep = createStep(
       quantity: item.quantity ?? 1,
       // Doar valori din lista Oblio — „Produs" simplu e respins cu 400.
       productType: "Marfa",
+      // Gestiunea din care e marfa. Cerută de Oblio pe produsele stocabile; nu
+      // se aplică serviciilor, deci linia de transport de mai jos n-o primește.
+      management,
       isDiscount: false,
       saveToDb: false,
     }))
@@ -204,7 +209,7 @@ export const oblioCreateInvoiceStep = createStep(
     logger.info(
       `Oblio → emitere pentru comanda ${order_id}: cif=${cui} serie=${seriesName} ` + `moneda=${currency} tva=${vatPercentage}% ` +
         `linii=${products.length} tipuri=${[...new Set(products.map((p) => p.productType))].join("/")} ` +
-        `useStock=0 total=${invoiceTotal.toFixed(2)} ` +
+        `useStock=0 gestiune=${management} total=${invoiceTotal.toFixed(2)} ` +
         `referinta=${String(order.display_id ?? order_id)}`
     )
 

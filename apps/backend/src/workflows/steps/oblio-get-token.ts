@@ -51,6 +51,22 @@ export async function fetchOblioToken(): Promise<string> {
  * payload-ul Oblio, dar era folosit fără verificare — o valoare absentă pleca
  * drept `undefined` și eșua la ei, cu un mesaj greu de legat de cauză.
  */
+/**
+ * Numele gestiunii din Oblio în care sunt produsele de tip „Marfa". Oblio îl
+ * cere pe fiecare astfel de linie („Produsul `X` nu are Gestiune (parametrul
+ * `management`)"); depinde de contul tău, deci nu poate avea o valoare implicită.
+ */
+export function requireOblioManagement(): string {
+  const management = process.env.OBLIO_MANAGEMENT?.trim()
+  if (!management) {
+    throw new Error(
+      "OBLIO_MANAGEMENT lipsește — numele gestiunii din Oblio, exact ca în cont " +
+        "(cerut pe produsele de tip Marfa, trimis ca `management`)"
+    )
+  }
+  return management
+}
+
 export function requireOblioCui(): string {
   const cui = process.env.OBLIO_CUI?.trim()
   if (!cui) {
