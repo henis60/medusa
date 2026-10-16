@@ -43,7 +43,9 @@ const ErrorContent = ({
       >
         {resolvedDescription}
       </p>
-      <div className="flex flex-col small:flex-row items-stretch small:items-center justify-center gap-4 mt-2 w-full max-w-xs small:max-w-none">
+      {/* Grilă cu coloane egale: butoanele au aceeași lățime pe desktop, în loc
+          să ia fiecare lățimea textului propriu. */}
+      <div className="grid grid-cols-1 small:grid-cols-2 gap-4 mt-2 w-full max-w-xs small:w-auto small:max-w-none">
         {reset && (
           <button
             onClick={() => {

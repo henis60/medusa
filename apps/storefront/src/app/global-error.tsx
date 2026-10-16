@@ -5,6 +5,27 @@
 // ajung să se monteze. Next.js cere ca acest fișier să randeze propriile
 // <html>/<body> — nu ne putem baza pe CSS vars din ThemeProvider, deci
 // culorile sunt hardcodate.
+
+// Stil comun pentru butonul și linkul de jos. Un <button> și un <a> au valori
+// implicite diferite (font, bordură, înălțime de rând), de aceea sunt toate
+// fixate explicit — altfel unul ieșea mai mic decât celălalt. Bordura e pe
+// ambele, cu aceeași grosime, chiar dacă la buton are culoarea fundalului.
+const buttonBase: React.CSSProperties = {
+  boxSizing: "border-box",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: "48px",
+  padding: "0.75rem 1.5rem",
+  border: "1px solid #c9a84c",
+  fontFamily: "inherit",
+  fontSize: "10px",
+  lineHeight: 1.2,
+  textTransform: "uppercase",
+  letterSpacing: "4px",
+  whiteSpace: "nowrap",
+}
+
 export default function GlobalError({
   error,
   reset,
@@ -35,7 +56,10 @@ export default function GlobalError({
             Ceva nu a funcționat cum trebuie. Poți reîncerca sau reveni la
             pagina principală.
           </p>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginTop: "0.5rem" }}>
+          {/* Grilă cu două coloane egale: ambele butoane iau lățimea celui mai
+              lung text, deci arată identic. Cu `flex`, lățimea venea din text
+              („Reîncearcă" ieșea mult mai îngust decât „Pagina principală"). */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "0.5rem" }}>
             <button
               onClick={() => {
                 // reset() alone just re-renders the segment without
@@ -50,13 +74,9 @@ export default function GlobalError({
                 window.location.reload()
               }}
               style={{
-                padding: "0.75rem 1.5rem",
+                ...buttonBase,
                 background: "#c9a84c",
                 color: "#0D0D0D",
-                fontSize: "10px",
-                textTransform: "uppercase",
-                letterSpacing: "4px",
-                border: "none",
                 cursor: "pointer",
               }}
             >
@@ -65,12 +85,9 @@ export default function GlobalError({
             <a
               href="/"
               style={{
-                padding: "0.75rem 1.5rem",
-                border: "1px solid #c9a84c",
+                ...buttonBase,
+                background: "transparent",
                 color: "#c9a84c",
-                fontSize: "10px",
-                textTransform: "uppercase",
-                letterSpacing: "4px",
                 textDecoration: "none",
               }}
             >
