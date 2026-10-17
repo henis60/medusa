@@ -116,18 +116,48 @@ const OrderEawbLabelWidget = ({ data: order }: { data: { id: string } }) => {
 
     setBusy(f.id)
     try {
-      await sdk.client.fetch(`/admin/eawb/cancel/${f.id}`, { method: "POST" })
-      toast.success(
-        shipped
-          ? "Expediere anulată. Acum poți anula comanda."
-          : "Expediere anulată. AWB anulat, produsele sunt din nou în stoc."
-      )
-      await refresh()
+      await runCancel(f, false)
     } catch (err: any) {
-      toast.error(err?.message || "Anularea a eșuat.")
+      const reason = err?.message || "Anularea a eșuat."
+
+      // Cel mai des: AWB-ul e deja anulat în contul Europarcel, iar răspunsul lor
+      // la o a doua anulare nu e recunoscut. Operatorul poate confirma și continua
+      // doar în Medusa — fără apel la curier.
+      const skipCourier = await prompt({
+        title: "Anularea la Europarcel a eșuat",
+        description:
+          `${reason}\n\n` +
+          "Dacă AWB-ul e deja anulat în contul Europarcel, poți continua și anula doar în Medusa, " +
+          "fără alt apel la curier. Verifică întâi în Europarcel.",
+        confirmText: "E anulat la Europarcel — continuă",
+        cancelText: "Renunț",
+      })
+      if (skipCourier) {
+        try {
+          await runCancel(f, true)
+        } catch (err2: any) {
+          toast.error(err2?.message || "Anularea a eșuat.")
+        }
+      } else {
+        toast.error(reason)
+      }
     } finally {
       setBusy(null)
     }
+  }
+
+  // `alreadyCanceled` → ruta nu mai apelează Europarcel, doar Medusa.
+  const runCancel = async (f: EawbFulfillment, alreadyCanceled: boolean) => {
+    await sdk.client.fetch(
+      `/admin/eawb/cancel/${f.id}${alreadyCanceled ? "?already_canceled=true" : ""}`,
+      { method: "POST" }
+    )
+    toast.success(
+      f.shipped_at
+        ? "Expediere anulată. Acum poți anula comanda."
+        : "Expediere anulată. AWB anulat, produsele sunt din nou în stoc."
+    )
+    await refresh()
   }
 
   const handleDownloadLabel = async (f: EawbFulfillment) => {

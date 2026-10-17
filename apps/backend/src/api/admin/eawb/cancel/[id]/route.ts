@@ -30,27 +30,58 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const { id } = req.params as { id: string }
   const logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
+  const fulfillmentModule = req.scope.resolve(Modules.FULFILLMENT) as any
+
+  // Operatorul confirmă că AWB-ul e deja anulat în contul Europarcel: nu mai
+  // încercăm să-l anulăm la curier, ci doar în Medusa.
+  const alreadyCanceled = req.query.already_canceled === "true"
+
+  const fail = (status: number, error: string) =>
+    // `message` pe lângă `error`: SDK-ul admin citește `message`, iar fără el
+    // operatorul vedea un text generic în loc de motivul real.
+    res.status(status).json({ error, message: error })
 
   const { data: [fulfillment] } = await query.graph({
     entity: "fulfillment",
-    fields: ["id", "provider_id", "canceled_at", "shipped_at", "delivered_at"],
+    fields: ["id", "provider_id", "canceled_at", "shipped_at", "delivered_at", "data"],
     filters: { id },
   })
 
   if (!fulfillment) {
-    return res.status(404).json({ error: "Expedierea nu a fost găsită." })
+    return fail(404, "Expedierea nu a fost găsită.")
   }
   if (!isEawb(fulfillment.provider_id)) {
-    return res.status(400).json({ error: "Expedierea nu e eAWB / Europarcel." })
+    return fail(400, "Expedierea nu e eAWB / Europarcel.")
   }
   if (fulfillment.canceled_at) {
     return res.json({ ok: true, mode: "already_canceled" })
   }
   if ((fulfillment as any).delivered_at) {
-    return res.status(409).json({
-      error: "Expedierea e marcată ca livrată — nu mai poate fi anulată.",
-    })
+    return fail(409, "Expedierea e marcată ca livrată — nu mai poate fi anulată.")
   }
+
+  const originalData = (fulfillment.data ?? {}) as Record<string, unknown>
+
+  // Steagul pe care providerul îl citește ca să nu mai lovească Europarcel.
+  // Se setează doar la cererea explicită a operatorului și se CURĂȚĂ dacă
+  // anularea eșuează: rămas pe fulfillment, ar face o încercare viitoare să
+  // sară în tăcere peste curier.
+  const markSkip = () =>
+    alreadyCanceled
+      ? fulfillmentModule.updateFulfillment(id, {
+          data: { ...originalData, courier_cancel_skipped: true },
+        })
+      : Promise.resolve()
+  const clearSkip = () =>
+    alreadyCanceled
+      ? fulfillmentModule
+          .updateFulfillment(id, { data: originalData })
+          .catch((e: Error) =>
+            logger.error(
+              `eAWB cancel: NU am putut șterge courier_cancel_skipped de pe ${id} — ${e.message}`
+            )
+          )
+      : Promise.resolve()
 
   // ── Neexpediat: unfulfill complet ───────────────────────────────────────────
   if (!fulfillment.shipped_at) {
@@ -61,36 +92,42 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     })
     const orderId = links?.[0]?.order_id as string | undefined
     if (!orderId) {
-      return res.status(404).json({ error: "Nu am găsit comanda expedierii." })
+      return fail(404, "Nu am găsit comanda expedierii.")
     }
 
+    await markSkip()
     try {
       await cancelOrderFulfillmentWorkflow(req.scope).run({
         input: { order_id: orderId, fulfillment_id: id },
       })
     } catch (err) {
+      await clearSkip()
       logger.error(
         `eAWB cancel: fulfillment ${id} (comanda ${orderId}) — ${(err as Error).message}`
       )
-      return res.status(502).json({ error: `Anularea a eșuat: ${(err as Error).message}` })
+      return fail(502, `Anularea a eșuat: ${(err as Error).message}`)
     }
 
-    logger.info(`eAWB cancel: fulfillment ${id} anulat prin Medusa (comanda ${orderId})`)
+    logger.info(
+      `eAWB cancel: fulfillment ${id} anulat prin Medusa (comanda ${orderId})` +
+        (alreadyCanceled ? " — fără apel la curier (confirmat de operator)" : "")
+    )
     return res.json({ ok: true, mode: "fulfillment_canceled" })
   }
 
   // ── Expediat: scoatem `shipped_at`, apoi anulăm prin modulul de fulfillment ─
-  const fulfillmentModule = req.scope.resolve(Modules.FULFILLMENT) as any
   const originalShippedAt = new Date(fulfillment.shipped_at as unknown as string)
 
   await fulfillmentModule.updateFulfillment(id, { shipped_at: null })
+  await markSkip()
 
   try {
     // Apelează providerul (AWB anulat la Europarcel) și setează canceled_at.
     await fulfillmentModule.cancelFulfillment(id)
   } catch (err) {
-    // Europarcel a refuzat sau altă eroare: readucem `shipped_at`, ca expedierea
-    // să nu rămână într-o stare pe jumătate modificată.
+    // Europarcel a refuzat sau altă eroare: readucem `shipped_at` (și datele),
+    // ca expedierea să nu rămână într-o stare pe jumătate modificată.
+    await clearSkip()
     await fulfillmentModule
       .updateFulfillment(id, { shipped_at: originalShippedAt })
       .catch((restoreErr: Error) =>
@@ -99,11 +136,12 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         )
       )
     logger.error(`eAWB cancel: fulfillment ${id} (expediat) — ${(err as Error).message}`)
-    return res.status(502).json({ error: `Anularea a eșuat: ${(err as Error).message}` })
+    return fail(502, `Anularea a eșuat: ${(err as Error).message}`)
   }
 
   logger.info(
-    `eAWB cancel: fulfillment ${id} expediat anulat (AWB + canceled_at), comanda poate fi anulată`
+    `eAWB cancel: fulfillment ${id} expediat anulat (AWB + canceled_at), comanda poate fi anulată` +
+      (alreadyCanceled ? " — fără apel la curier (confirmat de operator)" : "")
   )
   return res.json({ ok: true, mode: "shipped_canceled" })
 }

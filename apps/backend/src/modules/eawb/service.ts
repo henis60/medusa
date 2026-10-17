@@ -34,7 +34,14 @@ const BILLING_ADDRESS_TTL_MS = 5 * 60 * 1000
 function isAlreadyCancelled(err: unknown): boolean {
   if (!(err instanceof EuroparcelApiError)) return false
   if (err.status === 404 || err.status === 410) return true
-  return /already\s+(cancel|anulat)|deja\s+anulat|not\s+found/i.test(err.detail)
+  // „already/deja canceled|anulat", dar și „is/has been/este/a fost canceled|
+  // anulat" (cancel+ed: și varianta britanică „cancelled"), pe lângă „not found".
+  // Mesajul exact al Europarcel pentru o a doua anulare nu e documentat nicăieri
+  // unde am putut citi, deci lista e o estimare; ?already_canceled=true din
+  // widget e plasa de siguranță când tot nu se potrivește.
+  return /(already|deja)\s+(been\s+)?(cancel+ed|anulat)|(is|este|has\s+been|a\s+fost)\s+(cancel+ed|anulat)|not\s+found/i.test(
+    err.detail
+  )
 }
 
 export default class EawbFulfillmentProviderService extends AbstractFulfillmentProviderService {
@@ -401,6 +408,18 @@ export default class EawbFulfillmentProviderService extends AbstractFulfillmentP
   async cancelFulfillment(data: Record<string, unknown>): Promise<void> {
     if (data.dry_run) {
       this.logger_.warn("eAWB: DRY_RUN — skipping real AWB cancellation.")
+      return
+    }
+
+    // Operatorul a confirmat că AWB-ul e deja anulat în contul Europarcel (setat
+    // de ruta /admin/eawb/cancel cu ?already_canceled=true). Nu mai lovim
+    // Europarcel: un răspuns neașteptat la o a doua anulare bloca altfel
+    // anularea și în Medusa.
+    if (data.courier_cancel_skipped) {
+      this.logger_.warn(
+        `eAWB: anulare la curier omisă pentru comanda Europarcel ${String(data.europarcel_id ?? "?")} ` +
+          `(marcată de operator ca deja anulată).`
+      )
       return
     }
 
