@@ -26,6 +26,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       "fulfillments.provider_id",
       "fulfillments.canceled_at",
       "fulfillments.shipped_at",
+      "fulfillments.delivered_at",
       "fulfillments.data",
     ],
     filters: { id },
@@ -69,6 +70,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       data: f.data,
       canceled_at: f.canceled_at,
       shipped_at: f.shipped_at ?? null,
+      delivered_at: f.delivered_at ?? null,
     }))
 
   return res.json({

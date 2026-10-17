@@ -8,6 +8,7 @@ type EawbFulfillment = {
   id: string
   canceled_at?: string | null
   shipped_at?: string | null
+  delivered_at?: string | null
   data?: {
     awb?: string
     carrier_name?: string
@@ -99,7 +100,7 @@ const OrderEawbLabelWidget = ({ data: order }: { data: { id: string } }) => {
   // AWB-ul și fulfillment-ul doar ca să se poată anula COMANDA; stocul și
   // cantitățile comenzii rămân neatinse.
   const handleCancel = async (f: EawbFulfillment) => {
-    const shipped = !!f.shipped_at
+    const shipped = !!(f.shipped_at || f.delivered_at)
     const confirmed = await prompt({
       title: shipped ? "Anulezi expedierea plecată?" : "Anulezi expedierea?",
       description: shipped
@@ -153,7 +154,7 @@ const OrderEawbLabelWidget = ({ data: order }: { data: { id: string } }) => {
       { method: "POST" }
     )
     toast.success(
-      f.shipped_at
+      (f.shipped_at || f.delivered_at)
         ? "Expediere anulată. Acum poți anula comanda."
         : "Expediere anulată. AWB anulat, produsele sunt din nou în stoc."
     )
@@ -197,7 +198,8 @@ const OrderEawbLabelWidget = ({ data: order }: { data: { id: string } }) => {
 
       {fulfillments.map((f) => {
         const d = f.data ?? {}
-        const shipped = !!f.shipped_at
+        const delivered = !!f.delivered_at
+        const shipped = !!(f.shipped_at || f.delivered_at)
         return (
           <div key={f.id} className="flex flex-col gap-3 px-6 py-4">
             <div className="flex items-center justify-between gap-4">
@@ -212,7 +214,7 @@ const OrderEawbLabelWidget = ({ data: order }: { data: { id: string } }) => {
                     </Badge>
                   )}
                   <Badge size="2xsmall" color={shipped ? "green" : "grey"}>
-                    {shipped ? "Expediat" : "Neexpediat"}
+                    {delivered ? "Livrat" : shipped ? "Expediat" : "Neexpediat"}
                   </Badge>
                 </div>
                 {(d.carrier_name || d.service_name) && (

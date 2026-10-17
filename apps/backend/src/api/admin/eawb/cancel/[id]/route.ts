@@ -56,9 +56,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   if (fulfillment.canceled_at) {
     return res.json({ ok: true, mode: "already_canceled" })
   }
-  if ((fulfillment as any).delivered_at) {
-    return fail(409, "Expedierea e marcată ca livrată — nu mai poate fi anulată.")
-  }
 
   const originalData = (fulfillment.data ?? {}) as Record<string, unknown>
 
@@ -84,7 +81,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       : Promise.resolve()
 
   // ── Neexpediat: unfulfill complet ───────────────────────────────────────────
-  if (!fulfillment.shipped_at) {
+  const deliveredAt = (fulfillment as any).delivered_at as string | null | undefined
+  if (!fulfillment.shipped_at && !deliveredAt) {
     const { data: links } = await query.graph({
       entity: "order_fulfillment",
       fields: ["order_id"],
@@ -115,24 +113,33 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return res.json({ ok: true, mode: "fulfillment_canceled" })
   }
 
-  // ── Expediat: scoatem `shipped_at`, apoi anulăm prin modulul de fulfillment ─
-  const originalShippedAt = new Date(fulfillment.shipped_at as unknown as string)
+  // ── Expediat sau livrat: scoatem `shipped_at` și `delivered_at`, apoi anulăm
+  //    prin modulul de fulfillment. Modulul refuză și un fulfillment livrat
+  //    („already delivered"), deci ambele marcaje trebuie scoase. ─────────────
+  const originalShippedAt = fulfillment.shipped_at
+    ? new Date(fulfillment.shipped_at as unknown as string)
+    : null
+  const originalDeliveredAt = deliveredAt ? new Date(deliveredAt) : null
 
-  await fulfillmentModule.updateFulfillment(id, { shipped_at: null })
+  await fulfillmentModule.updateFulfillment(id, { shipped_at: null, delivered_at: null })
   await markSkip()
 
   try {
     // Apelează providerul (AWB anulat la Europarcel) și setează canceled_at.
     await fulfillmentModule.cancelFulfillment(id)
   } catch (err) {
-    // Europarcel a refuzat sau altă eroare: readucem `shipped_at` (și datele),
-    // ca expedierea să nu rămână într-o stare pe jumătate modificată.
+    // Europarcel a refuzat sau altă eroare: readucem `shipped_at` și
+    // `delivered_at` (și datele), ca expedierea să nu rămână pe jumătate
+    // modificată.
     await clearSkip()
     await fulfillmentModule
-      .updateFulfillment(id, { shipped_at: originalShippedAt })
+      .updateFulfillment(id, {
+        shipped_at: originalShippedAt,
+        delivered_at: originalDeliveredAt,
+      })
       .catch((restoreErr: Error) =>
         logger.error(
-          `eAWB cancel: NU am putut restaura shipped_at pe fulfillment ${id} — ${restoreErr.message}`
+          `eAWB cancel: NU am putut restaura shipped_at/delivered_at pe fulfillment ${id} — ${restoreErr.message}`
         )
       )
     logger.error(`eAWB cancel: fulfillment ${id} (expediat) — ${(err as Error).message}`)
@@ -140,7 +147,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   }
 
   logger.info(
-    `eAWB cancel: fulfillment ${id} expediat anulat (AWB + canceled_at), comanda poate fi anulată` +
+    `eAWB cancel: fulfillment ${id} ${deliveredAt ? "livrat" : "expediat"} anulat (AWB + canceled_at), comanda poate fi anulată` +
       (alreadyCanceled ? " — fără apel la curier (confirmat de operator)" : "")
   )
   return res.json({ ok: true, mode: "shipped_canceled" })
