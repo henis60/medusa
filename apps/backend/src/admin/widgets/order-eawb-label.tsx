@@ -177,12 +177,19 @@ const OrderEawbLabelWidget = ({ data: order }: { data: { id: string } }) => {
 
   return (
     <Container className="divide-y p-0">
-      <div className="flex items-center justify-between px-6 py-4">
+      {/* Antet: titlul pe un rând, acțiunea principală pe rândul ei. Coloana
+          laterală e îngustă, iar titlul + buton pe aceeași linie se înghesuiau. */}
+      <div className="flex flex-col gap-3 px-6 py-4">
         <Text size="small" weight="plus">
           eAWB / Europarcel
         </Text>
         {remainingItems > 0 && (
-          <Button size="small" onClick={handleCreateAwb} isLoading={fulfilling}>
+          <Button
+            size="small"
+            className="w-full"
+            onClick={handleCreateAwb}
+            isLoading={fulfilling}
+          >
             Creează AWB
           </Button>
         )}
@@ -200,14 +207,21 @@ const OrderEawbLabelWidget = ({ data: order }: { data: { id: string } }) => {
         const d = f.data ?? {}
         const delivered = !!f.delivered_at
         const shipped = !!(f.shipped_at || f.delivered_at)
+        const hasTrack = !!d.track_url && d.track_url !== "#"
         return (
-          <div key={f.id} className="flex flex-col gap-3 px-6 py-4">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex flex-col gap-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <Text size="small" weight="plus" className="truncate">
-                    AWB: {d.awb ?? "—"}
+          <div key={f.id} className="flex flex-col gap-4 px-6 py-4">
+            {/* Identitate: AWB + stare, apoi curierul pe rândul de sub. */}
+            <div className="flex flex-col gap-1 min-w-0">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <Text size="xsmall" className="text-ui-fg-subtle">
+                    AWB
                   </Text>
+                  <Text size="small" weight="plus" className="break-all">
+                    {d.awb ?? "—"}
+                  </Text>
+                </div>
+                <div className="flex flex-wrap justify-end gap-1 shrink-0">
                   {d.dry_run && (
                     <Badge size="2xsmall" color="orange">
                       DRY RUN
@@ -217,36 +231,38 @@ const OrderEawbLabelWidget = ({ data: order }: { data: { id: string } }) => {
                     {delivered ? "Livrat" : shipped ? "Expediat" : "Neexpediat"}
                   </Badge>
                 </div>
-                {(d.carrier_name || d.service_name) && (
-                  <Text size="xsmall" className="text-ui-fg-subtle">
-                    {[d.carrier_name, d.service_name].filter(Boolean).join(" — ")}
-                  </Text>
-                )}
               </div>
-              <div className="flex gap-2 shrink-0">
-                {d.track_url && d.track_url !== "#" && (
-                  <Button
-                    size="small"
-                    variant="secondary"
-                    onClick={() => window.open(d.track_url as string, "_blank")}
-                  >
-                    Tracking
-                  </Button>
-                )}
-                <Button
-                  size="small"
-                  variant="secondary"
-                  disabled={loadingId === f.id || !!d.dry_run}
-                  onClick={() => handleDownloadLabel(f)}
-                >
-                  {loadingId === f.id ? "Se generează..." : "Etichetă PDF"}
-                </Button>
-              </div>
+              {(d.carrier_name || d.service_name) && (
+                <Text size="xsmall" className="text-ui-fg-subtle">
+                  {[d.carrier_name, d.service_name].filter(Boolean).join(" — ")}
+                </Text>
+              )}
+            </div>
+
+            {/* Acțiuni secundare: două coloane egale, nu un rând care se rupe. */}
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                size="small"
+                variant="secondary"
+                disabled={!hasTrack}
+                onClick={() => window.open(d.track_url as string, "_blank")}
+              >
+                Tracking
+              </Button>
+              <Button
+                size="small"
+                variant="secondary"
+                disabled={loadingId === f.id || !!d.dry_run}
+                onClick={() => handleDownloadLabel(f)}
+              >
+                {loadingId === f.id ? "Se generează…" : "Etichetă PDF"}
+              </Button>
             </div>
 
             {/* Pasul 3 — „Anulează", și pentru expediat. Pasul 2 — „Expediat",
-                doar cât coletul n-a plecat. */}
-            <div className="flex gap-2 justify-end">
+                doar cât coletul n-a plecat. Fără „Expediat", „Anulează" ocupă
+                tot rândul, ca să nu rămână o jumătate goală. */}
+            <div className={shipped ? "grid grid-cols-1" : "grid grid-cols-2 gap-2"}>
               <Button
                 size="small"
                 variant="danger"
