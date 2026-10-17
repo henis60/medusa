@@ -9,7 +9,7 @@ const isEawb = (pid?: string | null) =>
  * doesn't depend on the admin order endpoint's default field set.
  *
  * GET /admin/eawb/order-status/:id
- * → { uses_eawb, remaining_items, fulfillments: [{ id, data, canceled_at }] }
+ * → { uses_eawb, remaining_items, fulfillments: [{ id, data, canceled_at, shipped_at }] }
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const { id } = req.params as { id: string }
@@ -25,6 +25,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       "fulfillments.id",
       "fulfillments.provider_id",
       "fulfillments.canceled_at",
+      "fulfillments.shipped_at",
       "fulfillments.data",
     ],
     filters: { id },
@@ -63,7 +64,12 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
   const fulfillments = (order.fulfillments ?? [])
     .filter((f: any) => isEawb(f?.provider_id) && !f?.canceled_at)
-    .map((f: any) => ({ id: f.id, data: f.data, canceled_at: f.canceled_at }))
+    .map((f: any) => ({
+      id: f.id,
+      data: f.data,
+      canceled_at: f.canceled_at,
+      shipped_at: f.shipped_at ?? null,
+    }))
 
   return res.json({
     uses_eawb: usesEawb,

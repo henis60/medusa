@@ -1,17 +1,23 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
-import {
-  createOrderFulfillmentWorkflow,
-  createOrderShipmentWorkflow,
-} from "@medusajs/medusa/core-flows"
+import { createOrderFulfillmentWorkflow } from "@medusajs/medusa/core-flows"
 
 /**
- * One-click "ready to ship": fulfills every still-unfulfilled item on the order
- * in a single fulfillment, using the order's shipping method (eAWB) — which is
- * what triggers AWB creation. Mirrors the admin fulfillment flow without the
- * manual item-by-item screen.
+ * Pasul 1 din 3: „Creează AWB".
  *
- * POST /admin/eawb/fulfill/:id
+ * Face fulfill pe toate produsele încă nepregătite ale comenzii, într-o singură
+ * expediere, cu metoda de livrare eAWB — ceea ce generează AWB-ul la Europarcel.
+ * Fulfillment-ul rămâne NEEXPEDIAT:
+ *
+ *   1. Creează AWB   → această rută
+ *   2. Expediat      → POST /admin/eawb/ship/:id   (trimite emailul clientului)
+ *   3. Anulează      → POST /admin/eawb/cancel/:id (doar cât e neexpediat)
+ *
+ * Expedierea NU se mai face aici: odată marcat expediat, Medusa nu mai permite
+ * anularea fulfillment-ului, iar emailul „expediat" pleca la generarea AWB-ului,
+ * adică înainte ca vreun colet să fi plecat.
+ *
+ * POST /admin/eawb/fulfill/:id        (id = comanda)
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const { id } = req.params as { id: string }
@@ -58,8 +64,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const fulfillmentData = (fulfillment as { data?: Record<string, unknown> }).data ?? {}
 
   // The provider persists the Europarcel order id even when no AWB came back,
-  // so the wallet charge stays recoverable. Don't mark such a fulfillment as
-  // shipped — that would email the customer a tracking-less "expediat".
+  // so the wallet charge stays recoverable. Without an AWB there is nothing
+  // to hand to the courier, so tell the operator instead of reporting success.
   if (fulfillmentData.awb_missing) {
     return res.status(502).json({
       error:
@@ -69,20 +75,9 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     })
   }
 
-  // Mark the fulfillment as shipped right away — the AWB is generated and the
-  // parcel is handed to the courier, so the order is effectively shipped. This
-  // emits `shipment.created` (NOT `order.shipment_created`, which doesn't
-  // exist in Medusa), which sends the shipped email — see
-  // subscribers/order-shipment-created.ts. `no_notification` is deliberately
-  // not passed, so the email goes out on every successful click.
-  await createOrderShipmentWorkflow(req.scope).run({
-    input: {
-      order_id: id,
-      fulfillment_id: (fulfillment as { id: string }).id,
-      items,
-      additional_data: {},
-    },
+  return res.json({
+    ok: true,
+    fulfilled_items: items.length,
+    fulfillment_id: (fulfillment as { id: string }).id,
   })
-
-  return res.json({ ok: true, fulfilled_items: items.length })
 }
