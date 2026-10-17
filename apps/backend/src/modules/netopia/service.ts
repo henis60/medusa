@@ -111,13 +111,32 @@ function classifyStatus(code: number | undefined): {
 }
 
 function toNumber(amount: unknown): number {
-  if (typeof amount === "number") return amount;
-  if (typeof amount === "string") return parseFloat(amount);
-  const n = Number((amount as any)?.valueOf?.() ?? amount);
-  if (Number.isNaN(n))
+  let n: number;
+
+  if (typeof amount === "number") {
+    n = amount;
+  } else if (typeof amount === "string") {
+    n = parseFloat(amount);
+  } else if (amount && typeof amount === "object") {
+    // Medusa dă suma în trei forme, după locul din care vine:
+    //  - instanță BigNumber            → are `numeric` (și valueOf() util)
+    //  - obiect brut `{ value, precision }` → `refund.raw_amount`, pe care îl
+    //    primește refundPayment. valueOf() al unui obiect simplu întoarce
+    //    chiar obiectul, iar Number({…}) e NaN — de aceea rambursarea arunca
+    //    „Invalid payment amount" și cererea nu pleca niciodată la Netopia.
+    //  - `{ raw: { value } }`          → același lucru, învelit.
+    const a = amount as Record<string, any>;
+    const candidate =
+      a.numeric ?? a.value ?? a.raw?.value ?? a.valueOf?.();
+    n = typeof candidate === "object" ? NaN : Number(candidate);
+  } else {
+    n = NaN;
+  }
+
+  if (!Number.isFinite(n))
     throw new MedusaError(
       MedusaError.Types.INVALID_DATA,
-      "Invalid payment amount",
+      `Invalid payment amount: ${JSON.stringify(amount)}`,
     );
   return n;
 }
