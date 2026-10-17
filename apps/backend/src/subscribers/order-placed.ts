@@ -83,6 +83,8 @@ export default async function sendOrderConfirmationEmail({
 
     const order = orders[0];
 
+    await notifyAdmins(container, order);
+
     if (!order.email) {
       logger.error(`Comanda ${data.id} nu are adresă de email`);
       return;
@@ -152,6 +154,69 @@ export default async function sendOrderConfirmationEmail({
       `Eroare la trimiterea emailului de confirmare pentru ${data.id}: ${String((error as Error)?.message ?? error)}`,
     );
   }
+}
+
+// Anunță echipa de comanda nouă: primesc toți utilizatorii din admin, citiți
+// la fiecare comandă — un admin nou e inclus automat, fără redeploy. Rulează înaintea emailului către client și are propriul
+// try/catch: un eșec aici nu trebuie să blocheze confirmarea clientului, și
+// nici invers.
+async function notifyAdmins(container: SubscriberArgs["container"], order: any) {
+  const logger = container.resolve("logger");
+  try {
+    const recipients = await resolveAdminRecipients(container);
+
+    if (!recipients.length) {
+      logger.warn(`Niciun admin cu email găsit, se omite notificarea pentru comanda ${order.id}`);
+      return;
+    }
+
+    await sendAdminNotification(container, order, recipients);
+    logger.info(`Notificare comandă nouă trimisă către ${recipients.length} admin(i) pentru ${order.id}`);
+  } catch (error) {
+    logger.error(
+      `Eroare la notificarea adminilor pentru comanda ${order.id}: ${String((error as Error)?.message ?? error)}`
+    );
+  }
+}
+
+async function resolveAdminRecipients(container: SubscriberArgs["container"]): Promise<string[]> {
+  const query = container.resolve("query");
+  const { data: users } = await query.graph({ entity: "user", fields: ["email"] });
+  return [...new Set(users.map((u: any) => u.email).filter(Boolean))] as string[];
+}
+
+async function sendAdminNotification(
+  container: SubscriberArgs["container"],
+  order: any,
+  recipients: string[]
+) {
+  const currency = (order.currency_code ?? "RON").toUpperCase();
+  const money = (v: unknown) => `${Number(v ?? 0).toFixed(2)} ${currency}`;
+  const addr = order.shipping_address ?? {};
+  const backendUrl = (process.env.BACKEND_URL || "http://localhost:9000").replace(/\/$/, "");
+
+  const notificationService = container.resolve("notification");
+  await notificationService.createNotifications(
+    recipients.map((to) => ({
+      to,
+      template: "admin-new-order",
+      channel: "email",
+      data: {
+        order_id: order.display_id,
+        customer_name: `${addr.first_name ?? ""} ${addr.last_name ?? ""}`.trim() || "—",
+        customer_email: order.email ?? "—",
+        customer_phone: addr.phone ?? "—",
+        shipping_city: [addr.city, addr.province].filter(Boolean).join(", ") || "—",
+        items: (order.items ?? []).map((item: any) => ({
+          title: item.title,
+          quantity: item.quantity,
+          subtotal: money(item.subtotal ?? (item.unit_price ?? 0) * (item.quantity ?? 1)),
+        })),
+        total: money(order.total),
+        admin_url: `${backendUrl}/app/orders/${order.id}`,
+      },
+    }))
+  );
 }
 
 export const config: SubscriberConfig = {

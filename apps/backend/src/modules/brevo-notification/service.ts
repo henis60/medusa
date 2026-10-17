@@ -123,6 +123,7 @@ class BrevoNotificationProviderService extends AbstractNotificationProviderServi
       "password-reset": "Resetare parolă",
       "admin-password-reset": "Resetare parolă administrator",
       "admin-invite": "Invitație administrator",
+      "admin-new-order": `Comandă nouă #${data.order_id || ""} — ${data.total || ""}`,
       "contact-form": `Mesaj nou de la ${data.name || data.email || "vizitator"}`,
       "appointment-form": `Cerere programare — ${data.name || data.email || "vizitator"}`,
     }
@@ -256,6 +257,42 @@ class BrevoNotificationProviderService extends AbstractNotificationProviderServi
                 <p style="margin:0 0 6px;font-size:12px;color:#a1a1aa;">Dacă butonul nu funcționează, copiază linkul:</p>
                 <p style="margin:0;font-size:12px;color:#71717a;word-break:break-all;">${safeUrl}</p>
               </div>
+            </div>
+          </div>
+        </div>`
+    }
+
+    // Staff-only, like admin-password-reset: neutral dashboard look, and the
+    // button lands straight on the order in the Medusa admin.
+    if (template === "admin-new-order") {
+      const items = Array.isArray(data.items) ? (data.items as any[]) : []
+      const row = (label: string, value: unknown) => `
+              <tr><td style="padding:6px 0;color:#71717a;font-size:13px;width:90px;">${label}</td>
+                  <td style="padding:6px 0;color:#18181b;font-size:14px;">${escapeHtml(value)}</td></tr>`
+      return `
+        <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Arial,sans-serif;background:#f9fafb;padding:32px 16px;">
+          <div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #e4e4e7;border-radius:8px;overflow:hidden;">
+            <div style="padding:24px 32px 0;">
+              <p style="margin:0;color:#71717a;font-size:12px;">${brand} · Admin</p>
+            </div>
+            <div style="padding:16px 32px 32px;">
+              <h1 style="margin:0 0 4px;font-size:20px;font-weight:600;color:#18181b;">Comandă nouă #${escapeHtml(data.order_id)}</h1>
+              <p style="margin:0 0 20px;font-size:22px;font-weight:600;color:#18181b;">${escapeHtml(data.total)}</p>
+              <table style="width:100%;border-collapse:collapse;">
+                ${row("Client", data.customer_name)}
+                ${row("Email", data.customer_email)}
+                ${row("Telefon", data.customer_phone)}
+                ${row("Livrare", data.shipping_city)}
+              </table>
+              <table style="width:100%;border-collapse:collapse;margin-top:20px;border-top:1px solid #e4e4e7;">
+                ${items.map((i) => `
+                <tr><td style="padding:8px 0;font-size:14px;color:#18181b;border-bottom:1px solid #f4f4f5;">${escapeHtml(i.quantity)} × ${escapeHtml(i.title)}</td>
+                    <td style="padding:8px 0;font-size:14px;color:#18181b;text-align:right;border-bottom:1px solid #f4f4f5;white-space:nowrap;">${escapeHtml(i.subtotal)}</td></tr>`).join("")}
+              </table>
+              <a href="${escapeHtml(data.admin_url)}"
+                 style="display:inline-block;margin-top:24px;padding:10px 20px;background:#18181b;color:#fff;text-decoration:none;font-size:14px;font-weight:500;border-radius:6px;">
+                Deschide comanda în admin
+              </a>
             </div>
           </div>
         </div>`
